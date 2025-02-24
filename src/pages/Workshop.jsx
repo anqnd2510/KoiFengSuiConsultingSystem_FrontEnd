@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import WorkshopTable from "../components/Workshop/WorkshopTable";
+import SearchBar from "../components/Common/SearchBar";
 
 const Workshop = () => {
   const [workshops, setWorkshops] = useState([
@@ -30,6 +31,11 @@ const Workshop = () => {
     }
   ]);
 
+  const handleSearch = (searchTerm) => {
+    // Xử lý tìm kiếm ở đây
+    console.log('Searching for:', searchTerm);
+  };
+
   return (
     <div className="p-6">
       <div className="bg-[#B08D57] text-white p-4 mb-4">
@@ -37,15 +43,8 @@ const Workshop = () => {
         <p className="text-sm">Reports and overview of your workshops</p>
       </div>
 
-      <div className="relative">
-        <input
-          type="text"
-          placeholder="Search content..."
-          className="w-full px-4 py-2 border rounded mb-4"
-        />
-        <button className="absolute right-2 top-1/2 transform -translate-y-1/2">
-          🔍
-        </button>
+      <div className="flex justify-end mb-8">
+        <SearchBar onSearch={handleSearch} />
       </div>
 
       {/* Error message */}
