@@ -7,17 +7,21 @@ import {
   ClipboardList,
   History,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   { icon: Calendar, text: "Schedule", href: "#" },
   { icon: MessageSquare, text: "Feedback", href: "#" },
   { icon: Users, text: "Customer Management", href: "#" },
   { icon: Bell, text: "Notifications", href: "#" },
-  { icon: ClipboardList, text: "Booking Schedule", href: "#", active: true },
+  { icon: ClipboardList, text: "Booking Schedule", href: "/booking-schedule" },
   { icon: History, text: "Consultation History", href: "#" },
+  { icon: ClipboardList, text: "Workshop", href: "/workshop" },
 ];
 
 const Sidebar = () => {
+  const location = useLocation();
+
   return (
     <div className="w-64 bg-[#90BC95] min-h-screen p-4">
       <div className="flex items-center gap-2 mb-8">
@@ -29,16 +33,16 @@ const Sidebar = () => {
         {menuItems.map((item) => {
           const Icon = item.icon;
           return (
-            <a
+            <Link
               key={item.text}
-              href={item.href}
+              to={item.href}
               className={`flex items-center gap-3 px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors ${
-                item.active ? "bg-white/20" : ""
+                location.pathname === item.href ? "bg-white/20" : ""
               }`}
             >
               <Icon className="w-5 h-5" />
               <span>{item.text}</span>
-            </a>
+            </Link>
           );
         })}
       </nav>
