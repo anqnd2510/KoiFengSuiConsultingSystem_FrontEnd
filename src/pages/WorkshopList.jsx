@@ -26,11 +26,11 @@ const WorkshopList = () => {
         <p className="text-sm">Reports and overview of your workshops</p>
       </div>
 
-      <div className="relative">
+      <div className="relative flex justify-end mb-2">
         <input
           type="text"
           placeholder="Search content..."
-          className="w-full px-4 py-2 border rounded-lg"
+          className="w-[30%] px-4 py-2 border rounded-lg"
         />
         <button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-transparent">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
