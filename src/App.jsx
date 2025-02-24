@@ -6,7 +6,7 @@ import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 import Workshop from "./pages/Workshop";
 import WorkshopList from "./pages/WorkshopList";
 import WorkshopCheck from './pages/WorkshopCheck';
-
+import AudienceList from './pages/AudienceList';
 import MainLayout from "./components/Layout/MainLayout";
 import Schedule from "./pages/Schedule";
 import BlogManagement from "./pages/BlogManagement";
@@ -28,6 +28,7 @@ function App() {
           <Route path="/workshop" element={<Workshop />} />
           <Route path="/workshoplist" element={<WorkshopList />} />
           <Route path="/workshopcheck" element={<WorkshopCheck />} />
+          <Route path="/audience" element={<AudienceList />} />
         </Route>
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
