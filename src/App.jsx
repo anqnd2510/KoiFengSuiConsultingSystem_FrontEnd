@@ -2,8 +2,13 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Layout/Sidebar";
 import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
+
+import Workshop from "./pages/Workshop";
+import WorkshopList from "./pages/WorkshopList";
+
 import MainLayout from "./components/Layout/MainLayout";
 import Schedule from "./pages/Schedule";
+
 
 function App() {
   return (
@@ -17,6 +22,8 @@ function App() {
             path="/booking-schedule/:id"
             element={<BookingScheduleDetails />}
           />
+          <Route path="/workshop" element={<Workshop />} />
+          <Route path="/workshoplist" element={<WorkshopList />} />
         </Route>
       </Routes>
     </Router>
