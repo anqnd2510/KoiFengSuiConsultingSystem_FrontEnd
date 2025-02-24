@@ -7,6 +7,7 @@ import {
   Bell,
   ClipboardList,
   History,
+  Newspaper,
 } from "lucide-react";
 
 const menuItems = [
@@ -24,6 +25,11 @@ const menuItems = [
     icon: History,
     label: "Consultation History",
     path: "/consultation-history",
+  },
+  {
+    icon: Newspaper,
+    label: "Koi Feng Shui Blog",
+    path: "/blog-management",
   },
 ];
 

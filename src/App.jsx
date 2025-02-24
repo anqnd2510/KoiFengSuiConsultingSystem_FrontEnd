@@ -4,7 +4,8 @@ import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 import MainLayout from "./components/Layout/MainLayout";
 import Schedule from "./pages/Schedule";
-
+import BlogManagement from "./pages/BlogManagement";
+import CreateBlog from "./pages/CreateBlog";
 function App() {
   return (
     <Router>
@@ -18,6 +19,8 @@ function App() {
             element={<BookingScheduleDetails />}
           />
         </Route>
+        <Route path="/blog-management" element={<BlogManagement />} />
+        <Route path="/create-blog" element={<CreateBlog />} />
       </Routes>
     </Router>
   );
