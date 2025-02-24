@@ -9,6 +9,7 @@ import {
   History,
   Newspaper,
 } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   { icon: Calendar, label: "Schedule", path: "/schedule" },
@@ -19,21 +20,24 @@ const menuItems = [
     icon: ClipboardList,
     label: "Booking Schedule",
     path: "/booking-schedule",
-    active: true,
   },
   {
     icon: History,
     label: "Consultation History",
     path: "/consultation-history",
   },
+
   {
     icon: Newspaper,
     label: "Koi Feng Shui Blog",
     path: "/blog-management",
   },
+  { icon: ClipboardList, label: "Workshop", path: "/workshop" },
 ];
 
 const Sidebar = () => {
+  const location = useLocation();
+
   return (
     <div className="w-64 bg-[#90B77D] min-h-screen relative">
       <div className="p-4">
