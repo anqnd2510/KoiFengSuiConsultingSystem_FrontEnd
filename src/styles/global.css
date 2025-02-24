@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+:root {
+  --primary-green: #90bc95;
+  --primary-gold: #b89d71;
+}
+
+body {
+  @apply bg-gray-50;
+}
+
+.sidebar-item {
+  @apply flex items-center gap-3 px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-colors;
+}
+
+.sidebar-item.active {
+  @apply bg-white/20;
+}
