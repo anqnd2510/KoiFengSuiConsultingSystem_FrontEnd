@@ -1,4 +1,5 @@
 import React from "react";
+import { NavLink } from "react-router-dom";
 import {
   Calendar,
   MessageSquare,
@@ -10,50 +11,61 @@ import {
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
-  { icon: Calendar, text: "Schedule", href: "#" },
-  { icon: MessageSquare, text: "Feedback", href: "#" },
-  { icon: Users, text: "Customer Management", href: "#" },
-  { icon: Bell, text: "Notifications", href: "#" },
-  { icon: ClipboardList, text: "Booking Schedule", href: "/booking-schedule" },
-  { icon: History, text: "Consultation History", href: "#" },
-  { icon: ClipboardList, text: "Workshop", href: "/workshop" },
+  { icon: Calendar, label: "Schedule", path: "/schedule" },
+  { icon: MessageSquare, label: "Feedback", path: "/feedback" },
+  { icon: Users, label: "Customer Management", path: "/customer-management" },
+  { icon: Bell, label: "Notifications", path: "/notifications" },
+  {
+    icon: ClipboardList,
+    label: "Booking Schedule",
+    path: "/booking-schedule",
+  },
+  {
+    icon: History,
+    label: "Consultation History",
+    path: "/consultation-history",
+  },
+  { icon: ClipboardList, label: "Workshop", path: "/workshop" },
 ];
 
 const Sidebar = () => {
   const location = useLocation();
 
   return (
-    <div className="w-64 bg-[#90BC95] min-h-screen p-4">
-      <div className="flex items-center gap-2 mb-8">
-        <img src="/logo.png" alt="Logo" className="w-12 h-12 rounded-full" />
-        <h2 className="text-white font-semibold">KOI PHONG THỦY</h2>
+    <div className="w-64 bg-[#90B77D] min-h-screen relative">
+      <div className="p-4">
+        <div className="flex items-center gap-3 mb-8">
+          <img
+            src="https://s3-alpha-sig.figma.com/img/ecfb/7109/593e32c422a65fcfe85b222299384fb2?Expires=1741564800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=rY8NCrfNmOymGEcakAG42elPBrUzYDk2-dc-3JQoJicbl3Lrse-esdQslnOBnmMyMJ7gQH~ZWVL2Gs8Qg2eGfK00YZ0OySm6FAAgfM8O6ALm8BP9BUSpG~yl8q-mTm~8r9I0MUNXqc8UFtwJS4QUH~Dbscjcmg9ymTn4Fu6WGtaLg37-0LvO3HPJGTY~iknJAvA~XNj4XbzOrXBDF3UGuovMTM5oH1jGCwmLNEi8g3pu~ElgHlUiung8sGdPdrmHNeOxo8jf5o20hj-O57bD1fCYAt3EpVLKGnYocHgPW2EJ70l6tCb3n2EhWvyD8QhoWTxCznmMIqX-zJZoitieDw__"
+            alt="Koi Phong Thủy"
+            className="w-16 h-16"
+          />
+          <h1 className="text-xl font-bold text-white">KOI PHONG THỦY</h1>
+        </div>
+
+        <nav className="space-y-2">
+          {menuItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-2 rounded-lg ${
+                  isActive
+                    ? "bg-[#42855B] text-white"
+                    : "text-gray-800 hover:bg-[#42855B] hover:text-white"
+                }`
+              }
+            >
+              {React.createElement(item.icon)}
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
       </div>
 
-      <nav className="space-y-2">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.text}
-              to={item.href}
-              className={`flex items-center gap-3 px-4 py-2 rounded-lg text-white hover:bg-white/10 transition-colors ${
-                location.pathname === item.href ? "bg-white/20" : ""
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span>{item.text}</span>
-            </Link>
-          );
-        })}
-      </nav>
-
       <div className="absolute bottom-4 left-4 flex items-center gap-2">
-        <img
-          src="/placeholder.svg?height=32&width=32"
-          alt="User"
-          className="w-8 h-8 rounded-full"
-        />
-        <span className="text-white text-sm">anh DuyAn trường F</span>
+        <img src="avatar.jpg" alt="User" className="w-8 h-8 rounded-full" />
+        <span className="text-white">anh Duy An</span>
       </div>
     </div>
   );
