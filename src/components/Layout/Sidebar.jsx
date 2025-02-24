@@ -7,6 +7,7 @@ import {
   Bell,
   ClipboardList,
   History,
+  Newspaper,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -24,6 +25,12 @@ const menuItems = [
     icon: History,
     label: "Consultation History",
     path: "/consultation-history",
+  },
+
+  {
+    icon: Newspaper,
+    label: "Koi Feng Shui Blog",
+    path: "/blog-management",
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop" },
 ];

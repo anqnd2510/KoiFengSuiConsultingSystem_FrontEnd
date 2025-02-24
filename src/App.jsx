@@ -8,7 +8,8 @@ import WorkshopList from "./pages/WorkshopList";
 
 import MainLayout from "./components/Layout/MainLayout";
 import Schedule from "./pages/Schedule";
-
+import BlogManagement from "./pages/BlogManagement";
+import CreateBlog from "./pages/CreateBlog";
 
 function App() {
   return (
@@ -25,6 +26,8 @@ function App() {
           <Route path="/workshop" element={<Workshop />} />
           <Route path="/workshoplist" element={<WorkshopList />} />
         </Route>
+        <Route path="/blog-management" element={<BlogManagement />} />
+        <Route path="/create-blog" element={<CreateBlog />} />
       </Routes>
     </Router>
   );
