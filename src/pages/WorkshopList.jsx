@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import SearchBar from '../components/Common/SearchBar';
 
 const WorkshopList = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(99); // Giả sử có 99 trang
+
+  const handleSearch = (searchTerm) => {
+    // Xử lý tìm kiếm ở đây
+    console.log('Searching for:', searchTerm);
+  };
 
   // Xử lý chuyển trang
   const handlePageChange = (page) => {
@@ -26,22 +32,9 @@ const WorkshopList = () => {
         <p className="text-sm">Reports and overview of your workshops</p>
       </div>
 
-      <div className="relative flex justify-end mb-2">
-        <input
-          type="text"
-          placeholder="Search content..."
-          className="w-[30%] px-4 py-2 border rounded-lg"
-        />
-        <button className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-transparent">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 19L13 13M15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8Z" 
-              stroke="#666666" 
-              strokeWidth="2" 
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        </div>
+      <div className="flex justify-end mb-8">
+        <SearchBar onSearch={handleSearch} />
+      </div>
 
       {error && (
         <div className="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded relative mb-4">
