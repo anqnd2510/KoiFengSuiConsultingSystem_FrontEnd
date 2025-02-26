@@ -1,18 +1,17 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Sidebar from "./components/Layout/Sidebar";
 import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 
 import Workshop from "./pages/Workshop";
 import WorkshopList from "./pages/WorkshopList";
-import WorkshopStaff from "./pages/WorkshopStaff";
-import WorkshopCheck from './pages/WorkshopCheck';
-import AudienceList from './pages/AudienceList';
+import WorkshopCheck from "./pages/WorkshopCheck";
+import AudienceList from "./pages/AudienceList";
 import MainLayout from "./components/Layout/MainLayout";
 import Schedule from "./pages/Schedule";
 import BlogManagement from "./pages/BlogManagement";
 import CreateBlog from "./pages/CreateBlog";
-
+import Login from "./pages/Login";
+import WorkshopStaff from "./pages/WorkshopStaff";
 
 function App() {
   return (
@@ -34,7 +33,7 @@ function App() {
         </Route>
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
-        
+        <Route path="/login" element={<Login />} />
       </Routes>
     </Router>
   );
