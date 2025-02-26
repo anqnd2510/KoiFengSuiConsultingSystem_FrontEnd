@@ -32,7 +32,7 @@ const menuItems = [
     label: "Koi Feng Shui Blog",
     path: "/blog-management",
   },
-  { icon: ClipboardList, label: "Workshop", path: "/workshop" },
+  { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
 ];
 
 const Sidebar = () => {

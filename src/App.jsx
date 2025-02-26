@@ -5,6 +5,7 @@ import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 
 import Workshop from "./pages/Workshop";
 import WorkshopList from "./pages/WorkshopList";
+import WorkshopStaff from "./pages/WorkshopStaff";
 import WorkshopCheck from './pages/WorkshopCheck';
 import AudienceList from './pages/AudienceList';
 import MainLayout from "./components/Layout/MainLayout";
@@ -25,8 +26,9 @@ function App() {
             path="/booking-schedule/:id"
             element={<BookingScheduleDetails />}
           />
-          <Route path="/workshop" element={<Workshop />} />
-          <Route path="/workshoplist" element={<WorkshopList />} />
+          <Route path="/workshop-master" element={<Workshop />} />
+          <Route path="/workshop-company" element={<WorkshopList />} />
+          <Route path="/workshop-staff" element={<WorkshopStaff />} />
           <Route path="/workshopcheck" element={<WorkshopCheck />} />
           <Route path="/audience" element={<AudienceList />} />
         </Route>
