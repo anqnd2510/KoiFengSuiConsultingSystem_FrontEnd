@@ -75,7 +75,7 @@ const WorkshopList = () => {
               <button 
                 onClick={() => {
                   try {
-                    navigate('/workshop-master');
+                    navigate('/workshop-staff');
                   } catch (err) {
                     setError("Không thể chuyển đến trang quản lý");
                   }
