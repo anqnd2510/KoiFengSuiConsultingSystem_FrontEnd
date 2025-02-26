@@ -56,17 +56,6 @@ const WorkshopTable = ({ workshops, onViewWorkshop }) => {
           ))}
         </tbody>
       </table>
-      <div className="flex justify-end py-4 px-6 bg-gray-100">
-        <div className="flex items-center space-x-1">
-          <button className="px-3 py-1 bg-gray-300 rounded">Previous</button>
-          <button className="px-3 py-1 bg-gray-300 rounded">1</button>
-          <button className="px-3 py-1 bg-gray-300 rounded">2</button>
-          <button className="px-3 py-1 bg-gray-300 rounded">3</button>
-          <span className="px-2 py-1">...</span>
-          <button className="px-3 py-1 bg-gray-300 rounded">99</button>
-          <button className="px-3 py-1 bg-gray-300 rounded">Next</button>
-        </div>
-      </div>
     </div>
   );
 };

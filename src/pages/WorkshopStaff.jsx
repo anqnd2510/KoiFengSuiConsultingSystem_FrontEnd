@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/Common/SearchBar";
+import Pagination from "../components/Common/Pagination";
 
 const WorkshopStaff = () => {
   const navigate = useNavigate();
@@ -40,6 +41,7 @@ const WorkshopStaff = () => {
   ]);
 
   const [error, setError] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const handleSearch = (searchTerm) => {
     console.log('Searching for:', searchTerm);
@@ -49,6 +51,11 @@ const WorkshopStaff = () => {
     if (workshop.status === "Checked in") {
       navigate(`/audience?workshopId=${workshop.id}`);
     }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    console.log("Changing to page:", page);
   };
 
   const getStatusClassName = (status) => {
@@ -71,76 +78,77 @@ const WorkshopStaff = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="bg-[#B08D57] text-white p-4 mb-4">
-        <h1 className="text-xl">Workshops Management</h1>
-        <p className="text-sm">Reports and overview of your workshops</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-[#B89D71] p-4">
+        <h1 className="text-white text-xl font-semibold">Workshops Management</h1>
+        <p className="text-white/80 text-sm">Reports and overview of your workshops</p>
       </div>
 
-      <div className="flex justify-end mb-8">
-        <SearchBar onSearch={handleSearch} />
-      </div>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <span className="font-bold">Error</span>
+      {/* Main Content */}
+      <div className="p-6">
+        <div className="mb-6 flex justify-end">
+          <SearchBar onSearch={handleSearch} />
         </div>
-      )}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="py-2 px-4 border">Workshop ID</th>
-              <th className="py-2 px-4 border">Workshop Name</th>
-              <th className="py-2 px-4 border">Master Name</th>
-              <th className="py-2 px-4 border">Location</th>
-              <th className="py-2 px-4 border">Date</th>
-              <th className="py-2 px-4 border">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {workshops.map((workshop) => (
-              <tr 
-                key={workshop.id} 
-                className={getRowClassName(workshop.status)} 
-                onClick={() => handleRowClick(workshop)}
-              >
-                <td className="py-2 px-4 border text-center">{workshop.id}</td>
-                <td className="py-2 px-4 border">{workshop.name}</td>
-                <td className="py-2 px-4 border">{workshop.master}</td>
-                <td className="py-2 px-4 border">{workshop.location}</td>
-                <td className="py-2 px-4 border text-center">{workshop.date}</td>
-                <td className="py-2 px-4 border text-center">
-                  <span className={getStatusClassName(workshop.status)}>
-                    {workshop.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-            {/* Thêm các hàng trống để giữ layout giống như trong hình */}
-            {[...Array(5)].map((_, index) => (
-              <tr key={`empty-${index}`}>
-                <td className="py-2 px-4 border"></td>
-                <td className="py-2 px-4 border"></td>
-                <td className="py-2 px-4 border"></td>
-                <td className="py-2 px-4 border"></td>
-                <td className="py-2 px-4 border"></td>
-                <td className="py-2 px-4 border"></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <span className="font-bold">Error</span>
+          </div>
+        )}
 
-      <div className="flex justify-end mt-4 gap-2">
-        <button className="bg-gray-300 px-4 py-2 rounded">Previous</button>
-        <button className="bg-gray-200 px-4 py-2 rounded">1</button>
-        <button className="bg-gray-200 px-4 py-2 rounded">2</button>
-        <button className="bg-gray-200 px-4 py-2 rounded">3</button>
-        <span className="px-2 py-2">...</span>
-        <button className="bg-gray-200 px-4 py-2 rounded">99</button>
-        <button className="bg-gray-300 px-4 py-2 rounded">Next</button>
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Workshop ID
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Workshop Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Master Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Location
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {workshops.map((workshop) => (
+                <tr 
+                  key={workshop.id} 
+                  className={getRowClassName(workshop.status)} 
+                  onClick={() => handleRowClick(workshop)}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{workshop.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{workshop.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{workshop.master}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{workshop.location}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{workshop.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={getStatusClassName(workshop.status)}>
+                      {workshop.status}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={5}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

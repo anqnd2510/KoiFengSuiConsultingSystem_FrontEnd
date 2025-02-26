@@ -5,6 +5,7 @@ import SearchBar from "../components/Common/SearchBar";
 import AddWorkshopButton from "../components/Workshop/AddWorkshopButton";
 import CreateWorkshopModal from "../components/Workshop/CreateWorkshopModal";
 import ViewWorkshopModal from "../components/Workshop/ViewWorkshopModal";
+import Pagination from "../components/Common/Pagination";
 
 const Workshop = () => {
   const [workshops, setWorkshops] = useState([
@@ -53,6 +54,7 @@ const Workshop = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Thêm hiệu ứng để làm mờ nội dung chính khi modal mở
   useEffect(() => {
@@ -101,15 +103,22 @@ const Workshop = () => {
     setIsCreateModalOpen(false);
   };
 
-  return (
-    <div className="p-6">
-      <div id="main-content">
-        <div className="bg-[#B08D57] text-white p-4 mb-4">
-          <h1 className="text-xl">Workshops Management </h1>
-          <p className="text-sm">Reports and overview of your workshops</p>
-        </div>
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    console.log("Changing to page:", page);
+  };
 
-        <div className="flex justify-between mb-8">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-[#B89D71] p-4">
+        <h1 className="text-white text-xl font-semibold">Workshops Management</h1>
+        <p className="text-white/80 text-sm">Reports and overview of your workshops</p>
+      </div>
+
+      {/* Main Content */}
+      <div id="main-content" className="p-6">
+        <div className="mb-6 flex justify-between items-center">
           <AddWorkshopButton onClick={handleOpenCreateModal} />
           <SearchBar onSearch={handleSearch} />
         </div>
@@ -119,10 +128,20 @@ const Workshop = () => {
           <span className="font-bold">Error</span>
         </div>
 
-        <WorkshopTable 
-          workshops={workshops} 
-          onViewWorkshop={handleViewWorkshop}
-        />
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <WorkshopTable 
+            workshops={workshops} 
+            onViewWorkshop={handleViewWorkshop}
+          />
+        </div>
+        
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={5}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
 
       <CreateWorkshopModal 
