@@ -1,45 +1,41 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import SearchBar from "../components/Common/SearchBar";
-import Audience from '../components/Workshop/Audience';
 
-const AudienceList = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const workshopId = queryParams.get("workshopId");
-
-  const [audiences, setAudiences] = useState([
+const WorkshopStaff = () => {
+  const navigate = useNavigate();
+  const [workshops, setWorkshops] = useState([
     {
-      id: "T01",
-      name: "John Smith",
-      phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      id: 1,
+      name: "Đại Đạo Chi Giản - Phong Thủy Cơ Học",
+      master: "John Smith",
+      location: "FPT University",
       date: "1/1/2021",
       status: "Checked in"
     },
     {
-      id: "T02",
-      name: "John Smith",
-      phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      id: 2,
+      name: "Đại Đạo Chi Giản - Phong Thủy Cơ Học I",
+      master: "John Smith",
+      location: "FPT University",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Checking"
     },
     {
-      id: "T03",
-      name: "John Smith",
-      phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      id: 3,
+      name: "Đại Đạo Chi Giản - Phong Thủy Cơ Học II",
+      master: "John Smith",
+      location: "FPT University",
       date: "1/1/2021",
-      status: "Absent"
+      status: "Reject"
     },
     {
-      id: "T04",
-      name: "John Smith",
-      phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      id: 4,
+      name: "Đại Đạo Chi Giản - Phong Thủy Cơ Học III",
+      master: "John Smith",
+      location: "FPT University",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Cancel"
     }
   ]);
 
@@ -49,24 +45,36 @@ const AudienceList = () => {
     console.log('Searching for:', searchTerm);
   };
 
+  const handleRowClick = (workshop) => {
+    if (workshop.status === "Checked in") {
+      navigate(`/audience?workshopId=${workshop.id}`);
+    }
+  };
+
   const getStatusClassName = (status) => {
     switch (status) {
       case "Checked in":
         return "bg-green-500 text-white px-2 py-1 rounded";
-      case "Pending":
-        return "bg-blue-500 text-white px-2 py-1 rounded";
-      case "Absent":
+      case "Checking":
+        return "bg-yellow-500 text-white px-2 py-1 rounded";
+      case "Reject":
+        return "bg-gray-500 text-white px-2 py-1 rounded";
+      case "Cancel":
         return "bg-red-500 text-white px-2 py-1 rounded";
       default:
         return "";
     }
   };
 
+  const getRowClassName = (status) => {
+    return status === "Checked in" ? "cursor-pointer hover:bg-gray-100" : "";
+  };
+
   return (
     <div className="p-6">
       <div className="bg-[#B08D57] text-white p-4 mb-4">
-        <h1 className="text-xl">Workshop's audiences</h1>
-        <p className="text-sm">Reports and all audiences from checked in the workshop</p>
+        <h1 className="text-xl">Workshops Management</h1>
+        <p className="text-sm">Reports and overview of your workshops</p>
       </div>
 
       <div className="flex justify-end mb-8">
@@ -83,25 +91,29 @@ const AudienceList = () => {
         <table className="min-w-full bg-white border">
           <thead className="bg-gray-200">
             <tr>
-              <th className="py-2 px-4 border">Ticket ID</th>
-              <th className="py-2 px-4 border">Customer Name</th>
-              <th className="py-2 px-4 border">Phone</th>
-              <th className="py-2 px-4 border">Gmail</th>
+              <th className="py-2 px-4 border">Workshop ID</th>
+              <th className="py-2 px-4 border">Workshop Name</th>
+              <th className="py-2 px-4 border">Master Name</th>
+              <th className="py-2 px-4 border">Location</th>
               <th className="py-2 px-4 border">Date</th>
               <th className="py-2 px-4 border">Status</th>
             </tr>
           </thead>
           <tbody>
-            {audiences.map((audience) => (
-              <tr key={audience.id}>
-                <td className="py-2 px-4 border text-center">{audience.id}</td>
-                <td className="py-2 px-4 border">{audience.name}</td>
-                <td className="py-2 px-4 border">{audience.phone}</td>
-                <td className="py-2 px-4 border">{audience.email}</td>
-                <td className="py-2 px-4 border text-center">{audience.date}</td>
+            {workshops.map((workshop) => (
+              <tr 
+                key={workshop.id} 
+                className={getRowClassName(workshop.status)} 
+                onClick={() => handleRowClick(workshop)}
+              >
+                <td className="py-2 px-4 border text-center">{workshop.id}</td>
+                <td className="py-2 px-4 border">{workshop.name}</td>
+                <td className="py-2 px-4 border">{workshop.master}</td>
+                <td className="py-2 px-4 border">{workshop.location}</td>
+                <td className="py-2 px-4 border text-center">{workshop.date}</td>
                 <td className="py-2 px-4 border text-center">
-                  <span className={getStatusClassName(audience.status)}>
-                    {audience.status}
+                  <span className={getStatusClassName(workshop.status)}>
+                    {workshop.status}
                   </span>
                 </td>
               </tr>
@@ -134,4 +146,4 @@ const AudienceList = () => {
   );
 };
 
-export default AudienceList;
+export default WorkshopStaff; 
