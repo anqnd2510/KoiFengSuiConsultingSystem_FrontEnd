@@ -8,10 +8,12 @@ import {
   ClipboardList,
   History,
   Newspaper,
+  Home,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
+  { icon: Home, label: "Dashboard", path: "/dashboard" },
   { icon: Calendar, label: "Schedule", path: "/schedule" },
   { icon: MessageSquare, label: "Feedback", path: "/feedback" },
   { icon: Users, label: "Customer Management", path: "/customer-management" },
