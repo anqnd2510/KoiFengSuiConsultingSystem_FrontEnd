@@ -5,6 +5,7 @@ import Pagination from "../components/Common/Pagination";
 import CreateCourseModal from "../components/Course/CreateCourseModal";
 import AddCourseButton from "../components/Course/AddCourseButton";
 import CourseTable from "../components/Course/CourseTable";
+import ViewCourseModal from "../components/Course/ViewCourseModal";
 
 const CourseMaster = () => {
   // State cho danh sách khóa học
@@ -14,24 +15,44 @@ const CourseMaster = () => {
       name: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
       price: 20.5,
       date: "1/5/2021",
+      createdAt: "1/5/2021",
+      learningObjectives: "Hiểu về nguyên lý cơ bản của phong thủy cổ học",
+      description: "Khóa học giới thiệu các khái niệm cơ bản và ứng dụng của phong thủy cổ học trong đời sống hiện đại",
+      videoUrl: "https://example.com/video1",
+      image: "https://example.com/image1.jpg"
     },
     {
       id: 2,
       name: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
       price: 20.5,
       date: "1/5/2021",
+      createdAt: "1/5/2021",
+      learningObjectives: "Hiểu về nguyên lý cơ bản của phong thủy cổ học",
+      description: "Khóa học giới thiệu các khái niệm cơ bản và ứng dụng của phong thủy cổ học trong đời sống hiện đại",
+      videoUrl: "https://example.com/video2",
+      image: "https://example.com/image2.jpg"
     },
     {
       id: 3,
       name: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
       price: 20.5,
       date: "1/5/2021",
+      createdAt: "1/5/2021",
+      learningObjectives: "Hiểu về nguyên lý cơ bản của phong thủy cổ học",
+      description: "Khóa học giới thiệu các khái niệm cơ bản và ứng dụng của phong thủy cổ học trong đời sống hiện đại",
+      videoUrl: "https://example.com/video3",
+      image: "https://example.com/image3.jpg"
     },
     {
       id: 4,
       name: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
       price: 20.5,
       date: "1/5/2021",
+      createdAt: "1/5/2021",
+      learningObjectives: "Hiểu về nguyên lý cơ bản của phong thủy cổ học",
+      description: "Khóa học giới thiệu các khái niệm cơ bản và ứng dụng của phong thủy cổ học trong đời sống hiện đại",
+      videoUrl: "https://example.com/video4",
+      image: "https://example.com/image4.jpg"
     },
   ]);
 
@@ -76,8 +97,13 @@ const CourseMaster = () => {
     const newCourse = {
       id: courses.length + 1,
       name: courseData.name,
-      price: 20.5, // Giá mặc định
-      date: new Date().toLocaleDateString(), // Ngày hiện tại
+      price: courseData.price || 20.5,
+      date: new Date().toLocaleDateString(),
+      createdAt: new Date().toLocaleDateString(),
+      learningObjectives: courseData.learningObjectives || "",
+      description: courseData.description || "",
+      videoUrl: courseData.videoUrl || "",
+      image: courseData.image || ""
     };
     
     // Thêm khóa học mới vào danh sách
@@ -92,6 +118,11 @@ const CourseMaster = () => {
     console.log("Viewing course:", course);
     setSelectedCourse(course);
     setIsViewModalOpen(true);
+  };
+
+  const handleCloseViewModal = () => {
+    setIsViewModalOpen(false);
+    setSelectedCourse(null);
   };
 
   const handleUpdateCourse = (course) => {
@@ -155,6 +186,15 @@ const CourseMaster = () => {
             isOpen={isCreateModalOpen}
             onClose={handleCloseCreateModal}
             onSave={handleSaveCourse}
+          />
+        )}
+
+        {/* Modal xem chi tiết khóa học */}
+        {isViewModalOpen && (
+          <ViewCourseModal
+            isOpen={isViewModalOpen}
+            onClose={handleCloseViewModal}
+            course={selectedCourse}
           />
         )}
       </div>
