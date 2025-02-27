@@ -12,13 +12,14 @@ import BlogManagement from "./pages/BlogManagement";
 import CreateBlog from "./pages/CreateBlog";
 import Login from "./pages/Login";
 import WorkshopStaff from "./pages/WorkshopStaff";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Schedule />} />
+          <Route index element={<Dashboard />} />
           <Route path="schedule" element={<Schedule />} />
           <Route path="/booking-schedule" element={<BookingSchedule />} />
           <Route
@@ -30,6 +31,7 @@ function App() {
           <Route path="/workshop-staff" element={<WorkshopStaff />} />
           <Route path="/workshopcheck" element={<WorkshopCheck />} />
           <Route path="/audience" element={<AudienceList />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Route>
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
