@@ -13,6 +13,7 @@ import CreateBlog from "./pages/CreateBlog";
 import Login from "./pages/Login";
 import WorkshopStaff from "./pages/WorkshopStaff";
 import Dashboard from "./pages/Dashboard";
+import CourseMaster from "./pages/CourseMaster";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="/workshopcheck" element={<WorkshopCheck />} />
           <Route path="/audience" element={<AudienceList />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/course-master" element={<CourseMaster />} />
         </Route>
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
