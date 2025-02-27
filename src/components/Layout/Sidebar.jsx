@@ -36,7 +36,7 @@ const menuItems = [
     path: "/blog-management",
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
-  { icon: Book, label: "Courses", path: "/course-master" },
+  { icon: Book, label: "Courses", path: "/course-management" },
 ];
 
 const Sidebar = () => {

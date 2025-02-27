@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import MainLayout from "../components/Layout/MainLayout";
 import Workshop from "../pages/Workshop";
 import Dashboard from "../pages/Dashboard";
+import CourseManagement from "../pages/CourseManagement";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,10 @@ export const router = createBrowserRouter([
       {
         path: "workshop",
         element: <Workshop />,
+      },
+      {
+        path: "course-management",
+        element: <CourseManagement />,
       },
     ],
   },

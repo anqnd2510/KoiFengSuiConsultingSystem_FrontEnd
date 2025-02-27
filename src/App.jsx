@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
+import CourseManagement from "./pages/CourseManagement";
 
 import Workshop from "./pages/Workshop";
 import WorkshopList from "./pages/WorkshopList";
@@ -34,6 +35,7 @@ function App() {
           <Route path="/audience" element={<AudienceList />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/course-master" element={<CourseMaster />} />
+          <Route path="/course-management" element={<CourseManagement />} />
         </Route>
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
