@@ -9,6 +9,7 @@ import {
   History,
   Newspaper,
   Home,
+  Book,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
@@ -35,6 +36,7 @@ const menuItems = [
     path: "/blog-management",
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
+  { icon: Book, label: "Courses", path: "/course-management" },
 ];
 
 const Sidebar = () => {
