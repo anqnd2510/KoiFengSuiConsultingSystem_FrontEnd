@@ -1,6 +1,5 @@
 import React from "react";
 import { DatePicker } from "antd";
-import dayjs from "dayjs";
 import "dayjs/locale/vi";
 
 const CustomDatePicker = ({ value, onChange }) => {
@@ -9,7 +8,7 @@ const CustomDatePicker = ({ value, onChange }) => {
       value={value}
       onChange={onChange}
       format="dddd, DD [tháng] MM, YYYY"
-      className="border-0 bg-gray-50 py-2 px-4 rounded-lg text-gray-600 font-medium hover:border-[#B4925A] focus:border-[#B4925A]"
+      className="border-0 bg-gray-50 py-2 px-4 rounded-lg text-gray-600 font-medium hover:border-[#B4925A] focus:border-[#B4925A] cursor-pointer"
       placeholder="Chọn ngày"
       allowClear={false}
       locale={{

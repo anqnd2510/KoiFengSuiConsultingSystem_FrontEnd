@@ -245,11 +245,11 @@ const ConsultingOffline = () => {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={handleCloseModal}
-                  className="px-6 py-2 rounded-full bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors"
+                  className="px-6 py-2 rounded-full bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
-                <button className="px-6 py-2 rounded-full bg-black text-white font-medium hover:bg-gray-800 transition-colors">
+                <button className="px-6 py-2 rounded-full bg-black text-white font-medium hover:bg-gray-800 transition-colors cursor-pointer">
                   Save
                 </button>
               </div>
