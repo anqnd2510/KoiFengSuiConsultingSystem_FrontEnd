@@ -69,9 +69,13 @@ const CourseMaster = () => {
     const mainContent = document.getElementById('main-content');
     if (mainContent) {
       if (isCreateModalOpen || isViewModalOpen) {
-        mainContent.style.filter = 'blur(0.8px)';
+        mainContent.style.filter = 'blur(5px)';
+        mainContent.style.transition = 'filter 0.3s ease';
+        mainContent.style.pointerEvents = 'none'; // Ngăn tương tác với nền khi modal mở
       } else {
         mainContent.style.filter = 'none';
+        mainContent.style.transition = 'filter 0.3s ease';
+        mainContent.style.pointerEvents = 'auto'; // Cho phép tương tác lại khi modal đóng
       }
     }
   }, [isCreateModalOpen, isViewModalOpen]);
@@ -139,7 +143,7 @@ const CourseMaster = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 relative">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
         <h1 className="text-white text-xl font-semibold">Courses Management</h1>
@@ -147,7 +151,7 @@ const CourseMaster = () => {
       </div>
 
       {/* Main Content */}
-      <div id="main-content" className="p-6 relative">
+      <div id="main-content" className="p-6 transition-all duration-300">
         {/* Header với nút thêm mới và thanh tìm kiếm */}
         <div className="mb-6 flex justify-between items-center">
           <AddCourseButton onClick={handleOpenCreateModal} />
@@ -179,8 +183,10 @@ const CourseMaster = () => {
             onPageChange={handlePageChange}
           />
         </div>
+      </div>
 
-        {/* Modal tạo khóa học mới */}
+      {/* Modal tạo khóa học mới */}
+      <div className={`modal-container ${isCreateModalOpen ? 'active' : ''}`}>
         {isCreateModalOpen && (
           <CreateCourseModal
             isOpen={isCreateModalOpen}
@@ -188,8 +194,10 @@ const CourseMaster = () => {
             onSave={handleSaveCourse}
           />
         )}
+      </div>
 
-        {/* Modal xem chi tiết khóa học */}
+      {/* Modal xem chi tiết khóa học */}
+      <div className={`modal-container ${isViewModalOpen ? 'active' : ''}`}>
         {isViewModalOpen && (
           <ViewCourseModal
             isOpen={isViewModalOpen}
@@ -198,6 +206,24 @@ const CourseMaster = () => {
           />
         )}
       </div>
+
+      <style jsx global>{`
+        .modal-container {
+          position: relative;
+          z-index: 50;
+        }
+        .modal-container.active {
+          z-index: 50;
+        }
+        /* Đảm bảo modal hiển thị phía trên nội dung đã bị làm mờ */
+        .ant-modal-wrap,
+        .ant-modal-mask {
+          z-index: 1001;
+        }
+        .ant-modal {
+          z-index: 1002;
+        }
+      `}</style>
     </div>
   );
 };

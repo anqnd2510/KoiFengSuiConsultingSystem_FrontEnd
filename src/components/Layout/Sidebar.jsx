@@ -11,6 +11,7 @@ import {
   Home,
   Book,
   MessageCircle,
+  Fish,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -47,6 +48,11 @@ const menuItems = [
     icon: MessageCircle,
     label: "Consulting Offline",
     path: "/consulting-offline",
+  },
+  {
+    icon: Fish,
+    label: "Quản lý cá Koi",
+    path: "/koi-fish-management",
   },
 ];
 

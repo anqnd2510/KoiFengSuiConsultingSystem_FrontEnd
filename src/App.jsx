@@ -18,6 +18,7 @@ import ConsultingOnline from "./pages/ConsultingOnline";
 import ConsultingOffline from "./pages/ConsultingOffline";
 import Contract from "./pages/Contract";
 import ContractDetail from "./pages/ContractDetail";
+import KoiFishManagement from "./pages/KoiFishManagement";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
           <Route path="/course-master" element={<CourseMaster />} />
           <Route path="/course-management" element={<CourseManagement />} />
           <Route path="/consulting-online" element={<ConsultingOnline />} />
+          <Route path="/koi-fish-management" element={<KoiFishManagement />} />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
