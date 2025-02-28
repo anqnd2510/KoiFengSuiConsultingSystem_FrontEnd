@@ -12,6 +12,7 @@ import {
   Book,
   MessageCircle,
   Fish,
+  Droplets,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -51,8 +52,13 @@ const menuItems = [
   },
   {
     icon: Fish,
-    label: "Quản lý cá Koi",
+    label: "Koi Fish ",
     path: "/koi-fish-management",
+  },
+  {
+    icon: Droplets,
+    label: "Koi Pond ",
+    path: "/koi-pond-management",
   },
 ];
 

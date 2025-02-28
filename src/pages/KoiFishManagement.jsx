@@ -75,7 +75,7 @@ const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }
         >
           <div className="flex flex-col items-center">
             <UploadCloud className="w-6 h-6 text-gray-400" />
-            <div className="mt-2">Tải lên</div>
+            <div className="mt-2">Upload </div>
           </div>
         </Upload>
       </Form.Item>

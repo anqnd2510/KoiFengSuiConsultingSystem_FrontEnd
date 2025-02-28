@@ -19,6 +19,7 @@ import ConsultingOffline from "./pages/ConsultingOffline";
 import Contract from "./pages/Contract";
 import ContractDetail from "./pages/ContractDetail";
 import KoiFishManagement from "./pages/KoiFishManagement";
+import KoiPondManagement from "./pages/KoiPondManagement";
 
 function App() {
   return (
@@ -42,6 +43,7 @@ function App() {
           <Route path="/course-management" element={<CourseManagement />} />
           <Route path="/consulting-online" element={<ConsultingOnline />} />
           <Route path="/koi-fish-management" element={<KoiFishManagement />} />
+          <Route path="/koi-pond-management" element={<KoiPondManagement />} />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
