@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 import CourseManagement from "./pages/CourseManagement";
-
 import Workshop from "./pages/Workshop";
 import WorkshopList from "./pages/WorkshopList";
 import WorkshopCheck from "./pages/WorkshopCheck";
@@ -15,6 +14,10 @@ import Login from "./pages/Login";
 import WorkshopStaff from "./pages/WorkshopStaff";
 import Dashboard from "./pages/Dashboard";
 import CourseMaster from "./pages/CourseMaster";
+import ConsultingOnline from "./pages/ConsultingOnline";
+import ConsultingOffline from "./pages/ConsultingOffline";
+import Contract from "./pages/Contract";
+import ContractDetail from "./pages/ContractDetail";
 
 function App() {
   return (
@@ -36,10 +39,14 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/course-master" element={<CourseMaster />} />
           <Route path="/course-management" element={<CourseManagement />} />
+          <Route path="/consulting-online" element={<ConsultingOnline />} />
         </Route>
+        <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
         <Route path="/create-blog" element={<CreateBlog />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/contract" element={<Contract />} />
+        <Route path="/contract/:id" element={<ContractDetail />} />
       </Routes>
     </Router>
   );

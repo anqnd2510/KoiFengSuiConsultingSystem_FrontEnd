@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Calendar,
   MessageSquare,
@@ -10,8 +10,9 @@ import {
   Newspaper,
   Home,
   Book,
+  MessageCircle,
 } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -37,10 +38,30 @@ const menuItems = [
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
   { icon: Book, label: "Courses", path: "/course-management" },
+  {
+    icon: MessageCircle,
+    label: "Consulting Online",
+    path: "/consulting-online",
+  },
+  {
+    icon: MessageCircle,
+    label: "Consulting Offline",
+    path: "/consulting-offline",
+  },
 ];
 
 const Sidebar = () => {
   const location = useLocation();
+
+  const isActive = (path) => {
+    if (path === "/consulting-offline") {
+      return (
+        location.pathname === "/consulting-offline" ||
+        location.pathname.startsWith("/contract")
+      );
+    }
+    return location.pathname === path;
+  };
 
   return (
     <div className="w-64 bg-[#90B77D] min-h-screen relative">
@@ -59,12 +80,10 @@ const Sidebar = () => {
             <NavLink
               key={item.path}
               to={item.path}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2 rounded-lg ${
-                  isActive
-                    ? "bg-[#42855B] text-white"
-                    : "text-gray-800 hover:bg-[#42855B] hover:text-white"
-                }`
+              className={
+                isActive(item.path)
+                  ? "flex items-center gap-3 px-4 py-2 rounded-lg bg-[#42855B] text-white"
+                  : "flex items-center gap-3 px-4 py-2 rounded-lg text-gray-800 hover:bg-[#42855B] hover:text-white"
               }
             >
               {React.createElement(item.icon)}
