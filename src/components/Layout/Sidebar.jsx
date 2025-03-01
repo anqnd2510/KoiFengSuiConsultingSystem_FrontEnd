@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Fish,
   Droplets,
+  Award,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -40,6 +41,7 @@ const menuItems = [
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
   { icon: Book, label: "Courses", path: "/course-management" },
+  { icon: Award, label: "Certificate", path: "/certificate" },
   {
     icon: MessageCircle,
     label: "Consulting Online",
