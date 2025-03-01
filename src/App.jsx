@@ -23,6 +23,7 @@ import KoiPondManagement from "./pages/KoiPondManagement";
 import Feedback from "./pages/Feedback";
 import Certificate from "./pages/Certificate";
 import Master from "./pages/Master";
+import Customer from "./pages/Customer";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/certificate" element={<Certificate />} />
           <Route path="/master-management" element={<Master />} />
+          <Route path="/customer-management" element={<Customer />} />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
