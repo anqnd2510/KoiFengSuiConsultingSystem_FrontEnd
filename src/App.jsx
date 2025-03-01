@@ -22,6 +22,7 @@ import KoiFishManagement from "./pages/KoiFishManagement";
 import KoiPondManagement from "./pages/KoiPondManagement";
 import Feedback from "./pages/Feedback";
 import Certificate from "./pages/Certificate";
+import Master from "./pages/Master";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="/koi-pond-management" element={<KoiPondManagement />} />
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/certificate" element={<Certificate />} />
+          <Route path="/master-management" element={<Master />} />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />

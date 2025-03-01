@@ -14,6 +14,7 @@ import {
   Fish,
   Droplets,
   Award,
+  User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -61,6 +62,11 @@ const menuItems = [
     icon: Droplets,
     label: "Koi Pond ",
     path: "/koi-pond-management",
+  },
+  {
+    icon: User,
+    label: "Master Management",
+    path: "/master-management",
   },
 ];
 
