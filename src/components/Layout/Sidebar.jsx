@@ -11,6 +11,10 @@ import {
   Home,
   Book,
   MessageCircle,
+  Fish,
+  Droplets,
+  Award,
+  User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -38,6 +42,7 @@ const menuItems = [
   },
   { icon: ClipboardList, label: "Workshop", path: "/workshop-staff" },
   { icon: Book, label: "Courses", path: "/course-management" },
+  { icon: Award, label: "Certificate", path: "/certificate" },
   {
     icon: MessageCircle,
     label: "Consulting Online",
@@ -47,6 +52,21 @@ const menuItems = [
     icon: MessageCircle,
     label: "Consulting Offline",
     path: "/consulting-offline",
+  },
+  {
+    icon: Fish,
+    label: "Koi Fish ",
+    path: "/koi-fish-management",
+  },
+  {
+    icon: Droplets,
+    label: "Koi Pond ",
+    path: "/koi-pond-management",
+  },
+  {
+    icon: User,
+    label: "Master Management",
+    path: "/master-management",
   },
 ];
 

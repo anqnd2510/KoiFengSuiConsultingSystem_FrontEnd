@@ -18,6 +18,13 @@ import ConsultingOnline from "./pages/ConsultingOnline";
 import ConsultingOffline from "./pages/ConsultingOffline";
 import Contract from "./pages/Contract";
 import ContractDetail from "./pages/ContractDetail";
+import KoiFishManagement from "./pages/KoiFishManagement";
+import KoiPondManagement from "./pages/KoiPondManagement";
+import Feedback from "./pages/Feedback";
+import Certificate from "./pages/Certificate";
+import Master from "./pages/Master";
+import Customer from "./pages/Customer";
+import ConsultationHistory from "./pages/ConsultationHistory";
 
 function App() {
   return (
@@ -40,6 +47,13 @@ function App() {
           <Route path="/course-master" element={<CourseMaster />} />
           <Route path="/course-management" element={<CourseManagement />} />
           <Route path="/consulting-online" element={<ConsultingOnline />} />
+          <Route path="/koi-fish-management" element={<KoiFishManagement />} />
+          <Route path="/koi-pond-management" element={<KoiPondManagement />} />
+          <Route path="/feedback" element={<Feedback />} />
+          <Route path="/certificate" element={<Certificate />} />
+          <Route path="/master-management" element={<Master />} />
+          <Route path="/customer-management" element={<Customer />} />
+          <Route path="/consultation-history" element={<ConsultationHistory />} />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
