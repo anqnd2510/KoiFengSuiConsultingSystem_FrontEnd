@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Search, BookmarkPlus } from "lucide-react";
+import { Button } from "antd";
 import Sidebar from "../components/Layout/Sidebar";
 import { useNavigate } from "react-router-dom";
+import CustomTable from "../components/Common/CustomTable";
+import Pagination from "../components/Common/Pagination";
 
 const BlogManagement = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState("An error occurred while loading data");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const blogs = [
     {
@@ -38,6 +43,49 @@ const BlogManagement = () => {
       id: "BL006",
       title: "Cách bố trí hồ Koi theo phong thủy",
       uploadedDate: "2024-03-15",
+    },
+  ];
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const columns = [
+    {
+      title: "Mã bài viết",
+      dataIndex: "id",
+      key: "id",
+      width: "15%",
+    },
+    {
+      title: "Tiêu đề bài viết",
+      dataIndex: "title",
+      key: "title",
+      width: "50%",
+    },
+    {
+      title: "Ngày đăng",
+      dataIndex: "uploadedDate",
+      key: "uploadedDate",
+      width: "15%",
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: "20%",
+      render: () => (
+        <div className="space-x-2">
+          <Button type="primary" className="bg-[#4CAF50]">
+            Xem
+          </Button>
+          <Button type="primary" className="bg-[#FF9800]">
+            Cập nhật
+          </Button>
+          <Button type="primary" danger>
+            Xóa
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -99,60 +147,18 @@ const BlogManagement = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-6 py-3 text-left font-medium">Mã bài viết</th>
-                  <th className="px-6 py-3 text-left font-medium">
-                    Tiêu đề bài viết
-                  </th>
-                  <th className="px-6 py-3 text-left font-medium">
-                    Ngày đăng
-                  </th>
-                  <th className="px-6 py-3 text-center font-medium">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {blogs.map((blog) => (
-                  <tr key={blog.id} className="border-t">
-                    <td className="px-6 py-4">{blog.id}</td>
-                    <td className="px-6 py-4">{blog.title}</td>
-                    <td className="px-6 py-4">{blog.uploadedDate}</td>
-                    <td className="px-6 py-4 text-center space-x-2">
-                      <button className="px-3 py-1 bg-[#4CAF50] text-white rounded hover:bg-[#45a049]">
-                        Xem
-                      </button>
-                      <button className="px-3 py-1 bg-[#FF9800] text-white rounded hover:bg-[#f57c00]">
-                        Cập nhật
-                      </button>
-                      <button className="px-3 py-1 bg-[#f44336] text-white rounded hover:bg-[#e53935]">
-                        Xóa
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CustomTable
+            columns={columns}
+            dataSource={blogs}
+            loading={loading}
+          />
 
-          <div className="flex justify-end mt-6 gap-2">
-            <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Trước
-            </button>
-            {[1, 2, 3, "...", 99].map((page, index) => (
-              <button
-                key={index}
-                className={`px-4 py-2 rounded ${
-                  page === 1 ? "bg-gray-300" : "bg-gray-200"
-                } hover:bg-gray-300`}
-              >
-                {page}
-              </button>
-            ))}
-            <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Sau
-            </button>
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={5}
+              onPageChange={handlePageChange}
+            />
           </div>
         </main>
       </div>

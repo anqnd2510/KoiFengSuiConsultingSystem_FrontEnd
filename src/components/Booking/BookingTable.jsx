@@ -1,69 +1,86 @@
+import React from 'react';
+import { Tag } from 'antd';
+import CustomTable from '../Common/CustomTable';
 import { Link } from "react-router-dom";
 import StatusBadge from "../Common/StatusBadge";
 
-const BookingTable = ({ bookings }) => {
+const BookingTable = ({ bookings, loading }) => {
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'warning';
+      case 'done':
+        return 'success';
+      case 'cancel':
+        return 'error';
+      case 'scheduled':
+        return 'processing';
+      default:
+        return 'default';
+    }
+  };
+
+  const columns = [
+    {
+      title: 'Khách hàng',
+      dataIndex: 'customerName',
+      key: 'customerName',
+      width: '20%',
+      render: (text, record) => (
+        <Link
+          to={`/booking-schedule/${record.id}`}
+          className="text-blue-600 hover:text-blue-800 hover:underline"
+        >
+          {text}
+        </Link>
+      ),
+    },
+    {
+      title: 'Mô tả',
+      dataIndex: 'description',
+      key: 'description',
+      width: '30%',
+    },
+    {
+      title: 'Ngày',
+      dataIndex: 'date',
+      key: 'date',
+      width: '10%',
+    },
+    {
+      title: 'Thời gian',
+      dataIndex: 'time',
+      key: 'time',
+      width: '15%',
+    },
+    {
+      title: 'Bậc thầy',
+      dataIndex: 'master',
+      key: 'master',
+      width: '15%',
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      width: '10%',
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status === 'pending' ? 'Chờ xử lý' :
+           status === 'done' ? 'Hoàn thành' :
+           status === 'cancel' ? 'Đã hủy' :
+           status === 'scheduled' ? 'Đã lên lịch' : status}
+        </Tag>
+      ),
+    },
+  ];
+
   return (
-    <div className="bg-white rounded-lg shadow">
-      <table className="min-w-full">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Tên khách hàng
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Mô tả
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Ngày
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Thời gian
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Tư vấn viên
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Online/Offline
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Trạng thái 
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {bookings.map((booking) => (
-            <tr key={booking.id}>
-              <td className="px-6 py-4 text-sm text-gray-900">
-                <Link
-                  to={`/booking-schedule/${booking.id}`}
-                  className="text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  {booking.customerName}
-                </Link>
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {booking.description}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {booking.date}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {booking.time}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                {booking.master}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-500">
-                <StatusBadge isOnline={booking.isOnline} />
-              </td>
-              <td className="px-6 py-4 text-sm">
-                <StatusBadge status={booking.status} />
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <CustomTable
+      columns={columns}
+      dataSource={bookings}
+      loading={loading}
+    />
   );
 };
 

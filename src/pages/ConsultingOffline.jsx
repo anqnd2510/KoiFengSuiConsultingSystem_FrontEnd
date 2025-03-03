@@ -19,7 +19,8 @@ import Sidebar from "../components/Layout/Sidebar";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { Modal, Select } from "antd";
+import { Modal, Select, Tag } from "antd";
+import CustomTable from "../components/Common/CustomTable";
 
 const mockData = [
   {
@@ -68,6 +69,72 @@ const ConsultingOffline = () => {
     setSelectedItem(null);
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Mới":
+        return "blue";
+      case "Đang xử lý":
+        return "warning";
+      case "Hoàn thành":
+        return "success";
+      default:
+        return "default";
+    }
+  };
+
+  const columns = [
+    {
+      title: "Mã",
+      key: "id",
+      render: (_, record) => (
+        <span className="font-semibold text-[#B4925A]">
+          #{record.id.toString().padStart(4, "0")}
+        </span>
+      ),
+      width: "10%",
+    },
+    {
+      title: "Khách hàng",
+      dataIndex: "customer",
+      key: "customer",
+      width: "20%",
+    },
+    {
+      title: "Dịch vụ",
+      dataIndex: "service",
+      key: "service",
+      width: "30%",
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "date",
+      key: "date",
+      width: "15%",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: "15%",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>{status}</Tag>
+      ),
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      width: "10%",
+      render: (_, record) => (
+        <button
+          onClick={() => handleOpenModal(record)}
+          className="px-4 py-2 bg-[#B4925A] text-white text-sm rounded-lg hover:bg-[#8B6B3D] transition-all duration-200 shadow-sm cursor-pointer"
+        >
+          Chi tiết
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className="flex">
       <Sidebar />
@@ -103,69 +170,11 @@ const ConsultingOffline = () => {
             />
           </div>
 
-          {/* Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Mã
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Khách hàng
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Dịch vụ
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Ngày tạo
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Trạng thái
-                  </th>
-                  <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {mockData.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-gray-50 transition-all duration-200"
-                  >
-                    <td className="py-4 px-6 font-semibold text-[#B4925A]">
-                      #{item.id.toString().padStart(4, "0")}
-                    </td>
-                    <td className="py-4 px-6 font-medium">{item.customer}</td>
-                    <td className="py-4 px-6 text-gray-600">{item.service}</td>
-                    <td className="py-4 px-6">{item.date}</td>
-                    <td className="py-4 px-6">
-                      <span
-                        className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                          item.status === "Mới"
-                            ? "bg-blue-50 text-blue-600 ring-1 ring-blue-500/20"
-                            : item.status === "Đang xử lý"
-                            ? "bg-yellow-50 text-yellow-600 ring-1 ring-yellow-500/20"
-                            : "bg-green-50 text-green-600 ring-1 ring-green-500/20"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
-                    <td className="py-4 px-6">
-                      <button
-                        onClick={() => handleOpenModal(item)}
-                        className="px-4 py-2 bg-[#B4925A] text-white text-sm rounded-lg hover:bg-[#8B6B3D] transition-all duration-200 shadow-sm cursor-pointer"
-                      >
-                        Chi tiết
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <CustomTable
+            columns={columns}
+            dataSource={mockData}
+            loading={false}
+          />
 
           {/* Pagination */}
           <div className="flex justify-end mt-6">

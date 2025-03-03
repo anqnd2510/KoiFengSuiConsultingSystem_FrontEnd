@@ -3,6 +3,8 @@ import { Select } from "antd";
 import Pagination from "../components/Common/Pagination";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
+import CustomTable from "../components/Common/CustomTable";
+import { Tag } from "antd";
 
 const { Option } = Select;
 
@@ -55,6 +57,137 @@ const ConsultingOnline = () => {
     setTempStaff(null);
   };
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Hoàn thành":
+        return "success";
+      case "Đã hủy":
+        return "error";
+      case "Đang diễn ra":
+        return "processing";
+      case "Chờ xử lý":
+        return "warning";
+      default:
+        return "default";
+    }
+  };
+
+  const columns = [
+    {
+      title: "Mã",
+      dataIndex: "id",
+      key: "id",
+      width: "10%",
+      render: (id) => <span>#{id}</span>,
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+      width: "10%",
+    },
+    {
+      title: "Khách hàng",
+      dataIndex: "customer",
+      key: "customer",
+      width: "15%",
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      width: "15%",
+    },
+    {
+      title: "Gói dịch vụ",
+      dataIndex: "package",
+      key: "package",
+      width: "10%",
+    },
+    {
+      title: "Nhân viên",
+      dataIndex: "staff",
+      key: "staff",
+      width: "20%",
+      render: (staff, record) => (
+        <div className="flex items-center">
+          <Select
+            value={editingStaff === record.id ? tempStaff : staff}
+            placeholder="Phân công nhân viên"
+            style={{ width: 160 }}
+            className={staff === "Chưa phân công" ? "text-red-500" : ""}
+            onChange={(value) => handleStaffChange(value, record.id)}
+          >
+            {staffList.map((staff) => (
+              <Option key={staff} value={staff}>
+                {staff}
+              </Option>
+            ))}
+          </Select>
+
+          {editingStaff === record.id && (
+            <div className="absolute left-[170px] flex gap-1.5 items-center">
+              <button
+                onClick={handleSaveStaff}
+                className="p-1.5 rounded bg-green-500 hover:bg-green-600 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={handleCancelStaff}
+                className="p-1.5 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
+              >
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: "Loại",
+      dataIndex: "type",
+      key: "type",
+      width: "10%",
+      render: (type) => (
+        <Tag color="default">{type}</Tag>
+      ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: "10%",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>{status}</Tag>
+      ),
+    },
+  ];
+
   return (
     <div className="flex-1 flex">
       {/* Sidebar here */}
@@ -66,10 +199,8 @@ const ConsultingOnline = () => {
         </header>
 
         <div className="p-8">
-          {/* Rest of the content */}
           <div className="flex items-center justify-between mb-6">
             <div className="inline-flex p-1 bg-white rounded-xl mb-6 shadow-sm">
-              {/* Tabs */}
               {tabs.map((tab) => (
                 <button
                   key={tab}
@@ -85,27 +216,6 @@ const ConsultingOnline = () => {
                         ? "bg-[#B4925A] text-white shadow-sm"
                         : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                     }
-                    ${tab === "Tất cả" && activeTab === "Tất cả" && "bg-[#B4925A]"}
-                    ${
-                      tab === "Đang diễn ra" &&
-                      activeTab === "Đang diễn ra" &&
-                      "bg-blue-500"
-                    }
-                    ${
-                      tab === "Đã hủy" &&
-                      activeTab === "Đã hủy" &&
-                      "bg-red-500"
-                    }
-                    ${
-                      tab === "Hoàn thành" &&
-                      activeTab === "Hoàn thành" &&
-                      "bg-green-500"
-                    }
-                    ${
-                      tab === "Chờ xử lý" &&
-                      activeTab === "Chờ xử lý" &&
-                      "bg-yellow-500"
-                    }
                   `}
                 >
                   {tab}
@@ -118,116 +228,13 @@ const ConsultingOnline = () => {
             />
           </div>
 
-          {/* Table and Pagination */}
-          <table className="w-full mb-6">
-            <thead>
-              <tr className="text-left border-b">
-                <th className="pb-4 text-gray-600">Mã</th>
-                <th className="pb-4 text-gray-600">Ngày</th>
-                <th className="pb-4 text-gray-600">Khách hàng</th>
-                <th className="pb-4 text-gray-600">Mô tả</th>
-                <th className="pb-4 text-gray-600">Gói dịch vụ</th>
-                <th className="pb-4 text-gray-600">Nhân viên</th>
-                <th className="pb-4 text-gray-600">Loại</th>
-                <th className="pb-4 text-gray-600">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              {mockConsultingData.map((item) => (
-                <tr key={item.id} className="border-b">
-                  <td className="py-4 font-medium">#{item.id}</td>
-                  <td className="py-4">{item.date}</td>
-                  <td className="py-4">{item.customer}</td>
-                  <td className="py-4">{item.description}</td>
-                  <td className="py-4">{item.package}</td>
-                  <td className="py-4 w-[220px] relative">
-                    <div className="flex items-center">
-                      <Select
-                        value={
-                          editingStaff === item.id ? tempStaff : item.staff
-                        }
-                        placeholder="Phân công nhân viên"
-                        style={{ width: 160 }}
-                        className={
-                          item.staff === "Chưa phân công" ? "text-red-500" : ""
-                        }
-                        onChange={(value) => handleStaffChange(value, item.id)}
-                      >
-                        {staffList.map((staff) => (
-                          <Option key={staff} value={staff}>
-                            {staff}
-                          </Option>
-                        ))}
-                      </Select>
+          <CustomTable
+            columns={columns}
+            dataSource={mockConsultingData}
+            loading={false}
+          />
 
-                      {editingStaff === item.id && (
-                        <div className="absolute left-[170px] flex gap-1.5 items-center">
-                          <button
-                            onClick={handleSaveStaff}
-                            className="p-1.5 rounded bg-green-500 hover:bg-green-600 transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M5 13l4 4L19 7"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={handleCancelStaff}
-                            className="p-1.5 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
-                          >
-                            <svg
-                              className="w-4 h-4 text-white"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    <span className="px-3 py-1 rounded-full text-sm bg-gray-100">
-                      {item.type}
-                    </span>
-                  </td>
-                  <td className="py-4">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        item.status === "Hoàn thành"
-                          ? "bg-green-100 text-green-600"
-                          : item.status === "Đã hủy"
-                          ? "bg-red-100 text-red-600"
-                          : item.status === "Đang diễn ra"
-                          ? "bg-yellow-100 text-yellow-600"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="flex justify-end">
+          <div className="flex justify-end mt-6">
             <Pagination
               currentPage={1}
               totalPages={5}

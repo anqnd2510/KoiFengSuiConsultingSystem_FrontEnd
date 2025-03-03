@@ -23,6 +23,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import { User, Trash2, Calendar, Phone, Mail, Home, UploadCloud, FileText, CheckCircle, XCircle, Star, Shield, CreditCard } from "lucide-react";
 import dayjs from 'dayjs';
+import CustomTable from "../components/Common/CustomTable";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -569,7 +570,9 @@ const Customer = () => {
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
-            <Button type="primary" onClick={handleOpenCreateModal}>Thêm khách hàng mới</Button>
+            <Button type="primary" onClick={handleOpenCreateModal}>
+              Thêm khách hàng mới
+            </Button>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo tên, email, số điện thoại..."
@@ -578,12 +581,10 @@ const Customer = () => {
           />
         </div>
 
-        <Table
+        <CustomTable
           columns={columns}
           dataSource={paginatedData}
-          pagination={false}
-          rowKey="id"
-          bordered
+          loading={loading}
         />
 
         <div className="mt-4 flex justify-end">

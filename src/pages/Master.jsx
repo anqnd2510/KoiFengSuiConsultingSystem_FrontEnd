@@ -23,6 +23,7 @@ import {
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import { User, Trash2, Award, Calendar, Clock, UploadCloud, Star } from "lucide-react";
+import CustomTable from "../components/Common/CustomTable";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -498,12 +499,10 @@ const Master = () => {
           />
         </div>
 
-        <Table
+        <CustomTable
           columns={columns}
           dataSource={paginatedData}
-          pagination={false}
-          rowKey="id"
-          bordered
+          loading={loading}
         />
 
         <div className="mt-4 flex justify-end">

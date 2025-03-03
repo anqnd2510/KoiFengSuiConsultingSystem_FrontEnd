@@ -1,62 +1,85 @@
-import { Link } from "react-router-dom";
+import React from 'react';
+import { Button, Tag } from 'antd';
+import { Eye } from 'lucide-react';
+import CustomTable from '../Common/CustomTable';
 
-const WorkshopTable = ({ workshops, onViewWorkshop }) => {
+const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
+  const columns = [
+    {
+      title: 'Tên Workshop',
+      dataIndex: 'name',
+      key: 'name',
+      width: '25%',
+      render: (_, record) => (
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg overflow-hidden">
+            <img
+              src={record.image}
+              alt={record.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {e.target.src = "https://via.placeholder.com/100?text=Workshop"}}
+            />
+          </div>
+          <div>
+            <div className="font-medium">{record.name}</div>
+            <div className="text-sm text-gray-500">{record.location}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Ngày tổ chức',
+      dataIndex: 'date',
+      key: 'date',
+      width: '15%',
+    },
+    {
+      title: 'Giá vé',
+      dataIndex: 'ticketPrice',
+      key: 'ticketPrice',
+      width: '15%',
+    },
+    {
+      title: 'Số lượng vé',
+      dataIndex: 'ticketSlots',
+      key: 'ticketSlots',
+      width: '15%',
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      width: '15%',
+      render: (status) => {
+        let color = 'blue';
+        if (status === 'Đang diễn ra') color = 'green';
+        if (status === 'Đã kết thúc') color = 'gray';
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: '15%',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          icon={<Eye size={16} />}
+          onClick={() => onViewWorkshop(record)}
+        >
+          Xem chi tiết
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <div className="bg-white rounded-lg shadow">
-      <table className="min-w-full">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Mã hội thảo
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Tên hội thảo
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Địa điểm
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Ngày
-            </th>
-            <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Trạng thái
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200">
-          {workshops.map((workshop) => (
-            <tr key={workshop.id} className="hover:bg-gray-50">
-              <td className="px-6 py-4 text-sm text-gray-900">
-                {workshop.id}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900">
-                {workshop.name}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900">
-                {workshop.location}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900">
-                {workshop.date}
-              </td>
-              <td className="px-6 py-4 text-sm space-x-2">
-                <button 
-                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                  onClick={() => onViewWorkshop(workshop)}
-                >
-                  View
-                </button>
-                <button className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-                  Update
-                </button>
-                <button className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <CustomTable
+      columns={columns}
+      dataSource={workshops}
+      loading={loading}
+    />
   );
 };
 
