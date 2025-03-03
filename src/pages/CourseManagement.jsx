@@ -4,6 +4,7 @@ import { Tag } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
+import Header from "../components/Common/Header";
 
 const CourseManagement = () => {
   // State cho danh sách khóa học đã đăng ký
@@ -132,11 +133,10 @@ const CourseManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Quản lý khóa học</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về khóa học của bạn</p>
-      </div>
+      <Header 
+        title="Quản lý khóa học"
+        description="Báo cáo và tổng quan về khóa học của bạn"
+      />
 
       {/* Main Content */}
       <div id="main-content" className="p-6 relative">

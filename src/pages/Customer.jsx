@@ -21,6 +21,7 @@ import {
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 import { User, Trash2, Calendar, Phone, Mail, Home, UploadCloud, FileText, CheckCircle, XCircle, Star, Shield, CreditCard } from "lucide-react";
 import dayjs from 'dayjs';
 import CustomTable from "../components/Common/CustomTable";
@@ -556,15 +557,10 @@ const Customer = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Quản lý khách hàng
-        </h1>
-        <p className="text-white/80 text-sm">
-          Quản lý thông tin và danh sách khách hàng
-        </p>
-      </div>
+      <Header 
+        title="Quản lý khách hàng"
+        description="Quản lý thông tin và danh sách khách hàng"
+      />
 
       {/* Main Content */}
       <div className="p-6">

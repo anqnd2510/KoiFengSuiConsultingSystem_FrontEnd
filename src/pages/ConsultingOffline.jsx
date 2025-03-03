@@ -17,6 +17,7 @@ import {
 } from "react-icons/fa";
 import Sidebar from "../components/Layout/Sidebar";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
+import Header from "../components/Common/Header";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { Modal, Select, Tag } from "antd";
@@ -139,11 +140,10 @@ const ConsultingOffline = () => {
     <div className="flex">
       <Sidebar />
       <div className="flex-1">
-        <header className="h-[90px] bg-gradient-to-r from-[#B4925A] to-[#8B6B3D] flex items-center px-8 shadow-md">
-          <h1 className="text-2xl font-semibold text-white">
-            Tư vấn trực tiếp
-          </h1>
-        </header>
+        <Header 
+          title="Tư vấn trực tiếp"
+          description="Quản lý và theo dõi các buổi tư vấn trực tiếp"
+        />
 
         <div className="p-8">
           <div className="flex items-center justify-between mb-8">

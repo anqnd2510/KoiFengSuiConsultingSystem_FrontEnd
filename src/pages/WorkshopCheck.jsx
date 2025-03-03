@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WorkshopTableManager from "../components/Workshop/WorkshopTableManager";
 import SearchBar from "../components/Common/SearchBar";
+import Header from "../components/Common/Header";
 
 const WorkshopCheck = () => {
   const navigate = useNavigate();
@@ -38,10 +39,10 @@ const WorkshopCheck = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo</p>
-      </div>
+      <Header 
+        title="Quản lý hội thảo"
+        description="Báo cáo và tổng quan về các hội thảo"
+      />
 
       <div className="p-6">
         <div className="bg-white rounded-lg shadow">

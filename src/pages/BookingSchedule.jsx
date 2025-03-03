@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import SearchBar from "../components/Common/SearchBar";
 import BookingTable from "../components/Booking/BookingTable";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 
 const BookingSchedule = () => {
   const [bookings] = useState([
@@ -68,15 +69,10 @@ const BookingSchedule = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Quản lý lịch đặt hẹn
-        </h1>
-        <p className="text-white/80 text-sm">
-          Báo cáo và tổng quan về lịch đặt hẹn
-        </p>
-      </div>
+      <Header 
+        title="Quản lý lịch đặt hẹn"
+        description="Báo cáo và tổng quan về lịch đặt hẹn"
+      />
 
       {/* Main Content */}
       <div className="p-6">

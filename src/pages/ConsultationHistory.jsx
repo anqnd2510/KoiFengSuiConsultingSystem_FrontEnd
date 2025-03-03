@@ -19,6 +19,7 @@ import {
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 import { User, Trash2, Calendar, Clock, FileText, Check } from "lucide-react";
 
 const { Title } = Typography;
@@ -442,15 +443,10 @@ const ConsultationHistory = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Lịch sử tư vấn phong thủy Koi
-        </h1>
-        <p className="text-white/80 text-sm">
-          Quản lý thông tin và lịch sử các buổi tư vấn phong thủy
-        </p>
-      </div>
+      <Header 
+        title="Lịch sử tư vấn phong thủy Koi"
+        description="Quản lý thông tin và lịch sử các buổi tư vấn phong thủy"
+      />
 
       {/* Main Content */}
       <div className="p-6">

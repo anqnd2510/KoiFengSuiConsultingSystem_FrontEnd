@@ -5,6 +5,7 @@ import Sidebar from "../components/Layout/Sidebar";
 import { useNavigate } from "react-router-dom";
 import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 
 const BlogManagement = () => {
   const navigate = useNavigate();
@@ -93,14 +94,10 @@ const BlogManagement = () => {
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-1">
-        <header className="bg-[#B4925A] p-6">
-          <h1 className="text-2xl font-semibold text-white">
-            Quản lý bài viết
-          </h1>
-          <p className="text-white/80">
-            Báo cáo và tổng quan về các bài viết
-          </p>
-        </header>
+        <Header 
+          title="Quản lý bài viết"
+          description="Báo cáo và tổng quan về các bài viết"
+        />
 
         <main className="p-6">
           <div className="flex justify-between mb-6">

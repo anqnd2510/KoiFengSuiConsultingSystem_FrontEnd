@@ -1,5 +1,6 @@
 import React from "react";
 import { Select } from "antd";
+import Header from "../components/Common/Header";
 import {
   BarChart,
   Bar,
@@ -60,17 +61,10 @@ const SERVICE_COLORS = ["#FF4D4F", "#52C41A", "#1890FF"];
 const Dashboard = () => {
   return (
     <div className="flex-1 bg-[#F8F9FC]">
-      <header className="bg-gradient-to-r from-[#B4925A] to-[#8B6B3D] p-10 shadow-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-10"></div>
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-            Trang chủ
-          </h1>
-          <p className="text-white/90 text-lg font-light">
-            Chào mừng đến với trang quản trị
-          </p>
-        </div>
-      </header>
+      <Header 
+        title="Trang chủ"
+        description="Chào mừng đến với trang quản trị"
+      />
 
       <main className="p-8 max-w-[2000px] mx-auto">
         {/* Stats Cards */}

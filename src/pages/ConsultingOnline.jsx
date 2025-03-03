@@ -4,6 +4,7 @@ import Pagination from "../components/Common/Pagination";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import CustomTable from "../components/Common/CustomTable";
+import Header from "../components/Common/Header";
 import { Tag } from "antd";
 
 const { Option } = Select;
@@ -192,11 +193,10 @@ const ConsultingOnline = () => {
     <div className="flex-1 flex">
       {/* Sidebar here */}
       <div className="flex-1">
-        <header className="h-[90px] bg-[#B4925A] flex items-center px-8">
-          <h1 className="text-2xl font-semibold text-white">
-            Tư vấn trực tuyến
-          </h1>
-        </header>
+        <Header 
+          title="Tư vấn trực tuyến"
+          description="Quản lý và theo dõi các buổi tư vấn trực tuyến"
+        />
 
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">

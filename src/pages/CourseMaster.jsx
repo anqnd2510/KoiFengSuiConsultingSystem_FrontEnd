@@ -4,6 +4,7 @@ import { Button, Modal, Form, Input, InputNumber, Upload, message, Row, Col, Div
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CourseTable from "../components/Course/CourseTable";
+import Header from "../components/Common/Header";
 import { UploadCloud, Book, Calendar, DollarSign, Award, FileText } from "lucide-react";
 
 const { TextArea } = Input;
@@ -241,11 +242,10 @@ const CourseMaster = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 relative">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Quản lý khóa học</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về khóa học của bạn</p>
-      </div>
+      <Header 
+        title="Quản lý khóa học"
+        description="Báo cáo và tổng quan về khóa học của bạn"
+      />
 
       {/* Main Content */}
       <div id="main-content" className="p-6">

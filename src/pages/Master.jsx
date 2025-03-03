@@ -22,6 +22,7 @@ import {
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 import { User, Trash2, Award, Calendar, Clock, UploadCloud, Star } from "lucide-react";
 import CustomTable from "../components/Common/CustomTable";
 
@@ -476,15 +477,10 @@ const Master = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Quản lý bậc thầy phong thủy Koi
-        </h1>
-        <p className="text-white/80 text-sm">
-          Quản lý thông tin và danh sách các bậc thầy phong thủy Koi
-        </p>
-      </div>
+      <Header 
+        title="Quản lý bậc thầy phong thủy Koi"
+        description="Quản lý thông tin và danh sách các bậc thầy phong thủy Koi"
+      />
 
       {/* Main Content */}
       <div className="p-6">
