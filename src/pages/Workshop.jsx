@@ -5,6 +5,7 @@ import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info } from "lucide-react"
 import WorkshopTable from "../components/Workshop/WorkshopTable";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 
 const { TextArea } = Input;
 const { Option } = Select;

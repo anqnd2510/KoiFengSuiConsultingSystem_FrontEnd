@@ -1,5 +1,6 @@
 import React from "react";
 import { Select } from "antd";
+import Header from "../components/Common/Header";
 import {
   BarChart,
   Bar,
@@ -60,17 +61,10 @@ const SERVICE_COLORS = ["#FF4D4F", "#52C41A", "#1890FF"];
 const Dashboard = () => {
   return (
     <div className="flex-1 bg-[#F8F9FC]">
-      <header className="bg-gradient-to-r from-[#B4925A] to-[#8B6B3D] p-10 shadow-lg relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/pattern.png')] opacity-10"></div>
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white mb-3 tracking-tight">
-            Dashboard
-          </h1>
-          <p className="text-white/90 text-lg font-light">
-            Welcome to Admin Dashboard
-          </p>
-        </div>
-      </header>
+      <Header 
+        title="Trang chủ"
+        description="Chào mừng đến với trang quản trị"
+      />
 
       <main className="p-8 max-w-[2000px] mx-auto">
         {/* Stats Cards */}
@@ -82,7 +76,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
-                  Revenue
+                  Doanh thu
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
                   ${mockData.stats.revenue.toLocaleString()}
@@ -97,7 +91,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
-                  Average Rating
+                  Đánh giá trung bình
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800 group-hover:text-amber-600 transition-colors">
                   {mockData.stats.rating}/5.0
@@ -112,7 +106,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-sm font-medium mb-2 uppercase tracking-wider">
-                  Total Customers
+                  Tổng số khách hàng
                 </p>
                 <h3 className="text-3xl font-bold text-gray-800 group-hover:text-green-600 transition-colors">
                   {mockData.stats.customers.toLocaleString()}
@@ -129,10 +123,10 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-8">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Overview Statistics
+                    Thống kê tổng quan
                   </h2>
                   <p className="text-gray-500">
-                    Consultations vs. Courses vs. Workshops
+                    Tư vấn - Khóa học - Hội thảo
                   </p>
                 </div>
                 <Select
@@ -141,8 +135,8 @@ const Dashboard = () => {
                   bordered={false}
                   className="hover:bg-gray-50 rounded-lg text-base"
                 >
-                  <Option value="month">Show by month</Option>
-                  <Option value="week">Show by week</Option>
+                  <Option value="month">Xem theo tháng</Option>
+                  <Option value="week">Xem theo tuần</Option>
                 </Select>
               </div>
               <ResponsiveContainer width="100%" height={380}>
@@ -196,9 +190,9 @@ const Dashboard = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                      Gender Distribution
+                      Phân bố giới tính
                     </h2>
-                    <p className="text-gray-500 mb-8">Customers by Gender</p>
+                    <p className="text-gray-500 mb-8">Khách hàng theo giới tính</p>
                   </div>
                   <Select
                     defaultValue="month"
@@ -206,8 +200,8 @@ const Dashboard = () => {
                     bordered={false}
                     className="hover:bg-gray-50 rounded-lg text-base"
                   >
-                    <Option value="month">Show by month</Option>
-                    <Option value="week">Show by week</Option>
+                    <Option value="month">Xem theo tháng</Option>
+                    <Option value="week">Xem theo tuần</Option>
                   </Select>
                 </div>
                 <ResponsiveContainer width="100%" height={250}>
@@ -252,10 +246,10 @@ const Dashboard = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                      Service Split
+                      Phân bố dịch vụ
                     </h2>
                     <p className="text-gray-500 mb-8">
-                      Distribution by Service
+                      Phân bố theo loại dịch vụ
                     </p>
                   </div>
                   <Select
@@ -264,8 +258,8 @@ const Dashboard = () => {
                     bordered={false}
                     className="hover:bg-gray-50 rounded-lg text-base"
                   >
-                    <Option value="month">Show by month</Option>
-                    <Option value="week">Show by week</Option>
+                    <Option value="month">Xem theo tháng</Option>
+                    <Option value="week">Xem theo tuần</Option>
                   </Select>
                 </div>
                 <ResponsiveContainer width="100%" height={250}>
@@ -317,10 +311,10 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-8">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Time Distribution
+                    Phân bố thời gian
                   </h2>
                   <p className="text-gray-500">
-                    Time Admitted Throughout the Day
+                    Thời gian đăng ký trong ngày
                   </p>
                 </div>
                 <Select
@@ -329,8 +323,8 @@ const Dashboard = () => {
                   bordered={false}
                   className="hover:bg-gray-50 rounded-lg text-base"
                 >
-                  <Option value="today">View Today</Option>
-                  <Option value="week">View This Week</Option>
+                  <Option value="today">Xem hôm nay</Option>
+                  <Option value="week">Xem tuần này</Option>
                 </Select>
               </div>
               <ResponsiveContainer width="100%" height={280}>
@@ -406,9 +400,9 @@ const Dashboard = () => {
               <div className="flex justify-between items-center mb-8">
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Daily Stats
+                    Thống kê hàng ngày
                   </h2>
-                  <p className="text-gray-500">Today's Record</p>
+                  <p className="text-gray-500">Số liệu hôm nay</p>
                 </div>
                 <Select
                   defaultValue="today"
@@ -416,8 +410,8 @@ const Dashboard = () => {
                   bordered={false}
                   className="hover:bg-gray-50 rounded-lg text-base"
                 >
-                  <Option value="today">View Today</Option>
-                  <Option value="yesterday">View Yesterday</Option>
+                  <Option value="today">Xem hôm nay</Option>
+                  <Option value="yesterday">Xem hôm qua</Option>
                 </Select>
               </div>
               <div className="space-y-6">
@@ -427,7 +421,7 @@ const Dashboard = () => {
                       <BookOutlined className="text-blue-500 text-2xl" />
                     </div>
                     <div>
-                      <p className="text-gray-600 font-medium mb-1">Courses</p>
+                      <p className="text-gray-600 font-medium mb-1">Khóa học</p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
                         {mockData.todayRecord.courses}
                       </p>
@@ -441,7 +435,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-gray-600 font-medium mb-1">
-                        Check-in workshops
+                        Điểm danh hội thảo
                       </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors">
                         {mockData.todayRecord.workshops}
@@ -456,7 +450,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-gray-600 font-medium mb-1">
-                        Consultation
+                        Tư vấn
                       </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-red-600 transition-colors">
                         {mockData.todayRecord.consultations}

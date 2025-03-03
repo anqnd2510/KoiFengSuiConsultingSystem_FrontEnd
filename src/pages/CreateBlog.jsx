@@ -29,19 +29,19 @@ const CreateBlog = () => {
       <div className="flex-1">
         <header className="bg-[#B4925A] p-6">
           <h1 className="text-2xl font-semibold text-white">
-            Workshops Management
+            Quản lý bài viết
           </h1>
           <p className="text-white/80">
-            Reports and overview of your workshops
+            Báo cáo và tổng quan về bài viết
           </p>
         </header>
 
         <main className="p-6">
           <div className="bg-white rounded-lg p-6">
-            <h2 className="text-2xl font-semibold mb-6">Create new blog</h2>
+            <h2 className="text-2xl font-semibold mb-6">Tạo bài viết mới</h2>
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Title</label>
+                <label className="block text-sm font-medium mb-2">Tiêu đề</label>
                 <input
                   type="text"
                   name="title"
@@ -54,7 +54,7 @@ const CreateBlog = () => {
 
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">
-                  Content
+                  Nội dung
                 </label>
                 <textarea
                   name="content"
@@ -70,14 +70,14 @@ const CreateBlog = () => {
                   type="submit"
                   className="px-6 py-2 bg-[#B4925A] text-white rounded-lg hover:bg-[#a38350]"
                 >
-                  Create
+                  Tạo mới
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate(-1)}
                   className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
                 >
-                  Revert
+                  Quay lại
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Row, Col, Card, Button, Typography, message, Modal, Upload, Form } from "antd";
 import { UploadOutlined, PlusOutlined } from "@ant-design/icons";
+import Header from "../components/Common/Header";
 
 const { Title } = Typography;
 const { Dragger } = Upload;
@@ -25,7 +26,7 @@ const PondCard = ({ title, image, onUpdate }) => {
           className="w-full bg-blue-500"
           onClick={onUpdate}
         >
-          Update 
+          Cập nhật 
         </Button>
       </div>
     </Card>
@@ -148,15 +149,10 @@ const KoiPondManagement = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Quản lý hồ cá Koi
-        </h1>
-        <p className="text-white/80 text-sm">
-          Quản lý thông tin và danh sách các loại hồ cá Koi
-        </p>
-      </div>
+      <Header 
+        title="Quản lý hồ cá Koi"
+        description="Quản lý thông tin và danh sách các loại hồ cá Koi"
+      />
 
       <div className="p-6">
         <Row gutter={[16, 16]}>

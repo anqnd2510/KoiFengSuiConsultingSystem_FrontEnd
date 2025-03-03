@@ -2,56 +2,57 @@ import React, { useState } from "react";
 import SearchBar from "../components/Common/SearchBar";
 import BookingTable from "../components/Booking/BookingTable";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 
 const BookingSchedule = () => {
   const [bookings] = useState([
     {
       id: 1,
-      customerName: "John Smith",
+      customerName: "Nguyễn Văn A",
       description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
       date: "9/12",
       time: "8:00-10:00",
-      master: "Nguyen Trong Manh",
+      master: "Nguyễn Trọng Mạnh",
       status: "pending",
       isOnline: true,
     },
     {
       id: 2,
-      customerName: "John Smith",
+      customerName: "Trần Thị B",
       description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
       date: "9/12",
       time: "8:00-10:00",
-      master: "Nguyen Trong Manh",
+      master: "Nguyễn Trọng Mạnh",
       status: "done",
       isOnline: false,
     },
     {
       id: 3,
-      customerName: "John Smith",
+      customerName: "Lê Văn C",
       description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
       date: "9/12",
       time: "8:00-10:00",
-      master: "Nguyen Trong Manh",
+      master: "Nguyễn Trọng Mạnh",
       status: "cancel",
       isOnline: true,
     },
     {
       id: 4,
-      customerName: "John Smith",
+      customerName: "Phạm Thị D",
       description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
       date: "9/12",
       time: "8:00-10:00",
-      master: "Nguyen Trong Manh",
+      master: "Nguyễn Trọng Mạnh",
       status: "scheduled",
       isOnline: true,
     },
     {
       id: 5,
-      customerName: "John Smith",
+      customerName: "Hoàng Văn E",
       description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
       date: "9/12",
       time: "8:00-10:00",
-      master: "Nguyen Trong Manh",
+      master: "Nguyễn Trọng Mạnh",
       status: "pending",
       isOnline: false,
     },
@@ -59,26 +60,19 @@ const BookingSchedule = () => {
   ]);
 
   const handleSearch = (searchTerm) => {
-    // Implement search logic
-    console.log("Searching for:", searchTerm);
+    console.log("Tìm kiếm:", searchTerm);
   };
 
   const handlePageChange = (page) => {
-    // Implement pagination logic
-    console.log("Changing to page:", page);
+    console.log("Chuyển đến trang:", page);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Booking Schedule Management
-        </h1>
-        <p className="text-white/80 text-sm">
-          Reports and overview of your workspace
-        </p>
-      </div>
+      <Header 
+        title="Quản lý lịch đặt hẹn"
+        description="Báo cáo và tổng quan về lịch đặt hẹn"
+      />
 
       {/* Main Content */}
       <div className="p-6">

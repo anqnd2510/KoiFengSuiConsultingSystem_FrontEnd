@@ -3,10 +3,106 @@
 :root {
   --primary-green: #90bc95;
   --primary-gold: #b89d71;
+  
+  /* Font family */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  
+  /* Font sizes */
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
 }
 
 body {
   @apply bg-gray-50;
+  font-family: var(--font-primary);
+  font-size: var(--font-size-base);
+}
+
+/* Table styles */
+.custom-table {
+  @apply bg-white rounded-lg shadow-sm;
+}
+
+.custom-table .ant-table {
+  @apply rounded-lg overflow-hidden;
+}
+
+.custom-table .ant-table-thead > tr > th {
+  @apply bg-gray-50 text-gray-600 font-medium py-4;
+  font-size: var(--font-size-sm);
+}
+
+.custom-table .ant-table-tbody > tr > td {
+  @apply text-gray-700 py-4;
+  font-size: var(--font-size-sm);
+}
+
+.custom-table .ant-table-tbody > tr:hover > td {
+  @apply bg-gray-50;
+}
+
+.custom-table .ant-table-row-expand-icon {
+  @apply bg-transparent border-gray-200;
+}
+
+/* Heading styles */
+h1 {
+  font-size: var(--font-size-2xl);
+  font-weight: 600;
+}
+
+h2 {
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+}
+
+h3 {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+/* Common text styles */
+.text-xs {
+  font-size: var(--font-size-xs);
+}
+
+.text-sm {
+  font-size: var(--font-size-sm);
+}
+
+.text-base {
+  font-size: var(--font-size-base);
+}
+
+.text-lg {
+  font-size: var(--font-size-lg);
+}
+
+.text-xl {
+  font-size: var(--font-size-xl);
+}
+
+.text-2xl {
+  font-size: var(--font-size-2xl);
+}
+
+.text-3xl {
+  font-size: var(--font-size-3xl);
+}
+
+.text-4xl {
+  font-size: var(--font-size-4xl);
+}
+
+.text-5xl {
+  font-size: var(--font-size-5xl);
 }
 
 .sidebar-item {

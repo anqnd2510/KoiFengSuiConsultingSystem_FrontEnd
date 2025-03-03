@@ -1,46 +1,49 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { Tag } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import CustomTable from "../components/Common/CustomTable";
 
 const AudienceList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const workshopId = queryParams.get("workshopId");
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const [audiences, setAudiences] = useState([
     {
       id: "T01",
-      name: "John Smith",
+      name: "Nguyễn Văn A",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "nguyenvana@gmail.com",
       date: "1/1/2021",
-      status: "Checked in"
+      status: "Đã điểm danh"
     },
     {
       id: "T02",
-      name: "John Smith",
+      name: "Trần Thị B",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "tranthib@gmail.com",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Chờ xác nhận"
     },
     {
       id: "T03",
-      name: "John Smith",
+      name: "Lê Văn C",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "levanc@gmail.com",
       date: "1/1/2021",
-      status: "Absent"
+      status: "Vắng mặt"
     },
     {
       id: "T04",
-      name: "John Smith",
+      name: "Phạm Thị D",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "phamthid@gmail.com",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Chờ xác nhận"
     }
   ]);
 
@@ -54,25 +57,69 @@ const AudienceList = () => {
     setCurrentPage(page);
   };
 
-  const getStatusClassName = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
-      case "Checked in":
-        return "bg-green-500 text-white px-3 py-1 rounded-sm";
-      case "Pending":
-        return "bg-yellow-400 text-black px-3 py-1 rounded-sm";
-      case "Absent":
-        return "bg-red-500 text-white px-3 py-1 rounded-sm";
+      case "Đã điểm danh":
+        return "success";
+      case "Chờ xác nhận":
+        return "warning";
+      case "Vắng mặt":
+        return "error";
       default:
-        return "bg-gray-500 text-white px-3 py-1 rounded-sm";
+        return "default";
     }
   };
+
+  const columns = [
+    {
+      title: "Mã vé",
+      dataIndex: "id",
+      key: "id",
+      width: "10%",
+    },
+    {
+      title: "Họ và tên",
+      dataIndex: "name",
+      key: "name",
+      width: "20%",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phone",
+      key: "phone",
+      width: "15%",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      width: "20%",
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+      width: "15%",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: "20%",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status}
+        </Tag>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Workshop's audiences</h1>
-        <p className="text-white/80 text-sm">Reports and all audiences from checked in the workshop</p>
+        <h1 className="text-white text-xl font-semibold">Người tham dự</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tất cả khán giả đã tham gia trong hội thảo</p>
       </div>
 
       {/* Main Content */}
@@ -83,46 +130,23 @@ const AudienceList = () => {
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <span className="font-bold">Error</span>
+            <span className="font-bold">Đã xảy ra lỗi!</span>
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gmail</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {audiences.map((audience) => (
-                <tr key={audience.id}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{audience.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{audience.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{audience.phone}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{audience.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{audience.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={getStatusClassName(audience.status)}>
-                      {audience.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={5}
-          onPageChange={handlePageChange}
+        <CustomTable 
+          columns={columns}
+          dataSource={audiences}
+          loading={loading}
         />
+
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={5}
+            onPageChange={handlePageChange}
+          />
+        </div>
       </div>
     </div>
   );

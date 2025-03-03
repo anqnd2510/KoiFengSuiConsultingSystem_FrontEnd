@@ -18,6 +18,7 @@ import {
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
+import Header from "../components/Common/Header";
 import { MessageSquare, Trash2 } from "lucide-react";
 
 const { Title } = Typography;
@@ -271,15 +272,10 @@ const Feedback = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">
-          Quản lý đánh giá
-        </h1>
-        <p className="text-white/80 text-sm">
-          Quản lý đánh giá của khách hàng về bậc thầy và khóa học phong thủy Koi
-        </p>
-      </div>
+      <Header 
+        title="Quản lý đánh giá"
+        description="Quản lý đánh giá của khách hàng về bậc thầy và khóa học phong thủy Koi"
+      />
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
