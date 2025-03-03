@@ -34,8 +34,8 @@ const Schedule = () => {
     <div className="flex min-h-screen">
       <div className="flex-1">
         <header className="bg-[#B4925A] p-6">
-          <h1 className="text-2xl font-semibold text-white mb-2">Schedule</h1>
-          <p className="text-white/80">Schedule booking for Master</p>
+          <h1 className="text-2xl font-semibold text-white mb-2">Lịch hẹn</h1>
+          <p className="text-white/80">Lịch đặt hẹn cho chuyên gia</p>
         </header>
 
         <main className="p-6">

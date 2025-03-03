@@ -80,10 +80,10 @@ const CustomerForm = ({ form, initialData, loading }) => {
             rules={[{ required: true, message: "Vui lòng chọn gói thành viên" }]}
           >
             <Select placeholder="Chọn gói thành viên">
-              <Option value="Diamond">Diamond</Option>
-              <Option value="Gold">Gold</Option>
-              <Option value="Silver">Silver</Option>
-              <Option value="Basic">Basic</Option>
+              <Option value="Diamond">Kim cương</Option>
+              <Option value="Gold">Vàng</Option>
+              <Option value="Silver">Bạc</Option>
+              <Option value="Basic">Cơ bản</Option>
             </Select>
           </Form.Item>
         </Col>

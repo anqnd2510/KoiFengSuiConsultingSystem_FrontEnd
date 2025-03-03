@@ -7,11 +7,11 @@ const BookingDetails = ({ booking }) => {
         <div className="flex justify-between items-start">
           <div>
             <div className="font-medium text-lg">
-              Customer:
+              Tên khách hàng:
               <span className="font-normal ml-1">{booking.customerName}</span>
             </div>
             <div className="text-sm text-gray-600">
-              Phone number: {booking.phoneNumber}
+              Số điện thoại: {booking.phoneNumber}
             </div>
           </div>
           <div className="flex gap-2">
@@ -30,7 +30,7 @@ const BookingDetails = ({ booking }) => {
 
         <div>
           <div className="font-medium mb-1">
-            Description of consulting needs:
+            Mô tả nhu cầu tư vấn:
           </div>
           <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
             {booking.description}
@@ -39,11 +39,11 @@ const BookingDetails = ({ booking }) => {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="font-medium mb-1">Address:</div>
+            <div className="font-medium mb-1">Địa chỉ:</div>
             <div className="text-sm text-gray-600">{booking.address}</div>
           </div>
           <div>
-            <div className="font-medium mb-1">Time:</div>
+            <div className="font-medium mb-1">Thời gian:</div>
             <div className="text-sm text-gray-600">{booking.time}</div>
           </div>
         </div>

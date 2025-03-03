@@ -7,19 +7,19 @@ const WorkshopTable = ({ workshops, onViewWorkshop }) => {
         <thead>
           <tr className="bg-gray-200">
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Workshop ID
+              Mã hội thảo
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Workshop Name
+              Tên hội thảo
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Location
+              Địa điểm
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Date
+              Ngày
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Action
+              Trạng thái
             </th>
           </tr>
         </thead>

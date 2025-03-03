@@ -25,7 +25,7 @@ const PondCard = ({ title, image, onUpdate }) => {
           className="w-full bg-blue-500"
           onClick={onUpdate}
         >
-          Update 
+          Cập nhật 
         </Button>
       </div>
     </Card>

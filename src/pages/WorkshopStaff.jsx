@@ -81,8 +81,8 @@ const WorkshopStaff = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Workshops Management</h1>
-        <p className="text-white/80 text-sm">Reports and overview of your workshops</p>
+        <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo</p>
       </div>
 
       {/* Main Content */}
@@ -93,7 +93,7 @@ const WorkshopStaff = () => {
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <span className="font-bold">Error</span>
+            <span className="font-bold">Đã xảy ra lỗi</span>
           </div>
         )}
 
@@ -102,22 +102,22 @@ const WorkshopStaff = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Workshop ID
+                  Mã hội thảo
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Workshop Name
+                  Tên hội thảo
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Master Name
+                  Tên chuyên gia
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Location
+                  Địa điểm
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
+                  Ngày
                 </th>
                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
+                  Trạng thái
                 </th>
               </tr>
             </thead>

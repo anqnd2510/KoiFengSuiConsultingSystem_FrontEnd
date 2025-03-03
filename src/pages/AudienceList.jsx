@@ -12,35 +12,35 @@ const AudienceList = () => {
   const [audiences, setAudiences] = useState([
     {
       id: "T01",
-      name: "John Smith",
+      name: "Nguyễn Văn A",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "nguyenvana@gmail.com",
       date: "1/1/2021",
-      status: "Checked in"
+      status: "Đã điểm danh"
     },
     {
       id: "T02",
-      name: "John Smith",
+      name: "Trần Thị B",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "tranthib@gmail.com",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Chờ xác nhận"
     },
     {
       id: "T03",
-      name: "John Smith",
+      name: "Lê Văn C",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "levanc@gmail.com",
       date: "1/1/2021",
-      status: "Absent"
+      status: "Vắng mặt"
     },
     {
       id: "T04",
-      name: "John Smith",
+      name: "Phạm Thị D",
       phone: "1234567890",
-      email: "Johnsmith@gmail.com",
+      email: "phamthid@gmail.com",
       date: "1/1/2021",
-      status: "Pending"
+      status: "Chờ xác nhận"
     }
   ]);
 
@@ -56,11 +56,11 @@ const AudienceList = () => {
 
   const getStatusClassName = (status) => {
     switch (status) {
-      case "Checked in":
+      case "Đã điểm danh":
         return "bg-green-500 text-white px-3 py-1 rounded-sm";
-      case "Pending":
+      case "Chờ xác nhận":
         return "bg-yellow-400 text-black px-3 py-1 rounded-sm";
-      case "Absent":
+      case "Vắng mặt":
         return "bg-red-500 text-white px-3 py-1 rounded-sm";
       default:
         return "bg-gray-500 text-white px-3 py-1 rounded-sm";
@@ -71,8 +71,8 @@ const AudienceList = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Workshop's audiences</h1>
-        <p className="text-white/80 text-sm">Reports and all audiences from checked in the workshop</p>
+        <h1 className="text-white text-xl font-semibold">Người tham dự</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tất cả khán giả đã tham gia trong hội thảo</p>
       </div>
 
       {/* Main Content */}
@@ -83,7 +83,7 @@ const AudienceList = () => {
 
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <span className="font-bold">Error</span>
+            <span className="font-bold">Đã xảy ra lỗi!</span>
           </div>
         )}
 
@@ -91,12 +91,12 @@ const AudienceList = () => {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ticket ID</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer Name</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gmail</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mã vé</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Họ và tên</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số điện thoại</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

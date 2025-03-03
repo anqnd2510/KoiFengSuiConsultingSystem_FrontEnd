@@ -74,7 +74,7 @@ const ConsultingOffline = () => {
       <div className="flex-1">
         <header className="h-[90px] bg-gradient-to-r from-[#B4925A] to-[#8B6B3D] flex items-center px-8 shadow-md">
           <h1 className="text-2xl font-semibold text-white">
-            Consulting Offline
+            Tư vấn trực tiếp
           </h1>
         </header>
 
@@ -109,7 +109,7 @@ const ConsultingOffline = () => {
               <thead>
                 <tr className="bg-gray-50">
                   <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    ID
+                    Mã
                   </th>
                   <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
                     Khách hàng
@@ -124,7 +124,7 @@ const ConsultingOffline = () => {
                     Trạng thái
                   </th>
                   <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                    Action
+                    Thao tác
                   </th>
                 </tr>
               </thead>
@@ -173,7 +173,7 @@ const ConsultingOffline = () => {
               currentPage={1}
               totalPages={5}
               onPageChange={(page) => {
-                console.log("Changed to page:", page);
+                console.log("Chuyển đến trang:", page);
               }}
             />
           </div>
@@ -247,10 +247,10 @@ const ConsultingOffline = () => {
                   onClick={handleCloseModal}
                   className="px-6 py-2 rounded-full bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  Hủy
                 </button>
                 <button className="px-6 py-2 rounded-full bg-black text-white font-medium hover:bg-gray-800 transition-colors cursor-pointer">
-                  Save
+                  Lưu
                 </button>
               </div>
             </div>

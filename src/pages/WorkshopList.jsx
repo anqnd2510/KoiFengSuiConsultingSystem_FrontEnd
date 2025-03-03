@@ -31,8 +31,8 @@ const WorkshopList = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Workshops Management</h1>
-        <p className="text-white/80 text-sm">Reports and overview of your workshops</p>
+        <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo</p>
       </div>
 
       {/* Main Content */}
@@ -55,7 +55,7 @@ const WorkshopList = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between bg-white rounded-md border p-4">
-              <span className="text-gray-700 font-medium">Check workshops</span>
+              <span className="text-gray-700 font-medium">Kiểm tra hội thảo</span>
               <button 
                 onClick={() => {
                   try {
@@ -66,12 +66,12 @@ const WorkshopList = () => {
                 }}
                 className="inline-flex items-center justify-center bg-[#00B14F] text-white text-sm px-3 py-1 rounded-sm hover:bg-green-600"
               >
-                View
+                Xem
               </button>
             </div>
 
             <div className="flex items-center justify-between bg-white rounded-md border p-4">
-              <span className="text-gray-700 font-medium">Manage workshops</span>
+              <span className="text-gray-700 font-medium">Quản lý hội thảo</span>
               <button 
                 onClick={() => {
                   try {
@@ -82,7 +82,7 @@ const WorkshopList = () => {
                 }}
                 className="inline-flex items-center justify-center bg-[#00B14F] text-white text-sm px-3 py-1 rounded-sm hover:bg-green-600"
               >
-                View
+                Xem
               </button>
             </div>
           </div>

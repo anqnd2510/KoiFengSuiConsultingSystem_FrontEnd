@@ -10,33 +10,33 @@ const mockConsultingData = [
   {
     id: "0001",
     date: "2024-03-20",
-    customer: "John Smith",
+    customer: "Nguyễn Văn A",
     description: "Tư vấn xây hồ",
     package: "Cơ bản",
-    staff: "Nguyen Van A",
-    type: "Online",
-    status: "Finished",
+    staff: "Nguyễn Văn B",
+    type: "Trực tuyến",
+    status: "Hoàn thành",
   },
   {
     id: "0002",
     date: "2024-03-20",
-    customer: "John Smith",
+    customer: "Trần Thị C",
     description: "Tư vấn xây hồ",
     package: "Cơ bản",
-    staff: "NOT ASSIGNED",
-    type: "Online",
-    status: "Cancelled",
+    staff: "Chưa phân công",
+    type: "Trực tuyến",
+    status: "Đã hủy",
   },
   // ... other mock data
 ];
 
-const staffList = ["Nguyen Van A", "Tran Thi B", "Le Van C", "Pham Thi D"];
+const staffList = ["Nguyễn Văn B", "Trần Thị C", "Lê Văn D", "Phạm Thị E"];
 
 const ConsultingOnline = () => {
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("Tất cả");
   const [editingStaff, setEditingStaff] = useState(null);
   const [tempStaff, setTempStaff] = useState(null);
-  const tabs = ["All", "Ongoing", "Cancelled", "Finished", "Pending"];
+  const tabs = ["Tất cả", "Đang diễn ra", "Đã hủy", "Hoàn thành", "Chờ xử lý"];
   const [selectedDate, setSelectedDate] = useState(dayjs());
 
   const handleStaffChange = (value, recordId) => {
@@ -45,7 +45,7 @@ const ConsultingOnline = () => {
   };
 
   const handleSaveStaff = () => {
-    console.log(`Saving staff change: ${tempStaff} for record ${editingStaff}`);
+    console.log(`Lưu thay đổi nhân viên: ${tempStaff} cho bản ghi ${editingStaff}`);
     setEditingStaff(null);
     setTempStaff(null);
   };
@@ -61,7 +61,7 @@ const ConsultingOnline = () => {
       <div className="flex-1">
         <header className="h-[90px] bg-[#B4925A] flex items-center px-8">
           <h1 className="text-2xl font-semibold text-white">
-            Consulting Online
+            Tư vấn trực tuyến
           </h1>
         </header>
 
@@ -85,25 +85,25 @@ const ConsultingOnline = () => {
                         ? "bg-[#B4925A] text-white shadow-sm"
                         : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
                     }
-                    ${tab === "All" && activeTab === "All" && "bg-[#B4925A]"}
+                    ${tab === "Tất cả" && activeTab === "Tất cả" && "bg-[#B4925A]"}
                     ${
-                      tab === "Ongoing" &&
-                      activeTab === "Ongoing" &&
+                      tab === "Đang diễn ra" &&
+                      activeTab === "Đang diễn ra" &&
                       "bg-blue-500"
                     }
                     ${
-                      tab === "Cancelled" &&
-                      activeTab === "Cancelled" &&
+                      tab === "Đã hủy" &&
+                      activeTab === "Đã hủy" &&
                       "bg-red-500"
                     }
                     ${
-                      tab === "Finished" &&
-                      activeTab === "Finished" &&
+                      tab === "Hoàn thành" &&
+                      activeTab === "Hoàn thành" &&
                       "bg-green-500"
                     }
                     ${
-                      tab === "Pending" &&
-                      activeTab === "Pending" &&
+                      tab === "Chờ xử lý" &&
+                      activeTab === "Chờ xử lý" &&
                       "bg-yellow-500"
                     }
                   `}
@@ -122,14 +122,14 @@ const ConsultingOnline = () => {
           <table className="w-full mb-6">
             <thead>
               <tr className="text-left border-b">
-                <th className="pb-4 text-gray-600">ID</th>
-                <th className="pb-4 text-gray-600">Date</th>
-                <th className="pb-4 text-gray-600">Customer</th>
-                <th className="pb-4 text-gray-600">Description</th>
-                <th className="pb-4 text-gray-600">Package</th>
-                <th className="pb-4 text-gray-600">Staff</th>
-                <th className="pb-4 text-gray-600">Type</th>
-                <th className="pb-4 text-gray-600">Status</th>
+                <th className="pb-4 text-gray-600">Mã</th>
+                <th className="pb-4 text-gray-600">Ngày</th>
+                <th className="pb-4 text-gray-600">Khách hàng</th>
+                <th className="pb-4 text-gray-600">Mô tả</th>
+                <th className="pb-4 text-gray-600">Gói dịch vụ</th>
+                <th className="pb-4 text-gray-600">Nhân viên</th>
+                <th className="pb-4 text-gray-600">Loại</th>
+                <th className="pb-4 text-gray-600">Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -146,10 +146,10 @@ const ConsultingOnline = () => {
                         value={
                           editingStaff === item.id ? tempStaff : item.staff
                         }
-                        placeholder="Assign staff"
+                        placeholder="Phân công nhân viên"
                         style={{ width: 160 }}
                         className={
-                          item.staff === "NOT ASSIGNED" ? "text-red-500" : ""
+                          item.staff === "Chưa phân công" ? "text-red-500" : ""
                         }
                         onChange={(value) => handleStaffChange(value, item.id)}
                       >
@@ -210,11 +210,11 @@ const ConsultingOnline = () => {
                   <td className="py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-sm ${
-                        item.status === "Finished"
+                        item.status === "Hoàn thành"
                           ? "bg-green-100 text-green-600"
-                          : item.status === "Cancelled"
+                          : item.status === "Đã hủy"
                           ? "bg-red-100 text-red-600"
-                          : item.status === "Ongoing"
+                          : item.status === "Đang diễn ra"
                           ? "bg-yellow-100 text-yellow-600"
                           : "bg-gray-100 text-gray-600"
                       }`}
@@ -232,7 +232,7 @@ const ConsultingOnline = () => {
               currentPage={1}
               totalPages={5}
               onPageChange={(page) => {
-                console.log("Changed to page:", page);
+                console.log("Chuyển đến trang:", page);
               }}
             />
           </div>

@@ -50,7 +50,7 @@ const CourseManagement = () => {
   ]);
 
   // State cho lỗi
-  const [error, setError] = useState("Error");
+  const [error, setError] = useState("Lỗi");
   
   // Xử lý tìm kiếm
   const handleSearch = (searchTerm) => {
@@ -70,8 +70,8 @@ const CourseManagement = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Courses Management</h1>
-        <p className="text-white/80 text-sm">Reports and overview of your workshops</p>
+        <h1 className="text-white text-xl font-semibold">Quản lý khóa học</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tổng quan về khóa học của bạn</p>
       </div>
 
       {/* Main Content */}
@@ -85,7 +85,7 @@ const CourseManagement = () => {
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
             <FaExclamationCircle className="mr-2" />
-            <span>Error</span>
+            <span>Đã xảy ra lỗi!</span>
           </div>
         )}
 
@@ -95,25 +95,25 @@ const CourseManagement = () => {
             <thead>
               <tr className="bg-gray-200">
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Customer Name
+                  Tên khách hàng
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Courses
+                  Khóa học
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Date
+                  Ngày
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Count
+                  Số lượng
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Payment Method
+                  Phương thức thanh toán
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Total
+                  Tổng tiền
                 </th>
                 <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-                  Status
+                  Trạng thái
                 </th>
               </tr>
             </thead>

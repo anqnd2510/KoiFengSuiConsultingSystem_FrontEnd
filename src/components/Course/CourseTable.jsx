@@ -7,19 +7,19 @@ const CourseTable = ({ courses, onViewCourse, onUpdateCourse, onDeleteCourse }) 
         <thead>
           <tr className="bg-gray-200">
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Course ID
+              Mã khóa học 
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Course Name
+              Tên khóa học 
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Price
+              Giá
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Date
+              Ngày 
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-700">
-              Action
+              Trạng thái 
             </th>
           </tr>
         </thead>

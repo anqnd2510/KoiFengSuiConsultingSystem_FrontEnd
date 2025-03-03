@@ -47,10 +47,10 @@ const BlogManagement = () => {
       <div className="flex-1">
         <header className="bg-[#B4925A] p-6">
           <h1 className="text-2xl font-semibold text-white">
-            Workshops Management
+            Quản lý bài viết
           </h1>
           <p className="text-white/80">
-            Reports and overview of your workshops
+            Báo cáo và tổng quan về các bài viết
           </p>
         </header>
 
@@ -61,13 +61,13 @@ const BlogManagement = () => {
               onClick={() => navigate("/create-blog")}
             >
               <BookmarkPlus className="w-5 h-5" />
-              Add new blog
+              Thêm bài viết mới
             </button>
 
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search content..."
+                placeholder="Tìm kiếm nội dung..."
                 className="pl-4 pr-10 py-2 border rounded-lg w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -93,7 +93,7 @@ const BlogManagement = () => {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm">Error</p>
+                  <p className="text-sm">Đã xảy ra lỗi!</p>
                 </div>
               </div>
             </div>
@@ -103,14 +103,14 @@ const BlogManagement = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-6 py-3 text-left font-medium">Blog ID</th>
+                  <th className="px-6 py-3 text-left font-medium">Mã bài viết</th>
                   <th className="px-6 py-3 text-left font-medium">
-                    Blog Title
+                    Tiêu đề bài viết
                   </th>
                   <th className="px-6 py-3 text-left font-medium">
-                    Uploaded date
+                    Ngày đăng
                   </th>
-                  <th className="px-6 py-3 text-center font-medium">Action</th>
+                  <th className="px-6 py-3 text-center font-medium">Thao tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -121,13 +121,13 @@ const BlogManagement = () => {
                     <td className="px-6 py-4">{blog.uploadedDate}</td>
                     <td className="px-6 py-4 text-center space-x-2">
                       <button className="px-3 py-1 bg-[#4CAF50] text-white rounded hover:bg-[#45a049]">
-                        View
+                        Xem
                       </button>
                       <button className="px-3 py-1 bg-[#FF9800] text-white rounded hover:bg-[#f57c00]">
-                        Update
+                        Cập nhật
                       </button>
                       <button className="px-3 py-1 bg-[#f44336] text-white rounded hover:bg-[#e53935]">
-                        Delete
+                        Xóa
                       </button>
                     </td>
                   </tr>
@@ -138,7 +138,7 @@ const BlogManagement = () => {
 
           <div className="flex justify-end mt-6 gap-2">
             <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Previous
+              Trước
             </button>
             {[1, 2, 3, "...", 99].map((page, index) => (
               <button
@@ -151,7 +151,7 @@ const BlogManagement = () => {
               </button>
             ))}
             <button className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">
-              Next
+              Sau
             </button>
           </div>
         </main>

@@ -8,25 +8,25 @@ const BookingTable = ({ bookings }) => {
         <thead>
           <tr className="bg-gray-100">
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Customer Name
+              Tên khách hàng
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Description
+              Mô tả
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Date
+              Ngày
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Time
+              Thời gian
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Master
+              Tư vấn viên
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
               Online/Offline
             </th>
             <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">
-              Status
+              Trạng thái 
             </th>
           </tr>
         </thead>
