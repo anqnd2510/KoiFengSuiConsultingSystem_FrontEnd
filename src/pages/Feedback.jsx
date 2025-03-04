@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { 
   Space, 
   Table, 
-  Button, 
   Typography, 
   Tag, 
   Popconfirm, 
@@ -20,6 +19,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import { MessageSquare, Trash2 } from "lucide-react";
 
 const { Title } = Typography;
@@ -87,9 +87,9 @@ const FeedbackDetail = ({ feedback, visible, onClose }) => {
       visible={visible}
       onCancel={onClose}
       footer={[
-        <Button key="close" onClick={onClose}>
+        <CustomButton key="close" onClick={onClose}>
           Đóng
-        </Button>,
+        </CustomButton>,
       ]}
       width={700}
     >
@@ -237,26 +237,24 @@ const Feedback = () => {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button type="primary" size="small" onClick={() => handleViewDetail(record)}>
+          <CustomButton type="primary" className="bg-blue-500" onClick={() => handleViewDetail(record)}>
             Xem chi tiết
-          </Button>
+          </CustomButton>
           
           {record.status === "Chờ duyệt" ? (
-            <Button 
-              type="default" 
-              size="small" 
+            <CustomButton 
+              className="!bg-transparent !text-green-600 hover:!text-white hover:!bg-green-600 !border !border-green-600"
               onClick={() => handleChangeStatus(record.id, "Đã duyệt")}
             >
               Duyệt
-            </Button>
+            </CustomButton>
           ) : (
-            <Button 
-              type="default" 
-              size="small" 
+            <CustomButton 
+              className="!bg-transparent !text-yellow-600 hover:!text-white hover:!bg-yellow-600 !border !border-yellow-600"
               onClick={() => handleChangeStatus(record.id, "Chờ duyệt")}
             >
               Hủy duyệt
-            </Button>
+            </CustomButton>
           )}
           
           <Popconfirm
@@ -265,7 +263,7 @@ const Feedback = () => {
             okText="Xóa"
             cancelText="Hủy"
           >
-            <Button type="text" danger icon={<Trash2 size={16} />} />
+            <CustomButton type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),

@@ -1,7 +1,8 @@
 import React from 'react';
-import { Button, Tag } from 'antd';
+import { Tag } from 'antd';
 import { Eye } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
+import CustomButton from '../Common/CustomButton';
 
 const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
   const columns = [
@@ -62,14 +63,14 @@ const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
       key: 'action',
       width: '15%',
       render: (_, record) => (
-        <Button
+        <CustomButton
           type="primary"
           size="small"
           icon={<Eye size={16} />}
           onClick={() => onViewWorkshop(record)}
         >
           Xem chi tiết
-        </Button>
+        </CustomButton>
       ),
     },
   ];

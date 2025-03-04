@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Search, BookmarkPlus } from "lucide-react";
-import { Button } from "antd";
 import Sidebar from "../components/Layout/Sidebar";
 import { useNavigate } from "react-router-dom";
 import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 
 const BlogManagement = () => {
   const navigate = useNavigate();
@@ -77,15 +77,15 @@ const BlogManagement = () => {
       width: "20%",
       render: () => (
         <div className="space-x-2">
-          <Button type="primary" className="bg-[#4CAF50]">
+          <CustomButton type="primary" className="bg-[#4CAF50]">
             Xem
-          </Button>
-          <Button type="primary" className="bg-[#FF9800]">
+          </CustomButton>
+          <CustomButton type="default">
             Cập nhật
-          </Button>
-          <Button type="primary" danger>
+          </CustomButton>
+          <CustomButton type="primary" danger>
             Xóa
-          </Button>
+          </CustomButton>
         </div>
       ),
     },
@@ -102,13 +102,13 @@ const BlogManagement = () => {
 
         <main className="p-6">
           <div className="flex justify-between mb-6">
-            <button
-              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 cursor-pointer"
+            <CustomButton
+              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50"
               onClick={() => navigate("/create-blog")}
+              icon={<BookmarkPlus className="w-5 h-5" />}
             >
-              <BookmarkPlus className="w-5 h-5" />
               Thêm bài viết mới
-            </button>
+            </CustomButton>
 
             <div className="relative">
               <input

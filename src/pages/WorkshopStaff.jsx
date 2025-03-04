@@ -44,7 +44,7 @@ const WorkshopStaff = () => {
     }
   ]);
 
-  const [error, setError] = useState(true);
+  const [error, setError] = useState("Đã xảy ra lỗi");
   const [currentPage, setCurrentPage] = useState(1);
 
   const handleSearch = (searchTerm) => {

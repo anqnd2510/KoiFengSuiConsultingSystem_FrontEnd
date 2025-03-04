@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Row, Col, Card, Button, Typography, message, Modal, Upload, Form } from "antd";
+import { Row, Col, Card, Typography, message, Modal, Upload, Form } from "antd";
 import { UploadOutlined, PlusOutlined } from "@ant-design/icons";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 
 const { Title } = Typography;
 const { Dragger } = Upload;
@@ -22,13 +23,13 @@ const PondCard = ({ title, image, onUpdate }) => {
             }}
           />
         </div>
-        <Button 
+        <CustomButton 
           type="primary" 
           className="w-full bg-blue-500"
           onClick={onUpdate}
         >
           Cập nhật 
-        </Button>
+        </CustomButton>
       </div>
     </Card>
   );
@@ -182,7 +183,12 @@ const KoiPondManagement = () => {
         <div className="mb-4">
           <p>Chọn hình ảnh mới cho hồ cá:</p>
           <Upload {...uploadProps}>
-            {fileList.length >= 1 ? null : uploadButton}
+            {fileList.length >= 1 ? null : (
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>Tải lên</div>
+              </div>
+            )}
           </Upload>
         </div>
       </Modal>

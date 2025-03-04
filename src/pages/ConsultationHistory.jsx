@@ -21,6 +21,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import { User, Trash2, Calendar, Clock, FileText, Check } from "lucide-react";
 
 const { Title } = Typography;
@@ -415,14 +416,14 @@ const ConsultationHistory = () => {
       width: "13%",
       render: (_, record) => (
         <Space size="middle">
-          <Button 
+          <CustomButton 
             type="primary" 
-            size="small"
+            className="bg-blue-500"
             icon={<FileText className="w-4 h-4" />}
             onClick={() => handleOpenDetailModal(record)}
           >
             Chi tiết
-          </Button>
+          </CustomButton>
         </Space>
       ),
     },
@@ -454,9 +455,14 @@ const ConsultationHistory = () => {
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
-            <Button type="primary" onClick={handleExportReport} icon={<FileText className="w-4 h-4" />}>
+            <CustomButton 
+              type="primary" 
+              className="bg-blue-500"
+              onClick={handleExportReport} 
+              icon={<FileText className="w-4 h-4" />}
+            >
               Xuất báo cáo
-            </Button>
+            </CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo tên khách hàng, bậc thầy, chủ đề..."
@@ -493,9 +499,9 @@ const ConsultationHistory = () => {
         open={isModalOpen}
         onCancel={handleCloseModal}
         footer={[
-          <Button key="close" onClick={handleCloseModal}>
+          <CustomButton key="close" onClick={handleCloseModal}>
             Đóng
-          </Button>
+          </CustomButton>
         ]}
         width={700}
         className="consultation-modal"
