@@ -18,6 +18,7 @@ import {
 import Sidebar from "../components/Layout/Sidebar";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { Modal, Select, Tag } from "antd";
@@ -55,6 +56,7 @@ const ConsultingOffline = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const formatDate = (date) => {
     return date.locale("vi").format("dddd, DD [tháng] MM, YYYY");
@@ -146,7 +148,7 @@ const ConsultingOffline = () => {
         />
 
         <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex justify-between mb-8">
             <div className="border-b border-gray-200">
               <div className="flex gap-1">
                 <div
@@ -169,6 +171,8 @@ const ConsultingOffline = () => {
               onChange={(date) => setSelectedDate(date)}
             />
           </div>
+
+          {error && <Error message={error} />}
 
           <CustomTable
             columns={columns}

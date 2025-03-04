@@ -1,5 +1,7 @@
 import Calendar from "../components/Schedule/Calendar";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import { useState } from "react";
 
 const MOCK_BOOKINGS = [
   {
@@ -31,6 +33,8 @@ const MOCK_BOOKINGS = [
 ];
 
 const Schedule = () => {
+  const [error, setError] = useState(null);
+
   return (
     <div className="flex min-h-screen">
       <div className="flex-1">
@@ -40,6 +44,7 @@ const Schedule = () => {
         />
 
         <main className="p-6">
+          {error && <Error message={error} />}
           <Calendar bookings={MOCK_BOOKINGS} />
         </main>
       </div>

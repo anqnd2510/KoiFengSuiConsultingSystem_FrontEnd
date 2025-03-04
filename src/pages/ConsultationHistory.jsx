@@ -20,6 +20,7 @@ import {
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import { User, Trash2, Calendar, Clock, FileText, Check } from "lucide-react";
 
 const { Title } = Typography;
@@ -175,6 +176,7 @@ const ConsultationHistory = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [error, setError] = useState("Đã xảy ra lỗi");
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);

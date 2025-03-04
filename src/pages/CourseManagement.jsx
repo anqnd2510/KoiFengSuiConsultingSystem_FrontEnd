@@ -5,6 +5,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const CourseManagement = () => {
   // State cho danh sách khóa học đã đăng ký
@@ -145,13 +146,7 @@ const CourseManagement = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {/* Hiển thị lỗi nếu có */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
-            <FaExclamationCircle className="mr-2" />
-            <span>Đã xảy ra lỗi!</span>
-          </div>
-        )}
+        {error && <Error message={error} />}
 
         <CustomTable
           columns={columns}

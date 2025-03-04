@@ -19,6 +19,7 @@ import {
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import { MessageSquare, Trash2 } from "lucide-react";
 
 const { Title } = Typography;
@@ -145,6 +146,7 @@ const Feedback = () => {
   const [selectedFeedback, setSelectedFeedback] = useState(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // Hàm tìm kiếm
   const handleSearch = (value) => {
@@ -307,6 +309,8 @@ const Feedback = () => {
               </Select>
             </div>
           </div>
+
+          {error && <Error message={error} />}
 
           <Table
             columns={columns}

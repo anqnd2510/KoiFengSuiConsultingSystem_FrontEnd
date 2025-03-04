@@ -3,6 +3,7 @@ import { Space, Table, Button, Typography, Tag, Popconfirm, message, Modal, Form
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, Plus, Trash2 } from "lucide-react";
 
@@ -140,6 +141,7 @@ const KoiFishManagement = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [error, setError] = useState(null);
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -408,6 +410,8 @@ const KoiFishManagement = () => {
             className="w-64"
           />
         </div>
+
+        {error && <Error message={error} />}
 
         <Table
           columns={columns}

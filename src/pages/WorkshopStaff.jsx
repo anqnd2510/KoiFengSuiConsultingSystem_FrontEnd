@@ -5,6 +5,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const WorkshopStaff = () => {
   const navigate = useNavigate();
@@ -131,11 +132,7 @@ const WorkshopStaff = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <span className="font-bold">Đã xảy ra lỗi</span>
-          </div>
-        )}
+        {error && <Error message={error} />}
 
         <CustomTable
           columns={columns}

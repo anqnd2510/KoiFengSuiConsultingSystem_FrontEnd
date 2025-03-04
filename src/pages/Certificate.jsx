@@ -17,6 +17,7 @@ import { Award, Trash2, Download, Upload as UploadIcon, Search, Filter } from "l
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const { Option } = Select;
 
@@ -245,6 +246,7 @@ const Certificate = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // Hàm tìm kiếm
   const handleSearch = (value) => {
@@ -440,6 +442,8 @@ const Certificate = () => {
               </Button>
             </div>
           </div>
+
+          {error && <Error message={error} />}
 
           <Table
             columns={columns}

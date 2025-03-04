@@ -5,6 +5,7 @@ import CustomDatePicker from "../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import { Tag } from "antd";
 
 const { Option } = Select;
@@ -41,6 +42,7 @@ const ConsultingOnline = () => {
   const [tempStaff, setTempStaff] = useState(null);
   const tabs = ["Tất cả", "Đang diễn ra", "Đã hủy", "Hoàn thành", "Chờ xử lý"];
   const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [error, setError] = useState(null);
 
   const handleStaffChange = (value, recordId) => {
     setTempStaff(value);
@@ -227,6 +229,8 @@ const ConsultingOnline = () => {
               onChange={(date) => setSelectedDate(date)}
             />
           </div>
+
+          {error && <Error message={error} />}
 
           <CustomTable
             columns={columns}

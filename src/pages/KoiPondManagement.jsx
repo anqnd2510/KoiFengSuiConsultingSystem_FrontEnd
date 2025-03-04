@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Row, Col, Card, Button, Typography, message, Modal, Upload, Form } from "antd";
 import { UploadOutlined, PlusOutlined } from "@ant-design/icons";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const { Title } = Typography;
 const { Dragger } = Upload;
@@ -40,6 +41,7 @@ const KoiPondManagement = () => {
   const [previewImage, setPreviewImage] = useState("");
   const [previewVisible, setPreviewVisible] = useState(false);
   const [form] = Form.useForm();
+  const [error, setError] = useState(null);
 
   // Mock data cho các loại hồ cá
   const [pondTypes, setPondTypes] = useState([
@@ -194,6 +196,8 @@ const KoiPondManagement = () => {
       >
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
+
+      {error && <Error message={error} />}
     </div>
   );
 };

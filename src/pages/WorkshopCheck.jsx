@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import WorkshopTableManager from "../components/Workshop/WorkshopTableManager";
 import SearchBar from "../components/Common/SearchBar";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const WorkshopCheck = () => {
   const navigate = useNavigate();
@@ -73,6 +74,8 @@ const WorkshopCheck = () => {
               <span>Đã xảy ra lỗi</span>
             </div>
           </div>
+
+          {error && <Error message={error} />}
 
           <WorkshopTableManager workshops={workshops} />
         </div>
