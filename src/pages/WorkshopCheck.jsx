@@ -1,11 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import WorkshopTableManager from "../components/Workshop/WorkshopTableManager";
 import SearchBar from "../components/Common/SearchBar";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
+import CustomTable from "../components/Common/CustomTable";
+import Pagination from "../components/Common/Pagination";
+import { Plus } from "lucide-react";
 
 const WorkshopCheck = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [workshops, setWorkshops] = useState([
     {
       id: 1,
@@ -33,52 +39,91 @@ const WorkshopCheck = () => {
     }
   ]);
 
+  const columns = [
+    {
+      title: "Mã hội thảo",
+      dataIndex: "id",
+      key: "id",
+    },
+    {
+      title: "Tên hội thảo",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Địa điểm",
+      dataIndex: "location",
+      key: "location",
+    },
+    {
+      title: "Ngày",
+      dataIndex: "date",
+      key: "date",
+    },
+    {
+      title: "Thao tác",
+      key: "action",
+      render: () => (
+        <div className="flex gap-2">
+          <CustomButton className="!bg-yellow-500 hover:!bg-yellow-600 text-white">
+            Xem
+          </CustomButton>
+          <CustomButton className="!bg-green-500 hover:!bg-green-600 text-white">
+            Chấp thuận 
+          </CustomButton>
+          <CustomButton className="!bg-red-500 hover:!bg-red-600 text-white">
+            Từ chối 
+          </CustomButton>
+        </div>
+      ),
+    },
+  ];
+
   const handleManageWorkshops = () => {
-    navigate('/workshop-staff');
+    try {
+      navigate('/workshop-staff');
+    } catch (err) {
+      setError("Không thể chuyển đến trang quản lý hội thảo");
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
         title="Quản lý hội thảo"
-        description="Báo cáo và tổng quan về các hội thảo"
+        description="Báo cáo và tổng quan về hội thảo của bạn"
       />
 
       <div className="p-6">
         <div className="bg-white rounded-lg shadow">
-          <div className="flex justify-between p-4">
-            <button className="flex items-center gap-2 border border-gray-300 rounded-lg px-4 py-2">
-              Thêm hội thảo mới
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-            
+          <div className="flex justify-end p-4">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={handleManageWorkshops}
-                className="bg-[#00B14F] text-white px-4 py-2 rounded-md hover:bg-green-600"
-              >
-                Quản lý hội thảo
-              </button>
-              <SearchBar onSearch={(term) => console.log('Đang tìm kiếm:', term)} />
+              <SearchBar 
+                onSearch={(term) => console.log('Đang tìm kiếm:', term)} 
+              />
             </div>
           </div>
 
-          <div className="px-4">
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 6V10M10 14H10.01M19 10C19 14.9706 14.9706 19 10 19C5.02944 19 1 14.9706 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <span>Đã xảy ra lỗi</span>
-            </div>
+          {error && <Error message={error} />}
+
+          <div className="p-4">
+            <CustomTable 
+              columns={columns}
+              dataSource={workshops}
+            />
           </div>
 
-          <WorkshopTableManager workshops={workshops} />
+          <div className="p-4">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={5}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default WorkshopCheck; 
+export default WorkshopCheck;

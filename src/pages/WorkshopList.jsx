@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/Common/SearchBar';
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import CustomButton from "../components/Common/CustomButton";
 
 const WorkshopList = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const WorkshopList = () => {
           <div className="p-4 space-y-3">
             <div className="flex items-center justify-between bg-white rounded-md border p-4">
               <span className="text-gray-700 font-medium">Kiểm tra hội thảo</span>
-              <button 
+              <CustomButton 
                 onClick={() => {
                   try {
                     navigate('/workshopcheck');
@@ -64,15 +65,15 @@ const WorkshopList = () => {
                     setError("Không thể chuyển đến trang kiểm tra");
                   }
                 }}
-                className="inline-flex items-center justify-center bg-[#00B14F] text-white text-sm px-3 py-1 rounded-sm hover:bg-green-600"
+                className="bg-[#00B14F] hover:bg-green-600 text-white"
               >
                 Xem
-              </button>
+              </CustomButton>
             </div>
 
             <div className="flex items-center justify-between bg-white rounded-md border p-4">
               <span className="text-gray-700 font-medium">Quản lý hội thảo</span>
-              <button 
+              <CustomButton 
                 onClick={() => {
                   try {
                     navigate('/workshop-staff');
@@ -80,10 +81,10 @@ const WorkshopList = () => {
                     setError("Không thể chuyển đến trang quản lý");
                   }
                 }}
-                className="inline-flex items-center justify-center bg-[#00B14F] text-white text-sm px-3 py-1 rounded-sm hover:bg-green-600"
+                className="bg-[#00B14F] hover:bg-green-600 text-white"
               >
                 Xem
-              </button>
+              </CustomButton>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Select } from "antd";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 import {
   BarChart,
   Bar,
@@ -59,6 +60,8 @@ const COLORS = ["#FF4D4F", "#1890FF"];
 const SERVICE_COLORS = ["#FF4D4F", "#52C41A", "#1890FF"];
 
 const Dashboard = () => {
+  const [error, setError] = useState(null);
+
   return (
     <div className="flex-1 bg-[#F8F9FC]">
       <Header 
@@ -67,6 +70,8 @@ const Dashboard = () => {
       />
 
       <main className="p-8 max-w-[2000px] mx-auto">
+        {error && <Error message={error} />}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-8 mb-8">
           <div className="bg-white rounded-2xl p-8 shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100/50 group">

@@ -3,6 +3,7 @@ import SearchBar from "../components/Common/SearchBar";
 import BookingTable from "../components/Booking/BookingTable";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
 
 const BookingSchedule = () => {
   const [bookings] = useState([
@@ -58,6 +59,7 @@ const BookingSchedule = () => {
     },
     // Thêm data mẫu khác
   ]);
+  const [error, setError] = useState(null);
 
   const handleSearch = (searchTerm) => {
     console.log("Tìm kiếm:", searchTerm);
@@ -79,6 +81,8 @@ const BookingSchedule = () => {
         <div className="mb-6 flex justify-end">
           <SearchBar onSearch={handleSearch} />
         </div>
+
+        {error && <Error message={error} />}
 
         <BookingTable bookings={bookings} />
 

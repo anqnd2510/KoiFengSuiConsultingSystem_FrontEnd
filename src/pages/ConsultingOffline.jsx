@@ -18,6 +18,8 @@ import {
 import Sidebar from "../components/Layout/Sidebar";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { Modal, Select, Tag } from "antd";
@@ -55,6 +57,7 @@ const ConsultingOffline = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
 
   const formatDate = (date) => {
     return date.locale("vi").format("dddd, DD [tháng] MM, YYYY");
@@ -146,7 +149,7 @@ const ConsultingOffline = () => {
         />
 
         <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex justify-between mb-8">
             <div className="border-b border-gray-200">
               <div className="flex gap-1">
                 <div
@@ -169,6 +172,8 @@ const ConsultingOffline = () => {
               onChange={(date) => setSelectedDate(date)}
             />
           </div>
+
+          {error && <Error message={error} />}
 
           <CustomTable
             columns={columns}
@@ -252,15 +257,17 @@ const ConsultingOffline = () => {
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <button
+                <CustomButton
                   onClick={handleCloseModal}
                   className="px-6 py-2 rounded-full bg-gray-100 text-gray-700 font-medium hover:bg-gray-200 transition-colors cursor-pointer"
                 >
                   Hủy
-                </button>
-                <button className="px-6 py-2 rounded-full bg-black text-white font-medium hover:bg-gray-800 transition-colors cursor-pointer">
+                </CustomButton>
+                <CustomButton 
+                  className="px-6 py-2 rounded-full bg-black text-white font-medium hover:bg-gray-800 transition-colors cursor-pointer"
+                >
                   Lưu
-                </button>
+                </CustomButton>
               </div>
             </div>
           )}

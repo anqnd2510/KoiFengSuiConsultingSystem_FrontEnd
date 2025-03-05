@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { 
   Table, 
-  Button, 
   Tag, 
   Popconfirm, 
   message, 
@@ -17,6 +16,8 @@ import { Award, Trash2, Download, Upload as UploadIcon, Search, Filter } from "l
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 
 const { Option } = Select;
 
@@ -77,12 +78,12 @@ const CertificateDetail = ({ certificate, visible, onClose }) => {
       open={visible}
       onCancel={onClose}
       footer={[
-        <Button key="close" onClick={onClose}>
+        <CustomButton key="close" onClick={onClose}>
           Đóng
-        </Button>,
-        <Button key="download" type="primary" icon={<Download size={16} />}>
+        </CustomButton>,
+        <CustomButton key="download" type="primary" icon={<Download size={16} />}>
           Tải chứng chỉ
-        </Button>,
+        </CustomButton>,
       ]}
       width={700}
     >
@@ -227,7 +228,7 @@ const CreateCertificateModal = ({ visible, onClose, onSubmit }) => {
           label="Tải lên file chứng chỉ (tùy chọn)"
         >
           <Upload maxCount={1} listType="picture">
-            <Button icon={<UploadIcon size={16} />}>Chọn file</Button>
+            <CustomButton icon={<UploadIcon size={16} />}>Chọn file</CustomButton>
           </Upload>
         </Form.Item>
       </Form>
@@ -245,6 +246,7 @@ const Certificate = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // Hàm tìm kiếm
   const handleSearch = (value) => {
@@ -358,26 +360,26 @@ const Certificate = () => {
       key: "action",
       render: (_, record) => (
         <Space size="middle">
-          <Button type="primary" size="small" onClick={() => handleViewDetail(record)}>
+          <CustomButton type="primary" size="small" onClick={() => handleViewDetail(record)}>
             Xem chi tiết
-          </Button>
+          </CustomButton>
           
           {record.status === "Chờ cấp" ? (
-            <Button 
+            <CustomButton 
               type="default" 
               size="small" 
               onClick={() => handleChangeStatus(record.id, "Đã cấp")}
             >
               Cấp
-            </Button>
+            </CustomButton>
           ) : (
-            <Button 
+            <CustomButton 
               type="text" 
               size="small" 
               icon={<Download size={16} />}
             >
               Tải
-            </Button>
+            </CustomButton>
           )}
           
           <Popconfirm
@@ -386,7 +388,7 @@ const Certificate = () => {
             okText="Xóa"
             cancelText="Hủy"
           >
-            <Button type="text" danger icon={<Trash2 size={16} />} />
+            <CustomButton type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),
@@ -430,16 +432,18 @@ const Certificate = () => {
                 <Option value="pending">Chờ cấp</Option>
               </Select>
               
-              <Button 
+              <CustomButton 
                 type="primary" 
                 className="bg-[#42855B]" 
                 onClick={handleOpenCreateModal}
                 icon={<Award size={16} />}
               >
                 Cấp chứng chỉ mới
-              </Button>
+              </CustomButton>
             </div>
           </div>
+
+          {error && <Error message={error} />}
 
           <Table
             columns={columns}

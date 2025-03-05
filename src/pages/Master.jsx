@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { 
   Space, 
   Table, 
-  Button, 
   Typography, 
   Tag, 
   Popconfirm, 
@@ -23,6 +22,8 @@ import {
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import { User, Trash2, Award, Calendar, Clock, UploadCloud, Star } from "lucide-react";
 import CustomTable from "../components/Common/CustomTable";
 
@@ -185,6 +186,7 @@ const Master = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [error, setError] = useState(null);
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -440,22 +442,22 @@ const Master = () => {
       width: "15%",
       render: (_, record) => (
         <Space size="middle">
-          <Button 
+          <CustomButton 
             type="primary" 
             size="small"
             onClick={() => handleOpenEditModal(record)}
           >
             Chỉnh sửa
-          </Button>
+          </CustomButton>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa bậc thầy này không?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
             cancelText="Không"
           >
-            <Button type="primary" danger size="small">
+            <CustomButton type="primary" danger size="small">
               Xóa
-            </Button>
+            </CustomButton>
           </Popconfirm>
         </Space>
       ),
@@ -486,7 +488,7 @@ const Master = () => {
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
-            <Button type="primary" onClick={handleOpenCreateModal}>Thêm bậc thầy mới</Button>
+            <CustomButton type="primary" onClick={handleOpenCreateModal}>Thêm bậc thầy mới</CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo tên, email, cấp bậc..."
@@ -494,6 +496,8 @@ const Master = () => {
             className="w-64"
           />
         </div>
+
+        {error && <Error message={error} />}
 
         <CustomTable
           columns={columns}
@@ -532,12 +536,12 @@ const Master = () => {
           />
           
           <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={handleCloseModal}>
+            <CustomButton onClick={handleCloseModal}>
               Hủy bỏ
-            </Button>
-            <Button type="primary" onClick={handleSave} loading={loading}>
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleSave} loading={loading}>
               {selectedMaster ? "Cập nhật" : "Tạo mới"}
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </Modal>

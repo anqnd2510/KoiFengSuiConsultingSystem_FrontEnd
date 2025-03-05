@@ -3,6 +3,8 @@ import { Space, Table, Button, Typography, Tag, Popconfirm, message, Modal, Form
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, Plus, Trash2 } from "lucide-react";
 
@@ -112,7 +114,7 @@ const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }
               onChange={(value) => updateColorField(index, "value", value)}
               style={{ width: "30%" }}
             />
-            <Button
+            <CustomButton
               type="text"
               danger
               icon={<Trash2 size={16} />}
@@ -122,14 +124,14 @@ const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }
           </div>
         ))}
         
-        <Button 
+        <CustomButton 
           type="dashed" 
           onClick={addColorField}
           block
           icon={<Plus size={16} />}
         >
           Thêm màu sắc
-        </Button>
+        </CustomButton>
       </div>
     </Form>
   );
@@ -140,6 +142,7 @@ const KoiFishManagement = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [error, setError] = useState(null);
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -355,22 +358,22 @@ const KoiFishManagement = () => {
       width: "15%",
       render: (_, record) => (
         <Space size="middle">
-          <Button 
+          <CustomButton 
             type="primary" 
             size="small"
             onClick={() => handleOpenEditModal(record)}
           >
             Chỉnh sửa
-          </Button>
+          </CustomButton>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa cá Koi này không?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
             cancelText="Không"
           >
-            <Button type="primary" danger size="small">
+            <CustomButton type="primary" danger size="small">
               Xóa cá Koi
-            </Button>
+            </CustomButton>
           </Popconfirm>
         </Space>
       ),
@@ -399,8 +402,8 @@ const KoiFishManagement = () => {
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
-            <Button type="primary" onClick={handleOpenCreateModal}>Tạo mới loài cá Koi</Button>
-            <Button>Quản lý màu sắc</Button>
+            <CustomButton type="primary" onClick={handleOpenCreateModal}>Tạo mới loài cá Koi</CustomButton>
+            <CustomButton>Quản lý màu sắc</CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo giống cá..."
@@ -408,6 +411,8 @@ const KoiFishManagement = () => {
             className="w-64"
           />
         </div>
+
+        {error && <Error message={error} />}
 
         <Table
           columns={columns}
@@ -450,12 +455,12 @@ const KoiFishManagement = () => {
           />
           
           <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={handleCloseModal}>
+            <CustomButton onClick={handleCloseModal}>
               Hủy bỏ
-            </Button>
-            <Button type="primary" onClick={handleSave} loading={loading}>
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleSave} loading={loading}>
               {selectedKoi ? "Cập nhật" : "Tạo mới"}
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </Modal>

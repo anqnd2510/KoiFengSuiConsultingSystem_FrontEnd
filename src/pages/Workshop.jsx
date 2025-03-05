@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Button, Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider } from "antd";
+import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider } from "antd";
 import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info } from "lucide-react";
 import WorkshopTable from "../components/Workshop/WorkshopTable";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -19,11 +21,11 @@ const WorkshopForm = ({ form, loading }) => {
       disabled={loading}
     >
       <Form.Item
-        label="Tên workshop"
+        label="Tên hội thảo"
         name="name"
-        rules={[{ required: true, message: "Vui lòng nhập tên workshop" }]}
+        rules={[{ required: true, message: "Vui lòng nhập tên hội thảo" }]}
       >
-        <Input placeholder="Nhập tên workshop" />
+        <Input placeholder="Nhập tên hội thảo" />
       </Form.Item>
 
       <Form.Item
@@ -31,7 +33,7 @@ const WorkshopForm = ({ form, loading }) => {
         name="location"
         rules={[{ required: true, message: "Vui lòng nhập địa điểm" }]}
       >
-        <Input placeholder="Nhập địa điểm tổ chức workshop" />
+        <Input placeholder="Nhập địa điểm tổ chức hội thảo" />
       </Form.Item>
 
       <Form.Item
@@ -67,7 +69,7 @@ const WorkshopForm = ({ form, loading }) => {
         name="status"
         rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
       >
-        <Select placeholder="Chọn trạng thái workshop">
+        <Select placeholder="Chọn trạng thái hội thảo">
           <Option value="Sắp diễn ra">Sắp diễn ra</Option>
           <Option value="Đang diễn ra">Đang diễn ra</Option>
           <Option value="Đã kết thúc">Đã kết thúc</Option>
@@ -91,11 +93,11 @@ const WorkshopForm = ({ form, loading }) => {
       </Form.Item>
 
       <Form.Item
-        label="Mô tả workshop"
+        label="Mô tả hội thảo"
         name="description"
       >
         <TextArea 
-          placeholder="Nhập mô tả về workshop"
+          placeholder="Nhập mô tả về hội thảo"
           autoSize={{ minRows: 3, maxRows: 6 }}
         />
       </Form.Item>
@@ -157,7 +159,7 @@ const Workshop = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(""); // Để hiển thị lỗi nếu có
+  const [error, setError] = useState("Đã xảy ra lỗi"); // Để hiển thị lỗi nếu có
 
   const handleSearch = (searchTerm) => {
     // Xử lý tìm kiếm ở đây
@@ -205,7 +207,7 @@ const Workshop = () => {
         setWorkshops([...workshops, newWorkshop]);
         
         // Đóng modal và hiển thị thông báo
-        message.success("Đã tạo mới workshop thành công");
+        message.success("Đã tạo mới hội thảo thành công");
         setLoading(false);
         setIsCreateModalOpen(false);
       }, 1000);
@@ -216,7 +218,7 @@ const Workshop = () => {
 
   const handleRequestWorkshop = () => {
     // Xử lý yêu cầu workshop mới
-    message.info("Đã gửi yêu cầu workshop mới");
+    message.info("Đã gửi yêu cầu hội thảo mới");
     setIsCreateModalOpen(false);
   };
 
@@ -243,29 +245,24 @@ const Workshop = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Quản lý Workshops</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các workshop của bạn</p>
+        <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
+        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo của bạn</p>
       </div>
 
       {/* Main Content */}
       <div id="main-content" className="p-6">
         <div className="mb-6 flex justify-between items-center">
-          <Button 
+          <CustomButton 
             type="primary" 
             icon={<Plus size={16} />}
             onClick={handleOpenCreateModal}
           >
-            Tạo mới workshop
-          </Button>
+            Tạo mới hội thảo
+          </CustomButton>
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            <span className="font-bold">Lỗi: </span> {error}
-          </div>
-        )}
+        {error && <Error message={error} />}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <WorkshopTable 
@@ -287,7 +284,7 @@ const Workshop = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            Tạo mới workshop
+            Tạo mới hội thảo
           </div>
         }
         open={isCreateModalOpen}
@@ -303,15 +300,15 @@ const Workshop = () => {
           />
           
           <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={handleRequestWorkshop}>
-              Yêu cầu workshop
-            </Button>
-            <Button onClick={handleCloseCreateModal}>
+            <CustomButton onClick={handleRequestWorkshop}>
+              Yêu cầu hội thảo
+            </CustomButton>
+            <CustomButton onClick={handleCloseCreateModal}>
               Hủy bỏ
-            </Button>
-            <Button type="primary" onClick={handleSaveWorkshop} loading={loading}>
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleSaveWorkshop} loading={loading}>
               Tạo mới
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </Modal>
@@ -320,7 +317,7 @@ const Workshop = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            Chi tiết workshop
+            Chi tiết hội thảo
           </div>
         }
         open={isViewModalOpen}
@@ -378,15 +375,15 @@ const Workshop = () => {
             {/* Phần mô tả */}
             {selectedWorkshop.description && (
               <div className="mb-4">
-                <h4 className="text-md font-medium mb-2">Mô tả workshop</h4>
+                <h4 className="text-md font-medium mb-2">Mô tả hội thảo</h4>
                 <p className="text-gray-600">{selectedWorkshop.description}</p>
               </div>
             )}
             
             <div className="flex justify-end gap-3 mt-6">
-              <Button type="primary" onClick={handleCloseViewModal}>
+              <CustomButton type="primary" onClick={handleCloseViewModal}>
                 Đóng
-              </Button>
+              </CustomButton>
             </div>
           </div>
         )}

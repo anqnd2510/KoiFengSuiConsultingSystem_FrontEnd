@@ -22,6 +22,8 @@ import {
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
+import Error from "../components/Common/Error";
+import CustomButton from "../components/Common/CustomButton";
 import { User, Trash2, Calendar, Phone, Mail, Home, UploadCloud, FileText, CheckCircle, XCircle, Star, Shield, CreditCard } from "lucide-react";
 import dayjs from 'dayjs';
 import CustomTable from "../components/Common/CustomTable";
@@ -210,6 +212,7 @@ const Customer = () => {
   const [searchText, setSearchText] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
+  const [error, setError] = useState(null);
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -519,22 +522,22 @@ const Customer = () => {
       width: "10%",
       render: (_, record) => (
         <Space size="middle">
-          <Button 
+          <CustomButton 
             type="primary" 
-            size="small"
+            className="bg-blue-500"
             onClick={() => handleOpenEditModal(record)}
           >
             Chỉnh sửa
-          </Button>
+          </CustomButton>
           <Popconfirm
             title="Bạn có chắc chắn muốn xóa khách hàng này không?"
             onConfirm={() => handleDelete(record.id)}
             okText="Có"
             cancelText="Không"
           >
-            <Button type="primary" danger size="small">
+            <CustomButton type="primary" danger>
               Xóa
-            </Button>
+            </CustomButton>
           </Popconfirm>
         </Space>
       ),
@@ -566,9 +569,9 @@ const Customer = () => {
       <div className="p-6">
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
-            <Button type="primary" onClick={handleOpenCreateModal}>
+            <CustomButton type="primary" className="bg-blue-500" onClick={handleOpenCreateModal}>
               Thêm khách hàng mới
-            </Button>
+            </CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo tên, email, số điện thoại..."
@@ -576,6 +579,8 @@ const Customer = () => {
             className="w-64"
           />
         </div>
+
+        {error && <Error message={error} />}
 
         <CustomTable
           columns={columns}
@@ -614,12 +619,12 @@ const Customer = () => {
           />
           
           <div className="flex justify-end gap-3 mt-6">
-            <Button onClick={handleCloseModal}>
+            <CustomButton onClick={handleCloseModal}>
               Hủy bỏ
-            </Button>
-            <Button type="primary" onClick={handleSave} loading={loading}>
+            </CustomButton>
+            <CustomButton type="primary" className="bg-blue-500" onClick={handleSave} loading={loading}>
               {selectedCustomer ? "Cập nhật" : "Tạo mới"}
-            </Button>
+            </CustomButton>
           </div>
         </div>
       </Modal>
