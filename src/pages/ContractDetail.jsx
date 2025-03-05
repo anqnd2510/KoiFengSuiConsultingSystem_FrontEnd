@@ -199,6 +199,191 @@ const ContractDetail = () => {
             </div>
           </div>
         );
+      case "Hồ sơ tư vấn":
+        return (
+          <div className="bg-white rounded-b-xl border border-gray-200 p-8">
+            <div className="space-y-6">
+              {/* Upload Section */}
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 bg-gray-50">
+                <div className="flex flex-col items-center justify-center text-center">
+                  <svg
+                    className="w-12 h-12 text-gray-400 mb-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <p className="text-gray-600 mb-2">Kéo file vào đây</p>
+                  <p className="text-gray-400 text-sm mb-4">hoặc</p>
+                  <button className="px-6 py-2.5 bg-[#B4925A] text-white rounded-full hover:bg-[#A38250] transition-colors cursor-pointer">
+                    Chọn file
+                  </button>
+                </div>
+              </div>
+
+              {/* File List */}
+              <div className="space-y-4">
+                {/* File Item */}
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#B4925A]/10 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-[#B4925A]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">
+                        Hồ sơ tư vấn.pdf
+                      </h4>
+                      <p className="text-sm text-gray-500">2.5 MB • PDF</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button className="text-gray-400 hover:text-[#B4925A] transition-colors">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    </button>
+                    <button className="text-gray-400 hover:text-red-500 transition-colors">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Repeat for more files */}
+                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-[#B4925A]/10 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-6 h-6 text-[#B4925A]"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">
+                        Ảnh tư vấn.jpg
+                      </h4>
+                      <p className="text-sm text-gray-500">1.8 MB • JPG</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button className="text-gray-400 hover:text-[#B4925A] transition-colors">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                    </button>
+                    <button className="text-gray-400 hover:text-red-500 transition-colors">
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case "Ghi chú":
+        return (
+          <div className="bg-white rounded-b-xl border border-gray-200 p-8">
+            <div className="space-y-6">
+              {/* Notes List */}
+              <div className="space-y-4">
+                {/* Note Item */}
+                <div className="bg-gray-100 p-4 rounded-lg">
+                  <p className="text-gray-700">
+                    Khách hàng yêu cầu tư vấn về hướng cửa chính
+                  </p>
+                </div>
+
+                {/* Note Item */}
+                <div className="bg-gray-100 p-4 rounded-lg">
+                  <p className="text-gray-700">
+                    Cần xem xét kỹ về vị trí đặt hồ
+                  </p>
+                </div>
+              </div>
+
+              {/* Add New Note */}
+              <div className="space-y-4">
+                <textarea
+                  placeholder="Thêm ghi chú mới..."
+                  className="w-full p-4 border border-gray-200 rounded-lg min-h-[120px] focus:outline-none focus:ring-2 focus:ring-[#B4925A] focus:border-transparent"
+                />
+                <button className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors">
+                  Thêm ghi chú mới
+                </button>
+              </div>
+            </div>
+          </div>
+        );
       default:
         return (
           <div className="bg-white rounded-b-xl border border-gray-200 p-8">
@@ -239,7 +424,7 @@ const ContractDetail = () => {
                   "Chi tiết hợp đồng",
                   "Tiến độ",
                   "Hồ sơ tư vấn",
-                  "Ghi Chú",
+                  "Ghi chú",
                 ].map((tab) => (
                   <button
                     key={tab}

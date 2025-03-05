@@ -47,7 +47,7 @@ const Header = () => {
       >
         <div className="flex items-center cursor-pointer">
           <Avatar size={32} src="/avatar.png" />
-          <span className="ml-2 text-gray-700">nguyenhotantien</span>
+          <span className="ml-2 text-gray-700">anhDuyAn</span>
         </div>
       </Dropdown>
     </header>

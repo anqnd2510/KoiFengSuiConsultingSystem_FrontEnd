@@ -25,7 +25,7 @@ import Certificate from "./pages/Certificate";
 import Master from "./pages/Master";
 import Customer from "./pages/Customer";
 import ConsultationHistory from "./pages/ConsultationHistory";
-
+import Notifications from "./pages/Notifications";
 function App() {
   return (
     <Router>
@@ -53,7 +53,10 @@ function App() {
           <Route path="/certificate" element={<Certificate />} />
           <Route path="/master-management" element={<Master />} />
           <Route path="/customer-management" element={<Customer />} />
-          <Route path="/consultation-history" element={<ConsultationHistory />} />
+          <Route
+            path="/consultation-history"
+            element={<ConsultationHistory />}
+          />
         </Route>
         <Route path="/consulting-offline" element={<ConsultingOffline />} />
         <Route path="/blog-management" element={<BlogManagement />} />
@@ -61,6 +64,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/contract" element={<Contract />} />
         <Route path="/contract/:id" element={<ContractDetail />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Routes>
     </Router>
   );
