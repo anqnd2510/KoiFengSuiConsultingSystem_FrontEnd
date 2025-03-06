@@ -52,9 +52,7 @@ const WorkshopStaff = () => {
   };
 
   const handleRowClick = (workshop) => {
-    if (workshop.status === "Checked in") {
-      navigate(`/audience?workshopId=${workshop.id}`);
-    }
+    navigate(`/audience?workshopId=${workshop.id}`);
   };
 
   const handlePageChange = (page) => {
@@ -139,13 +137,9 @@ const WorkshopStaff = () => {
           dataSource={workshops}
           loading={false}
           onRow={(record) => ({
-            onClick: () => {
-              if (record.status === "Checked in") {
-                handleRowClick(record);
-              }
-            },
+            onClick: () => handleRowClick(record),
             style: {
-              cursor: record.status === "Checked in" ? "pointer" : "default",
+              cursor: "pointer",
             },
           })}
         />

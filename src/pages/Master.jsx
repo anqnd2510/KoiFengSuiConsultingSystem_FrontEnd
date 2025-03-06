@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import dayjs from 'dayjs';
 import { 
   Space, 
   Table, 
@@ -39,7 +40,7 @@ const MasterForm = ({ form, initialData, loading }) => {
       form={form}
       layout="vertical"
       disabled={loading}
-      initialValues={initialData}
+      initialValues={initialData || {}}
     >
       <Row gutter={16}>
         <Col span={24} md={12}>
@@ -193,6 +194,10 @@ const Master = () => {
   const [selectedMaster, setSelectedMaster] = useState(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  
+  // States cho modal xem chi tiết
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [viewMaster, setViewMaster] = useState(null);
 
   // Mock data cho danh sách bậc thầy
   const initialData = [
@@ -283,63 +288,128 @@ const Master = () => {
 
   // Hàm mở modal để chỉnh sửa
   const handleOpenEditModal = (master) => {
-    setSelectedMaster(master);
-    form.setFieldsValue({
-      fullName: master.fullName,
-      email: master.email,
-      phone: master.phone,
-      level: master.level,
-      experience: master.experience,
-      rating: master.rating,
-      expertise: master.expertise,
-      workingHours: master.workingHours,
-      workingDays: master.workingDays,
-      bio: master.bio,
-    });
-    setIsModalOpen(true);
+    try {
+      // Đảm bảo reset form trước khi thiết lập giá trị mới
+      form.resetFields();
+      
+      // Lưu thông tin master được chọn
+      setSelectedMaster({...master});
+      
+      // Thiết lập giá trị cho form
+      const formValues = {
+        fullName: master.fullName,
+        email: master.email,
+        phone: master.phone,
+        level: master.level,
+        experience: master.experience,
+        rating: master.rating,
+        expertise: master.expertise,
+        workingDays: master.workingDays,
+        bio: master.bio,
+      };
+      
+      // Xử lý workingHours nếu có
+      if (master.workingHours && Array.isArray(master.workingHours) && master.workingHours.length === 2) {
+        // Nếu workingHours là mảng chuỗi, chuyển đổi sang định dạng phù hợp cho TimePicker
+        formValues.workingHours = [
+          master.workingHours[0] ? dayjs(master.workingHours[0], 'HH:mm') : null,
+          master.workingHours[1] ? dayjs(master.workingHours[1], 'HH:mm') : null,
+        ];
+      }
+      
+      // Thiết lập giá trị cho form
+      form.setFieldsValue(formValues);
+      
+      // Mở modal sau khi đã thiết lập giá trị
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi mở modal chỉnh sửa:", error);
+      message.error("Có lỗi xảy ra khi mở form chỉnh sửa. Vui lòng thử lại.");
+    }
   };
 
   // Đóng modal
   const handleCloseModal = () => {
+    // Đóng modal trước
     setIsModalOpen(false);
-    setSelectedMaster(null);
-    form.resetFields();
+    
+    // Sau đó xóa dữ liệu sau khi animation đóng hoàn tất
+    setTimeout(() => {
+      setSelectedMaster(null);
+      form.resetFields();
+    }, 300);
   };
 
   // Hàm lưu dữ liệu
   const handleSave = () => {
     form.validateFields().then((values) => {
-      setLoading(true);
-      
-      setTimeout(() => {
-        if (selectedMaster) {
-          // Cập nhật
-          const newData = data.map(item => {
-            if (item.id === selectedMaster.id) {
-              return {
-                ...item,
-                ...values
-              };
-            }
-            return item;
-          });
-          setData(newData);
-          message.success("Đã cập nhật thông tin bậc thầy thành công");
-        } else {
-          // Tạo mới
-          const newId = Math.max(...data.map(item => item.id)) + 1;
-          const newMaster = {
-            id: newId,
-            ...values
-          };
-          setData([...data, newMaster]);
-          message.success("Đã tạo mới bậc thầy thành công");
+      try {
+        setLoading(true);
+        
+        // Xử lý dữ liệu trước khi lưu
+        const processedValues = {...values};
+        
+        // Chuyển đổi workingHours từ dayjs object sang string
+        if (processedValues.workingHours && Array.isArray(processedValues.workingHours) && processedValues.workingHours.length === 2) {
+          processedValues.workingHours = [
+            processedValues.workingHours[0] ? processedValues.workingHours[0].format('HH:mm') : '',
+            processedValues.workingHours[1] ? processedValues.workingHours[1].format('HH:mm') : ''
+          ];
         }
         
+        setTimeout(() => {
+          if (selectedMaster) {
+            // Cập nhật
+            const newData = data.map(item => {
+              if (item.id === selectedMaster.id) {
+                return {
+                  ...item,
+                  ...processedValues
+                };
+              }
+              return item;
+            });
+            setData(newData);
+            message.success("Đã cập nhật thông tin bậc thầy thành công");
+          } else {
+            // Tạo mới
+            const newId = Math.max(...data.map(item => item.id), 0) + 1;
+            const newMaster = {
+              id: newId,
+              ...processedValues
+            };
+            setData([...data, newMaster]);
+            message.success("Đã tạo mới bậc thầy thành công");
+          }
+          
+          setLoading(false);
+          handleCloseModal();
+        }, 1000);
+      } catch (error) {
+        console.error("Lỗi khi lưu dữ liệu:", error);
+        message.error("Có lỗi xảy ra khi lưu dữ liệu. Vui lòng thử lại.");
         setLoading(false);
-        handleCloseModal();
-      }, 1000);
+      }
+    }).catch(error => {
+      console.error("Lỗi khi xác thực form:", error);
     });
+  };
+
+  // Hàm mở modal để xem chi tiết
+  const handleOpenViewModal = (master) => {
+    setViewMaster(master);
+    setIsViewModalOpen(true);
+  };
+
+  // Đóng modal xem chi tiết
+  const handleCloseViewModal = () => {
+    // Đóng modal trước
+    setIsViewModalOpen(false);
+    
+    // Sau đó xóa dữ liệu sau khi animation đóng hoàn tất
+    setTimeout(() => {
+      setViewMaster(null);
+    }, 300);
   };
 
   // Cấu hình các cột cho bảng
@@ -420,7 +490,8 @@ const Master = () => {
         <div>
           <div>
             <Clock className="inline-block mr-1 w-4 h-4" /> 
-            {record.workingHours[0]} - {record.workingHours[1]}
+            {record.workingHours && Array.isArray(record.workingHours) && record.workingHours.length === 2 ? 
+              `${record.workingHours[0]} - ${record.workingHours[1]}` : 'Chưa có thông tin'}
           </div>
           <div className="mt-1">
             <Calendar className="inline-block mr-1 w-4 h-4" /> 
@@ -443,9 +514,18 @@ const Master = () => {
       render: (_, record) => (
         <Space size="middle">
           <CustomButton 
-            type="primary" 
+            type="default" 
+            size="small"
+            onClick={() => handleOpenViewModal(record)}
+            className="!bg-blue-500 hover:!bg-blue-600 !text-white"
+          >
+            Xem chi tiết
+          </CustomButton>
+          <CustomButton 
+            type="default" 
             size="small"
             onClick={() => handleOpenEditModal(record)}
+            className="!bg-transparent hover:!bg-blue-50 !text-blue-500 !border !border-blue-500"
           >
             Chỉnh sửa
           </CustomButton>
@@ -525,6 +605,10 @@ const Master = () => {
         footer={null}
         width={700}
         className="master-modal"
+        maskClosable={true}
+        destroyOnClose={true}
+        closable={true}
+        mask={true}
       >
         <div className="p-4">
           <MasterForm
@@ -537,27 +621,163 @@ const Master = () => {
             <CustomButton onClick={handleCloseModal}>
               Hủy bỏ
             </CustomButton>
-            <CustomButton type="primary" onClick={handleSave} loading={loading}>
+            <CustomButton type="primary" className="bg-blue-500" onClick={handleSave} loading={loading}>
               {selectedMaster ? "Cập nhật" : "Tạo mới"}
             </CustomButton>
           </div>
         </div>
       </Modal>
 
+      {/* Modal xem chi tiết */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Chi tiết thông tin bậc thầy
+          </div>
+        }
+        open={isViewModalOpen}
+        onCancel={handleCloseViewModal}
+        footer={null}
+        width={700}
+        className="master-view-modal"
+        maskClosable={true}
+        destroyOnClose={true}
+        closable={true}
+        mask={true}
+      >
+        {viewMaster && (
+          <div className="p-4">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-20 h-20 overflow-hidden rounded-full">
+                <img
+                  src={viewMaster.avatar}
+                  alt={viewMaster.fullName}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = "https://via.placeholder.com/80?text=Master";
+                  }}
+                />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">{viewMaster.fullName}</h2>
+                <Tag color={
+                  viewMaster.level === "Cao cấp" ? "gold" : 
+                  viewMaster.level === "Trung cấp" ? "green" : "blue"
+                } className="mt-1">
+                  {viewMaster.level}
+                </Tag>
+              </div>
+            </div>
+            
+            <Divider />
+            
+            <Row gutter={[16, 16]}>
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Email</p>
+                  <p className="font-medium">{viewMaster.email}</p>
+                </div>
+              </Col>
+              
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Số điện thoại</p>
+                  <p className="font-medium">{viewMaster.phone}</p>
+                </div>
+              </Col>
+              
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Kinh nghiệm</p>
+                  <p className="font-medium">{viewMaster.experience} năm</p>
+                </div>
+              </Col>
+              
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Đánh giá</p>
+                  <Rate disabled value={viewMaster.rating} />
+                </div>
+              </Col>
+              
+              <Col span={24}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Chuyên môn</p>
+                  <div>
+                    {viewMaster.expertise.map(tag => (
+                      <Tag color="blue" key={tag} className="mb-1 mr-1">
+                        {tag}
+                      </Tag>
+                    ))}
+                  </div>
+                </div>
+              </Col>
+              
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Thời gian làm việc</p>
+                  <p className="font-medium">
+                    {viewMaster.workingHours && Array.isArray(viewMaster.workingHours) && viewMaster.workingHours.length === 2 ? 
+                      `${viewMaster.workingHours[0]} - ${viewMaster.workingHours[1]}` : 'Chưa có thông tin'}
+                  </p>
+                </div>
+              </Col>
+              
+              <Col span={24} md={12}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Ngày làm việc</p>
+                  <p className="font-medium">{viewMaster.workingDays.join(", ")}</p>
+                </div>
+              </Col>
+              
+              <Col span={24}>
+                <div className="mb-4">
+                  <p className="text-gray-500 mb-1">Giới thiệu</p>
+                  <p>{viewMaster.bio}</p>
+                </div>
+              </Col>
+            </Row>
+            
+            <div className="flex justify-end mt-6">
+              <CustomButton onClick={handleCloseViewModal}>
+                Đóng
+              </CustomButton>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       <style jsx global>{`
-        .master-modal .ant-modal-content {
+        .master-modal .ant-modal-content,
+        .master-view-modal .ant-modal-content {
           border-radius: 12px;
           overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-        .master-modal .ant-modal-header {
+        .master-modal .ant-modal-header,
+        .master-view-modal .ant-modal-header {
           border-bottom: 1px solid #f0f0f0;
           padding: 16px 24px;
         }
-        .master-modal .ant-modal-body {
+        .master-modal .ant-modal-body,
+        .master-view-modal .ant-modal-body {
           padding: 12px;
         }
-        .master-modal .ant-modal-footer {
+        .master-modal .ant-modal-footer,
+        .master-view-modal .ant-modal-footer {
           border-top: 1px solid #f0f0f0;
+        }
+        .master-modal .ant-modal-close,
+        .master-view-modal .ant-modal-close {
+          color: rgba(0, 0, 0, 0.45);
+        }
+        .master-modal .ant-modal-close:hover,
+        .master-view-modal .ant-modal-close:hover {
+          color: rgba(0, 0, 0, 0.75);
+        }
+        .master-modal .ant-modal-mask,
+        .master-view-modal .ant-modal-mask {
+          background-color: rgba(0, 0, 0, 0.45);
         }
       `}</style>
     </div>
