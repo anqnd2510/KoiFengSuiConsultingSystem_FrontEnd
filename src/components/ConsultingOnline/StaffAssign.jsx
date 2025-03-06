@@ -47,7 +47,7 @@ const StaffAssign = ({
       </Select>
 
       {editingMode && (
-        <div className="absolute left-[170px] flex gap-1.5 items-center">
+        <div className="flex gap-[5px] items-center ml-[5px]">
           <button
             onClick={handleSave}
             className="p-1.5 rounded bg-green-500 hover:bg-green-600 transition-colors"
