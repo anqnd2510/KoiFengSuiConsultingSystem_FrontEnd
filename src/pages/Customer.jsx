@@ -567,12 +567,7 @@ const Customer = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="flex flex-wrap justify-between items-center mb-4">
-          <div className="flex gap-2 mb-4">
-            <CustomButton type="primary" className="bg-blue-500" onClick={handleOpenCreateModal}>
-              Thêm khách hàng mới
-            </CustomButton>
-          </div>
+        <div className="flex justify-end mb-4">
           <SearchBar
             placeholder="Tìm kiếm theo tên, email, số điện thoại..."
             onSearch={handleSearch}
