@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, BookmarkPlus } from "lucide-react";
+import { Search, BookmarkPlus, Trash2 } from "lucide-react";
 import Sidebar from "../components/Layout/Sidebar";
 import { useNavigate } from "react-router-dom";
 import CustomTable from "../components/Common/CustomTable";
@@ -83,8 +83,7 @@ const BlogManagement = () => {
           <CustomButton type="default">
             Cập nhật
           </CustomButton>
-          <CustomButton type="primary" danger>
-            Xóa
+          <CustomButton type="text" danger icon={<Trash2 size={16} />}>
           </CustomButton>
         </div>
       ),

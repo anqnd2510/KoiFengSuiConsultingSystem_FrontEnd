@@ -455,9 +455,7 @@ const Master = () => {
             okText="Có"
             cancelText="Không"
           >
-            <CustomButton type="primary" danger size="small">
-              Xóa
-            </CustomButton>
+            <CustomButton type="text" danger size="small" icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),

@@ -7,7 +7,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
-import { UploadCloud, Book, Calendar, DollarSign, Award, FileText } from "lucide-react";
+import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2 } from "lucide-react";
 
 const { TextArea } = Input;
 
@@ -170,13 +170,12 @@ const CourseMaster = () => {
             Cập nhật
           </CustomButton>
           <CustomButton 
-            type="primary" 
+            type="text" 
             danger 
             size="small"
             onClick={() => handleDeleteCourse(record)}
-          >
-            Xóa
-          </CustomButton>
+            icon={<Trash2 size={16} />}
+          />
         </div>
       ),
     },

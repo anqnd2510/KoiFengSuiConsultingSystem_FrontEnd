@@ -10,7 +10,10 @@ import {
   Select, 
   DatePicker, 
   Upload, 
-  Space 
+  Space, 
+  Row, 
+  Col, 
+  Divider 
 } from "antd";
 import { Award, Trash2, Download, Upload as UploadIcon, Search, Filter } from "lucide-react";
 import SearchBar from "../components/Common/SearchBar";
@@ -74,60 +77,93 @@ const initialCertificates = [
 const CertificateDetail = ({ certificate, visible, onClose }) => {
   return (
     <Modal
-      title="Chi tiết chứng chỉ"
+      title={
+        <div className="text-xl font-semibold">
+          Chi tiết chứng chỉ
+        </div>
+      }
       open={visible}
       onCancel={onClose}
-      footer={[
-        <CustomButton key="close" onClick={onClose}>
-          Đóng
-        </CustomButton>,
-        <CustomButton key="download" type="primary" icon={<Download size={16} />}>
-          Tải chứng chỉ
-        </CustomButton>,
-      ]}
+      footer={null}
       width={700}
+      className="certificate-modal"
     >
-      <div className="space-y-4">
-        <div>
-          <p className="text-gray-500">Mã chứng chỉ</p>
-          <p className="font-medium">{certificate?.certificateId}</p>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Học viên</p>
-          <p className="font-medium">{certificate?.studentName}</p>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Khóa học</p>
-          <p className="font-medium">{certificate?.courseName}</p>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Ngày cấp</p>
-          <p className="font-medium">{certificate?.issueDate}</p>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Ngày hết hạn</p>
-          <p className="font-medium">{certificate?.expiryDate}</p>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Trạng thái</p>
-          <Tag color={certificate?.status === "Đã cấp" ? "success" : "warning"}>
-            {certificate?.status}
-          </Tag>
-        </div>
-        
-        <div>
-          <p className="text-gray-500">Xem trước chứng chỉ</p>
-          <div className="mt-2 border border-gray-200 rounded-md p-4 flex justify-center">
-            <img 
-              src="https://images.unsplash.com/photo-1606768666853-403c90a981ad?q=80&w=2071&auto=format&fit=crop" 
-              alt="Certificate Preview" 
-              className="max-h-64 object-contain"
-            />
+      <div className="p-4">
+        <div className="space-y-4">
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Mã chứng chỉ</p>
+                <p className="font-medium">{certificate?.certificateId}</p>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Học viên</p>
+                <p className="font-medium">{certificate?.studentName}</p>
+              </div>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Khóa học</p>
+                <p className="font-medium">{certificate?.courseName}</p>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Trạng thái</p>
+                <Tag color={certificate?.status === "Đã cấp" ? "success" : "warning"}>
+                  {certificate?.status}
+                </Tag>
+              </div>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Ngày cấp</p>
+                <p className="font-medium">{certificate?.issueDate}</p>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Ngày hết hạn</p>
+                <p className="font-medium">{certificate?.expiryDate}</p>
+              </div>
+            </Col>
+          </Row>
+
+          <Divider />
+          
+          <div>
+            <p className="text-gray-500 mb-2">Xem trước chứng chỉ</p>
+            <div className="border border-gray-200 rounded-md p-4 flex justify-center">
+              <img 
+                src="https://images.unsplash.com/photo-1606768666853-403c90a981ad?q=80&w=2071&auto=format&fit=crop" 
+                alt="Certificate Preview" 
+                className="max-h-64 object-contain"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={onClose}>
+              Đóng
+            </CustomButton>
+            <CustomButton 
+              type="primary" 
+              className="bg-blue-500" 
+              icon={<Download size={16} />}
+            >
+              Tải chứng chỉ
+            </CustomButton>
           </div>
         </div>
       </div>
@@ -483,4 +519,21 @@ const Certificate = () => {
   );
 };
 
-export default Certificate; 
+export default Certificate;
+
+<style jsx global>{`
+  .certificate-modal .ant-modal-content {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .certificate-modal .ant-modal-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 16px 24px;
+  }
+  .certificate-modal .ant-modal-body {
+    padding: 12px;
+  }
+  .certificate-modal .ant-modal-footer {
+    border-top: 1px solid #f0f0f0;
+  }
+`}</style> 

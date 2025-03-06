@@ -151,6 +151,11 @@ const KoiFishManagement = () => {
   const [loading, setLoading] = useState(false);
   const [colorFields, setColorFields] = useState([{ name: "", value: "" }]);
 
+  // States cho modal quản lý màu sắc
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+  const [colorForm] = Form.useForm();
+  const [colorLoading, setColorLoading] = useState(false);
+
   // Mock data cho các loại cá Koi
   const initialData = [
     {
@@ -291,6 +296,47 @@ const KoiFishManagement = () => {
     });
   };
 
+  // Hàm mở modal quản lý màu sắc
+  const handleOpenColorModal = () => {
+    setIsColorModalOpen(true);
+    colorForm.resetFields();
+  };
+
+  // Hàm đóng modal quản lý màu sắc
+  const handleCloseColorModal = () => {
+    setIsColorModalOpen(false);
+    colorForm.resetFields();
+  };
+
+  // Hàm xử lý thêm màu mới
+  const handleAddColor = async () => {
+    try {
+      const values = await colorForm.validateFields();
+      setColorLoading(true);
+      
+      const formattedValues = {
+        colorID: values.colorID,
+        elementPoint: Object.entries(values.elementPoints).map(
+          ([elementID, point]) => ({
+            elementID,
+            point: parseFloat(point),
+          })
+        ),
+      };
+
+      // Giả lập API call
+      setTimeout(() => {
+        message.success("Đã thêm màu mới thành công");
+        handleCloseColorModal();
+        setColorLoading(false);
+      }, 1000);
+      
+    } catch (error) {
+      console.error("Lỗi khi thêm màu:", error);
+      message.error("Không thể thêm màu mới");
+    }
+  };
+
   // Cấu hình các cột cho bảng
   const columns = [
     {
@@ -371,9 +417,7 @@ const KoiFishManagement = () => {
             okText="Có"
             cancelText="Không"
           >
-            <CustomButton type="primary" danger size="small">
-              Xóa cá Koi
-            </CustomButton>
+            <CustomButton type="text" danger size="small" icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),
@@ -403,7 +447,7 @@ const KoiFishManagement = () => {
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
             <CustomButton type="primary" onClick={handleOpenCreateModal}>Tạo mới loài cá Koi</CustomButton>
-            <CustomButton>Quản lý màu sắc</CustomButton>
+            <CustomButton onClick={handleOpenColorModal}>Quản lý màu sắc</CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo giống cá..."
@@ -465,6 +509,59 @@ const KoiFishManagement = () => {
         </div>
       </Modal>
 
+      {/* Modal for Color Management */}
+      <Modal
+        title="Quản lý màu sắc"
+        open={isColorModalOpen}
+        onCancel={handleCloseColorModal}
+        footer={null}
+        width={700}
+        className="koi-fish-modal"
+      >
+        <div className="p-4">
+          <Form
+            form={colorForm}
+            layout="vertical"
+            disabled={colorLoading}
+          >
+            <Form.Item
+              name="colorID"
+              label="Tên màu"
+              rules={[{ required: true, message: "Vui lòng nhập tên màu" }]}
+            >
+              <Input placeholder="Nhập tên màu (ví dụ: Đỏ, Vàng, ...)" />
+            </Form.Item>
+
+            <Divider orientation="left">Điểm số cho từng mệnh</Divider>
+
+            {["Hỏa", "Thủy", "Mộc", "Kim", "Thổ"].map((element) => (
+              <Form.Item
+                key={element}
+                name={["elementPoints", element]}
+                label={element}
+                rules={[{ required: true, message: "Vui lòng chọn điểm" }]}
+              >
+                <Select placeholder="Chọn điểm">
+                  <Option value="0.25">0.25</Option>
+                  <Option value="0.5">0.5</Option>
+                  <Option value="0.75">0.75</Option>
+                  <Option value="1">1</Option>
+                </Select>
+              </Form.Item>
+            ))}
+          </Form>
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={handleCloseColorModal}>
+              Hủy bỏ
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleAddColor} loading={colorLoading}>
+              Thêm màu mới
+            </CustomButton>
+          </div>
+        </div>
+      </Modal>
+
       <style jsx global>{`
         .koi-fish-modal .ant-modal-content {
           border-radius: 12px;
@@ -485,4 +582,4 @@ const KoiFishManagement = () => {
   );
 };
 
-export default KoiFishManagement; 
+export default KoiFishManagement;

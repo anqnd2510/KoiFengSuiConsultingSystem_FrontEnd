@@ -3,8 +3,9 @@ import { Tag } from 'antd';
 import CustomTable from '../Common/CustomTable';
 import { Link } from "react-router-dom";
 import StatusBadge from "../Common/StatusBadge";
+import StaffAssign from "../ConsultingOnline/StaffAssign";
 
-const BookingTable = ({ bookings, loading }) => {
+const BookingTable = ({ bookings, loading, onMasterChange }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'pending':
@@ -19,6 +20,8 @@ const BookingTable = ({ bookings, loading }) => {
         return 'default';
     }
   };
+
+  const masterList = ["Nguyễn Trọng Mạnh", "Trần Văn Bình", "Phạm Thanh Hà", "Đỗ Minh Tuấn"];
 
   const columns = [
     {
@@ -58,6 +61,15 @@ const BookingTable = ({ bookings, loading }) => {
       dataIndex: 'master',
       key: 'master',
       width: '15%',
+      render: (master, record) => (
+        <StaffAssign
+          staffId={master}
+          recordId={record.id}
+          staffList={masterList}
+          onSave={(staffValue, recordId) => onMasterChange(staffValue, recordId)}
+          defaultValue={master || "Chưa phân công"}
+        />
+      ),
     },
     {
       title: 'Trạng thái',
