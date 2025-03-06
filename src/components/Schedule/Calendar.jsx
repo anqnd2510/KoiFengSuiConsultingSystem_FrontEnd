@@ -3,10 +3,16 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DAYS_OF_WEEK, formatMonth } from "../../utils/dateUtils";
 import { useCalendar } from "../../hooks/useCalendar";
 import BookingDetails from "./BookingDetails";
+import { useNavigate } from "react-router-dom";
 
 const Calendar = ({ bookings = [] }) => {
   const { currentDate, days, goToPreviousMonth, goToNextMonth } = useCalendar();
   const [activeBookingId, setActiveBookingId] = useState(null);
+  const navigate = useNavigate();
+
+  const handleCustomerClick = (bookingId) => {
+    navigate(`/booking-schedule/${bookingId}`);
+  };
 
   return (
     <div className="bg-white rounded-lg p-6 shadow-sm">
@@ -69,7 +75,10 @@ const Calendar = ({ bookings = [] }) => {
                       onMouseEnter={() => setActiveBookingId(booking.id)}
                       onMouseLeave={() => setActiveBookingId(null)}
                     >
-                      <div className="text-xs text-blue-600 cursor-pointer p-1 rounded group-hover:bg-blue-50">
+                      <div 
+                        className="text-xs text-blue-600 cursor-pointer p-1 rounded group-hover:bg-blue-50"
+                        onClick={() => handleCustomerClick(booking.id)}
+                      >
                         {booking.time} {booking.customerName}
                       </div>
                       {activeBookingId === booking.id && (

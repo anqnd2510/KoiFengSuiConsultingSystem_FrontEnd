@@ -7,6 +7,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import { Tag } from "antd";
+import StaffAssign from "../components/ConsultingOnline/StaffAssign";
 
 const { Option } = Select;
 
@@ -38,26 +39,22 @@ const staffList = ["Nguyễn Văn B", "Trần Thị C", "Lê Văn D", "Phạm Th
 
 const ConsultingOnline = () => {
   const [activeTab, setActiveTab] = useState("Tất cả");
-  const [editingStaff, setEditingStaff] = useState(null);
-  const [tempStaff, setTempStaff] = useState(null);
+  const [consultingData, setConsultingData] = useState(mockConsultingData);
   const tabs = ["Tất cả", "Đang diễn ra", "Đã hủy", "Hoàn thành", "Chờ xử lý"];
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [error, setError] = useState(null);
 
-  const handleStaffChange = (value, recordId) => {
-    setTempStaff(value);
-    setEditingStaff(recordId);
-  };
-
-  const handleSaveStaff = () => {
-    console.log(`Lưu thay đổi nhân viên: ${tempStaff} cho bản ghi ${editingStaff}`);
-    setEditingStaff(null);
-    setTempStaff(null);
-  };
-
-  const handleCancelStaff = () => {
-    setEditingStaff(null);
-    setTempStaff(null);
+  const handleStaffChange = (staffValue, recordId) => {
+    // Cập nhật dữ liệu khi nhân viên được phân công
+    const updatedData = consultingData.map(item => {
+      if (item.id === recordId) {
+        return { ...item, staff: staffValue };
+      }
+      return item;
+    });
+    
+    setConsultingData(updatedData);
+    console.log(`Đã phân công nhân viên ${staffValue} cho bản ghi ${recordId}`);
   };
 
   const getStatusColor = (status) => {
@@ -113,62 +110,13 @@ const ConsultingOnline = () => {
       key: "staff",
       width: "20%",
       render: (staff, record) => (
-        <div className="flex items-center">
-          <Select
-            value={editingStaff === record.id ? tempStaff : staff}
-            placeholder="Phân công nhân viên"
-            style={{ width: 160 }}
-            className={staff === "Chưa phân công" ? "text-red-500" : ""}
-            onChange={(value) => handleStaffChange(value, record.id)}
-          >
-            {staffList.map((staff) => (
-              <Option key={staff} value={staff}>
-                {staff}
-              </Option>
-            ))}
-          </Select>
-
-          {editingStaff === record.id && (
-            <div className="absolute left-[170px] flex gap-1.5 items-center">
-              <button
-                onClick={handleSaveStaff}
-                className="p-1.5 rounded bg-green-500 hover:bg-green-600 transition-colors"
-              >
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={handleCancelStaff}
-                className="p-1.5 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
-              >
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          )}
-        </div>
+        <StaffAssign
+          staffId={staff}
+          recordId={record.id}
+          staffList={staffList}
+          onSave={handleStaffChange}
+          defaultValue={staff}
+        />
       ),
     },
     {
@@ -234,7 +182,7 @@ const ConsultingOnline = () => {
 
           <CustomTable
             columns={columns}
-            dataSource={mockConsultingData}
+            dataSource={consultingData}
             loading={false}
           />
 

@@ -535,9 +535,7 @@ const Customer = () => {
             okText="Có"
             cancelText="Không"
           >
-            <CustomButton type="primary" danger>
-              Xóa
-            </CustomButton>
+            <CustomButton type="text" danger icon={<Trash2 size={16} />} />
           </Popconfirm>
         </Space>
       ),
@@ -605,6 +603,7 @@ const Customer = () => {
         footer={null}
         width={700}
         className="customer-modal"
+        maskClosable={true}
       >
         <div className="p-4">
           <CustomerForm

@@ -29,147 +29,137 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
-// Component form cho chi tiết lịch sử tư vấn
-const ConsultationDetailForm = ({ form, initialData, loading }) => {
+// Component modal xem chi tiết tư vấn
+const ConsultationDetail = ({ consultation, visible, onClose }) => {
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      disabled={loading}
-      initialValues={initialData}
+    <Modal
+      title={
+        <div className="text-xl font-semibold">
+          Chi tiết buổi tư vấn
+        </div>
+      }
+      open={visible}
+      onCancel={onClose}
+      footer={null}
+      width={700}
+      className="consultation-modal"
     >
-      <Row gutter={16}>
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Khách hàng"
-            name="customerName"
-            rules={[{ required: true, message: "Vui lòng nhập tên khách hàng" }]}
-          >
-            <Input placeholder="Nhập tên khách hàng" disabled />
-          </Form.Item>
-        </Col>
+      <div className="p-4">
+        <div className="space-y-4">
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Khách hàng</p>
+                <div className="flex items-center gap-2">
+                  <User className="w-6 h-6 text-gray-400" />
+                  <div>
+                    <p className="font-medium">{consultation?.customerName}</p>
+                    <p className="text-sm text-gray-500">{consultation?.customerEmail}</p>
+                  </div>
+                </div>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Bậc thầy tư vấn</p>
+                <p className="font-medium">{consultation?.masterName}</p>
+              </div>
+            </Col>
+          </Row>
 
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Bậc thầy tư vấn"
-            name="masterName"
-            rules={[{ required: true, message: "Vui lòng nhập tên bậc thầy" }]}
-          >
-            <Input placeholder="Nhập tên bậc thầy" disabled />
-          </Form.Item>
-        </Col>
-      </Row>
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Ngày tư vấn</p>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.consultationDate}</p>
+                </div>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Thời lượng</p>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.duration} phút</p>
+                </div>
+              </div>
+            </Col>
+          </Row>
 
-      <Row gutter={16}>
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Ngày tư vấn"
-            name="consultationDate"
-            rules={[{ required: true, message: "Vui lòng chọn ngày tư vấn" }]}
-          >
-            <DatePicker style={{ width: '100%' }} disabled />
-          </Form.Item>
-        </Col>
+          <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Loại tư vấn</p>
+                <Tag color={
+                  consultation?.consultationType === "Online" ? "green" :
+                  consultation?.consultationType === "Offline" ? "gold" : "purple"
+                }>
+                  {consultation?.consultationType}
+                </Tag>
+              </div>
+            </Col>
+            
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Trạng thái</p>
+                <Tag color={
+                  consultation?.status === "Completed" ? "success" :
+                  consultation?.status === "Cancelled" ? "error" : "warning"
+                }>
+                  {consultation?.status === "Completed" ? "Hoàn thành" :
+                   consultation?.status === "Cancelled" ? "Đã hủy" : "Hoãn lại"}
+                </Tag>
+              </div>
+            </Col>
+          </Row>
 
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Loại tư vấn"
-            name="consultationType"
-            rules={[{ required: true, message: "Vui lòng chọn loại tư vấn" }]}
-          >
-            <Select placeholder="Chọn loại tư vấn" disabled>
-              <Option value="Online">Tư vấn online</Option>
-              <Option value="Offline">Tư vấn trực tiếp</Option>
-              <Option value="Phone">Tư vấn qua điện thoại</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
+          <div>
+            <p className="text-gray-500 mb-1">Chủ đề tư vấn</p>
+            <div className="flex flex-wrap gap-2">
+              {consultation?.consultationTopics.map(topic => (
+                <Tag color="blue" key={topic}>
+                  {topic}
+                </Tag>
+              ))}
+            </div>
+          </div>
 
-      <Row gutter={16}>
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Thời lượng (phút)"
-            name="duration"
-            rules={[{ required: true, message: "Vui lòng nhập thời lượng" }]}
-          >
-            <Input placeholder="Nhập thời lượng" disabled />
-          </Form.Item>
-        </Col>
+          <div>
+            <p className="text-gray-500 mb-1">Đánh giá</p>
+            <Rate disabled defaultValue={consultation?.rating} />
+          </div>
 
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Trạng thái"
-            name="status"
-            rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
-          >
-            <Select placeholder="Chọn trạng thái" disabled>
-              <Option value="Completed">Đã hoàn thành</Option>
-              <Option value="Cancelled">Đã hủy</Option>
-              <Option value="Postponed">Đã hoãn lại</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
+          <Divider />
+          
+          <div>
+            <p className="text-gray-500 mb-1">Ghi chú tư vấn</p>
+            <p className="font-medium mt-1">{consultation?.consultationNotes}</p>
+          </div>
+          
+          <div>
+            <p className="text-gray-500 mb-1">Kết quả/Giải pháp đề xuất</p>
+            <p className="font-medium mt-1">{consultation?.recommendations}</p>
+          </div>
 
-      <Row gutter={16}>
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Dự án liên quan"
-            name="relatedProject"
-          >
-            <Input placeholder="Nhập dự án liên quan" disabled />
-          </Form.Item>
-        </Col>
-
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Đánh giá từ khách hàng"
-            name="rating"
-          >
-            <Rate disabled />
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Form.Item
-        label="Chủ đề tư vấn"
-        name="consultationTopics"
-        rules={[{ required: true, message: "Vui lòng chọn chủ đề tư vấn" }]}
-      >
-        <Select mode="multiple" placeholder="Chọn chủ đề tư vấn" disabled>
-          <Option value="Phong thủy hồ Koi">Phong thủy hồ Koi</Option>
-          <Option value="Thiết kế hồ">Thiết kế hồ</Option>
-          <Option value="Lựa chọn cá Koi">Lựa chọn cá Koi</Option>
-          <Option value="Phong thủy nhà ở">Phong thủy nhà ở</Option>
-          <Option value="Phong thủy văn phòng">Phong thủy văn phòng</Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
-        label="Ghi chú tư vấn"
-        name="consultationNotes"
-        rules={[{ required: true, message: "Vui lòng nhập ghi chú tư vấn" }]}
-      >
-        <TextArea
-          placeholder="Nhập ghi chú về buổi tư vấn"
-          autoSize={{ minRows: 3, maxRows: 6 }}
-          disabled
-        />
-      </Form.Item>
-
-      <Form.Item
-        label="Kết quả/Giải pháp đề xuất"
-        name="recommendations"
-        rules={[{ required: true, message: "Vui lòng nhập kết quả tư vấn" }]}
-      >
-        <TextArea
-          placeholder="Nhập kết quả và giải pháp đề xuất"
-          autoSize={{ minRows: 3, maxRows: 6 }}
-          disabled
-        />
-      </Form.Item>
-    </Form>
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={onClose}>
+              Đóng
+            </CustomButton>
+            <CustomButton 
+              type="primary" 
+              className="bg-blue-500" 
+              icon={<FileText size={16} />}
+            >
+              Xuất báo cáo
+            </CustomButton>
+          </div>
+        </div>
+      </div>
+    </Modal>
   );
 };
 
@@ -489,31 +479,14 @@ const ConsultationHistory = () => {
         </div>
       </div>
 
-      {/* Modal for Viewing Details */}
-      <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Chi tiết buổi tư vấn
-          </div>
-        }
-        open={isModalOpen}
-        onCancel={handleCloseModal}
-        footer={[
-          <CustomButton key="close" onClick={handleCloseModal}>
-            Đóng
-          </CustomButton>
-        ]}
-        width={700}
-        className="consultation-modal"
-      >
-        <div className="p-4">
-          <ConsultationDetailForm
-            form={form}
-            initialData={selectedConsultation}
-            loading={loading}
-          />
-        </div>
-      </Modal>
+      {/* Modal xem chi tiết tư vấn */}
+      {selectedConsultation && (
+        <ConsultationDetail
+          consultation={selectedConsultation}
+          visible={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
 
       <style jsx global>{`
         .consultation-modal .ant-modal-content {
