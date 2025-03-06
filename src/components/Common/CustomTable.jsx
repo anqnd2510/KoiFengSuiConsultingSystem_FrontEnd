@@ -1,7 +1,7 @@
 import React from "react";
 import { Table } from "antd";
 
-const CustomTable = ({ columns, dataSource, loading = false }) => {
+const CustomTable = ({ columns, dataSource, loading = false, onRow }) => {
   return (
     <Table
       columns={columns}
@@ -11,6 +11,7 @@ const CustomTable = ({ columns, dataSource, loading = false }) => {
       bordered
       loading={loading}
       className="custom-table"
+      onRow={onRow}
     />
   );
 };

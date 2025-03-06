@@ -351,9 +351,18 @@ const Customer = () => {
 
   // Đóng modal
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedCustomer(null);
-    form.resetFields();
+    try {
+      // Đóng modal trước
+      setIsModalOpen(false);
+      
+      // Sau đó xóa dữ liệu sau khi animation đóng hoàn tất
+      setTimeout(() => {
+        setSelectedCustomer(null);
+        form.resetFields();
+      }, 300);
+    } catch (error) {
+      console.error("Lỗi khi đóng modal:", error);
+    }
   };
 
   // Hàm lưu dữ liệu
@@ -604,6 +613,10 @@ const Customer = () => {
         width={700}
         className="customer-modal"
         maskClosable={true}
+        destroyOnClose={true}
+        closable={true}
+        mask={true}
+        keyboard={true}
       >
         <div className="p-4">
           <CustomerForm
@@ -627,6 +640,7 @@ const Customer = () => {
         .customer-modal .ant-modal-content {
           border-radius: 12px;
           overflow: hidden;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         .customer-modal .ant-modal-header {
           border-bottom: 1px solid #f0f0f0;
@@ -637,6 +651,15 @@ const Customer = () => {
         }
         .customer-modal .ant-modal-footer {
           border-top: 1px solid #f0f0f0;
+        }
+        .customer-modal .ant-modal-close {
+          color: rgba(0, 0, 0, 0.45);
+        }
+        .customer-modal .ant-modal-close:hover {
+          color: rgba(0, 0, 0, 0.75);
+        }
+        .customer-modal .ant-modal-mask {
+          background-color: rgba(0, 0, 0, 0.45);
         }
       `}</style>
     </div>
