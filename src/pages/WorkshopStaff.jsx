@@ -6,6 +6,7 @@ import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import FilterBar from "../components/Common/FilterBar";
 
 const WorkshopStaff = () => {
   const navigate = useNavigate();
@@ -46,9 +47,18 @@ const WorkshopStaff = () => {
 
   const [error, setError] = useState("Đã xảy ra lỗi");
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const handleSearch = (searchTerm) => {
+    setSearchTerm(searchTerm);
     console.log('Searching for:', searchTerm);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+    console.log("Lọc theo trạng thái:", value);
   };
 
   const handleRowClick = (workshop) => {
@@ -75,80 +85,99 @@ const WorkshopStaff = () => {
     }
   };
 
+  // Tùy chọn trạng thái cho bộ lọc
+  const statusOptions = [
+    { value: "Checked in", label: "Đã tham gia" },
+    { value: "Checking", label: "Đang kiểm tra" },
+    { value: "Reject", label: "Từ chối" },
+    { value: "Cancel", label: "Đã hủy" }
+  ];
+
+  // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
+  const filteredWorkshops = workshops.filter(workshop => {
+    const matchesSearch = 
+      workshop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workshop.master.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      workshop.location.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesStatus = statusFilter === "all" || workshop.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   const columns = [
     {
-      title: "Mã hội thảo",
-      dataIndex: "id",
-      key: "id",
-      width: "10%",
-    },
-    {
-      title: "Tên hội thảo",
+      title: "TÊN WORKSHOP",
       dataIndex: "name",
-      key: "name",
-      width: "25%",
+      key: "name"
     },
     {
-      title: "Tên chuyên gia",
+      title: "MASTER",
       dataIndex: "master",
-      key: "master",
-      width: "20%",
+      key: "master"
     },
     {
-      title: "Địa điểm",
+      title: "ĐỊA ĐIỂM",
       dataIndex: "location",
-      key: "location",
-      width: "20%",
+      key: "location"
     },
     {
-      title: "Ngày",
+      title: "NGÀY",
       dataIndex: "date",
-      key: "date",
-      width: "10%",
+      key: "date"
     },
     {
-      title: "Trạng thái",
+      title: "TRẠNG THÁI",
       dataIndex: "status",
       key: "status",
-      width: "15%",
       render: (status) => (
         <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
-    },
+      )
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        title="Quản lý hội thảo"
-        description="Báo cáo và tổng quan về các hội thảo"
+    <div className="min-h-screen bg-gray-50 pb-8">
+      <Header
+        title="Workshop"
+        description="Quản lý workshop"
       />
 
-      {/* Main Content */}
       <div className="p-6">
-        <div className="mb-6 flex justify-end">
-          <SearchBar onSearch={handleSearch} />
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+          <div className="flex flex-wrap justify-between items-center mb-4">
+            <SearchBar 
+              placeholder="Tìm workshop..."
+              onSearch={handleSearch}
+            />
+            
+            <FilterBar 
+              statusOptions={statusOptions}
+              onStatusChange={handleStatusFilterChange}
+              defaultValue="all"
+              placeholder="Trạng thái"
+              width="170px"
+              className="ml-auto mt-2 md:mt-0"
+            />
+          </div>
+
+          {error && <Error message={error} />}
+
+          <CustomTable
+            columns={columns}
+            dataSource={filteredWorkshops}
+            onRowClick={handleRowClick}
+          />
+
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              current={currentPage}
+              total={filteredWorkshops.length}
+              pageSize={10}
+              onChange={handlePageChange}
+            />
+          </div>
         </div>
-
-        {error && <Error message={error} />}
-
-        <CustomTable
-          columns={columns}
-          dataSource={workshops}
-          loading={false}
-          onRow={(record) => ({
-            onClick: () => handleRowClick(record),
-            style: {
-              cursor: "pointer",
-            },
-          })}
-        />
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={5}
-          onPageChange={handlePageChange}
-        />
       </div>
     </div>
   );

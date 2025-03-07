@@ -21,6 +21,7 @@ import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
+import FilterBar from "../components/Common/FilterBar";
 
 const { Option } = Select;
 
@@ -283,12 +284,20 @@ const Certificate = () => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
   
   // Hàm tìm kiếm
   const handleSearch = (value) => {
     setSearchTerm(value);
     // Trong thực tế, đây sẽ là API call để tìm kiếm
     console.log("Tìm kiếm với từ khóa:", value);
+  };
+  
+  // Hàm xử lý filter theo trạng thái
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+    console.log("Lọc theo trạng thái:", value);
   };
   
   // Hàm xóa chứng chỉ
@@ -431,6 +440,30 @@ const Certificate = () => {
     },
   ];
 
+  // Tùy chọn trạng thái cho bộ lọc
+  const statusOptions = [
+    { value: "Đã cấp", label: "Đã cấp" },
+    { value: "Chờ cấp", label: "Chờ cấp" }
+  ];
+  
+  // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
+  const filteredCertificates = certificates.filter(cert => {
+    const matchesSearch = 
+      cert.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cert.certificateId.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesStatus = statusFilter === "all" || cert.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+  
+  // Phân trang dữ liệu
+  const paginatedCertificates = filteredCertificates.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -447,26 +480,13 @@ const Certificate = () => {
             />
             
             <div className="flex gap-2">
-              <Select 
-                defaultValue="all" 
-                style={{ width: 150 }}
-                onChange={(value) => console.log("Lọc theo khóa học:", value)}
-              >
-                <Option value="all">Tất cả khóa học</Option>
-                <Option value="basic">Phong thủy Koi cơ bản</Option>
-                <Option value="advanced">Phong thủy Koi nâng cao</Option>
-                <Option value="master">Đại Đạo Chi Giản</Option>
-              </Select>
-              
-              <Select 
-                defaultValue="all" 
-                style={{ width: 150 }}
-                onChange={(value) => console.log("Lọc theo trạng thái:", value)}
-              >
-                <Option value="all">Tất cả trạng thái</Option>
-                <Option value="issued">Đã cấp</Option>
-                <Option value="pending">Chờ cấp</Option>
-              </Select>
+              <FilterBar 
+                statusOptions={statusOptions}
+                onStatusChange={handleStatusFilterChange}
+                defaultValue="all"
+                placeholder="Trạng thái"
+                width="150px"
+              />
               
               <CustomButton 
                 type="primary" 
@@ -483,7 +503,7 @@ const Certificate = () => {
 
           <Table
             columns={columns}
-            dataSource={certificates}
+            dataSource={paginatedCertificates}
             rowKey="id"
             pagination={false}
             loading={loading}
@@ -492,7 +512,7 @@ const Certificate = () => {
           <div className="mt-4 flex justify-end">
             <Pagination
               current={currentPage}
-              total={totalItems}
+              total={filteredCertificates.length}
               pageSize={pageSize}
               onChange={handlePageChange}
             />
