@@ -6,6 +6,7 @@ import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
+import FilterBar from "../components/Common/FilterBar";
 
 const CourseManagement = () => {
   // State cho danh sách khóa học đã đăng ký
@@ -54,113 +55,156 @@ const CourseManagement = () => {
 
   // State cho lỗi
   const [error, setError] = useState("Lỗi");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   
   // Xử lý tìm kiếm
   const handleSearch = (searchTerm) => {
+    setSearchTerm(searchTerm);
     console.log("Searching for:", searchTerm);
     // Thực hiện logic tìm kiếm ở đây
   };
 
+  // Xử lý filter theo trạng thái
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+    console.log("Lọc theo trạng thái:", value);
+  };
+
   // Xử lý phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = 5;
+  const pageSize = 10;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
+  // Xác định màu sắc cho trạng thái
   const getStatusColor = (status) => {
     switch (status) {
       case "done":
         return "success";
       case "cancel":
         return "error";
+      case "pending":
+        return "warning";
       default:
         return "default";
     }
   };
 
+  // Tùy chọn trạng thái cho bộ lọc
+  const statusOptions = [
+    { value: "done", label: "Hoàn tất" },
+    { value: "cancel", label: "Đã hủy" },
+    { value: "pending", label: "Đang chờ" }
+  ];
+
+  // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
+  const filteredRegistrations = registrations.filter(registration => {
+    const matchesSearch = 
+      registration.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.courseName.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesStatus = statusFilter === "all" || registration.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Phân trang dữ liệu
+  const paginatedRegistrations = filteredRegistrations.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const columns = [
     {
-      title: "Tên khách hàng",
+      title: "KHÁCH HÀNG",
       dataIndex: "customerName",
-      key: "customerName",
-      width: "20%",
+      key: "customerName"
     },
     {
-      title: "Khóa học",
+      title: "KHÓA HỌC",
       dataIndex: "courseName",
-      key: "courseName",
-      width: "25%",
+      key: "courseName"
     },
     {
-      title: "Ngày",
+      title: "NGÀY",
       dataIndex: "date",
-      key: "date",
-      width: "10%",
+      key: "date"
     },
     {
-      title: "Số lượng",
+      title: "SỐ LƯỢNG",
       dataIndex: "count",
-      key: "count",
-      width: "10%",
+      key: "count"
     },
     {
-      title: "Phương thức thanh toán",
+      title: "PHƯƠNG THỨC THANH TOÁN",
       dataIndex: "paymentMethod",
-      key: "paymentMethod",
-      width: "15%",
+      key: "paymentMethod"
     },
     {
-      title: "Tổng tiền",
+      title: "TỔNG TIỀN",
       dataIndex: "total",
       key: "total",
-      width: "10%",
-      render: (total) => `$${total}`,
+      render: (total) => `$${total}`
     },
     {
-      title: "Trạng thái",
+      title: "TRẠNG THÁI",
       dataIndex: "status",
       key: "status",
-      width: "10%",
       render: (status) => (
         <Tag color={getStatusColor(status)}>
-          {status === "done" ? "Hoàn thành" : 
-           status === "cancel" ? "Đã hủy" : status}
+          {status === "done" ? "Hoàn tất" : 
+           status === "cancel" ? "Đã hủy" : "Đang chờ"}
         </Tag>
-      ),
-    },
+      )
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        title="Quản lý khóa học"
-        description="Báo cáo và tổng quan về khóa học của bạn"
+        title="Quản lý đơn đăng ký khóa học"
+        description="Quản lý đơn đăng ký khóa học của khách hàng"
       />
 
-      {/* Main Content */}
-      <div id="main-content" className="p-6 relative">
-        {/* Thanh tìm kiếm */}
-        <div className="mb-6 flex justify-end">
-          <SearchBar onSearch={handleSearch} />
-        </div>
+      <div className="p-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+          <div className="flex flex-wrap justify-between items-center mb-4">
+            <SearchBar 
+              placeholder="Tìm khóa học theo tên khách hàng hoặc tên khóa học"
+              onSearch={handleSearch}
+              className="w-64 mb-2 md:mb-0"
+            />
+            
+            <FilterBar 
+              statusOptions={statusOptions}
+              onStatusChange={handleStatusFilterChange}
+              defaultValue="all"
+              placeholder="Trạng thái"
+              width="150px"
+              className="ml-auto"
+            />
+          </div>
 
-        {error && <Error message={error} />}
+          {error && <Error message={error} />}
 
-        <CustomTable
-          columns={columns}
-          dataSource={registrations}
-          loading={false}
-        />
-
-        {/* Phân trang */}
-        <div className="mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
+          <CustomTable
+            columns={columns}
+            dataSource={paginatedRegistrations}
+            pagination={false}
           />
+
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              current={currentPage}
+              total={filteredRegistrations.length}
+              pageSize={pageSize}
+              onChange={handlePageChange}
+            />
+          </div>
         </div>
       </div>
     </div>

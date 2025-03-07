@@ -14,15 +14,14 @@ import {
   DatePicker, 
   Divider, 
   Row, 
-  Col,
-  Rate
+  Col
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
-import { User, Trash2, Calendar, Clock, FileText, Check } from "lucide-react";
+import { User, Trash2, Calendar, FileText, Check, Clock, Filter, Phone, DollarSign, Video } from "lucide-react";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -62,8 +61,11 @@ const ConsultationDetail = ({ consultation, visible, onClose }) => {
             
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Bậc thầy tư vấn</p>
-                <p className="font-medium">{consultation?.masterName}</p>
+                <p className="text-gray-500 mb-1">Số điện thoại</p>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.customerPhone}</p>
+                </div>
               </div>
             </Col>
           </Row>
@@ -71,39 +73,71 @@ const ConsultationDetail = ({ consultation, visible, onClose }) => {
           <Row gutter={16}>
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Ngày tư vấn</p>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.consultationDate}</p>
-                </div>
+                <p className="text-gray-500 mb-1">Bậc thầy tư vấn</p>
+                <p className="font-medium">{consultation?.masterName}</p>
               </div>
             </Col>
             
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Thời lượng</p>
+                <p className="text-gray-500 mb-1">Giá tiền</p>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.duration} phút</p>
+                  <DollarSign className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.price?.toLocaleString('vi-VN')} VNĐ</p>
                 </div>
               </div>
             </Col>
           </Row>
 
           <Row gutter={16}>
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Ngày & giờ tư vấn</p>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.consultationDate}</p>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{consultation?.consultationTime}</p>
+                </div>
+              </div>
+            </Col>
+            
             <Col span={24} md={12}>
               <div>
                 <p className="text-gray-500 mb-1">Loại tư vấn</p>
                 <Tag color={
                   consultation?.consultationType === "Online" ? "green" :
-                  consultation?.consultationType === "Offline" ? "gold" : "purple"
+                  consultation?.consultationType === "Offline" ? "gold" : "blue"
                 }>
                   {consultation?.consultationType}
                 </Tag>
               </div>
             </Col>
-            
-            <Col span={24} md={12}>
+          </Row>
+
+          {consultation?.consultationType === "Online" && (
+            <Row gutter={16}>
+              <Col span={24}>
+                <div>
+                  <p className="text-gray-500 mb-1">Link Meet</p>
+                  <a 
+                    href={consultation?.meetLink} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline flex items-center gap-2"
+                  >
+                    <Video className="w-4 h-4" />
+                    {consultation?.meetLink}
+                  </a>
+                </div>
+              </Col>
+            </Row>
+          )}
+
+          <Row gutter={16}>
+            <Col span={24}>
               <div>
                 <p className="text-gray-500 mb-1">Trạng thái</p>
                 <Tag color={
@@ -120,17 +154,12 @@ const ConsultationDetail = ({ consultation, visible, onClose }) => {
           <div>
             <p className="text-gray-500 mb-1">Chủ đề tư vấn</p>
             <div className="flex flex-wrap gap-2">
-              {consultation?.consultationTopics.map(topic => (
+              {consultation?.consultationTopics?.map(topic => (
                 <Tag color="blue" key={topic}>
                   {topic}
                 </Tag>
               ))}
             </div>
-          </div>
-
-          <div>
-            <p className="text-gray-500 mb-1">Đánh giá</p>
-            <Rate disabled defaultValue={consultation?.rating} />
           </div>
 
           <Divider />
@@ -139,22 +168,10 @@ const ConsultationDetail = ({ consultation, visible, onClose }) => {
             <p className="text-gray-500 mb-1">Ghi chú tư vấn</p>
             <p className="font-medium mt-1">{consultation?.consultationNotes}</p>
           </div>
-          
-          <div>
-            <p className="text-gray-500 mb-1">Kết quả/Giải pháp đề xuất</p>
-            <p className="font-medium mt-1">{consultation?.recommendations}</p>
-          </div>
 
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={onClose}>
               Đóng
-            </CustomButton>
-            <CustomButton 
-              type="primary" 
-              className="bg-blue-500" 
-              icon={<FileText size={16} />}
-            >
-              Xuất báo cáo
             </CustomButton>
           </div>
         </div>
@@ -168,6 +185,8 @@ const ConsultationHistory = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [error, setError] = useState("Đã xảy ra lỗi");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -181,80 +200,89 @@ const ConsultationHistory = () => {
       id: 1,
       customerName: "Nguyễn Văn An",
       customerEmail: "nguyenvanan@example.com",
+      customerPhone: "0901234567",
       masterName: "Trần Phong Thủy",
       consultationDate: "2023-06-15",
+      consultationTime: "09:00 - 10:00",
       consultationType: "Online",
-      duration: 60,
       status: "Completed",
       consultationTopics: ["Phong thủy hồ Koi", "Thiết kế hồ"],
       relatedProject: "Dự án biệt thự Vinhomes",
-      rating: 5,
       consultationNotes: "Khách hàng muốn tư vấn về thiết kế hồ Koi cho biệt thự mới xây.",
-      recommendations: "Đề xuất xây dựng hồ Koi kích thước 4x6m tại khu vực sân sau, hướng Đông Nam để đón khí vượng."
+      price: 1500000,
+      meetLink: "https://meet.google.com/abc-defg-hij"
     },
     {
       id: 2,
       customerName: "Trần Thị Bình",
       customerEmail: "tranthib@example.com",
+      customerPhone: "0912345678",
       masterName: "Nguyễn Văn Phong",
       consultationDate: "2023-06-20",
+      consultationTime: "14:00 - 15:30",
       consultationType: "Offline",
-      duration: 90,
       status: "Completed",
       consultationTopics: ["Lựa chọn cá Koi", "Phong thủy nhà ở"],
       relatedProject: "",
-      rating: 4,
       consultationNotes: "Khách hàng cần tư vấn về loại cá Koi phù hợp với mệnh Thổ.",
-      recommendations: "Đề xuất lựa chọn cá Koi màu vàng (Yamabuki) và màu cam (Kohaku) để tăng vận khí tài lộc."
+      price: 2000000
     },
     {
       id: 3,
       customerName: "Lê Văn Cường",
       customerEmail: "levanc@example.com",
+      customerPhone: "0923456789",
       masterName: "Trần Phong Thủy",
       consultationDate: "2023-07-05",
-      consultationType: "Phone",
-      duration: 45,
+      consultationTime: "10:30 - 11:30",
+      consultationType: "Online",
       status: "Cancelled",
       consultationTopics: ["Phong thủy văn phòng"],
       relatedProject: "Văn phòng công ty ABC",
-      rating: 0,
       consultationNotes: "Khách hàng muốn tư vấn bố trí hồ cá trong văn phòng công ty.",
-      recommendations: ""
+      price: 1500000,
+      meetLink: "https://meet.google.com/xyz-abcd-efg"
     },
     {
       id: 4,
       customerName: "Phạm Thanh Đào",
       customerEmail: "phamthanhd@example.com",
+      customerPhone: "0934567890",
       masterName: "Lê Thủy Sinh",
       consultationDate: "2023-07-15",
+      consultationTime: "15:00 - 16:00",
       consultationType: "Online",
-      duration: 60,
       status: "Postponed",
       consultationTopics: ["Thiết kế hồ", "Lựa chọn cá Koi"],
       relatedProject: "",
-      rating: 0,
       consultationNotes: "Khách hàng cần tư vấn thiết kế hồ cho khu vườn nhỏ.",
-      recommendations: ""
+      price: 1200000,
+      meetLink: "https://meet.google.com/mno-pqrs-tuv"
     },
     {
       id: 5,
       customerName: "Hoàng Minh Tuấn",
       customerEmail: "hoangmt@example.com",
+      customerPhone: "0945678901",
       masterName: "Nguyễn Văn Phong",
       consultationDate: "2023-08-10",
+      consultationTime: "09:30 - 11:00",
       consultationType: "Offline",
-      duration: 120,
       status: "Completed",
       consultationTopics: ["Phong thủy hồ Koi", "Phong thủy nhà ở"],
       relatedProject: "Nhà phố Hà Đông",
-      rating: 5,
       consultationNotes: "Khách hàng muốn tư vấn tổng thể về phong thủy cho nhà mới và vị trí đặt hồ Koi.",
-      recommendations: "Đề xuất bố trí hồ Koi ở khu vực sân trước, kích thước 3x2m, hướng Bắc để cân bằng năng lượng cho ngôi nhà."
+      price: 2500000
     },
   ];
 
-  const [data, setData] = useState(initialData);
+  // Đảm bảo không còn loại tư vấn "Phone"
+  const cleanedData = initialData.map(item => ({
+    ...item,
+    consultationType: item.consultationType === "Phone" ? "Online" : item.consultationType
+  }));
+
+  const [data, setData] = useState(cleanedData);
 
   // Hàm xử lý tìm kiếm
   const handleSearch = (value) => {
@@ -272,16 +300,18 @@ const ConsultationHistory = () => {
     setSelectedConsultation(consultation);
     form.setFieldsValue({
       customerName: consultation.customerName,
+      customerEmail: consultation.customerEmail,
+      customerPhone: consultation.customerPhone,
       masterName: consultation.masterName,
       consultationDate: consultation.consultationDate,
+      consultationTime: consultation.consultationTime,
       consultationType: consultation.consultationType,
-      duration: consultation.duration,
       status: consultation.status,
       consultationTopics: consultation.consultationTopics,
       relatedProject: consultation.relatedProject,
-      rating: consultation.rating,
       consultationNotes: consultation.consultationNotes,
-      recommendations: consultation.recommendations,
+      price: consultation.price,
+      meetLink: consultation.meetLink
     });
     setIsModalOpen(true);
   };
@@ -293,9 +323,16 @@ const ConsultationHistory = () => {
     form.resetFields();
   };
 
-  // Xuất báo cáo
-  const handleExportReport = () => {
-    message.success("Đã xuất báo cáo lịch sử tư vấn thành công");
+  // Hàm xử lý filter theo trạng thái
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Hàm xử lý filter theo loại tư vấn
+  const handleTypeFilterChange = (value) => {
+    setTypeFilter(value);
+    setCurrentPage(1);
   };
 
   // Cấu hình các cột cho bảng
@@ -322,19 +359,14 @@ const ConsultationHistory = () => {
       width: "12%",
     },
     {
-      title: "Ngày & Thời gian",
+      title: "Ngày tư vấn",
       key: "consultationDate",
+      dataIndex: "consultationDate",
       width: "15%",
-      render: (_, record) => (
+      render: (date) => (
         <div>
-          <div>
-            <Calendar className="inline-block mr-1 w-4 h-4" /> 
-            {record.consultationDate}
-          </div>
-          <div className="mt-1">
-            <Clock className="inline-block mr-1 w-4 h-4" /> 
-            {record.duration} phút
-          </div>
+          <Calendar className="inline-block mr-1 w-4 h-4" /> 
+          {date}
         </div>
       ),
     },
@@ -344,11 +376,10 @@ const ConsultationHistory = () => {
       dataIndex: "consultationType",
       width: "10%",
       render: (type) => {
-        let color = "blue";
-        if (type === "Online") color = "green";
-        if (type === "Offline") color = "gold";
-        if (type === "Phone") color = "purple";
-        return <Tag color={color}>{type}</Tag>;
+        // Đảm bảo loại tư vấn chỉ là Online hoặc Offline
+        const validType = type === "Phone" ? "Online" : type;
+        const color = validType === "Online" ? "green" : "gold";
+        return <Tag color={color}>{validType}</Tag>;
       },
     },
     {
@@ -392,15 +423,6 @@ const ConsultationHistory = () => {
       },
     },
     {
-      title: "Đánh giá",
-      key: "rating",
-      dataIndex: "rating",
-      width: "10%",
-      render: (rating) => (
-        <Rate disabled defaultValue={rating} />
-      ),
-    },
-    {
       title: "Hành động",
       key: "action",
       width: "13%",
@@ -419,14 +441,24 @@ const ConsultationHistory = () => {
     },
   ];
 
-  // Lọc dữ liệu theo tìm kiếm
-  const filteredData = data.filter((item) =>
-    item.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.customerEmail.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.masterName.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.status.toLowerCase().includes(searchText.toLowerCase()) ||
-    (item.consultationTopics.some(topic => topic.toLowerCase().includes(searchText.toLowerCase())))
-  );
+  // Lọc dữ liệu theo tìm kiếm và bộ lọc
+  const filteredData = data.filter((item) => {
+    // Lọc theo từ khóa tìm kiếm
+    const matchesSearchTerm = 
+      item.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.customerEmail.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.masterName.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.status.toLowerCase().includes(searchText.toLowerCase()) ||
+      (item.consultationTopics.some(topic => topic.toLowerCase().includes(searchText.toLowerCase())));
+    
+    // Lọc theo trạng thái
+    const matchesStatus = statusFilter === "all" || item.status === statusFilter;
+    
+    // Lọc theo loại tư vấn
+    const matchesType = typeFilter === "all" || item.consultationType === typeFilter;
+    
+    return matchesSearchTerm && matchesStatus && matchesType;
+  });
 
   // Phân trang dữ liệu
   const paginatedData = filteredData.slice(
@@ -443,39 +475,61 @@ const ConsultationHistory = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="flex flex-wrap justify-between items-center mb-4">
-          <div className="flex gap-2 mb-4">
-            <CustomButton 
-              type="primary" 
-              className="bg-blue-500"
-              onClick={handleExportReport} 
-              icon={<FileText className="w-4 h-4" />}
-            >
-              Xuất báo cáo
-            </CustomButton>
+        <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
+          <div className="flex flex-wrap justify-between items-center mb-4">
+            <SearchBar
+              placeholder="Tìm kiếm theo tên khách hàng, bậc thầy, chủ đề..."
+              onSearch={handleSearch}
+              className="w-64 mb-2 md:mb-0"
+            />
+            
+            <div className="flex flex-wrap gap-2">
+              <Select 
+                defaultValue="all" 
+                style={{ width: 150 }}
+                onChange={handleStatusFilterChange}
+                placeholder="Trạng thái"
+                suffixIcon={<Filter size={16} />}
+                className="mb-2 md:mb-0"
+              >
+                <Option value="all">Tất cả trạng thái</Option>
+                <Option value="Completed">Hoàn thành</Option>
+                <Option value="Cancelled">Đã hủy</Option>
+                <Option value="Postponed">Hoãn lại</Option>
+              </Select>
+              
+              <Select 
+                defaultValue="all" 
+                style={{ width: 150 }}
+                onChange={handleTypeFilterChange}
+                placeholder="Loại tư vấn"
+                suffixIcon={<Filter size={16} />}
+                className="mb-2 md:mb-0"
+              >
+                <Option value="all">Tất cả loại</Option>
+                <Option value="Online">Online</Option>
+                <Option value="Offline">Offline</Option>
+              </Select>
+            </div>
           </div>
-          <SearchBar
-            placeholder="Tìm kiếm theo tên khách hàng, bậc thầy, chủ đề..."
-            onSearch={handleSearch}
-            className="w-64"
-          />
-        </div>
 
-        <Table
-          columns={columns}
-          dataSource={paginatedData}
-          pagination={false}
-          rowKey="id"
-          bordered
-        />
-
-        <div className="mt-4 flex justify-end">
-          <Pagination
-            current={currentPage}
-            total={filteredData.length}
-            pageSize={pageSize}
-            onChange={handlePageChange}
+          <Table
+            columns={columns}
+            dataSource={paginatedData}
+            pagination={false}
+            rowKey="id"
+            bordered
+            loading={loading}
           />
+
+          <div className="mt-4 flex justify-end">
+            <Pagination
+              current={currentPage}
+              total={filteredData.length}
+              pageSize={pageSize}
+              onChange={handlePageChange}
+            />
+          </div>
         </div>
       </div>
 
