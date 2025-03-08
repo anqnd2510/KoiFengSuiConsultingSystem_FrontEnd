@@ -1,27 +1,44 @@
-import React, { useState } from "react";
-import { 
-  Space, 
-  Table, 
-  Button, 
-  Typography, 
-  Tag, 
-  Popconfirm, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  DatePicker, 
-  Divider, 
-  Row, 
-  Col
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Space,
+  Table,
+  Button,
+  Typography,
+  Tag,
+  Popconfirm,
+  message,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Divider,
+  Row,
+  Col,
 } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
-import { User, Trash2, Calendar, FileText, Check, Clock, Filter, Phone, DollarSign, Video } from "lucide-react";
+import {
+  User,
+  Trash2,
+  Calendar,
+  FileText,
+  Check,
+  Clock,
+  Filter,
+  Phone,
+  DollarSign,
+  Video,
+  CheckCircle,
+} from "lucide-react";
+import {
+  getBookingOnlineHistory,
+  getBookingDetail,
+} from "../services/booking.service";
+import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -29,14 +46,31 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 // Component modal xem chi tiết tư vấn
-const ConsultationDetail = ({ consultation, visible, onClose }) => {
+const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
+  // Log để debug data nhận được
+  console.log("Modal consultation data:", consultation);
+
+  // Kiểm tra và format dữ liệu trước khi render
+  const formattedData = {
+    customerName: consultation?.customerName || "Chưa có thông tin",
+    customerEmail: consultation?.customerEmail || "Chưa có email",
+    masterName: consultation?.masterName || "Chưa phân công",
+    bookingOnlineId:
+      consultation?.id || consultation?.bookingOnlineId || "Không có mã",
+    bookingDate: consultation?.bookingDate
+      ? new Date(consultation.bookingDate).toLocaleDateString("vi-VN")
+      : "Chưa có ngày",
+    startTime: consultation?.startTime || "--:--",
+    endTime: consultation?.endTime || "--:--",
+    type: consultation?.type || "Chưa xác định",
+    status: consultation?.status || "Chưa có trạng thái",
+    description: consultation?.description || "Không có yêu cầu",
+    masterNote: consultation?.masterNote || "Chưa có ghi chú",
+  };
+
   return (
     <Modal
-      title={
-        <div className="text-xl font-semibold">
-          Chi tiết buổi tư vấn
-        </div>
-      }
+      title={<div className="text-xl font-semibold">Chi tiết buổi tư vấn</div>}
       open={visible}
       onCancel={onClose}
       footer={null}
@@ -45,353 +79,332 @@ const ConsultationDetail = ({ consultation, visible, onClose }) => {
     >
       <div className="p-4">
         <div className="space-y-4">
-          <Row gutter={16}>
+          <Row gutter={16} key="customer-row">
             <Col span={24} md={12}>
               <div>
                 <p className="text-gray-500 mb-1">Khách hàng</p>
                 <div className="flex items-center gap-2">
                   <User className="w-6 h-6 text-gray-400" />
                   <div>
-                    <p className="font-medium">{consultation?.customerName}</p>
-                    <p className="text-sm text-gray-500">{consultation?.customerEmail}</p>
+                    <p className="font-medium">{formattedData.customerName}</p>
+                    <p className="text-sm text-gray-500">
+                      {formattedData.customerEmail}
+                    </p>
                   </div>
                 </div>
               </div>
             </Col>
-            
+          </Row>
+
+          <Row gutter={16} key="master-row">
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Số điện thoại</p>
+                <p className="text-gray-500 mb-1">Thầy tư vấn</p>
+                <p className="font-medium">{formattedData.masterName}</p>
+              </div>
+            </Col>
+
+            <Col span={24} md={12}>
+              <div>
+                <p className="text-gray-500 mb-1">Mã đặt lịch</p>
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.customerPhone}</p>
+                  <FileText className="w-4 h-4 text-gray-400" />
+                  <p className="font-medium">{formattedData.bookingOnlineId}</p>
                 </div>
               </div>
             </Col>
           </Row>
 
-          <Row gutter={16}>
+          <Row gutter={16} key="consult-date-row">
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Bậc thầy tư vấn</p>
-                <p className="font-medium">{consultation?.masterName}</p>
-              </div>
-            </Col>
-            
-            <Col span={24} md={12}>
-              <div>
-                <p className="text-gray-500 mb-1">Giá tiền</p>
-                <div className="flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.price?.toLocaleString('vi-VN')} VNĐ</p>
-                </div>
-              </div>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={24} md={12}>
-              <div>
-                <p className="text-gray-500 mb-1">Ngày & giờ tư vấn</p>
+                <p className="text-gray-500 mb-1">Thời gian tư vấn</p>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.consultationDate}</p>
+                  <p className="font-medium">{formattedData.bookingDate}</p>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <Clock className="w-4 h-4 text-gray-400" />
-                  <p className="font-medium">{consultation?.consultationTime}</p>
+                  <p className="font-medium">
+                    {`${formattedData.startTime} - ${formattedData.endTime}`}
+                  </p>
                 </div>
               </div>
             </Col>
-            
+
             <Col span={24} md={12}>
               <div>
                 <p className="text-gray-500 mb-1">Loại tư vấn</p>
-                <Tag color={
-                  consultation?.consultationType === "Online" ? "green" :
-                  consultation?.consultationType === "Offline" ? "gold" : "blue"
-                }>
-                  {consultation?.consultationType}
+                <Tag color={formattedData.type === "Online" ? "green" : "gold"}>
+                  {formattedData.type}
                 </Tag>
               </div>
             </Col>
           </Row>
 
-          {consultation?.consultationType === "Online" && (
-            <Row gutter={16}>
-              <Col span={24}>
-                <div>
-                  <p className="text-gray-500 mb-1">Link Meet</p>
-                  <a 
-                    href={consultation?.meetLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-500 hover:underline flex items-center gap-2"
-                  >
-                    <Video className="w-4 h-4" />
-                    {consultation?.meetLink}
-                  </a>
-                </div>
-              </Col>
-            </Row>
-          )}
-
-          <Row gutter={16}>
+          <Row gutter={16} key="status-row">
             <Col span={24}>
               <div>
                 <p className="text-gray-500 mb-1">Trạng thái</p>
-                <Tag color={
-                  consultation?.status === "Completed" ? "success" :
-                  consultation?.status === "Cancelled" ? "error" : "warning"
-                }>
-                  {consultation?.status === "Completed" ? "Hoàn thành" :
-                   consultation?.status === "Cancelled" ? "Đã hủy" : "Hoãn lại"}
+                <Tag
+                  color={
+                    formattedData.status === "Completed"
+                      ? "success"
+                      : formattedData.status === "Pending"
+                      ? "warning"
+                      : formattedData.status === "Cancelled"
+                      ? "error"
+                      : "default"
+                  }
+                >
+                  {formattedData.status === "Completed"
+                    ? "Hoàn thành"
+                    : formattedData.status === "Pending"
+                    ? "Đang chờ"
+                    : formattedData.status === "Cancelled"
+                    ? "Đã hủy"
+                    : formattedData.status}
                 </Tag>
               </div>
             </Col>
           </Row>
 
           <div>
-            <p className="text-gray-500 mb-1">Chủ đề tư vấn</p>
-            <div className="flex flex-wrap gap-2">
-              {consultation?.consultationTopics?.map(topic => (
-                <Tag color="blue" key={topic}>
-                  {topic}
-                </Tag>
-              ))}
-            </div>
+            <p className="text-gray-500 mb-1">Yêu cầu tư vấn</p>
+            <p className="mt-1">{formattedData.description}</p>
           </div>
 
           <Divider />
-          
+
           <div>
-            <p className="text-gray-500 mb-1">Ghi chú tư vấn</p>
-            <p className="font-medium mt-1">{consultation?.consultationNotes}</p>
+            <p className="text-gray-500 mb-1">Ghi chú của thầy</p>
+            <p className="font-medium mt-1">{formattedData.masterNote}</p>
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={onClose}>
-              Đóng
-            </CustomButton>
+            <CustomButton onClick={onClose}>Đóng</CustomButton>
           </div>
         </div>
       </div>
     </Modal>
   );
-};
+});
 
 const ConsultationHistory = () => {
-  const [searchText, setSearchText] = useState("");
+  // Thêm ref để track mounted state
+  const isMounted = React.useRef(false);
+
+  // Các state hiện tại
+  const [consultations, setConsultations] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
-  const [error, setError] = useState("Đã xảy ra lỗi");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null); // Chỉ set error khi thực sự có lỗi
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
-  
-  // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
 
-  // Mock data cho lịch sử tư vấn
-  const initialData = [
-    {
-      id: 1,
-      customerName: "Nguyễn Văn An",
-      customerEmail: "nguyenvanan@example.com",
-      customerPhone: "0901234567",
-      masterName: "Trần Phong Thủy",
-      consultationDate: "2023-06-15",
-      consultationTime: "09:00 - 10:00",
-      consultationType: "Online",
-      status: "Completed",
-      consultationTopics: ["Phong thủy hồ Koi", "Thiết kế hồ"],
-      relatedProject: "Dự án biệt thự Vinhomes",
-      consultationNotes: "Khách hàng muốn tư vấn về thiết kế hồ Koi cho biệt thự mới xây.",
-      price: 1500000,
-      meetLink: "https://meet.google.com/abc-defg-hij"
-    },
-    {
-      id: 2,
-      customerName: "Trần Thị Bình",
-      customerEmail: "tranthib@example.com",
-      customerPhone: "0912345678",
-      masterName: "Nguyễn Văn Phong",
-      consultationDate: "2023-06-20",
-      consultationTime: "14:00 - 15:30",
-      consultationType: "Offline",
-      status: "Completed",
-      consultationTopics: ["Lựa chọn cá Koi", "Phong thủy nhà ở"],
-      relatedProject: "",
-      consultationNotes: "Khách hàng cần tư vấn về loại cá Koi phù hợp với mệnh Thổ.",
-      price: 2000000
-    },
-    {
-      id: 3,
-      customerName: "Lê Văn Cường",
-      customerEmail: "levanc@example.com",
-      customerPhone: "0923456789",
-      masterName: "Trần Phong Thủy",
-      consultationDate: "2023-07-05",
-      consultationTime: "10:30 - 11:30",
-      consultationType: "Online",
-      status: "Cancelled",
-      consultationTopics: ["Phong thủy văn phòng"],
-      relatedProject: "Văn phòng công ty ABC",
-      consultationNotes: "Khách hàng muốn tư vấn bố trí hồ cá trong văn phòng công ty.",
-      price: 1500000,
-      meetLink: "https://meet.google.com/xyz-abcd-efg"
-    },
-    {
-      id: 4,
-      customerName: "Phạm Thanh Đào",
-      customerEmail: "phamthanhd@example.com",
-      customerPhone: "0934567890",
-      masterName: "Lê Thủy Sinh",
-      consultationDate: "2023-07-15",
-      consultationTime: "15:00 - 16:00",
-      consultationType: "Online",
-      status: "Postponed",
-      consultationTopics: ["Thiết kế hồ", "Lựa chọn cá Koi"],
-      relatedProject: "",
-      consultationNotes: "Khách hàng cần tư vấn thiết kế hồ cho khu vườn nhỏ.",
-      price: 1200000,
-      meetLink: "https://meet.google.com/mno-pqrs-tuv"
-    },
-    {
-      id: 5,
-      customerName: "Hoàng Minh Tuấn",
-      customerEmail: "hoangmt@example.com",
-      customerPhone: "0945678901",
-      masterName: "Nguyễn Văn Phong",
-      consultationDate: "2023-08-10",
-      consultationTime: "09:30 - 11:00",
-      consultationType: "Offline",
-      status: "Completed",
-      consultationTopics: ["Phong thủy hồ Koi", "Phong thủy nhà ở"],
-      relatedProject: "Nhà phố Hà Đông",
-      consultationNotes: "Khách hàng muốn tư vấn tổng thể về phong thủy cho nhà mới và vị trí đặt hồ Koi.",
-      price: 2500000
-    },
-  ];
+  // Tối ưu lại fetchConsultationHistory với useCallback
+  const fetchConsultationHistory = useCallback(async () => {
+    if (!isMounted.current) return;
 
-  // Đảm bảo không còn loại tư vấn "Phone"
-  const cleanedData = initialData.map(item => ({
-    ...item,
-    consultationType: item.consultationType === "Phone" ? "Online" : item.consultationType
-  }));
+    try {
+      setLoading(true);
+      const response = await getBookingOnlineHistory();
+      console.log("Raw data from API:", response.data);
 
-  const [data, setData] = useState(cleanedData);
+      if (!response?.data) {
+        throw new Error("Định dạng dữ liệu không đúng");
+      }
 
-  // Hàm xử lý tìm kiếm
-  const handleSearch = (value) => {
-    setSearchText(value);
-    setCurrentPage(1);
-  };
+      const dataArray = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
 
-  // Hàm chuyển trang
-  const handlePageChange = (page) => {
+      const formattedData = dataArray.map((item) => ({
+        key: item.id,
+        bookingOnlineId: item.id,
+        bookingDate: item.bookingDate,
+        startTime: item.startTime || "Chưa có",
+        endTime: item.endTime || "Chưa có",
+        customerName: item.customerName,
+        customerEmail: item.customerEmail,
+        masterName: item.masterName,
+        masterNote: item.masterNote || "Chưa có ghi chú",
+        type: item.type,
+        status: item.status,
+        description: item.description || "Không có mô tả",
+        customer: {
+          name: item.customerName || "Không có tên",
+          email: item.customerEmail || "Không có email",
+        },
+        master: item.masterName || "Chưa phân công",
+        consultType: item.type,
+        consultDate: item.bookingDate,
+        topics: [item.description].filter(Boolean),
+      }));
+
+      console.log("Formatted data with IDs:", formattedData);
+      setConsultations(formattedData);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      setError(error.message || "Đã có lỗi xảy ra");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Sử dụng useEffect với cleanup function
+  useEffect(() => {
+    isMounted.current = true;
+    fetchConsultationHistory();
+
+    return () => {
+      isMounted.current = false;
+    };
+  }, [fetchConsultationHistory]);
+
+  // Tối ưu các hàm xử lý với useCallback
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value);
+  }, []);
+
+  const handlePageChange = useCallback((page) => {
     setCurrentPage(page);
+  }, []);
+
+  const handleOpenDetailModal = async (record) => {
+    try {
+      console.log("Record data:", record);
+      const response = await getBookingDetail(record.bookingOnlineId);
+      console.log("API Response:", response);
+
+      // Kiểm tra và lấy dữ liệu từ response
+      if (response.isSuccess && response.data) {
+        const detailData = response.data;
+        console.log("Detail data received:", detailData);
+
+        // Set data cho modal
+        setSelectedConsultation({
+          customerName: detailData.customerName,
+          customerEmail: detailData.customerEmail,
+          masterName: detailData.masterName,
+          bookingOnlineId: detailData.bookingOnlineId,
+          bookingDate: detailData.bookingDate,
+          startTime: detailData.startTime,
+          endTime: detailData.endTime,
+          type: detailData.type,
+          status: detailData.status,
+          description: detailData.description,
+          masterNote: detailData.masterNote,
+        });
+      } else {
+        // Nếu không có data từ API, sử dụng data từ record
+        setSelectedConsultation(record);
+        console.warn("No detail data received from API, using record data");
+      }
+
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error fetching booking detail:", error);
+      // Trong trường hợp lỗi, vẫn hiển thị modal với dữ liệu từ record
+      setSelectedConsultation(record);
+      setIsModalOpen(true);
+      message.error(
+        "Không thể lấy thông tin chi tiết. Hiển thị dữ liệu cơ bản."
+      );
+    }
   };
 
-  // Hàm mở modal để xem chi tiết
-  const handleOpenDetailModal = (consultation) => {
-    setSelectedConsultation(consultation);
-    form.setFieldsValue({
-      customerName: consultation.customerName,
-      customerEmail: consultation.customerEmail,
-      customerPhone: consultation.customerPhone,
-      masterName: consultation.masterName,
-      consultationDate: consultation.consultationDate,
-      consultationTime: consultation.consultationTime,
-      consultationType: consultation.consultationType,
-      status: consultation.status,
-      consultationTopics: consultation.consultationTopics,
-      relatedProject: consultation.relatedProject,
-      consultationNotes: consultation.consultationNotes,
-      price: consultation.price,
-      meetLink: consultation.meetLink
-    });
-    setIsModalOpen(true);
-  };
-
-  // Đóng modal
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedConsultation(null);
-    form.resetFields();
-  };
+  }, []);
 
-  // Hàm xử lý filter theo trạng thái
-  const handleStatusFilterChange = (value) => {
+  const handleStatusFilterChange = useCallback((value) => {
     setStatusFilter(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  // Hàm xử lý filter theo loại tư vấn
-  const handleTypeFilterChange = (value) => {
+  const handleTypeFilterChange = useCallback((value) => {
     setTypeFilter(value);
     setCurrentPage(1);
-  };
+  }, []);
 
-  // Cấu hình các cột cho bảng
+  // Tối ưu filteredData với useMemo
+  const filteredData = useMemo(() => {
+    return consultations.filter((item) => {
+      const matchesSearchTerm =
+        item.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.master.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.topics.some((topic) =>
+          topic.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+      const matchesStatus =
+        statusFilter === "all" || item.status === statusFilter;
+      const matchesType =
+        typeFilter === "all" || item.consultType === typeFilter;
+
+      return matchesSearchTerm && matchesStatus && matchesType;
+    });
+  }, [consultations, searchTerm, statusFilter, typeFilter]);
+
+  // Tối ưu paginatedData với useMemo
+  const paginatedData = useMemo(() => {
+    return filteredData.slice((currentPage - 1) * 10, currentPage * 10);
+  }, [filteredData, currentPage]);
+
+  // Render columns theo dữ liệu từ hình ảnh
   const columns = [
     {
       title: "Khách hàng",
-      dataIndex: "customerName",
-      key: "customerName",
-      width: "15%",
-      render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <User className="w-6 h-6 text-gray-400" />
-          <div>
-            <div className="font-medium">{record.customerName}</div>
-            <div className="text-xs text-gray-500">{record.customerEmail}</div>
+      dataIndex: "customer",
+      key: "customer",
+      render: (customer) => (
+        <div>
+          <div>{customer?.name || "Không có tên"}</div>
+          <div style={{ color: "#888", fontSize: "12px" }}>
+            {customer?.email || "Không có email"}
           </div>
         </div>
       ),
     },
     {
-      title: "Bậc thầy",
-      dataIndex: "masterName",
-      key: "masterName",
-      width: "12%",
+      title: "Thầy tư vấn",
+      dataIndex: "master",
+      key: "master",
+      render: (master) => master || "Chưa phân công",
     },
     {
       title: "Ngày tư vấn",
-      key: "consultationDate",
-      dataIndex: "consultationDate",
-      width: "15%",
-      render: (date) => (
-        <div>
-          <Calendar className="inline-block mr-1 w-4 h-4" /> 
-          {date}
-        </div>
-      ),
+      dataIndex: "consultDate",
+      key: "consultDate",
+      render: (date) =>
+        date ? new Date(date).toLocaleDateString("vi-VN") : "Chưa có ngày",
     },
     {
       title: "Loại tư vấn",
-      key: "consultationType",
-      dataIndex: "consultationType",
-      width: "10%",
-      render: (type) => {
-        // Đảm bảo loại tư vấn chỉ là Online hoặc Offline
-        const validType = type === "Phone" ? "Online" : type;
-        const color = validType === "Online" ? "green" : "gold";
-        return <Tag color={color}>{validType}</Tag>;
-      },
+      dataIndex: "consultType",
+      key: "consultType",
+      render: (type) => (
+        <Tag color={type === "Online" ? "green" : "gold"}>
+          {type || "Chưa xác định"}
+        </Tag>
+      ),
     },
     {
-      title: "Chủ đề tư vấn",
-      key: "consultationTopics",
-      dataIndex: "consultationTopics",
-      width: "15%",
+      title: "Yêu cầu tư vấn",
+      dataIndex: "topics",
+      key: "topics",
       render: (topics) => (
         <>
-          {topics.map(tag => (
-            <Tag color="blue" key={tag} className="mb-1 mr-1">
-              {tag}
+          {(topics || []).map((topic, index) => (
+            <Tag color="blue" key={`${topic}-${index}`}>
+              {topic || "Không có yêu cầu"}
             </Tag>
           ))}
         </>
@@ -399,25 +412,41 @@ const ConsultationHistory = () => {
     },
     {
       title: "Trạng thái",
-      key: "status",
       dataIndex: "status",
-      width: "10%",
+      key: "status",
       render: (status) => {
-        let color = "green";
-        let icon = <Check className="inline-block mr-1 w-4 h-4" />;
-        
-        if (status === "Cancelled") {
-          color = "red";
-          icon = <Trash2 className="inline-block mr-1 w-4 h-4" />;
-        } else if (status === "Postponed") {
-          color = "orange";
-          icon = <Clock className="inline-block mr-1 w-4 h-4" />;
+        let color = "default";
+        let icon = null;
+        let displayText = status;
+
+        switch (status) {
+          case "Completed":
+            color = "success";
+            icon = <Check className="inline-block mr-1 w-4 h-4" />;
+            displayText = "Hoàn thành";
+            break;
+          case "Cancelled":
+            color = "error";
+            icon = <Trash2 className="inline-block mr-1 w-4 h-4" />;
+            displayText = "Đã hủy";
+            break;
+          case "Pending":
+            color = "warning";
+            icon = <Clock className="inline-block mr-1 w-4 h-4" />;
+            displayText = "Đang chờ";
+            break;
+          case "Confirmed":
+            color = "processing";
+            icon = <CheckCircle className="inline-block mr-1 w-4 h-4" />;
+            displayText = "Đã xác nhận";
+            break;
+          default:
+            displayText = status || "Chưa xác định";
         }
-        
+
         return (
           <Tag color={color} icon={icon}>
-            {status === "Completed" ? "Hoàn thành" : 
-              status === "Cancelled" ? "Đã hủy" : "Hoãn lại"}
+            {displayText}
           </Tag>
         );
       },
@@ -425,50 +454,17 @@ const ConsultationHistory = () => {
     {
       title: "Hành động",
       key: "action",
-      width: "13%",
       render: (_, record) => (
-        <Space size="middle">
-          <CustomButton 
-            type="primary" 
-            className="bg-blue-500"
-            icon={<FileText className="w-4 h-4" />}
-            onClick={() => handleOpenDetailModal(record)}
-          >
-            Chi tiết
-          </CustomButton>
-        </Space>
+        <Button type="primary" onClick={() => handleOpenDetailModal(record)}>
+          Chi tiết
+        </Button>
       ),
     },
   ];
 
-  // Lọc dữ liệu theo tìm kiếm và bộ lọc
-  const filteredData = data.filter((item) => {
-    // Lọc theo từ khóa tìm kiếm
-    const matchesSearchTerm = 
-      item.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.customerEmail.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.masterName.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.status.toLowerCase().includes(searchText.toLowerCase()) ||
-      (item.consultationTopics.some(topic => topic.toLowerCase().includes(searchText.toLowerCase())));
-    
-    // Lọc theo trạng thái
-    const matchesStatus = statusFilter === "all" || item.status === statusFilter;
-    
-    // Lọc theo loại tư vấn
-    const matchesType = typeFilter === "all" || item.consultationType === typeFilter;
-    
-    return matchesSearchTerm && matchesStatus && matchesType;
-  });
-
-  // Phân trang dữ liệu
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         title="Lịch sử tư vấn phong thủy Koi"
         description="Quản lý thông tin và lịch sử các buổi tư vấn phong thủy"
       />
@@ -478,37 +474,51 @@ const ConsultationHistory = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
             <SearchBar
-              placeholder="Tìm kiếm theo tên khách hàng, bậc thầy, chủ đề..."
+              placeholder="Tìm kiếm theo tên khách hàng, thầy, chủ đề..."
               onSearch={handleSearch}
               className="w-64 mb-2 md:mb-0"
             />
-            
+
             <div className="flex flex-wrap gap-2">
-              <Select 
-                defaultValue="all" 
+              <Select
+                defaultValue="all"
                 style={{ width: 150 }}
                 onChange={handleStatusFilterChange}
                 placeholder="Trạng thái"
-                suffixIcon={<Filter size={16} />}
+                suffixIcon={<FilterOutlined />}
                 className="mb-2 md:mb-0"
               >
-                <Option value="all">Tất cả trạng thái</Option>
-                <Option value="Completed">Hoàn thành</Option>
-                <Option value="Cancelled">Đã hủy</Option>
-                <Option value="Postponed">Hoãn lại</Option>
+                <Option key="status-all" value="all">
+                  Tất cả trạng thái
+                </Option>
+                <Option key="status-completed" value="Completed">
+                  Hoàn thành
+                </Option>
+                <Option key="status-cancelled" value="Cancelled">
+                  Đã hủy
+                </Option>
+                <Option key="status-postponed" value="Postponed">
+                  Hoãn lại
+                </Option>
               </Select>
-              
-              <Select 
-                defaultValue="all" 
+
+              <Select
+                defaultValue="all"
                 style={{ width: 150 }}
                 onChange={handleTypeFilterChange}
                 placeholder="Loại tư vấn"
-                suffixIcon={<Filter size={16} />}
+                suffixIcon={<FilterOutlined />}
                 className="mb-2 md:mb-0"
               >
-                <Option value="all">Tất cả loại</Option>
-                <Option value="Online">Online</Option>
-                <Option value="Offline">Offline</Option>
+                <Option key="type-all" value="all">
+                  Tất cả loại
+                </Option>
+                <Option key="type-online" value="Online">
+                  Online
+                </Option>
+                <Option key="type-offline" value="Offline">
+                  Offline
+                </Option>
               </Select>
             </div>
           </div>
@@ -517,7 +527,7 @@ const ConsultationHistory = () => {
             columns={columns}
             dataSource={paginatedData}
             pagination={false}
-            rowKey="id"
+            rowKey="key"
             bordered
             loading={loading}
           />
@@ -526,7 +536,7 @@ const ConsultationHistory = () => {
             <Pagination
               current={currentPage}
               total={filteredData.length}
-              pageSize={pageSize}
+              pageSize={10}
               onChange={handlePageChange}
             />
           </div>
@@ -562,4 +572,4 @@ const ConsultationHistory = () => {
   );
 };
 
-export default ConsultationHistory; 
+export default React.memo(ConsultationHistory);
