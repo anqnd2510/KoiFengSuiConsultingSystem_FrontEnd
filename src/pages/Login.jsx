@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Image from "react-image-webp";
+import { message } from "antd";
+import { login } from "../services/auth.service";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,11 +21,61 @@ const Login = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Xử lý logic đăng nhập ở đây
-    console.log("Login data:", formData);
+    setLoading(true);
+
+    try {
+      const response = await login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      console.log("Login response:", response);
+
+      if (response.accessToken) {
+        console.log("Login successful, preparing to navigate...");
+        message.success("Đăng nhập thành công!");
+
+        if (formData.rememberMe) {
+          localStorage.setItem("rememberedEmail", formData.email);
+        } else {
+          localStorage.removeItem("rememberedEmail");
+        }
+
+        localStorage.setItem("accessToken", response.accessToken);
+        localStorage.setItem("refreshToken", response.refreshToken);
+
+        console.log("Tokens saved, navigating to schedule...");
+
+        navigate("/schedule", { replace: true });
+      } else {
+        message.error(
+          "Đăng nhập thất bại: " + (response.message || "Vui lòng thử lại")
+        );
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.title ||
+        "Đã xảy ra lỗi khi đăng nhập";
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  useEffect(() => {
+    const rememberedEmail = localStorage.getItem("rememberedEmail");
+    if (rememberedEmail) {
+      setFormData((prev) => ({
+        ...prev,
+        email: rememberedEmail,
+        rememberMe: true,
+      }));
+    }
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -149,9 +202,12 @@ const Login = () => {
             {/* Login button */}
             <button
               type="submit"
-              className="w-full px-4 py-3 rounded-lg bg-black text-white hover:bg-gray-900 transition duration-200 transform hover:scale-[1.02]"
+              disabled={loading}
+              className={`w-full px-4 py-3 rounded-lg bg-black text-white transition duration-200 transform hover:scale-[1.02] ${
+                loading ? "opacity-70 cursor-not-allowed" : "hover:bg-gray-900"
+              }`}
             >
-              Sign in
+              {loading ? "Đang đăng nhập..." : "Đăng nhập"}
             </button>
 
             <div className="relative my-8">

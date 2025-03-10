@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import BookingSchedule from "./pages/BookingSchedule";
 import BookingScheduleDetails from "./pages/BookingScheduleDetails";
 import CourseManagement from "./pages/CourseManagement";
@@ -26,47 +26,43 @@ import Master from "./pages/Master";
 import Customer from "./pages/Customer";
 import ConsultationHistory from "./pages/ConsultationHistory";
 import Notifications from "./pages/Notifications";
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="schedule" element={<Schedule />} />
-          <Route path="/booking-schedule" element={<BookingSchedule />} />
-          <Route
-            path="/booking-schedule/:id"
-            element={<BookingScheduleDetails />}
-          />
-          <Route path="/workshop-master" element={<Workshop />} />
-          <Route path="/workshop-company" element={<WorkshopList />} />
-          <Route path="/workshop-staff" element={<WorkshopStaff />} />
-          <Route path="/workshopcheck" element={<WorkshopCheck />} />
-          <Route path="/audience" element={<AudienceList />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/course-master" element={<CourseMaster />} />
-          <Route path="/course-management" element={<CourseManagement />} />
-          <Route path="/consulting-online" element={<ConsultingOnline />} />
-          <Route path="/koi-fish-management" element={<KoiFishManagement />} />
-          <Route path="/koi-pond-management" element={<KoiPondManagement />} />
-          <Route path="/feedback" element={<Feedback />} />
-          <Route path="/certificate" element={<Certificate />} />
-          <Route path="/master-management" element={<Master />} />
-          <Route path="/customer-management" element={<Customer />} />
-          <Route
-            path="/consultation-history"
-            element={<ConsultationHistory />}
-          />
-        </Route>
-        <Route path="/consulting-offline" element={<ConsultingOffline />} />
-        <Route path="/blog-management" element={<BlogManagement />} />
-        <Route path="/create-blog" element={<CreateBlog />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/contract" element={<Contract />} />
-        <Route path="/contract/:id" element={<ContractDetail />} />
-        <Route path="/notifications" element={<Notifications />} />
-      </Routes>
-    </Router>
+    <Routes>
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="schedule" element={<Schedule />} />
+        <Route path="/booking-schedule" element={<BookingSchedule />} />
+        <Route
+          path="/booking-schedule/:id"
+          element={<BookingScheduleDetails />}
+        />
+        <Route path="/workshop-master" element={<Workshop />} />
+        <Route path="/workshop-company" element={<WorkshopList />} />
+        <Route path="/workshop-staff" element={<WorkshopStaff />} />
+        <Route path="/workshopcheck" element={<WorkshopCheck />} />
+        <Route path="/audience" element={<AudienceList />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/course-master" element={<CourseMaster />} />
+        <Route path="/course-management" element={<CourseManagement />} />
+        <Route path="/consulting-online" element={<ConsultingOnline />} />
+        <Route path="/koi-fish-management" element={<KoiFishManagement />} />
+        <Route path="/koi-pond-management" element={<KoiPondManagement />} />
+        <Route path="/feedback" element={<Feedback />} />
+        <Route path="/certificate" element={<Certificate />} />
+        <Route path="/master-management" element={<Master />} />
+        <Route path="/customer-management" element={<Customer />} />
+        <Route path="/consultation-history" element={<ConsultationHistory />} />
+      </Route>
+      <Route path="/consulting-offline" element={<ConsultingOffline />} />
+      <Route path="/blog-management" element={<BlogManagement />} />
+      <Route path="/create-blog" element={<CreateBlog />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/contract" element={<Contract />} />
+      <Route path="/contract/:id" element={<ContractDetail />} />
+      <Route path="/notifications" element={<Notifications />} />
+    </Routes>
   );
 }
 
