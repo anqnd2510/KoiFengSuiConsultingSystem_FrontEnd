@@ -1,51 +1,82 @@
 import Calendar from "../components/Schedule/Calendar";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
-import { useState } from "react";
-
-const MOCK_BOOKINGS = [
-  {
-    id: 1,
-    date: 2,
-    isCurrentMonth: true,
-    customerName: "John Smith",
-    phoneNumber: "0123456789",
-    description: "nhà đẹp xe sang",
-    address: "ABC, HCM City",
-    time: "8:00-10:00",
-    link: "zalo-you-bro",
-    isOnline: true,
-    isOffline: false,
-  },
-  {
-    id: 2,
-    date: 2,
-    isCurrentMonth: true,
-    customerName: "anh Duy An",
-    phoneNumber: "0912875712",
-    description: "how to pass SEP490",
-    address: "ABC, HCM City",
-    time: "8:00-10:00",
-    link: "zalo-you-bro",
-    isOnline: false,
-    isOffline: true,
-  },
-];
+import { useState, useEffect } from "react";
+import { getCurrentMasterSchedule } from "../services/masterSchedule.service";
+import { message, Spin } from "antd";
 
 const Schedule = () => {
   const [error, setError] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMasterSchedule();
+  }, []);
+
+  const fetchMasterSchedule = async () => {
+    try {
+      const response = await getCurrentMasterSchedule();
+      console.log("Schedule response:", response);
+
+      if (response.isSuccess) {
+        const formattedBookings = response.data.flatMap((dateSchedule) => {
+          return dateSchedule.schedules.map((schedule) => {
+            const formatTime = (timeStr) => {
+              const time = timeStr.split(":");
+              return `${time[0]}:${time[1]}`;
+            };
+
+            const startTime = formatTime(schedule.startTime);
+            const endTime = formatTime(schedule.endTime);
+
+            // Lấy tên khách hàng đầu tiên nếu có booking, nếu không thì "Chưa có khách hàng"
+            const customerName =
+              schedule.bookingOnlines?.length > 0
+                ? schedule.bookingOnlines[0].customer.fullName
+                : "Chưa có khách hàng";
+
+            return {
+              id: schedule.masterScheduleId,
+              date: new Date(dateSchedule.date).getDate(),
+              isCurrentMonth:
+                new Date(dateSchedule.date).getMonth() ===
+                new Date().getMonth(),
+              customerName: customerName,
+              time: `${startTime}-${endTime}`,
+            };
+          });
+        });
+
+        console.log("Formatted bookings:", formattedBookings);
+        setBookings(formattedBookings);
+      } else {
+        setError(response.message || "Không thể lấy dữ liệu lịch");
+        message.error("Không thể lấy dữ liệu lịch");
+      }
+    } catch (error) {
+      console.error("Error fetching schedule:", error);
+      setError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu lịch");
+      message.error("Đã xảy ra lỗi khi lấy dữ liệu lịch");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
       <div className="flex-1">
-        <Header 
-          title="Lịch hẹn"
-          description="Lịch đặt hẹn cho chuyên gia"
-        />
+        <Header title="Lịch hẹn" description="Lịch đặt hẹn cho chuyên gia" />
 
         <main className="p-6">
           {error && <Error message={error} />}
-          <Calendar bookings={MOCK_BOOKINGS} />
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <Spin size="large" tip="Đang tải lịch..." />
+            </div>
+          ) : (
+            <Calendar bookings={bookings} />
+          )}
         </main>
       </div>
     </div>
