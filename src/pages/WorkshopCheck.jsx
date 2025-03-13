@@ -11,9 +11,9 @@ import { Plus, Check, X } from "lucide-react";
 import { 
   getPendingWorkshops, 
   approveWorkshop, 
-  rejectWorkshop, 
   formatPendingWorkshopsData 
 } from "../services/approve.service";
+import { rejectWorkshop } from "../services/reject.service";
 import { isAuthenticated } from "../services/auth.service";
 
 const { TextArea } = Input;
@@ -125,22 +125,27 @@ const WorkshopCheck = () => {
     
     try {
       setLoading(true);
-      await rejectWorkshop(selectedWorkshop.id, rejectReason);
-      message.success("Đã từ chối hội thảo thành công");
-      fetchPendingWorkshops(); // Refresh danh sách
-      setRejectModalVisible(false);
-      setRejectReason("");
+      const result = await rejectWorkshop(selectedWorkshop.id, rejectReason);
+      
+      if (result.success) {
+        message.success(result.message || "Đã từ chối hội thảo thành công");
+        fetchPendingWorkshops(); // Refresh danh sách
+        setRejectModalVisible(false);
+        setRejectReason("");
+      } else {
+        message.error(result.message || "Không thể từ chối hội thảo. Vui lòng thử lại sau.");
+      }
     } catch (err) {
       console.error("Lỗi khi từ chối hội thảo:", err);
       
       // Xử lý lỗi 401
-      if (err.message.includes("đăng nhập")) {
+      if (err.message && err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
         return;
       }
       
-      message.error("Không thể từ chối hội thảo. Vui lòng thử lại sau.");
+      message.error(err.message || "Không thể từ chối hội thảo. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
