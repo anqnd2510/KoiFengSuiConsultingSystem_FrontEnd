@@ -367,9 +367,9 @@ const Workshop = () => {
       case "Đã hủy":
         return "red";
       case "Chờ duyệt":
-        return "orange";
+        return "orange"; // Màu cam cho trạng thái chờ duyệt
       case "Từ chối":
-        return "volcano"; // Màu đỏ cam cho trạng thái từ chối
+        return "red"; // Màu đỏ cho trạng thái từ chối
       default:
         return "default";
     }
