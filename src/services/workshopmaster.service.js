@@ -102,7 +102,7 @@ export const createWorkshop = async (workshopData) => {
       location: workshopData.location,
       description: workshopData.description || "",
       capacity: workshopData.ticketSlots,
-      status: "Scheduled",
+      status: "Pending",
       price: workshopData.ticketPrice,
       masterName: "Master Wong"
     });
@@ -171,7 +171,7 @@ export const deleteWorkshop = async (id) => {
 };
 
 /**
- * Chuyển đổi trạng thái từ API sang trạng thái hiển thị
+ * Chuyển đổi trạng thái từ API sang trạng thái hiển thị tiếng Việt
  * @param {string} apiStatus - Trạng thái từ API
  * @returns {string} Trạng thái hiển thị
  */
@@ -180,9 +180,12 @@ export const mapWorkshopStatus = (apiStatus) => {
     "Scheduled": "Sắp diễn ra",
     "Open Registration": "Đang diễn ra",
     "Completed": "Đã kết thúc",
-    "Cancelled": "Đã hủy"
+    "Cancelled": "Đã hủy",
+    "Pending": "Chờ duyệt", // Trạng thái chờ duyệt từ API
+    "Approved": "Sắp diễn ra"  // Trạng thái sau khi phê duyệt
   };
   
+  console.log("Mapping status:", apiStatus, "->", statusMap[apiStatus] || "Không xác định");
   return statusMap[apiStatus] || "Không xác định";
 };
 
@@ -205,4 +208,44 @@ export const formatWorkshopsData = (workshopsData) => {
     status: mapWorkshopStatus(workshop.status),
     description: workshop.description || ""
   }));
+};
+
+/**
+ * Lấy danh sách workshop chờ phê duyệt
+ * @returns {Promise<Array>} Danh sách workshop chờ phê duyệt
+ */
+export const getPendingWorkshops = async () => {
+  try {
+    // Kiểm tra token
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+    
+    // Sử dụng API getAllWorkshops thay vì pending-workshops
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}`);
+    console.log("API Response:", response.data);
+    
+    // Kiểm tra cấu trúc response
+    if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
+      // Lọc các workshop có trạng thái "Pending"
+      const pendingWorkshops = response.data.data.filter(workshop => workshop.status === "Pending");
+      console.log("Workshop chờ duyệt:", pendingWorkshops);
+      return pendingWorkshops; // Trả về mảng workshop đã lọc
+    } else {
+      console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
+      return [];
+    }
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách workshop chờ phê duyệt:', error);
+    
+    // Xử lý lỗi 401
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    
+    throw error;
+  }
 }; 

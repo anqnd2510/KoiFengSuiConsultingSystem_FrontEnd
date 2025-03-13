@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider } from "antd";
+import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider, Tabs } from "antd";
 import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info } from "lucide-react";
 import WorkshopTable from "../components/Workshop/WorkshopTable";
 import SearchBar from "../components/Common/SearchBar";
@@ -16,10 +16,12 @@ import {
   deleteWorkshop,
   formatWorkshopsData
 } from "../services/workshopmaster.service";
+import { getPendingWorkshops, formatPendingWorkshopsData } from "../services/approve.service";
 import { isAuthenticated } from "../services/auth.service";
 
 const { TextArea } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 // Component form cho workshop
 const WorkshopForm = ({ form, loading }) => {
@@ -112,14 +114,18 @@ const WorkshopForm = ({ form, loading }) => {
 const Workshop = () => {
   const navigate = useNavigate();
   const [workshops, setWorkshops] = useState([]);
+  const [pendingWorkshops, setPendingWorkshops] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
+  const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [activeTab, setActiveTab] = useState("1");
 
   // Kiểm tra xác thực khi component mount
   useEffect(() => {
@@ -129,7 +135,24 @@ const Workshop = () => {
       return;
     }
     fetchWorkshops();
+    fetchPendingWorkshops();
   }, [navigate]);
+
+  // Thêm useEffect để refresh danh sách workshop khi quay lại từ trang WorkshopCheck
+  useEffect(() => {
+    const refreshOnFocus = () => {
+      console.log("Trang được focus lại, refresh danh sách workshop");
+      refreshData();
+    };
+
+    // Đăng ký sự kiện focus
+    window.addEventListener('focus', refreshOnFocus);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', refreshOnFocus);
+    };
+  }, []);
 
   // Hàm fetch workshops từ API
   const fetchWorkshops = async () => {
@@ -151,6 +174,30 @@ const Workshop = () => {
       }
       
       setError("Không thể tải danh sách hội thảo. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm fetch workshops chờ phê duyệt từ API
+  const fetchPendingWorkshops = async () => {
+    try {
+      setLoading(true);
+      const data = await getPendingWorkshops();
+      const formattedData = formatPendingWorkshopsData(data);
+      setPendingWorkshops(formattedData);
+      setPendingTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
+      
+      // Xử lý lỗi 401
+      if (err.message.includes("đăng nhập")) {
+        message.error(err.message);
+        navigate("/login");
+        return;
+      }
+      
+      message.error("Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -206,6 +253,12 @@ const Workshop = () => {
     setSelectedWorkshop(null);
   };
 
+  // Hàm refresh dữ liệu
+  const refreshData = async () => {
+    await fetchWorkshops();
+    await fetchPendingWorkshops();
+  };
+
   const handleSaveWorkshop = () => {
     // Kiểm tra xác thực trước khi tạo workshop
     if (!isAuthenticated()) {
@@ -245,7 +298,7 @@ const Workshop = () => {
           
           if (result) {
             message.success("Đã tạo mới hội thảo thành công");
-            fetchWorkshops(); // Refresh danh sách
+            refreshData(); // Refresh cả hai danh sách
             setIsCreateModalOpen(false);
           } else {
             message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
@@ -275,8 +328,15 @@ const Workshop = () => {
   };
 
   const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // Có thể thêm logic phân trang từ API ở đây
+    if (activeTab === "1") {
+      setCurrentPage(page);
+    } else {
+      setPendingCurrentPage(page);
+    }
+  };
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
   };
 
   // Hàm lấy màu cho trạng thái
@@ -290,9 +350,15 @@ const Workshop = () => {
         return "gray";
       case "Đã hủy":
         return "red";
+      case "Chờ duyệt":
+        return "orange";
       default:
         return "default";
     }
+  };
+
+  const handleCheckPendingWorkshops = () => {
+    navigate('/workshop-check');
   };
 
   return (
@@ -306,32 +372,58 @@ const Workshop = () => {
       {/* Main Content */}
       <div id="main-content" className="p-6">
         <div className="mb-6 flex justify-between items-center">
-          <CustomButton 
-            type="primary" 
-            icon={<Plus size={16} />}
-            onClick={handleOpenCreateModal}
-          >
-            Tạo mới hội thảo
-          </CustomButton>
+          <div className="flex gap-3">
+            <CustomButton 
+              type="primary" 
+              icon={<Plus size={16} />}
+              onClick={handleOpenCreateModal}
+            >
+              Tạo mới hội thảo
+            </CustomButton>
+            {pendingWorkshops.length > 0 && (
+              <CustomButton 
+                onClick={handleCheckPendingWorkshops}
+              >
+                Kiểm duyệt hội thảo ({pendingWorkshops.length})
+              </CustomButton>
+            )}
+          </div>
           <SearchBar onSearch={handleSearch} />
         </div>
 
         {error && <Error message={error} />}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <WorkshopTable 
-            workshops={workshops} 
-            onViewWorkshop={handleViewWorkshop}
-            loading={loading}
-          />
-        </div>
-        
-        <div className="mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
+          <Tabs defaultActiveKey="1" onChange={handleTabChange}>
+            <TabPane tab="Hội thảo đã duyệt" key="1">
+              <WorkshopTable 
+                workshops={workshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+            <TabPane tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`} key="2">
+              <WorkshopTable 
+                workshops={pendingWorkshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={pendingCurrentPage}
+                  totalPages={pendingTotalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+          </Tabs>
         </div>
       </div>
 
