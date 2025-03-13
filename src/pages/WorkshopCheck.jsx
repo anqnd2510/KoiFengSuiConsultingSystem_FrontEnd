@@ -125,10 +125,24 @@ const WorkshopCheck = () => {
     
     try {
       setLoading(true);
+      // Gọi API từ chối workshop, lưu ý API mới không sử dụng lý do từ chối
       const result = await rejectWorkshop(selectedWorkshop.id, rejectReason);
       
       if (result.success) {
         message.success(result.message || "Đã từ chối hội thảo thành công");
+        // Lưu lý do từ chối vào localStorage để hiển thị sau này nếu cần
+        try {
+          const rejectionHistory = JSON.parse(localStorage.getItem('rejectionHistory') || '{}');
+          rejectionHistory[selectedWorkshop.id] = {
+            reason: rejectReason,
+            timestamp: new Date().toISOString(),
+            workshopName: selectedWorkshop.name
+          };
+          localStorage.setItem('rejectionHistory', JSON.stringify(rejectionHistory));
+        } catch (e) {
+          console.error("Không thể lưu lý do từ chối vào localStorage:", e);
+        }
+        
         fetchPendingWorkshops(); // Refresh danh sách
         setRejectModalVisible(false);
         setRejectReason("");

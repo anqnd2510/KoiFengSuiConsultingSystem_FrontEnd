@@ -10,7 +10,7 @@ const WORKSHOP_ENDPOINT = "/Workshop";
 /**
  * Từ chối workshop
  * @param {string} workshopId - ID của workshop cần từ chối
- * @param {string} reason - Lý do từ chối
+ * @param {string} reason - Lý do từ chối (không sử dụng trong API hiện tại)
  * @returns {Promise<Object>} Kết quả từ chối
  */
 export const rejectWorkshop = async (workshopId, reason) => {
@@ -21,13 +21,10 @@ export const rejectWorkshop = async (workshopId, reason) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
     
-    console.log("Gọi API từ chối workshop với ID:", workshopId, "và lý do:", reason);
+    console.log("Gọi API từ chối workshop với ID:", workshopId);
     
-    // Gọi API từ chối workshop
-    const response = await apiClient.post(`${WORKSHOP_ENDPOINT}/reject-workshop`, {
-      workshopId: workshopId,
-      reason: reason || "Không đáp ứng yêu cầu"
-    });
+    // Gọi API từ chối workshop - Sử dụng PUT thay vì POST và truyền id qua tham số URL
+    const response = await apiClient.put(`${WORKSHOP_ENDPOINT}/reject-workshop?id=${workshopId}`);
     
     console.log("API Response từ chối workshop:", response.data);
     
