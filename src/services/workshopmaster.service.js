@@ -171,7 +171,7 @@ export const deleteWorkshop = async (id) => {
 };
 
 /**
- * Chuyển đổi trạng thái từ API sang trạng thái hiển thị tiếng Việt
+ * Ánh xạ trạng thái từ API sang trạng thái hiển thị
  * @param {string} apiStatus - Trạng thái từ API
  * @returns {string} Trạng thái hiển thị
  */
@@ -182,7 +182,8 @@ export const mapWorkshopStatus = (apiStatus) => {
     "Completed": "Đã kết thúc",
     "Cancelled": "Đã hủy",
     "Pending": "Chờ duyệt", // Trạng thái chờ duyệt từ API
-    "Approved": "Sắp diễn ra"  // Trạng thái sau khi phê duyệt
+    "Approved": "Sắp diễn ra",  // Trạng thái sau khi phê duyệt
+    "Rejected": "Từ chối" // Trạng thái từ chối
   };
   
   console.log("Mapping status:", apiStatus, "->", statusMap[apiStatus] || "Không xác định");

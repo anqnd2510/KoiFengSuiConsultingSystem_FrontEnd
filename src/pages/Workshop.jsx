@@ -115,16 +115,19 @@ const Workshop = () => {
   const navigate = useNavigate();
   const [workshops, setWorkshops] = useState([]);
   const [pendingWorkshops, setPendingWorkshops] = useState([]);
+  const [rejectedWorkshops, setRejectedWorkshops] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [rejectedCurrentPage, setRejectedCurrentPage] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [rejectedTotalPages, setRejectedTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState("1");
 
   // Kiểm tra xác thực khi component mount
@@ -160,8 +163,19 @@ const Workshop = () => {
       setLoading(true);
       const data = await getAllWorkshops();
       const formattedData = formatWorkshopsData(data);
-      setWorkshops(formattedData);
-      setTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
+      
+      // Lọc các workshop đã bị từ chối
+      const rejected = formattedData.filter(workshop => workshop.status === "Từ chối");
+      setRejectedWorkshops(rejected);
+      setRejectedTotalPages(Math.ceil(rejected.length / 10));
+      
+      // Lọc các workshop không bị từ chối và không phải chờ duyệt để hiển thị ở tab 1
+      const approved = formattedData.filter(workshop => 
+        workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
+      );
+      setWorkshops(approved);
+      setTotalPages(Math.ceil(approved.length / 10));
+      
       setError(null);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
@@ -330,8 +344,10 @@ const Workshop = () => {
   const handlePageChange = (page) => {
     if (activeTab === "1") {
       setCurrentPage(page);
-    } else {
+    } else if (activeTab === "2") {
       setPendingCurrentPage(page);
+    } else if (activeTab === "3") {
+      setRejectedCurrentPage(page);
     }
   };
 
@@ -352,6 +368,8 @@ const Workshop = () => {
         return "red";
       case "Chờ duyệt":
         return "orange";
+      case "Từ chối":
+        return "volcano"; // Màu đỏ cam cho trạng thái từ chối
       default:
         return "default";
     }
@@ -419,6 +437,20 @@ const Workshop = () => {
                 <Pagination
                   currentPage={pendingCurrentPage}
                   totalPages={pendingTotalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+            <TabPane tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`} key="3">
+              <WorkshopTable 
+                workshops={rejectedWorkshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={rejectedCurrentPage}
+                  totalPages={rejectedTotalPages}
                   onPageChange={handlePageChange}
                 />
               </div>
@@ -521,6 +553,34 @@ const Workshop = () => {
               <div className="mb-4">
                 <h4 className="text-md font-medium mb-2">Mô tả hội thảo</h4>
                 <p className="text-gray-600">{selectedWorkshop.description}</p>
+              </div>
+            )}
+            
+            {/* Hiển thị lý do từ chối nếu workshop bị từ chối */}
+            {selectedWorkshop.status === "Từ chối" && (
+              <div className="mb-4">
+                <h4 className="text-md font-medium mb-2 text-red-500">Lý do từ chối</h4>
+                {(() => {
+                  try {
+                    const rejectionHistory = JSON.parse(localStorage.getItem('rejectionHistory') || '{}');
+                    const rejectionInfo = rejectionHistory[selectedWorkshop.id];
+                    if (rejectionInfo && rejectionInfo.reason) {
+                      return (
+                        <div>
+                          <p className="text-gray-600">{rejectionInfo.reason}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Từ chối vào: {new Date(rejectionInfo.timestamp).toLocaleString('vi-VN')}
+                          </p>
+                        </div>
+                      );
+                    } else {
+                      return <p className="text-gray-600">Không có thông tin về lý do từ chối.</p>;
+                    }
+                  } catch (e) {
+                    console.error("Lỗi khi đọc lý do từ chối:", e);
+                    return <p className="text-gray-600">Không thể hiển thị lý do từ chối.</p>;
+                  }
+                })()}
               </div>
             )}
             
