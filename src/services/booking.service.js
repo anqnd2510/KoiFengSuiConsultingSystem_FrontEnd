@@ -7,9 +7,7 @@ const BOOKING_ENDPOINT = "http://localhost:5261/api/Booking";
 // Get All Booking  APIs
 export const getBookingOnlineHistory = async () => {
   try {
-    const response = await apiClient.get(
-      `${BOOKING_ENDPOINT}/get-booking-online`
-    );
+    const response = await apiClient.get(`${BOOKING_ENDPOINT}/get-booking`);
     console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
