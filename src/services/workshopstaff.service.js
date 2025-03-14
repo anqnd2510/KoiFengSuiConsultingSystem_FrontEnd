@@ -13,7 +13,7 @@ const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
  */
 export const getWorkshopsByCreatedDate = async () => {
   try {
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/list-by-created-date`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
@@ -36,7 +36,8 @@ export const getWorkshopsByCreatedDate = async () => {
  */
 export const getWorkshopById = async (id) => {
   try {
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/${id}`);
+    // Thử cách khác: truyền ID trực tiếp trong URL path thay vì query parameter
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/id/${id}`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
