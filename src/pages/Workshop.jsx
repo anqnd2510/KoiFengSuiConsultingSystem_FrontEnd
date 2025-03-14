@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider, Tabs } from "antd";
-import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info } from "lucide-react";
+import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info, Eye } from "lucide-react";
 import WorkshopTable from "../components/Workshop/WorkshopTable";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
@@ -235,28 +235,12 @@ const Workshop = () => {
   const handleViewWorkshop = async (workshop) => {
     try {
       setLoading(true);
-      // Lấy thông tin chi tiết từ API nếu cần
-      const detailData = await getWorkshopById(workshop.id);
-      if (detailData) {
-        // Format dữ liệu nếu cần
-        const formattedWorkshop = {
-          ...workshop,
-          // Thêm các thông tin chi tiết khác nếu có
-        };
-        setSelectedWorkshop(formattedWorkshop);
-        setIsViewModalOpen(true);
-      }
+      // Không cần gọi API, sử dụng trực tiếp dữ liệu workshop đã có
+      setSelectedWorkshop(workshop);
+      setIsViewModalOpen(true);
     } catch (err) {
-      console.error("Lỗi khi lấy chi tiết workshop:", err);
-      
-      // Xử lý lỗi 401
-      if (err.message.includes("đăng nhập")) {
-        message.error(err.message);
-        navigate("/login");
-        return;
-      }
-      
-      message.error("Không thể tải thông tin chi tiết hội thảo");
+      console.error("Lỗi khi hiển thị chi tiết workshop:", err);
+      message.error("Không thể hiển thị thông tin chi tiết hội thảo");
     } finally {
       setLoading(false);
     }
@@ -375,10 +359,6 @@ const Workshop = () => {
     }
   };
 
-  const handleCheckPendingWorkshops = () => {
-    navigate('/workshop-check');
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -398,13 +378,6 @@ const Workshop = () => {
             >
               Tạo mới hội thảo
             </CustomButton>
-            {pendingWorkshops.length > 0 && (
-              <CustomButton 
-                onClick={handleCheckPendingWorkshops}
-              >
-                Kiểm duyệt hội thảo ({pendingWorkshops.length})
-              </CustomButton>
-            )}
           </div>
           <SearchBar onSearch={handleSearch} />
         </div>

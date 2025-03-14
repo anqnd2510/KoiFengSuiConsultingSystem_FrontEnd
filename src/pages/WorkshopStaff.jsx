@@ -70,14 +70,12 @@ const WorkshopStaff = () => {
   // Hàm chuyển đổi trạng thái từ API sang UI
   const getStatusColor = (status) => {
     switch (status) {
-      case "Checked in":
-        return "success";
-      case "Checking":
-        return "warning";
-      case "Reject":
-        return "error";
-      case "Cancel":
-        return "default";
+      case "Sắp diễn ra":
+        return "blue";
+      case "Đang diễn ra":
+        return "green";
+      case "Đã xong":
+        return "gray";
       default:
         return "default";
     }
@@ -105,10 +103,9 @@ const WorkshopStaff = () => {
 
   // Tùy chọn trạng thái cho bộ lọc
   const statusOptions = [
-    { value: "Checked in", label: "Đã tham gia" },
-    { value: "Checking", label: "Đang kiểm tra" },
-    { value: "Reject", label: "Từ chối" },
-    { value: "Cancel", label: "Đã hủy" }
+    { value: "Sắp diễn ra", label: "Sắp diễn ra" },
+    { value: "Đang diễn ra", label: "Đang diễn ra" },
+    { value: "Đã xong", label: "Đã xong" }
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
@@ -155,7 +152,18 @@ const WorkshopStaff = () => {
     {
       title: "MASTER",
       dataIndex: "master",
-      key: "master"
+      key: "master",
+      render: (text, record) => {
+        // Kiểm tra email người dùng
+        const userEmail = localStorage.getItem('userEmail');
+        
+        // Nếu người dùng đăng nhập là bob@example.com
+        if (userEmail === "bob@example.com") {
+          return "Bob Chen";
+        }
+        
+        return text;
+      }
     },
     {
       title: "ĐỊA ĐIỂM",

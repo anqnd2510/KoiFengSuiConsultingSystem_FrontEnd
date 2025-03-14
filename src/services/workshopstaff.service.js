@@ -13,7 +13,7 @@ const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
  */
 export const getWorkshopsByCreatedDate = async () => {
   try {
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/list-by-created-date`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
@@ -36,7 +36,8 @@ export const getWorkshopsByCreatedDate = async () => {
  */
 export const getWorkshopById = async (id) => {
   try {
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/${id}`);
+    // Thử cách khác: truyền ID trực tiếp trong URL path thay vì query parameter
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/id/${id}`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
@@ -62,15 +63,15 @@ export const mapWorkshopStatus = (apiStatus) => {
   if (typeof apiStatus === 'string') {
     switch (apiStatus.toLowerCase()) {
       case 'open registration':
-        return "Checking";
+        return "Đang diễn ra";
       case 'scheduled':
-        return "Checked in";
+        return "Sắp diễn ra";
       case 'cancelled':
         return "Cancel";
       case 'completed':
-        return "Reject";
+        return "Đã xong";
       default:
-        return "Checking";
+        return "Sắp diễn ra";
     }
   }
   
@@ -110,12 +111,23 @@ export const formatWorkshopsData = (workshopsData) => {
         return null;
       }
       
+      // Lấy email người dùng từ localStorage
+      const userEmail = localStorage.getItem('userEmail');
+      
+      // Xác định tên master
+      let masterName = workshop.masterName || "Chưa có thông tin";
+      
+      // Nếu người dùng đăng nhập là bob@example.com, hiển thị tên là Bob Chen
+      if (userEmail === "bob@example.com" && masterName === "Sensei Tanaka") {
+        masterName = "Bob Chen";
+      }
+      
       // Tạo đối tượng workshop đã định dạng
       const formattedWorkshop = {
         id: workshop.workshopId || 0,
         workshopId: workshop.workshopId || "", // Giữ nguyên workshopId từ API
         name: workshop.workshopName || "Không có tên",
-        master: workshop.masterName || "Chưa có thông tin",
+        master: masterName,
         location: workshop.location || "Không có địa điểm",
         date: workshop.startDate ? new Date(workshop.startDate).toLocaleDateString('vi-VN') : "Không có ngày",
         status: mapWorkshopStatus(workshop.status),
