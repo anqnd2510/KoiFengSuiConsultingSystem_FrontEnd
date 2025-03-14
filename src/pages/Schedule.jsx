@@ -4,11 +4,13 @@ import Error from "../components/Common/Error";
 import { useState, useEffect } from "react";
 import { getCurrentMasterSchedule } from "../services/masterSchedule.service";
 import { message, Spin } from "antd";
+import { useNavigate } from "react-router-dom";
 
 const Schedule = () => {
   const [error, setError] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchMasterSchedule();
@@ -30,7 +32,6 @@ const Schedule = () => {
             const startTime = formatTime(schedule.startTime);
             const endTime = formatTime(schedule.endTime);
 
-            // Lấy tên khách hàng đầu tiên nếu có booking, nếu không thì "Chưa có khách hàng"
             const customerName =
               schedule.bookingOnlines?.length > 0
                 ? schedule.bookingOnlines[0].customer.fullName
@@ -44,6 +45,17 @@ const Schedule = () => {
                 new Date().getMonth(),
               customerName: customerName,
               time: `${startTime}-${endTime}`,
+              onClick: () => {
+                console.log("Schedule clicked:", schedule);
+                const masterScheduleId = schedule.masterScheduleId;
+                console.log("Master Schedule ID:", masterScheduleId);
+                if (masterScheduleId) {
+                  navigate(`/booking-schedule-details/${masterScheduleId}`);
+                } else {
+                  message.info("Không tìm thấy thông tin lịch");
+                }
+              },
+              originalData: schedule,
             };
           });
         });
