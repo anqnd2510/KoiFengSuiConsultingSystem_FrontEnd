@@ -19,7 +19,20 @@ export const getBookingOnlineHistory = async () => {
 // Get Booking Detail APIs
 export const getBookingDetail = async (id) => {
   try {
-    const response = await apiClient.get(`${BOOKING_ENDPOINT}/${id}`);
+    const response = await apiClient.get(`${BOOKING_ENDPOINT}/booking-${id}`);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching booking detail:", error);
+    throw error;
+  }
+};
+// Get Booking Detail APIs
+export const getBookingScheduleDetail = async (id) => {
+  try {
+    const response = await apiClient.get(
+      `${BOOKING_ENDPOINT}/consulting-by-masterSchedule-${id}`
+    );
     console.log("API Response:", response.data);
     return response.data;
   } catch (error) {

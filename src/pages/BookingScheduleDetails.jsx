@@ -1,19 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getBookingScheduleDetail } from "../services/booking.service";
+import { message } from "antd";
 
 const BookingScheduleDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    consultationId: "CONS-001",
-    customerName: "Nguyễn Văn A",
-    link: "https://meet.google.com/abc-defg-hij",
-    date: "2024-03-15",
-    time: "08:00-10:00",
-    method: "Trực tuyến",
-    description: "Tư vấn xây nhà ở ven sông Sài Gòn view Landmark81",
-    note: "Nền xây nhà hướng Bắc",
+    consultationId: "",
+    customerName: "",
+    link: "",
+    date: "",
+    time: "",
+    method: "",
+    description: "",
+    note: "",
   });
+
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const response = await getBookingScheduleDetail(id);
+        console.log("Detail response:", response);
+
+        if (response.isSuccess) {
+          const booking = response.data;
+          setFormData({
+            consultationId: booking.consultingId || "",
+            customerName: booking.customerName || "",
+            link: booking.linkMeet || "",
+            date: booking.bookingDate || "",
+            time: `${booking.startTime} - ${booking.endTime}`,
+            method: booking.type || "",
+            description: booking.description || "",
+            note: booking.masterNote || "",
+          });
+        } else {
+          message.error("Không thể lấy thông tin chi tiết");
+        }
+      } catch (error) {
+        console.error("Error fetching detail:", error);
+        message.error("Đã xảy ra lỗi khi lấy thông tin chi tiết");
+      }
+    };
+
+    if (id) {
+      fetchDetail();
+    }
+  }, [id]);
 
   const handleInputChange = (field) => (e) => {
     setFormData((prev) => ({
@@ -27,7 +61,7 @@ const BookingScheduleDetails = () => {
   };
 
   const handleReturn = () => {
-    navigate("/booking-schedule");
+    navigate("/schedule");
   };
 
   return (
@@ -56,7 +90,6 @@ const BookingScheduleDetails = () => {
           <div className="bg-red-50 border border-red-200 text-red-600 px-6 py-3 rounded mb-8">
             <span className="flex items-center gap-3">
               <span className="text-red-600">Đã xảy ra lỗi!</span>
-              
             </span>
           </div>
 
