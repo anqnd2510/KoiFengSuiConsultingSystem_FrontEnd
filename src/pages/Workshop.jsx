@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider } from "antd";
+import { Link, useNavigate } from "react-router-dom";
+import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider, Tabs } from "antd";
 import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info } from "lucide-react";
 import WorkshopTable from "../components/Workshop/WorkshopTable";
 import SearchBar from "../components/Common/SearchBar";
@@ -8,9 +8,20 @@ import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
+import { 
+  getAllWorkshops, 
+  getWorkshopById, 
+  createWorkshop, 
+  updateWorkshop, 
+  deleteWorkshop,
+  formatWorkshopsData
+} from "../services/workshopmaster.service";
+import { getPendingWorkshops, formatPendingWorkshopsData } from "../services/approve.service";
+import { isAuthenticated } from "../services/auth.service";
 
 const { TextArea } = Input;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 // Component form cho workshop
 const WorkshopForm = ({ form, loading }) => {
@@ -65,20 +76,15 @@ const WorkshopForm = ({ form, loading }) => {
       </Form.Item>
 
       <Form.Item
-        label="Trạng thái"
-        name="status"
-        rules={[{ required: true, message: "Vui lòng chọn trạng thái" }]}
-      >
-        <Select placeholder="Chọn trạng thái hội thảo">
-          <Option value="Sắp diễn ra">Sắp diễn ra</Option>
-          <Option value="Đang diễn ra">Đang diễn ra</Option>
-          <Option value="Đã kết thúc">Đã kết thúc</Option>
-        </Select>
-      </Form.Item>
-
-      <Form.Item
         label="Hình ảnh"
         name="image"
+        valuePropName="fileList"
+        getValueFromEvent={(e) => {
+          if (Array.isArray(e)) {
+            return e;
+          }
+          return e?.fileList;
+        }}
       >
         <Upload
           listType="picture-card"
@@ -106,64 +112,115 @@ const WorkshopForm = ({ form, loading }) => {
 };
 
 const Workshop = () => {
-  const [workshops, setWorkshops] = useState([
-    {
-      id: 1,
-      name: "Đại Đạo Chi Giản - Phòng Thủy Cơ Học",
-      location: "Đại học FPT",
-      date: "1/5/2021",
-      image: "https://images.unsplash.com/photo-1529870797170-55aaafe68c6f?q=80&w=1974&auto=format&fit=crop",
-      ticketPrice: "300.000 VND",
-      ticketSlots: "50",
-      status: "Đang diễn ra",
-      description: "Workshop về Phong Thủy cổ học và ứng dụng thực tiễn trong cuộc sống hiện đại. Tham gia để học hỏi từ các chuyên gia hàng đầu trong lĩnh vực."
-    },
-    {
-      id: 2,
-      name: "Đại Đạo Chi Giản - Phòng Thủy Cơ Học I",
-      location: "Đại học FPT",
-      date: "1/5/2021",
-      image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop",
-      ticketPrice: "350.000 VND",
-      ticketSlots: "45",
-      status: "Sắp diễn ra",
-      description: "Tiếp nối thành công của phần 1, workshop mới sẽ đi sâu hơn vào các ứng dụng của Phong Thủy trong thiết kế nội thất và cảnh quan."
-    },
-    {
-      id: 3,
-      name: "Đại Đạo Chi Giản - Phòng Thủy Cơ Học II",
-      location: "Đại học FPT",
-      date: "1/5/2021",
-      image: "https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?q=80&w=1770&auto=format&fit=crop",
-      ticketPrice: "400.000 VND",
-      ticketSlots: "40",
-      status: "Đã kết thúc",
-      description: "Workshop tập trung vào Phong Thủy văn phòng và không gian làm việc, giúp tạo ra môi trường làm việc hiệu quả và thịnh vượng."
-    },
-    {
-      id: 4,
-      name: "Đại Đạo Chi Giản - Phòng Thủy Cơ Học III",
-      location: "Đại học FPT",
-      date: "1/5/2021",
-      image: "https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?q=80&w=1770&auto=format&fit=crop",
-      ticketPrice: "450.000 VND",
-      ticketSlots: "35",
-      status: "Sắp diễn ra",
-      description: "Workshop nâng cao về Phong Thủy, đi sâu vào nghiên cứu các trường hợp thực tế và giải pháp toàn diện cho nhà ở và không gian sống."
-    }
-  ]);
-
+  const navigate = useNavigate();
+  const [workshops, setWorkshops] = useState([]);
+  const [pendingWorkshops, setPendingWorkshops] = useState([]);
+  const [rejectedWorkshops, setRejectedWorkshops] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pendingCurrentPage, setPendingCurrentPage] = useState(1);
+  const [rejectedCurrentPage, setRejectedCurrentPage] = useState(1);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("Đã xảy ra lỗi"); // Để hiển thị lỗi nếu có
+  const [error, setError] = useState(null);
+  const [totalPages, setTotalPages] = useState(1);
+  const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [rejectedTotalPages, setRejectedTotalPages] = useState(1);
+  const [activeTab, setActiveTab] = useState("1");
+
+  // Kiểm tra xác thực khi component mount
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      message.error("Bạn cần đăng nhập để sử dụng chức năng này");
+      navigate("/login");
+      return;
+    }
+    fetchWorkshops();
+    fetchPendingWorkshops();
+  }, [navigate]);
+
+  // Thêm useEffect để refresh danh sách workshop khi quay lại từ trang WorkshopCheck
+  useEffect(() => {
+    const refreshOnFocus = () => {
+      console.log("Trang được focus lại, refresh danh sách workshop");
+      refreshData();
+    };
+
+    // Đăng ký sự kiện focus
+    window.addEventListener('focus', refreshOnFocus);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', refreshOnFocus);
+    };
+  }, []);
+
+  // Hàm fetch workshops từ API
+  const fetchWorkshops = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllWorkshops();
+      const formattedData = formatWorkshopsData(data);
+      
+      // Lọc các workshop đã bị từ chối
+      const rejected = formattedData.filter(workshop => workshop.status === "Từ chối");
+      setRejectedWorkshops(rejected);
+      setRejectedTotalPages(Math.ceil(rejected.length / 10));
+      
+      // Lọc các workshop không bị từ chối và không phải chờ duyệt để hiển thị ở tab 1
+      const approved = formattedData.filter(workshop => 
+        workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
+      );
+      setWorkshops(approved);
+      setTotalPages(Math.ceil(approved.length / 10));
+      
+      setError(null);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách workshop:", err);
+      
+      // Xử lý lỗi 401
+      if (err.message.includes("đăng nhập")) {
+        message.error(err.message);
+        navigate("/login");
+        return;
+      }
+      
+      setError("Không thể tải danh sách hội thảo. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Hàm fetch workshops chờ phê duyệt từ API
+  const fetchPendingWorkshops = async () => {
+    try {
+      setLoading(true);
+      const data = await getPendingWorkshops();
+      const formattedData = formatPendingWorkshopsData(data);
+      setPendingWorkshops(formattedData);
+      setPendingTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
+      
+      // Xử lý lỗi 401
+      if (err.message.includes("đăng nhập")) {
+        message.error(err.message);
+        navigate("/login");
+        return;
+      }
+      
+      message.error("Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (searchTerm) => {
     // Xử lý tìm kiếm ở đây
     console.log('Searching for:', searchTerm);
+    // Có thể thêm logic tìm kiếm từ API ở đây
   };
 
   const handleOpenCreateModal = () => {
@@ -175,9 +232,34 @@ const Workshop = () => {
     setIsCreateModalOpen(false);
   };
 
-  const handleViewWorkshop = (workshop) => {
-    setSelectedWorkshop(workshop);
-    setIsViewModalOpen(true);
+  const handleViewWorkshop = async (workshop) => {
+    try {
+      setLoading(true);
+      // Lấy thông tin chi tiết từ API nếu cần
+      const detailData = await getWorkshopById(workshop.id);
+      if (detailData) {
+        // Format dữ liệu nếu cần
+        const formattedWorkshop = {
+          ...workshop,
+          // Thêm các thông tin chi tiết khác nếu có
+        };
+        setSelectedWorkshop(formattedWorkshop);
+        setIsViewModalOpen(true);
+      }
+    } catch (err) {
+      console.error("Lỗi khi lấy chi tiết workshop:", err);
+      
+      // Xử lý lỗi 401
+      if (err.message.includes("đăng nhập")) {
+        message.error(err.message);
+        navigate("/login");
+        return;
+      }
+      
+      message.error("Không thể tải thông tin chi tiết hội thảo");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseViewModal = () => {
@@ -185,46 +267,92 @@ const Workshop = () => {
     setSelectedWorkshop(null);
   };
 
+  // Hàm refresh dữ liệu
+  const refreshData = async () => {
+    await fetchWorkshops();
+    await fetchPendingWorkshops();
+  };
+
   const handleSaveWorkshop = () => {
-    form.validateFields().then((values) => {
-      setLoading(true);
-      
-      setTimeout(() => {
-        // Tạo một workshop mới với ID tự động tăng
-        const newWorkshop = {
-          id: workshops.length + 1,
+    // Kiểm tra xác thực trước khi tạo workshop
+    if (!isAuthenticated()) {
+      message.error("Bạn cần đăng nhập để tạo hội thảo");
+      navigate("/login");
+      return;
+    }
+
+    form.validateFields().then(async (values) => {
+      try {
+        setLoading(true);
+        
+        // Xử lý giá vé
+        let ticketPrice = 0;
+        if (values.ticketPrice) {
+          // Loại bỏ tất cả các ký tự không phải số
+          const numericValue = values.ticketPrice.replace(/[^\d]/g, '');
+          ticketPrice = numericValue ? parseFloat(numericValue) : 0;
+        }
+        
+        // Chuẩn bị dữ liệu để gửi lên API
+        const workshopData = {
           name: values.name,
           location: values.location,
-          date: values.date ? values.date.format('DD/MM/YYYY') : new Date().toLocaleDateString(),
-          image: values.image || "default-workshop.jpg",
-          ticketPrice: values.ticketPrice,
+          date: values.date ? values.date.format('YYYY-MM-DD') : new Date().toISOString().split('T')[0],
+          ticketPrice: ticketPrice,
           ticketSlots: values.ticketSlots,
-          status: values.status,
           description: values.description || ""
         };
         
-        // Thêm workshop mới vào danh sách
-        setWorkshops([...workshops, newWorkshop]);
+        console.log("Dữ liệu gửi đi:", workshopData);
         
-        // Đóng modal và hiển thị thông báo
-        message.success("Đã tạo mới hội thảo thành công");
+        try {
+          // Gọi API để tạo workshop mới
+          const result = await createWorkshop(workshopData);
+          console.log("Kết quả từ API:", result);
+          
+          if (result) {
+            message.success("Đã tạo mới hội thảo thành công");
+            refreshData(); // Refresh cả hai danh sách
+            setIsCreateModalOpen(false);
+          } else {
+            message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
+          }
+        } catch (apiError) {
+          console.error("Lỗi API:", apiError);
+          
+          // Xử lý lỗi 401
+          if (apiError.message.includes("đăng nhập")) {
+            message.error(apiError.message);
+            navigate("/login");
+            return;
+          }
+          
+          const errorMessage = apiError.response?.data?.message || apiError.message || "Lỗi không xác định";
+          message.error("Lỗi API: " + errorMessage);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tạo workshop:", err);
+        message.error("Đã xảy ra lỗi khi tạo hội thảo: " + (err.message || "Lỗi không xác định"));
+      } finally {
         setLoading(false);
-        setIsCreateModalOpen(false);
-      }, 1000);
+      }
     }).catch(err => {
       console.log("Validation failed:", err);
     });
   };
 
-  const handleRequestWorkshop = () => {
-    // Xử lý yêu cầu workshop mới
-    message.info("Đã gửi yêu cầu hội thảo mới");
-    setIsCreateModalOpen(false);
+  const handlePageChange = (page) => {
+    if (activeTab === "1") {
+      setCurrentPage(page);
+    } else if (activeTab === "2") {
+      setPendingCurrentPage(page);
+    } else if (activeTab === "3") {
+      setRejectedCurrentPage(page);
+    }
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    console.log("Changing to page:", page);
+  const handleTabChange = (key) => {
+    setActiveTab(key);
   };
 
   // Hàm lấy màu cho trạng thái
@@ -236,9 +364,19 @@ const Workshop = () => {
         return "blue";
       case "Đã kết thúc":
         return "gray";
+      case "Đã hủy":
+        return "red";
+      case "Chờ duyệt":
+        return "orange"; // Màu cam cho trạng thái chờ duyệt
+      case "Từ chối":
+        return "red"; // Màu đỏ cho trạng thái từ chối
       default:
         return "default";
     }
+  };
+
+  const handleCheckPendingWorkshops = () => {
+    navigate('/workshop-check');
   };
 
   return (
@@ -252,31 +390,72 @@ const Workshop = () => {
       {/* Main Content */}
       <div id="main-content" className="p-6">
         <div className="mb-6 flex justify-between items-center">
-          <CustomButton 
-            type="primary" 
-            icon={<Plus size={16} />}
-            onClick={handleOpenCreateModal}
-          >
-            Tạo mới hội thảo
-          </CustomButton>
+          <div className="flex gap-3">
+            <CustomButton 
+              type="primary" 
+              icon={<Plus size={16} />}
+              onClick={handleOpenCreateModal}
+            >
+              Tạo mới hội thảo
+            </CustomButton>
+            {pendingWorkshops.length > 0 && (
+              <CustomButton 
+                onClick={handleCheckPendingWorkshops}
+              >
+                Kiểm duyệt hội thảo ({pendingWorkshops.length})
+              </CustomButton>
+            )}
+          </div>
           <SearchBar onSearch={handleSearch} />
         </div>
 
         {error && <Error message={error} />}
 
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <WorkshopTable 
-            workshops={workshops} 
-            onViewWorkshop={handleViewWorkshop}
-          />
-        </div>
-        
-        <div className="mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={5}
-            onPageChange={handlePageChange}
-          />
+          <Tabs defaultActiveKey="1" onChange={handleTabChange}>
+            <TabPane tab="Hội thảo đã duyệt" key="1">
+              <WorkshopTable 
+                workshops={workshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+            <TabPane tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`} key="2">
+              <WorkshopTable 
+                workshops={pendingWorkshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={pendingCurrentPage}
+                  totalPages={pendingTotalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+            <TabPane tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`} key="3">
+              <WorkshopTable 
+                workshops={rejectedWorkshops} 
+                onViewWorkshop={handleViewWorkshop}
+                loading={loading}
+              />
+              <div className="p-4">
+                <Pagination
+                  currentPage={rejectedCurrentPage}
+                  totalPages={rejectedTotalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabPane>
+          </Tabs>
         </div>
       </div>
 
@@ -300,9 +479,6 @@ const Workshop = () => {
           />
           
           <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={handleRequestWorkshop}>
-              Yêu cầu hội thảo
-            </CustomButton>
             <CustomButton onClick={handleCloseCreateModal}>
               Hủy bỏ
             </CustomButton>
@@ -377,6 +553,34 @@ const Workshop = () => {
               <div className="mb-4">
                 <h4 className="text-md font-medium mb-2">Mô tả hội thảo</h4>
                 <p className="text-gray-600">{selectedWorkshop.description}</p>
+              </div>
+            )}
+            
+            {/* Hiển thị lý do từ chối nếu workshop bị từ chối */}
+            {selectedWorkshop.status === "Từ chối" && (
+              <div className="mb-4">
+                <h4 className="text-md font-medium mb-2 text-red-500">Lý do từ chối</h4>
+                {(() => {
+                  try {
+                    const rejectionHistory = JSON.parse(localStorage.getItem('rejectionHistory') || '{}');
+                    const rejectionInfo = rejectionHistory[selectedWorkshop.id];
+                    if (rejectionInfo && rejectionInfo.reason) {
+                      return (
+                        <div>
+                          <p className="text-gray-600">{rejectionInfo.reason}</p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Từ chối vào: {new Date(rejectionInfo.timestamp).toLocaleString('vi-VN')}
+                          </p>
+                        </div>
+                      );
+                    } else {
+                      return <p className="text-gray-600">Không có thông tin về lý do từ chối.</p>;
+                    }
+                  } catch (e) {
+                    console.error("Lỗi khi đọc lý do từ chối:", e);
+                    return <p className="text-gray-600">Không thể hiển thị lý do từ chối.</p>;
+                  }
+                })()}
               </div>
             )}
             
