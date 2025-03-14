@@ -25,7 +25,7 @@ export const getPendingWorkshops = async () => {
     // Sử dụng API getAllWorkshops thay vì pending-workshops
     console.log("Gọi API:", `${WORKSHOP_ENDPOINT}`);
     
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
