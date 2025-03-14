@@ -55,6 +55,9 @@ const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
         let color = 'blue';
         if (status === 'Đang diễn ra') color = 'green';
         if (status === 'Đã kết thúc') color = 'gray';
+        if (status === 'Đã hủy') color = 'red';
+        if (status === 'Chờ duyệt') color = 'orange';
+        if (status === 'Từ chối') color = 'red';
         return <Tag color={color}>{status}</Tag>;
       },
     },
