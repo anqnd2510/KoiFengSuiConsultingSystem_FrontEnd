@@ -1,69 +1,62 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import SearchBar from "../components/Common/SearchBar";
 import BookingTable from "../components/Booking/BookingTable";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
-import { Modal, Form, Input, DatePicker, TimePicker, Select } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  DatePicker,
+  TimePicker,
+  Select,
+  Spin,
+  message,
+} from "antd";
 import CustomButton from "../components/Common/CustomButton";
+import { getBookingHistory, assignMaster } from "../services/booking.service";
 
 const BookingSchedule = () => {
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      customerName: "John Smith",
-      description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
-      date: "9/12",
-      time: "8:00-10:00",
-      master: "Nguyễn Trọng Mạnh",
-      status: "pending",
-      isOnline: true,
-    },
-    {
-      id: 2,
-      customerName: "Trần Thị B",
-      description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
-      date: "9/12",
-      time: "8:00-10:00",
-      master: "Chưa phân công",
-      status: "done",
-      isOnline: false,
-    },
-    {
-      id: 3,
-      customerName: "Lê Văn C",
-      description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
-      date: "9/12",
-      time: "8:00-10:00",
-      master: "Chưa phân công",
-      status: "cancel",
-      isOnline: true,
-    },
-    {
-      id: 4,
-      customerName: "Phạm Thị D",
-      description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
-      date: "9/12",
-      time: "8:00-10:00",
-      master: "Nguyễn Trọng Mạnh",
-      status: "scheduled",
-      isOnline: true,
-    },
-    {
-      id: 5,
-      customerName: "Hoàng Văn E",
-      description: "Chỉ số tiêu chuẩn của nước nuôi cá Koi khỏe mạnh",
-      date: "9/12",
-      time: "8:00-10:00",
-      master: "Nguyễn Trọng Mạnh",
-      status: "pending",
-      isOnline: false,
-    },
-    // Thêm data mẫu khác
-  ]);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [masterList, setMasterList] = useState([]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        setLoading(true);
+        const response = await getBookingHistory();
+
+        if (response?.data && Array.isArray(response.data)) {
+          const transformedData = response.data.map((booking) => ({
+            id: booking.id || "",
+            customerName: booking.customerName || "",
+            description: booking.description || "",
+            date: booking.bookingDate || "",
+            consultingType: booking.type,
+            master: booking.masterName || "Chưa phân công",
+            status: booking.status || "pending",
+          }));
+
+          setBookings(transformedData);
+          setError(null);
+        } else {
+          setError("Không có dữ liệu từ server");
+        }
+      } catch (err) {
+        setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+        console.error("Error fetching bookings:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
 
   const handleSearch = (searchTerm) => {
     console.log("Tìm kiếm:", searchTerm);
@@ -83,36 +76,34 @@ const BookingSchedule = () => {
   };
 
   const handleSave = () => {
-    form.validateFields().then(values => {
+    form.validateFields().then((values) => {
       console.log("Form values:", values);
       handleCloseModal();
     });
   };
-  
+
   const handleMasterChange = (masterValue, recordId) => {
-    // Nếu không có giá trị, gán là "Chưa phân công"
-    const finalMasterValue = masterValue || "Chưa phân công";
-    
-    // Cập nhật danh sách booking khi thay đổi bậc thầy
-    const updatedBookings = bookings.map(booking => {
+    // Tìm tên master từ masterValue (masterId)
+    const selectedMaster = masterList.find((m) => m.value === masterValue);
+    const masterName = selectedMaster ? selectedMaster.label : masterValue;
+
+    const updatedBookings = bookings.map((booking) => {
       if (booking.id === recordId) {
-        return { ...booking, master: finalMasterValue };
+        return { ...booking, master: masterName };
       }
       return booking;
     });
-    
+
     setBookings(updatedBookings);
-    console.log(`Đã phân công bậc thầy ${finalMasterValue} cho lịch hẹn ${recordId}`);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         title="Quản lý lịch đặt hẹn"
         description="Báo cáo và tổng quan về lịch đặt hẹn"
       />
 
-      {/* Main Content */}
       <div className="p-6">
         <div className="mb-6 flex justify-end items-center">
           <SearchBar onSearch={handleSearch} />
@@ -120,10 +111,16 @@ const BookingSchedule = () => {
 
         {error && <Error message={error} />}
 
-        <BookingTable 
-          bookings={bookings} 
-          onMasterChange={handleMasterChange}
-        />
+        {loading ? (
+          <div className="text-center py-4">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <BookingTable
+            bookings={bookings}
+            onMasterChange={handleMasterChange}
+          />
+        )}
 
         <Pagination
           currentPage={1}
@@ -131,13 +128,8 @@ const BookingSchedule = () => {
           onPageChange={handlePageChange}
         />
 
-        {/* Modal tạo lịch tư vấn */}
         <Modal
-          title={
-            <div className="text-xl font-semibold">
-              Tạo lịch tư vấn
-            </div>
-          }
+          title={<div className="text-xl font-semibold">Tạo lịch tư vấn</div>}
           open={isModalOpen}
           onCancel={handleCloseModal}
           footer={null}
@@ -145,32 +137,13 @@ const BookingSchedule = () => {
           className="booking-modal"
         >
           <div className="p-4">
-            <Form
-              form={form}
-              layout="vertical"
-            >
+            <Form form={form} layout="vertical">
               <Form.Item
                 label="Mã tư vấn"
                 name="consultingId"
                 rules={[{ required: true, message: "Vui lòng nhập mã tư vấn" }]}
               >
                 <Input placeholder="Nhập mã tư vấn" />
-              </Form.Item>
-
-              <Form.Item
-                label="Thời gian bắt đầu"
-                name="startTime"
-                rules={[{ required: true, message: "Vui lòng chọn thời gian bắt đầu" }]}
-              >
-                <TimePicker format="HH:mm" className="w-full" />
-              </Form.Item>
-
-              <Form.Item
-                label="Thời gian kết thúc"
-                name="endTime"
-                rules={[{ required: true, message: "Vui lòng chọn thời gian kết thúc" }]}
-              >
-                <TimePicker format="HH:mm" className="w-full" />
               </Form.Item>
 
               <Form.Item
@@ -184,22 +157,22 @@ const BookingSchedule = () => {
               <Form.Item
                 label="Loại tư vấn"
                 name="type"
-                rules={[{ required: true, message: "Vui lòng chọn loại tư vấn" }]}
+                rules={[
+                  { required: true, message: "Vui lòng chọn loại tư vấn" },
+                ]}
               >
                 <Select
                   placeholder="Chọn loại tư vấn"
                   options={[
                     { value: "online", label: "Online" },
-                    { value: "offline", label: "Offline" }
+                    { value: "offline", label: "Offline" },
                   ]}
                 />
               </Form.Item>
             </Form>
 
             <div className="flex justify-end gap-3 mt-6">
-              <CustomButton onClick={handleCloseModal}>
-                Hủy bỏ
-              </CustomButton>
+              <CustomButton onClick={handleCloseModal}>Hủy bỏ</CustomButton>
               <CustomButton type="primary" onClick={handleSave}>
                 Tạo mới
               </CustomButton>

@@ -35,7 +35,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import {
-  getBookingOnlineHistory,
+  getBookingHistory,
   getBookingDetail,
 } from "../services/booking.service";
 import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
@@ -211,7 +211,7 @@ const ConsultationHistory = () => {
 
     try {
       setLoading(true);
-      const response = await getBookingOnlineHistory();
+      const response = await getBookingHistory();
       console.log("Raw data from API:", response.data);
 
       if (!response?.data) {
