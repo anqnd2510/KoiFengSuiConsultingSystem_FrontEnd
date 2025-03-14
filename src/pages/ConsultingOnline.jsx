@@ -7,7 +7,6 @@ import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import { Tag } from "antd";
-import StaffAssign from "../components/ConsultingOnline/StaffAssign";
 
 const { Option } = Select;
 
@@ -18,7 +17,6 @@ const mockConsultingData = [
     customer: "Nguyễn Văn A",
     description: "Tư vấn xây hồ",
     package: "Cơ bản",
-    staff: "Nguyễn Văn B",
     type: "Trực tuyến",
     status: "Hoàn thành",
   },
@@ -28,14 +26,11 @@ const mockConsultingData = [
     customer: "Trần Thị C",
     description: "Tư vấn xây hồ",
     package: "Cơ bản",
-    staff: "Chưa phân công",
     type: "Trực tuyến",
     status: "Đã hủy",
   },
   // ... other mock data
 ];
-
-const staffList = ["Nguyễn Văn B", "Trần Thị C", "Lê Văn D", "Phạm Thị E"];
 
 const ConsultingOnline = () => {
   const [activeTab, setActiveTab] = useState("Tất cả");
@@ -43,19 +38,6 @@ const ConsultingOnline = () => {
   const tabs = ["Tất cả", "Đang diễn ra", "Đã hủy", "Hoàn thành", "Chờ xử lý"];
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [error, setError] = useState(null);
-
-  const handleStaffChange = (staffValue, recordId) => {
-    // Cập nhật dữ liệu khi nhân viên được phân công
-    const updatedData = consultingData.map(item => {
-      if (item.id === recordId) {
-        return { ...item, staff: staffValue };
-      }
-      return item;
-    });
-    
-    setConsultingData(updatedData);
-    console.log(`Đã phân công nhân viên ${staffValue} cho bản ghi ${recordId}`);
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -96,34 +78,19 @@ const ConsultingOnline = () => {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
-      width: "15%",
+      width: "20%",
     },
     {
       title: "Gói dịch vụ",
       dataIndex: "package",
       key: "package",
-      width: "10%",
-    },
-    {
-      title: "Nhân viên",
-      dataIndex: "staff",
-      key: "staff",
-      width: "20%",
-      render: (staff, record) => (
-        <StaffAssign
-          staffId={staff}
-          recordId={record.id}
-          staffList={staffList}
-          onSave={handleStaffChange}
-          defaultValue={staff}
-        />
-      ),
+      width: "15%",
     },
     {
       title: "Loại",
       dataIndex: "type",
       key: "type",
-      width: "10%",
+      width: "15%",
       render: (type) => (
         <Tag color="default">{type}</Tag>
       ),
@@ -132,7 +99,7 @@ const ConsultingOnline = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: "10%",
+      width: "15%",
       render: (status) => (
         <Tag color={getStatusColor(status)}>{status}</Tag>
       ),

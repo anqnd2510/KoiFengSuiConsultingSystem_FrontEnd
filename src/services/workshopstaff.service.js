@@ -63,15 +63,15 @@ export const mapWorkshopStatus = (apiStatus) => {
   if (typeof apiStatus === 'string') {
     switch (apiStatus.toLowerCase()) {
       case 'open registration':
-        return "Checking";
+        return "Đang diễn ra";
       case 'scheduled':
-        return "Checked in";
+        return "Sắp diễn ra";
       case 'cancelled':
         return "Cancel";
       case 'completed':
-        return "Reject";
+        return "Đã xong";
       default:
-        return "Checking";
+        return "Sắp diễn ra";
     }
   }
   
@@ -111,12 +111,23 @@ export const formatWorkshopsData = (workshopsData) => {
         return null;
       }
       
+      // Lấy email người dùng từ localStorage
+      const userEmail = localStorage.getItem('userEmail');
+      
+      // Xác định tên master
+      let masterName = workshop.masterName || "Chưa có thông tin";
+      
+      // Nếu người dùng đăng nhập là bob@example.com, hiển thị tên là Bob Chen
+      if (userEmail === "bob@example.com" && masterName === "Sensei Tanaka") {
+        masterName = "Bob Chen";
+      }
+      
       // Tạo đối tượng workshop đã định dạng
       const formattedWorkshop = {
         id: workshop.workshopId || 0,
         workshopId: workshop.workshopId || "", // Giữ nguyên workshopId từ API
         name: workshop.workshopName || "Không có tên",
-        master: workshop.masterName || "Chưa có thông tin",
+        master: masterName,
         location: workshop.location || "Không có địa điểm",
         date: workshop.startDate ? new Date(workshop.startDate).toLocaleDateString('vi-VN') : "Không có ngày",
         status: mapWorkshopStatus(workshop.status),

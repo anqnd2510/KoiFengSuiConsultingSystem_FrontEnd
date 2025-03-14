@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag } from 'antd';
+import { Tag, Space } from 'antd';
 import { Eye } from 'lucide-react';
 import CustomTable from '../Common/CustomTable';
 import CustomButton from '../Common/CustomButton';
@@ -12,19 +12,9 @@ const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
       key: 'name',
       width: '25%',
       render: (_, record) => (
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg overflow-hidden">
-            <img
-              src={record.image}
-              alt={record.name}
-              className="w-full h-full object-cover"
-              onError={(e) => {e.target.src = "https://via.placeholder.com/100?text=Workshop"}}
-            />
-          </div>
-          <div>
-            <div className="font-medium">{record.name}</div>
-            <div className="text-sm text-gray-500">{record.location}</div>
-          </div>
+        <div>
+          <div className="font-medium">{record.name}</div>
+          <div className="text-sm text-gray-500">{record.location}</div>
         </div>
       ),
     },
@@ -66,14 +56,17 @@ const WorkshopTable = ({ workshops, onViewWorkshop, loading }) => {
       key: 'action',
       width: '15%',
       render: (_, record) => (
-        <CustomButton
-          type="primary"
-          size="small"
-          icon={<Eye size={16} />}
-          onClick={() => onViewWorkshop(record)}
-        >
-          Xem chi tiết
-        </CustomButton>
+        <Space size="middle">
+          <CustomButton
+            type="primary"
+            size="small"
+            icon={<Eye size={16} />}
+            onClick={() => onViewWorkshop(record)}
+            className="bg-blue-500"
+          >
+            Xem chi tiết
+          </CustomButton>
+        </Space>
       ),
     },
   ];

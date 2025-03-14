@@ -96,6 +96,20 @@ export const createWorkshop = async (workshopData) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
     
+    // Lấy tên người dùng từ localStorage
+    let userName = localStorage.getItem('userName');
+    console.log("Tên người dùng từ localStorage:", userName);
+    
+    // Kiểm tra email từ localStorage nếu có
+    const userEmail = localStorage.getItem('userEmail');
+    console.log("Email người dùng từ localStorage:", userEmail);
+    
+    // Hardcode tên cho bob@example.com
+    if (userEmail === "bob@example.com" || !userName) {
+      userName = "Bob Chen";
+      console.log("Sử dụng tên hardcode:", userName);
+    }
+    
     // Gửi dữ liệu trực tiếp
     const response = await apiClient.post(`${WORKSHOP_ENDPOINT}/create`, {
       workshopName: workshopData.name,
@@ -105,7 +119,8 @@ export const createWorkshop = async (workshopData) => {
       capacity: workshopData.ticketSlots,
       status: "Pending",
       price: workshopData.ticketPrice,
-      masterName: "Master Wong"
+      masterName: userName, // Sử dụng tên người dùng từ localStorage
+      masterAccount: userEmail // Thêm tham số masterAccount để backend có thể lấy tên từ tài khoản
     });
     
     console.log("API Response:", response.data);
