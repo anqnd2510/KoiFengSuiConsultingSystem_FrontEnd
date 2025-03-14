@@ -1,29 +1,58 @@
 import React, { useState } from "react";
-import { Select } from "antd";
+import { Select, message } from "antd";
+import { assignMaster } from "../../services/booking.service";
 
 const { Option } = Select;
 
 /**
  * Component dùng để phân công nhân viên cho các buổi tư vấn
  */
-const StaffAssign = ({ 
-  staffId, 
-  recordId, 
-  staffList, 
-  onSave, 
-  defaultValue = "Chưa phân công"
+const StaffAssign = ({
+  staffId,
+  recordId,
+  staffList,
+  onSave,
+  defaultValue = "Chưa phân công",
 }) => {
   const [editingMode, setEditingMode] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(defaultValue);
-  
+
   const handleStaffChange = (value) => {
     setSelectedStaff(value);
     setEditingMode(true);
   };
 
-  const handleSave = () => {
-    onSave(selectedStaff, recordId);
-    setEditingMode(false);
+  const handleSave = async () => {
+    try {
+      if (
+        selectedStaff &&
+        selectedStaff !== "Chưa phân công" &&
+        selectedStaff !== "none"
+      ) {
+        console.log("Sending to API:", {
+          bookingId: recordId.toString(),
+          masterId: selectedStaff.toString(),
+        });
+
+        const response = await assignMaster(
+          recordId.toString(),
+          selectedStaff.toString()
+        );
+
+        if (response.isSuccess) {
+          onSave(selectedStaff, recordId);
+          setEditingMode(false);
+          message.success("Phân công bậc thầy thành công!");
+        } else {
+          message.error(response.message || "Phân công bậc thầy thất bại!");
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleSave:", error);
+      message.error(
+        error.response?.data?.message || "Có lỗi xảy ra khi phân công bậc thầy!"
+      );
+    }
   };
 
   const handleCancel = () => {
@@ -32,28 +61,25 @@ const StaffAssign = ({
   };
 
   return (
-    <div className="flex items-center">
+    <div className="inline-flex items-center gap-2 relative">
       <Select
         value={selectedStaff}
         placeholder="Phân công nhân viên"
         style={{ width: 160 }}
         className={selectedStaff === "Chưa phân công" ? "text-red-500" : ""}
         onChange={handleStaffChange}
-      >
-        <Option key="unassigned" value="Chưa phân công" className="text-red-500">Chưa phân công</Option>
-        {staffList.map((staff) => (
-          <Option key={staff} value={staff}>{staff}</Option>
-        ))}
-      </Select>
+        options={staffList}
+        dropdownMatchSelectWidth={false}
+      />
 
       {editingMode && (
-        <div className="flex gap-[5px] items-center ml-[5px]">
+        <div className="inline-flex items-center gap-1">
           <button
             onClick={handleSave}
-            className="p-1.5 rounded bg-green-500 hover:bg-green-600 transition-colors"
+            className="p-1 rounded bg-green-500 hover:bg-green-600 transition-colors"
           >
             <svg
-              className="w-4 h-4 text-white"
+              className="w-3.5 h-3.5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -68,10 +94,10 @@ const StaffAssign = ({
           </button>
           <button
             onClick={handleCancel}
-            className="p-1.5 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
+            className="p-1 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
           >
             <svg
-              className="w-4 h-4 text-white"
+              className="w-3.5 h-3.5 text-white"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -90,4 +116,4 @@ const StaffAssign = ({
   );
 };
 
-export default StaffAssign; 
+export default StaffAssign;
