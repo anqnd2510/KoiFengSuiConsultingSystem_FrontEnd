@@ -1,12 +1,52 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Tag, message, Spin, Button, Popconfirm } from "antd";
+import { Tag, message, Spin, Button, Popconfirm, Alert } from "antd";
 import { CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
 import { getAudiencesByWorkshopId, formatAudiencesData, checkInAudience } from "../services/audience.service";
+
+// Dữ liệu mẫu khi API chưa sẵn sàng
+const sampleAudiences = [
+  {
+    id: "T01",
+    name: "Nguyễn Văn A",
+    phone: "0987654321",
+    email: "nguyenvana@gmail.com",
+    date: "01/05/2023",
+    status: "Chờ xác nhận",
+    registerId: "R001"
+  },
+  {
+    id: "T02",
+    name: "Trần Thị B",
+    phone: "0912345678",
+    email: "tranthib@gmail.com",
+    date: "02/05/2023",
+    status: "Đã điểm danh",
+    registerId: "R002"
+  },
+  {
+    id: "T03",
+    name: "Lê Văn C",
+    phone: "0909123456",
+    email: "levanc@gmail.com",
+    date: "03/05/2023",
+    status: "Vắng mặt",
+    registerId: "R003"
+  },
+  {
+    id: "T04",
+    name: "Phạm Thị D",
+    phone: "0978123456",
+    email: "phamthid@gmail.com",
+    date: "04/05/2023",
+    status: "Chờ xác nhận",
+    registerId: "R004"
+  }
+];
 
 const AudienceList = () => {
   const location = useLocation();
@@ -18,6 +58,7 @@ const AudienceList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
+  const [usingSampleData, setUsingSampleData] = useState(false);
 
   // Fetch danh sách người tham dự từ API
   const fetchAudiences = async () => {
@@ -28,14 +69,16 @@ const AudienceList = () => {
 
     setLoading(true);
     setError(null);
+    setUsingSampleData(false);
     
     try {
       const data = await getAudiencesByWorkshopId(workshopId);
       console.log("Dữ liệu người tham dự gốc:", data);
       
       if (!data || data.length === 0) {
-        message.info("Không có dữ liệu người tham dự");
-        setAudiences([]);
+        message.info("Không có dữ liệu người tham dự từ API, sử dụng dữ liệu mẫu");
+        setAudiences(sampleAudiences);
+        setUsingSampleData(true);
       } else {
         const formattedData = formatAudiencesData(data);
         console.log("Dữ liệu người tham dự đã định dạng:", formattedData);
@@ -45,7 +88,9 @@ const AudienceList = () => {
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu người tham dự:", err);
       setError(`Không thể tải dữ liệu người tham dự: ${err.message}`);
-      message.error("Không thể tải dữ liệu người tham dự");
+      message.warning("Sử dụng dữ liệu mẫu do không thể kết nối đến API");
+      setAudiences(sampleAudiences);
+      setUsingSampleData(true);
     } finally {
       setLoading(false);
     }
@@ -67,6 +112,19 @@ const AudienceList = () => {
 
   // Xử lý điểm danh người tham dự
   const handleCheckIn = async (audience) => {
+    if (usingSampleData) {
+      // Nếu đang sử dụng dữ liệu mẫu, chỉ cập nhật UI mà không gọi API
+      message.success(`Điểm danh thành công cho ${audience.name} (chế độ mẫu)`);
+      setAudiences(prevAudiences => 
+        prevAudiences.map(item => 
+          item.id === audience.id 
+            ? { ...item, status: "Đã điểm danh" } 
+            : item
+        )
+      );
+      return;
+    }
+
     if (!workshopId || !audience.registerId) {
       message.error("Thiếu thông tin cần thiết để điểm danh");
       return;
@@ -217,11 +275,21 @@ const AudienceList = () => {
 
       {/* Main Content */}
       <div className="p-6">
+        {usingSampleData && (
+          <Alert
+            message="Đang sử dụng dữ liệu mẫu"
+            description="Không thể kết nối đến API hoặc không có dữ liệu thực. Đang hiển thị dữ liệu mẫu cho mục đích demo."
+            type="warning"
+            showIcon
+            className="mb-4"
+          />
+        )}
+
         <div className="mb-6 flex justify-end">
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && <Error message={error} />}
+        {error && !usingSampleData && <Error message={error} />}
 
         {loading ? (
           <div className="flex justify-center items-center py-10">

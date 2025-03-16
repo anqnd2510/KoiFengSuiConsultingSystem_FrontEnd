@@ -24,7 +24,8 @@ export const getAudiencesByWorkshopId = async (workshopId) => {
     console.log("Gọi API lấy danh sách người tham dự với workshopId:", workshopId);
     
     // Gọi API lấy danh sách người tham dự
-    const response = await apiClient.get(`${AUDIENCE_ENDPOINT}/by-workshop/${workshopId}`);
+    // Sửa endpoint để phù hợp với API của backend
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/get-audiences-by-workshop/${workshopId}`);
     
     console.log("API Response danh sách người tham dự:", response.data);
     
