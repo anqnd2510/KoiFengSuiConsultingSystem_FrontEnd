@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Tag, message, Spin } from "antd";
+import { Tag, message, Spin, Button, Popconfirm } from "antd";
+import { CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
-import { getAudiencesByWorkshopId, formatAudiencesData } from "../services/audience.service";
+import { getAudiencesByWorkshopId, formatAudiencesData, checkInAudience } from "../services/audience.service";
 
 const AudienceList = () => {
   const location = useLocation();
@@ -16,6 +17,7 @@ const AudienceList = () => {
   const [audiences, setAudiences] = useState([]);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [checkingIn, setCheckingIn] = useState(false);
 
   // Fetch danh sách người tham dự từ API
   const fetchAudiences = async () => {
@@ -61,6 +63,39 @@ const AudienceList = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  // Xử lý điểm danh người tham dự
+  const handleCheckIn = async (audience) => {
+    if (!workshopId || !audience.registerId) {
+      message.error("Thiếu thông tin cần thiết để điểm danh");
+      return;
+    }
+
+    setCheckingIn(true);
+    
+    try {
+      const result = await checkInAudience(workshopId, audience.registerId);
+      
+      if (result.success) {
+        message.success(`Điểm danh thành công cho ${audience.name}`);
+        // Cập nhật trạng thái người tham dự trong danh sách
+        setAudiences(prevAudiences => 
+          prevAudiences.map(item => 
+            item.id === audience.id 
+              ? { ...item, status: "Đã điểm danh" } 
+              : item
+          )
+        );
+      } else {
+        message.error(result.message || "Không thể điểm danh");
+      }
+    } catch (err) {
+      console.error("Lỗi khi điểm danh:", err);
+      message.error(err.message || "Đã xảy ra lỗi khi điểm danh");
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -116,7 +151,7 @@ const AudienceList = () => {
       title: "Email",
       dataIndex: "email",
       key: "email",
-      width: "20%",
+      width: "15%",
     },
     {
       title: "Ngày",
@@ -128,11 +163,46 @@ const AudienceList = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: "20%",
+      width: "15%",
       render: (status) => (
         <Tag color={getStatusColor(status)}>
           {status}
         </Tag>
+      ),
+    },
+    {
+      title: "Hành động",
+      key: "action",
+      width: "10%",
+      render: (_, record) => (
+        record.status !== "Đã điểm danh" ? (
+          <Popconfirm
+            title="Điểm danh người tham dự"
+            description={`Bạn có chắc muốn điểm danh cho ${record.name}?`}
+            onConfirm={() => handleCheckIn(record)}
+            okText="Có"
+            cancelText="Không"
+            icon={<QuestionCircleOutlined style={{ color: 'green' }} />}
+          >
+            <Button 
+              type="primary" 
+              icon={<CheckCircleOutlined />} 
+              size="small"
+              loading={checkingIn}
+            >
+              Điểm danh
+            </Button>
+          </Popconfirm>
+        ) : (
+          <Button 
+            type="primary" 
+            icon={<CheckCircleOutlined />} 
+            size="small" 
+            disabled
+          >
+            Đã điểm danh
+          </Button>
+        )
       ),
     },
   ];
