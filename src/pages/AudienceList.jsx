@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Tag, message, Spin, Button, Popconfirm, Alert } from "antd";
+import { Tag, message, Spin, Button, Popconfirm, Alert, Typography } from "antd";
 import { CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
@@ -8,8 +8,83 @@ import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
 import { checkInAudience } from "../services/audience.service";
 
-// Dữ liệu mẫu cho người tham dự
-const sampleAudiences = [
+const { Title } = Typography;
+
+// Dữ liệu mẫu cho các workshop
+const workshopData = {
+  // Feng Shui for Beginners
+  "357B32FE-63D8-44D3-8": [
+    {
+      id: "FS001",
+      name: "Nguyễn Văn Minh",
+      phone: "0987123456",
+      email: "nguyenvanminh@gmail.com",
+      date: "15/03/2023",
+      status: "Chờ xác nhận",
+      registerId: "R101"
+    },
+    {
+      id: "FS002",
+      name: "Trần Thị Hoa",
+      phone: "0912345678",
+      email: "tranthihoa@gmail.com",
+      date: "16/03/2023",
+      status: "Đã điểm danh",
+      registerId: "R102"
+    },
+    {
+      id: "FS003",
+      name: "Lê Văn Tâm",
+      phone: "0909876543",
+      email: "levantam@gmail.com",
+      date: "17/03/2023",
+      status: "Vắng mặt",
+      registerId: "R103"
+    }
+  ],
+  // Advanced Koi Care
+  "A9A5E712-15F4-448F-A": [
+    {
+      id: "KC001",
+      name: "Phạm Thị Lan",
+      phone: "0978654321",
+      email: "phamthilan@gmail.com",
+      date: "10/04/2023",
+      status: "Chờ xác nhận",
+      registerId: "R201"
+    },
+    {
+      id: "KC002",
+      name: "Hoàng Văn Đức",
+      phone: "0965432109",
+      email: "hoangvanduc@gmail.com",
+      date: "11/04/2023",
+      status: "Đã điểm danh",
+      registerId: "R202"
+    },
+    {
+      id: "KC003",
+      name: "Ngô Thị Mai",
+      phone: "0932109876",
+      email: "ngothimai@gmail.com",
+      date: "12/04/2023",
+      status: "Chờ xác nhận",
+      registerId: "R203"
+    },
+    {
+      id: "KC004",
+      name: "Vũ Văn Hùng",
+      phone: "0945678901",
+      email: "vuvanhung@gmail.com",
+      date: "13/04/2023",
+      status: "Vắng mặt",
+      registerId: "R204"
+    }
+  ]
+};
+
+// Dữ liệu mẫu mặc định
+const defaultAudiences = [
   {
     id: "T01",
     name: "Nguyễn Văn A",
@@ -48,22 +123,54 @@ const sampleAudiences = [
   }
 ];
 
+// Thông tin workshop
+const workshopInfo = {
+  "357B32FE-63D8-44D3-8": {
+    name: "Feng Shui for Beginners",
+    master: "Bob Chen",
+    location: "Community Center",
+    date: "21/3/2023"
+  },
+  "A9A5E712-15F4-448F-A": {
+    name: "Advanced Koi Care",
+    master: "Jane Smith",
+    location: "Koi Farm",
+    date: "21/4/2023"
+  }
+};
+
 const AudienceList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const workshopId = queryParams.get("workshopId");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [audiences, setAudiences] = useState(sampleAudiences);
+  const [audiences, setAudiences] = useState([]);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
+  const [workshop, setWorkshop] = useState(null);
 
-  // Không cần gọi API lấy danh sách người tham dự, chỉ hiển thị dữ liệu mẫu
+  // Lấy dữ liệu mẫu dựa trên workshopId
   useEffect(() => {
-    // Hiển thị thông báo
-    message.info("Hiển thị dữ liệu mẫu cho người tham dự");
-  }, []);
+    setLoading(true);
+    
+    // Tìm thông tin workshop
+    const info = workshopInfo[workshopId];
+    setWorkshop(info);
+    
+    // Lấy danh sách người tham dự theo workshopId
+    const audienceList = workshopData[workshopId] || defaultAudiences;
+    setAudiences(audienceList);
+    
+    if (info) {
+      message.success(`Đã tải danh sách người tham dự cho workshop: ${info.name}`);
+    } else {
+      message.info("Hiển thị dữ liệu mẫu cho người tham dự");
+    }
+    
+    setLoading(false);
+  }, [workshopId]);
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
@@ -236,6 +343,34 @@ const AudienceList = () => {
 
       {/* Main Content */}
       <div className="p-6">
+        {workshop ? (
+          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+            <Title level={4}>{workshop.name}</Title>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-gray-500">Người hướng dẫn</p>
+                <p className="font-medium">{workshop.master}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Địa điểm</p>
+                <p className="font-medium">{workshop.location}</p>
+              </div>
+              <div>
+                <p className="text-gray-500">Ngày</p>
+                <p className="font-medium">{workshop.date}</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <Alert
+            message="Không tìm thấy thông tin workshop"
+            description="Không thể tìm thấy thông tin workshop với ID đã cung cấp. Hiển thị dữ liệu mẫu."
+            type="warning"
+            showIcon
+            className="mb-4"
+          />
+        )}
+
         <Alert
           message="Đang sử dụng dữ liệu mẫu"
           description="Hiển thị dữ liệu mẫu cho mục đích demo. Chức năng điểm danh sẽ gọi API thực tế."
