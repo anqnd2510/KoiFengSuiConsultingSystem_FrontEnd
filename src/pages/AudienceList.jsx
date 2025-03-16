@@ -10,122 +10,67 @@ import { checkInAudience } from "../services/audience.service";
 
 const { Title } = Typography;
 
-// Dữ liệu mẫu cho các workshop
-const workshopData = {
-  // Feng Shui for Beginners
-  "357B32FE-63D8-44D3-8": [
-    {
-      id: "FS001",
-      name: "Nguyễn Văn Minh",
-      phone: "0987123456",
-      email: "nguyenvanminh@gmail.com",
-      date: "15/03/2023",
-      status: "Chờ xác nhận",
-      registerId: "R101"
-    },
-    {
-      id: "FS002",
-      name: "Trần Thị Hoa",
-      phone: "0912345678",
-      email: "tranthihoa@gmail.com",
-      date: "16/03/2023",
-      status: "Đã điểm danh",
-      registerId: "R102"
-    },
-    {
-      id: "FS003",
-      name: "Lê Văn Tâm",
-      phone: "0909876543",
-      email: "levantam@gmail.com",
-      date: "17/03/2023",
-      status: "Vắng mặt",
-      registerId: "R103"
-    }
-  ],
-  // Advanced Koi Care
-  "A9A5E712-15F4-448F-A": [
-    {
-      id: "KC001",
-      name: "Phạm Thị Lan",
-      phone: "0978654321",
-      email: "phamthilan@gmail.com",
-      date: "10/04/2023",
-      status: "Chờ xác nhận",
-      registerId: "R201"
-    },
-    {
-      id: "KC002",
-      name: "Hoàng Văn Đức",
-      phone: "0965432109",
-      email: "hoangvanduc@gmail.com",
-      date: "11/04/2023",
-      status: "Đã điểm danh",
-      registerId: "R202"
-    },
-    {
-      id: "KC003",
-      name: "Ngô Thị Mai",
-      phone: "0932109876",
-      email: "ngothimai@gmail.com",
-      date: "12/04/2023",
-      status: "Chờ xác nhận",
-      registerId: "R203"
-    },
-    {
-      id: "KC004",
-      name: "Vũ Văn Hùng",
-      phone: "0945678901",
-      email: "vuvanhung@gmail.com",
-      date: "13/04/2023",
-      status: "Vắng mặt",
-      registerId: "R204"
-    }
-  ]
-};
-
-// Dữ liệu mẫu mặc định
-const defaultAudiences = [
+// Dữ liệu mẫu dựa trên hình ảnh
+const audienceData = [
   {
-    id: "T01",
-    name: "Nguyễn Văn A",
-    phone: "0987654321",
-    email: "nguyenvana@gmail.com",
-    date: "01/05/2023",
-    status: "Chờ xác nhận",
-    registerId: "R001"
+    id: 1,
+    attendId: "0BA1CFE1-53D2-47E3-B",
+    workshopId: "NULL",
+    attendName: "Jane Smith",
+    phoneNumber: "0987654321",
+    customerId: "CEDBA518-5EC0-4469-B",
+    status: "Pending"
   },
   {
-    id: "T02",
-    name: "Trần Thị B",
-    phone: "0912345678",
-    email: "tranthib@gmail.com",
-    date: "02/05/2023",
-    status: "Đã điểm danh",
-    registerId: "R002"
+    id: 2,
+    attendId: "3DAF1138-8D95-40BD-8",
+    workshopId: "NULL",
+    attendName: "John Doe",
+    phoneNumber: "1234567890",
+    customerId: "05369D4A-A270-4E52-A",
+    status: "Confirmed"
   },
   {
-    id: "T03",
-    name: "Lê Văn C",
-    phone: "0909123456",
-    email: "levanc@gmail.com",
-    date: "03/05/2023",
-    status: "Vắng mặt",
-    registerId: "R003"
+    id: 3,
+    attendId: "7D544216-AE7C-4A0B-8",
+    workshopId: "NULL",
+    attendName: "John Doe",
+    phoneNumber: "1234567890",
+    customerId: "05369D4A-A270-4E52-A",
+    status: "Confirmed"
   },
   {
-    id: "T04",
-    name: "Phạm Thị D",
-    phone: "0978123456",
-    email: "phamthid@gmail.com",
-    date: "04/05/2023",
-    status: "Chờ xác nhận",
-    registerId: "R004"
+    id: 4,
+    attendId: "D05BB2F7-6D35-4352-8",
+    workshopId: "NULL",
+    attendName: "Jane Smith",
+    phoneNumber: "0987654321",
+    customerId: "CEDBA518-5EC0-4469-B",
+    status: "Pending"
+  },
+  {
+    id: 5,
+    attendId: "E61CB314-41C9-4AAD-B",
+    workshopId: "357B32FE-63D8-4493-8",
+    attendName: "John Doe",
+    phoneNumber: "1234567890",
+    customerId: "05369D4A-A270-4E52-A",
+    status: "Confirmed"
+  },
+  {
+    id: 6,
+    attendId: "EE5E0887-6D93-4E0A-B",
+    workshopId: "A9A5E712-15F4-448F-A",
+    attendName: "Jane Smith",
+    phoneNumber: "0987654321",
+    customerId: "CEDBA518-5EC0-4469-B",
+    status: "Pending"
   }
 ];
 
 // Thông tin workshop
 const workshopInfo = {
-  "357B32FE-63D8-44D3-8": {
+  "357B32FE-63D8-4493-8": {
     name: "Feng Shui for Beginners",
     master: "Bob Chen",
     location: "Community Center",
@@ -151,22 +96,29 @@ const AudienceList = () => {
   const [checkingIn, setCheckingIn] = useState(false);
   const [workshop, setWorkshop] = useState(null);
 
-  // Lấy dữ liệu mẫu dựa trên workshopId
+  // Lấy dữ liệu dựa trên workshopId
   useEffect(() => {
     setLoading(true);
+    
+    console.log("Workshop ID từ URL:", workshopId);
     
     // Tìm thông tin workshop
     const info = workshopInfo[workshopId];
     setWorkshop(info);
     
-    // Lấy danh sách người tham dự theo workshopId
-    const audienceList = workshopData[workshopId] || defaultAudiences;
-    setAudiences(audienceList);
+    // Lọc danh sách người tham dự theo workshopId
+    // Nếu workshopId là null, lấy tất cả người tham dự có workshopId là NULL
+    // Nếu có workshopId, lấy người tham dự có workshopId tương ứng
+    const filteredAudiences = workshopId 
+      ? audienceData.filter(a => a.workshopId === workshopId)
+      : audienceData.filter(a => a.workshopId === "NULL");
+    
+    setAudiences(filteredAudiences);
     
     if (info) {
       message.success(`Đã tải danh sách người tham dự cho workshop: ${info.name}`);
     } else {
-      message.info("Hiển thị dữ liệu mẫu cho người tham dự");
+      message.info("Đã tải danh sách người tham dự");
     }
     
     setLoading(false);
@@ -183,7 +135,7 @@ const AudienceList = () => {
 
   // Xử lý điểm danh người tham dự
   const handleCheckIn = async (audience) => {
-    if (!workshopId || !audience.registerId) {
+    if (!audience.attendId) {
       message.error("Thiếu thông tin cần thiết để điểm danh");
       return;
     }
@@ -192,15 +144,15 @@ const AudienceList = () => {
     
     try {
       // Gọi API điểm danh
-      const result = await checkInAudience(workshopId, audience.registerId);
+      const result = await checkInAudience(workshopId, audience.attendId);
       
       if (result.success) {
-        message.success(`Điểm danh thành công cho ${audience.name}`);
+        message.success(`Điểm danh thành công cho ${audience.attendName}`);
         // Cập nhật trạng thái người tham dự trong danh sách
         setAudiences(prevAudiences => 
           prevAudiences.map(item => 
             item.id === audience.id 
-              ? { ...item, status: "Đã điểm danh" } 
+              ? { ...item, status: "Confirmed" } 
               : item
           )
         );
@@ -215,7 +167,7 @@ const AudienceList = () => {
       setAudiences(prevAudiences => 
         prevAudiences.map(item => 
           item.id === audience.id 
-            ? { ...item, status: "Đã điểm danh" } 
+            ? { ...item, status: "Confirmed" } 
             : item
         )
       );
@@ -226,24 +178,37 @@ const AudienceList = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Đã điểm danh":
+      case "Confirmed":
         return "success";
-      case "Chờ xác nhận":
+      case "Pending":
         return "warning";
-      case "Vắng mặt":
+      case "Absent":
         return "error";
       default:
         return "default";
     }
   };
 
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Confirmed":
+        return "Đã điểm danh";
+      case "Pending":
+        return "Chờ xác nhận";
+      case "Absent":
+        return "Vắng mặt";
+      default:
+        return status;
+    }
+  };
+
   // Lọc dữ liệu theo từ khóa tìm kiếm
   const filteredAudiences = audiences.filter(audience => {
     return (
-      (audience.name && audience.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.phone && audience.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.email && audience.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.id && audience.id.toLowerCase().includes(searchTerm.toLowerCase()))
+      (audience.attendName && audience.attendName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.phoneNumber && audience.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.customerId && audience.customerId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.attendId && audience.attendId.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -256,43 +221,43 @@ const AudienceList = () => {
 
   const columns = [
     {
-      title: "Mã vé",
-      dataIndex: "id",
-      key: "id",
-      width: "10%",
-    },
-    {
-      title: "Họ và tên",
-      dataIndex: "name",
-      key: "name",
-      width: "20%",
-    },
-    {
-      title: "Số điện thoại",
-      dataIndex: "phone",
-      key: "phone",
+      title: "AttendId",
+      dataIndex: "attendId",
+      key: "attendId",
       width: "15%",
     },
     {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
+      title: "WorkshopId",
+      dataIndex: "workshopId",
+      key: "workshopId",
       width: "15%",
     },
     {
-      title: "Ngày",
-      dataIndex: "date",
-      key: "date",
+      title: "AttendName",
+      dataIndex: "attendName",
+      key: "attendName",
       width: "15%",
     },
     {
-      title: "Trạng thái",
+      title: "PhoneNumber",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+      width: "15%",
+    },
+    {
+      title: "CustomerId",
+      dataIndex: "customerId",
+      key: "customerId",
+      width: "15%",
+    },
+    {
+      title: "Status",
       dataIndex: "status",
       key: "status",
       width: "15%",
       render: (status) => (
         <Tag color={getStatusColor(status)}>
-          {status}
+          {getStatusText(status)}
         </Tag>
       ),
     },
@@ -301,10 +266,10 @@ const AudienceList = () => {
       key: "action",
       width: "10%",
       render: (_, record) => (
-        record.status !== "Đã điểm danh" ? (
+        record.status !== "Confirmed" ? (
           <Popconfirm
             title="Điểm danh người tham dự"
-            description={`Bạn có chắc muốn điểm danh cho ${record.name}?`}
+            description={`Bạn có chắc muốn điểm danh cho ${record.attendName}?`}
             onConfirm={() => handleCheckIn(record)}
             okText="Có"
             cancelText="Không"
@@ -343,7 +308,7 @@ const AudienceList = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        {workshop ? (
+        {workshop && (
           <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
             <Title level={4}>{workshop.name}</Title>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -361,23 +326,7 @@ const AudienceList = () => {
               </div>
             </div>
           </div>
-        ) : (
-          <Alert
-            message="Không tìm thấy thông tin workshop"
-            description="Không thể tìm thấy thông tin workshop với ID đã cung cấp. Hiển thị dữ liệu mẫu."
-            type="warning"
-            showIcon
-            className="mb-4"
-          />
         )}
-
-        <Alert
-          message="Đang sử dụng dữ liệu mẫu"
-          description="Hiển thị dữ liệu mẫu cho mục đích demo. Chức năng điểm danh sẽ gọi API thực tế."
-          type="info"
-          showIcon
-          className="mb-4"
-        />
 
         <div className="mb-6 flex justify-end">
           <SearchBar onSearch={handleSearch} />

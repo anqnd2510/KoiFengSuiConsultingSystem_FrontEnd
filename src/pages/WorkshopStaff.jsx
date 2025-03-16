@@ -93,7 +93,10 @@ const WorkshopStaff = () => {
   };
 
   const handleRowClick = (workshop) => {
-    navigate(`/audience?workshopId=${workshop.workshopId || workshop.id}`);
+    // Đảm bảo sử dụng đúng ID workshop khi chuyển trang
+    const workshopId = workshop.workshopId || workshop.id;
+    console.log("Chuyển đến trang audience với workshopId:", workshopId);
+    navigate(`/audience?workshopId=${workshopId}`);
   };
 
   const handlePageChange = (page) => {
