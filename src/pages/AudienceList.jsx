@@ -221,37 +221,32 @@ const AudienceList = () => {
 
   const columns = [
     {
-      title: "AttendId",
+      title: "Mã điểm danh",
       dataIndex: "attendId",
       key: "attendId",
       width: "15%",
     },
     {
-      title: "WorkshopId",
-      dataIndex: "workshopId",
-      key: "workshopId",
-      width: "15%",
-    },
-    {
-      title: "AttendName",
-      dataIndex: "attendName",
-      key: "attendName",
-      width: "15%",
-    },
-    {
-      title: "PhoneNumber",
-      dataIndex: "phoneNumber",
-      key: "phoneNumber",
-      width: "15%",
-    },
-    {
-      title: "CustomerId",
+      title: "Mã khách hàng",
       dataIndex: "customerId",
       key: "customerId",
       width: "15%",
     },
     {
-      title: "Status",
+      title: "Tên người tham dự",
+      dataIndex: "attendName",
+      key: "attendName",
+      width: "15%",
+    },
+    {
+      title: "Số điện thoại",
+      dataIndex: "phoneNumber",
+      key: "phoneNumber",
+      width: "15%",
+    },
+    
+    {
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: "15%",
