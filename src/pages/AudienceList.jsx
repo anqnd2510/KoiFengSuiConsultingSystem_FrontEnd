@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Tag } from "antd";
+import { Tag, message, Spin } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
+import { getAudiencesByWorkshopId, formatAudiencesData } from "../services/audience.service";
 
 const AudienceList = () => {
   const location = useLocation();
@@ -12,45 +13,49 @@ const AudienceList = () => {
   const workshopId = queryParams.get("workshopId");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [audiences, setAudiences] = useState([]);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const [audiences, setAudiences] = useState([
-    {
-      id: "T01",
-      name: "Nguyễn Văn A",
-      phone: "1234567890",
-      email: "nguyenvana@gmail.com",
-      date: "1/1/2021",
-      status: "Đã điểm danh"
-    },
-    {
-      id: "T02",
-      name: "Trần Thị B",
-      phone: "1234567890",
-      email: "tranthib@gmail.com",
-      date: "1/1/2021",
-      status: "Chờ xác nhận"
-    },
-    {
-      id: "T03",
-      name: "Lê Văn C",
-      phone: "1234567890",
-      email: "levanc@gmail.com",
-      date: "1/1/2021",
-      status: "Vắng mặt"
-    },
-    {
-      id: "T04",
-      name: "Phạm Thị D",
-      phone: "1234567890",
-      email: "phamthid@gmail.com",
-      date: "1/1/2021",
-      status: "Chờ xác nhận"
+  // Fetch danh sách người tham dự từ API
+  const fetchAudiences = async () => {
+    if (!workshopId) {
+      setError("Không tìm thấy ID workshop");
+      return;
     }
-  ]);
 
-  const [error, setError] = useState(true);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const data = await getAudiencesByWorkshopId(workshopId);
+      console.log("Dữ liệu người tham dự gốc:", data);
+      
+      if (!data || data.length === 0) {
+        message.info("Không có dữ liệu người tham dự");
+        setAudiences([]);
+      } else {
+        const formattedData = formatAudiencesData(data);
+        console.log("Dữ liệu người tham dự đã định dạng:", formattedData);
+        setAudiences(formattedData);
+        message.success(`Đã tải ${formattedData.length} người tham dự`);
+      }
+    } catch (err) {
+      console.error("Lỗi khi tải dữ liệu người tham dự:", err);
+      setError(`Không thể tải dữ liệu người tham dự: ${err.message}`);
+      message.error("Không thể tải dữ liệu người tham dự");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Gọi API khi component được mount hoặc workshopId thay đổi
+  useEffect(() => {
+    fetchAudiences();
+  }, [workshopId]);
 
   const handleSearch = (searchTerm) => {
+    setSearchTerm(searchTerm);
     console.log('Searching for:', searchTerm);
   };
 
@@ -70,6 +75,23 @@ const AudienceList = () => {
         return "default";
     }
   };
+
+  // Lọc dữ liệu theo từ khóa tìm kiếm
+  const filteredAudiences = audiences.filter(audience => {
+    return (
+      (audience.name && audience.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.phone && audience.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.email && audience.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.id && audience.id.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  });
+
+  // Phân trang
+  const pageSize = 10;
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedAudiences = filteredAudiences.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(filteredAudiences.length / pageSize);
 
   const columns = [
     {
@@ -129,21 +151,29 @@ const AudienceList = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && <Error message="Đã xảy ra lỗi!" />}
+        {error && <Error message={error} />}
 
-        <CustomTable 
-          columns={columns}
-          dataSource={audiences}
-          loading={loading}
-        />
+        {loading ? (
+          <div className="flex justify-center items-center py-10">
+            <Spin size="large" tip="Đang tải dữ liệu..." />
+          </div>
+        ) : (
+          <>
+            <CustomTable 
+              columns={columns}
+              dataSource={paginatedAudiences}
+              loading={loading}
+            />
 
-        <div className="mt-6">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={5}
-            onPageChange={handlePageChange}
-          />
-        </div>
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
