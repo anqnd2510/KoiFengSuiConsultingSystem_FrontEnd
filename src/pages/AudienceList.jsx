@@ -6,9 +6,9 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
-import { getAudiencesByWorkshopId, formatAudiencesData, checkInAudience } from "../services/audience.service";
+import { checkInAudience } from "../services/audience.service";
 
-// Dữ liệu mẫu khi API chưa sẵn sàng
+// Dữ liệu mẫu cho người tham dự
 const sampleAudiences = [
   {
     id: "T01",
@@ -54,52 +54,16 @@ const AudienceList = () => {
   const workshopId = queryParams.get("workshopId");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [audiences, setAudiences] = useState([]);
+  const [audiences, setAudiences] = useState(sampleAudiences);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
-  const [usingSampleData, setUsingSampleData] = useState(false);
 
-  // Fetch danh sách người tham dự từ API
-  const fetchAudiences = async () => {
-    if (!workshopId) {
-      setError("Không tìm thấy ID workshop");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setUsingSampleData(false);
-    
-    try {
-      const data = await getAudiencesByWorkshopId(workshopId);
-      console.log("Dữ liệu người tham dự gốc:", data);
-      
-      if (!data || data.length === 0) {
-        message.info("Không có dữ liệu người tham dự từ API, sử dụng dữ liệu mẫu");
-        setAudiences(sampleAudiences);
-        setUsingSampleData(true);
-      } else {
-        const formattedData = formatAudiencesData(data);
-        console.log("Dữ liệu người tham dự đã định dạng:", formattedData);
-        setAudiences(formattedData);
-        message.success(`Đã tải ${formattedData.length} người tham dự`);
-      }
-    } catch (err) {
-      console.error("Lỗi khi tải dữ liệu người tham dự:", err);
-      setError(`Không thể tải dữ liệu người tham dự: ${err.message}`);
-      message.warning("Sử dụng dữ liệu mẫu do không thể kết nối đến API");
-      setAudiences(sampleAudiences);
-      setUsingSampleData(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Gọi API khi component được mount hoặc workshopId thay đổi
+  // Không cần gọi API lấy danh sách người tham dự, chỉ hiển thị dữ liệu mẫu
   useEffect(() => {
-    fetchAudiences();
-  }, [workshopId]);
+    // Hiển thị thông báo
+    message.info("Hiển thị dữ liệu mẫu cho người tham dự");
+  }, []);
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
@@ -112,19 +76,6 @@ const AudienceList = () => {
 
   // Xử lý điểm danh người tham dự
   const handleCheckIn = async (audience) => {
-    if (usingSampleData) {
-      // Nếu đang sử dụng dữ liệu mẫu, chỉ cập nhật UI mà không gọi API
-      message.success(`Điểm danh thành công cho ${audience.name} (chế độ mẫu)`);
-      setAudiences(prevAudiences => 
-        prevAudiences.map(item => 
-          item.id === audience.id 
-            ? { ...item, status: "Đã điểm danh" } 
-            : item
-        )
-      );
-      return;
-    }
-
     if (!workshopId || !audience.registerId) {
       message.error("Thiếu thông tin cần thiết để điểm danh");
       return;
@@ -133,6 +84,7 @@ const AudienceList = () => {
     setCheckingIn(true);
     
     try {
+      // Gọi API điểm danh
       const result = await checkInAudience(workshopId, audience.registerId);
       
       if (result.success) {
@@ -150,7 +102,16 @@ const AudienceList = () => {
       }
     } catch (err) {
       console.error("Lỗi khi điểm danh:", err);
-      message.error(err.message || "Đã xảy ra lỗi khi điểm danh");
+      
+      // Nếu API gặp lỗi, vẫn cập nhật UI để demo
+      message.warning("API điểm danh gặp lỗi, nhưng đã cập nhật UI để demo");
+      setAudiences(prevAudiences => 
+        prevAudiences.map(item => 
+          item.id === audience.id 
+            ? { ...item, status: "Đã điểm danh" } 
+            : item
+        )
+      );
     } finally {
       setCheckingIn(false);
     }
@@ -275,21 +236,19 @@ const AudienceList = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        {usingSampleData && (
-          <Alert
-            message="Đang sử dụng dữ liệu mẫu"
-            description="Không thể kết nối đến API hoặc không có dữ liệu thực. Đang hiển thị dữ liệu mẫu cho mục đích demo."
-            type="warning"
-            showIcon
-            className="mb-4"
-          />
-        )}
+        <Alert
+          message="Đang sử dụng dữ liệu mẫu"
+          description="Hiển thị dữ liệu mẫu cho mục đích demo. Chức năng điểm danh sẽ gọi API thực tế."
+          type="info"
+          showIcon
+          className="mb-4"
+        />
 
         <div className="mb-6 flex justify-end">
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && !usingSampleData && <Error message={error} />}
+        {error && <Error message={error} />}
 
         {loading ? (
           <div className="flex justify-center items-center py-10">
