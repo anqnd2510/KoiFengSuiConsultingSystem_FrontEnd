@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag, message, Spin, Button, Tooltip, Typography } from "antd";
-import { ReloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { ReloadOutlined, InfoCircleOutlined, EyeOutlined } from '@ant-design/icons';
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
@@ -93,7 +93,7 @@ const WorkshopStaff = () => {
   };
 
   const handleRowClick = (workshop) => {
-    navigate(`/audience?workshopId=${workshop.workshopId || workshop.id}`);
+    console.log("Đã chọn workshop:", workshop);
   };
 
   const handlePageChange = (page) => {
@@ -187,6 +187,23 @@ const WorkshopStaff = () => {
       key: "status",
       render: (status) => (
         <Tag color={getStatusColor(status)}>{status}</Tag>
+      )
+    },
+    {
+      title: "HÀNH ĐỘNG",
+      key: "action",
+      render: (_, record) => (
+        <Button
+          type="primary"
+          icon={<EyeOutlined />}
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/audience?workshopId=${record.workshopId || record.id}`);
+          }}
+        >
+          Xem
+        </Button>
       )
     }
   ];
