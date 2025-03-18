@@ -1,28 +1,24 @@
-import { createBrowserRouter } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 import MainLayout from "../components/Layout/MainLayout";
-import Workshop from "../pages/Workshop";
-import Dashboard from "../pages/Dashboard";
-import CourseManagement from "../pages/CourseManagement";
+import { mainRoutes } from "./mainRoutes";
+import { adminRoutes } from "./adminRoutes";
+import { publicRoutes } from "./publicRoutes";
 
-export const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <MainLayout />,
-    children: [
-      {
-        path: "/",
-        element: <Dashboard />,
-      },
-      {
-        path: "workshop",
-        element: <Workshop />,
-      },
-      {
-        path: "course-management",
-        element: <CourseManagement />,
-      },
-    ],
-  },
-]);
+export const AppRoutes = () => {
+  const routes = [
+    {
+      path: "/",
+      element: <MainLayout />,
+      children: [
+        ...mainRoutes,
+        {
+          path: "admin",
+          children: adminRoutes,
+        },
+      ],
+    },
+    ...publicRoutes,
+  ];
 
-export default router;
+  return useRoutes(routes);
+};
