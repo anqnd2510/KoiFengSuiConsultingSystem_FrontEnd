@@ -101,6 +101,7 @@ const WorkshopForm = ({ form, loading }) => {
       <Form.Item
         label="Mô tả hội thảo"
         name="description"
+        rules={[{ required: true, message: "Vui lòng nhập mô tả hội thảo" }]}
       >
         <TextArea 
           placeholder="Nhập mô tả về hội thảo"
@@ -129,6 +130,7 @@ const Workshop = () => {
   const [pendingTotalPages, setPendingTotalPages] = useState(1);
   const [rejectedTotalPages, setRejectedTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState("1");
+  const [pageSize, setPageSize] = useState(10);
 
   // Kiểm tra xác thực khi component mount
   useEffect(() => {
@@ -277,13 +279,21 @@ const Workshop = () => {
           ticketPrice = numericValue ? parseFloat(numericValue) : 0;
         }
         
+        // Đảm bảo số lượng vé là số nguyên
+        const ticketSlots = values.ticketSlots ? parseInt(values.ticketSlots, 10) : 0;
+        
+        // Đảm bảo ngày có định dạng đúng (YYYY-MM-DD)
+        const formattedDate = values.date 
+          ? values.date.format('YYYY-MM-DD') 
+          : new Date().toISOString().split('T')[0];
+        
         // Chuẩn bị dữ liệu để gửi lên API
         const workshopData = {
           name: values.name,
           location: values.location,
-          date: values.date ? values.date.format('YYYY-MM-DD') : new Date().toISOString().split('T')[0],
+          date: formattedDate,
           ticketPrice: ticketPrice,
-          ticketSlots: values.ticketSlots,
+          ticketSlots: ticketSlots,
           description: values.description || ""
         };
         
@@ -391,42 +401,54 @@ const Workshop = () => {
                 workshops={workshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
+                pagination={{
+                  current: currentPage,
+                  total: workshops.length,
+                  pageSize: pageSize,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Tổng số ${total} hội thảo`,
+                  onChange: (page, pageSize) => {
+                    setCurrentPage(page);
+                    setPageSize(pageSize);
+                  }
+                }}
               />
-              <div className="p-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
             </TabPane>
             <TabPane tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`} key="2">
               <WorkshopTable 
                 workshops={pendingWorkshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
+                pagination={{
+                  current: pendingCurrentPage,
+                  total: pendingWorkshops.length,
+                  pageSize: pageSize,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Tổng số ${total} hội thảo`,
+                  onChange: (page, pageSize) => {
+                    setPendingCurrentPage(page);
+                    setPageSize(pageSize);
+                  }
+                }}
               />
-              <div className="p-4">
-                <Pagination
-                  currentPage={pendingCurrentPage}
-                  totalPages={pendingTotalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
             </TabPane>
             <TabPane tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`} key="3">
               <WorkshopTable 
                 workshops={rejectedWorkshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
+                pagination={{
+                  current: rejectedCurrentPage,
+                  total: rejectedWorkshops.length,
+                  pageSize: pageSize,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Tổng số ${total} hội thảo`,
+                  onChange: (page, pageSize) => {
+                    setRejectedCurrentPage(page);
+                    setPageSize(pageSize);
+                  }
+                }}
               />
-              <div className="p-4">
-                <Pagination
-                  currentPage={rejectedCurrentPage}
-                  totalPages={rejectedTotalPages}
-                  onPageChange={handlePageChange}
-                />
-              </div>
             </TabPane>
           </Tabs>
         </div>

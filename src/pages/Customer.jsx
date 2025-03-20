@@ -559,12 +559,6 @@ const Customer = () => {
     item.membership.toLowerCase().includes(searchText.toLowerCase())
   );
 
-  // Phân trang dữ liệu
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -586,18 +580,20 @@ const Customer = () => {
 
         <CustomTable
           columns={columns}
-          dataSource={paginatedData}
+          dataSource={filteredData}
           loading={loading}
+          pagination={{
+            current: currentPage,
+            total: filteredData.length,
+            pageSize: pageSize,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng số ${total} khách hàng`,
+            onChange: (page, pageSize) => {
+              setCurrentPage(page);
+              setPageSize(pageSize);
+            }
+          }}
         />
-
-        <div className="mt-4 flex justify-end">
-          <Pagination
-            current={currentPage}
-            total={filteredData.length}
-            pageSize={pageSize}
-            onChange={handlePageChange}
-          />
-        </div>
       </div>
 
       {/* Modal for Create/Edit */}

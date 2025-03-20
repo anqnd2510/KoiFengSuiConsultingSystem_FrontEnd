@@ -306,12 +306,6 @@ const Certificate = () => {
     message.success("Đã xóa chứng chỉ thành công");
   };
   
-  // Hàm chuyển trang
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    // Trong thực tế, đây sẽ là API call để lấy dữ liệu trang mới
-  };
-  
   // Hàm xem chi tiết chứng chỉ
   const handleViewDetail = (certificate) => {
     setSelectedCertificate(certificate);
@@ -457,12 +451,6 @@ const Certificate = () => {
     
     return matchesSearch && matchesStatus;
   });
-  
-  // Phân trang dữ liệu
-  const paginatedCertificates = filteredCertificates.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -503,20 +491,21 @@ const Certificate = () => {
 
           <Table
             columns={columns}
-            dataSource={paginatedCertificates}
+            dataSource={filteredCertificates}
             rowKey="id"
-            pagination={false}
             loading={loading}
+            pagination={{
+              current: currentPage,
+              total: filteredCertificates.length,
+              pageSize: pageSize,
+              showSizeChanger: true,
+              showTotal: (total) => `Tổng số ${total} chứng chỉ`,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              }
+            }}
           />
-
-          <div className="mt-4 flex justify-end">
-            <Pagination
-              current={currentPage}
-              total={filteredCertificates.length}
-              pageSize={pageSize}
-              onChange={handlePageChange}
-            />
-          </div>
         </div>
       </div>
       

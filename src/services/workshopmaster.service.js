@@ -110,18 +110,37 @@ export const createWorkshop = async (workshopData) => {
       console.log("Sử dụng tên hardcode:", userName);
     }
     
-    // Gửi dữ liệu trực tiếp
-    const response = await apiClient.post(`${WORKSHOP_ENDPOINT}/create`, {
-      workshopName: workshopData.name,
-      startDate: workshopData.date,
-      location: workshopData.location,
-      description: workshopData.description || "",
-      capacity: workshopData.ticketSlots,
-      status: "Pending",
-      price: workshopData.ticketPrice,
-      masterName: userName, // Sử dụng tên người dùng từ localStorage
-      masterAccount: userEmail // Thêm tham số masterAccount để backend có thể lấy tên từ tài khoản
-    });
+    // Đảm bảo giá trị số là số, không phải chuỗi
+    const price = typeof workshopData.ticketPrice === 'string' 
+      ? parseFloat(workshopData.ticketPrice.replace(/[^\d]/g, '')) 
+      : workshopData.ticketPrice;
+    
+    const capacity = typeof workshopData.ticketSlots === 'string'
+      ? parseInt(workshopData.ticketSlots, 10)
+      : workshopData.ticketSlots;
+    
+    // Đảm bảo ngày có định dạng đúng
+    const startDate = workshopData.date;
+    
+    // Chuẩn bị dữ liệu theo đúng cấu trúc mà API yêu cầu
+    const requestData = {
+      WorkshopName: workshopData.name,
+      StartDate: startDate,
+      Location: workshopData.location,
+      Description: workshopData.description || "",
+      Capacity: capacity,
+      Status: "Pending",
+      Price: price,
+      MasterName: userName || "Unknown Master",
+      MasterAccount: userEmail || "unknown@example.com",
+      Image: null,
+      WorkshopId: 0
+    };
+    
+    console.log("Request data:", JSON.stringify(requestData, null, 2));
+    
+    // Gửi dữ liệu trực tiếp - sử dụng đúng endpoint /create
+    const response = await apiClient.post(`${WORKSHOP_ENDPOINT}/create`, requestData);
     
     console.log("API Response:", response.data);
     
