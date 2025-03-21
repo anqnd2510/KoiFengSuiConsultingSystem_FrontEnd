@@ -8,8 +8,11 @@ import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
 import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2 } from "lucide-react";
-import { getAllCourses, createCourse } from "../services/course.service";
+import { getAllCourses, createCourse, deleteCourse, updateCourse } from "../services/course.service";
 import { formatDate, formatPrice } from '../utils/formatters';
+import { getChaptersByCourseId, formatDuration, createChapter } from "../services/chapter.service";
+import { useNavigate } from "react-router-dom";
+import Chapter from "./Chapter";
 
 const { TextArea } = Input;
 
@@ -91,19 +94,112 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
   );
 };
 
+// Thêm form component cho chương
+const ChapterForm = ({ form, loading }) => {
+  return (
+    <Form
+      form={form}
+      layout="vertical"
+      disabled={loading}
+    >
+      <Form.Item
+        label="Tiêu đề chương"
+        name="chapterName"
+        rules={[{ required: true, message: "Vui lòng nhập tiêu đề chương" }]}
+      >
+        <Input placeholder="Nhập tiêu đề chương" />
+      </Form.Item>
+
+      <Form.Item
+        label="Mô tả"
+        name="description"
+        rules={[{ required: true, message: "Vui lòng nhập mô tả chương" }]}
+      >
+        <TextArea
+          placeholder="Nhập mô tả nội dung chương"
+          autoSize={{ minRows: 3, maxRows: 6 }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Thời lượng (phút)"
+        name="duration"
+        rules={[{ required: true, message: "Vui lòng nhập thời lượng" }]}
+      >
+        <InputNumber
+          placeholder="Nhập thời lượng (phút)"
+          min={1}
+          style={{ width: '100%' }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Thứ tự hiển thị"
+        name="order"
+        rules={[{ required: true, message: "Vui lòng nhập thứ tự hiển thị" }]}
+      >
+        <InputNumber
+          placeholder="Nhập thứ tự hiển thị"
+          min={1}
+          style={{ width: '100%' }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="URL Video"
+        name="videoUrl"
+        rules={[{ required: false, message: "Vui lòng nhập URL video" }]}
+      >
+        <Input placeholder="Nhập URL video bài giảng (YouTube, Vimeo...)" />
+      </Form.Item>
+
+      <Form.Item
+        label="Nội dung chi tiết"
+        name="content"
+      >
+        <TextArea
+          placeholder="Nhập nội dung chi tiết chương (không bắt buộc)"
+          autoSize={{ minRows: 4, maxRows: 10 }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Đường dẫn tài nguyên"
+        name="resourceUrl"
+      >
+        <Input placeholder="Nhập đường dẫn đến tài liệu (không bắt buộc)" />
+      </Form.Item>
+    </Form>
+  );
+};
+
 const CourseMaster = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [form] = Form.useForm();
+  const [updateForm] = Form.useForm();
   const [courses, setCourses] = useState([]);
   const [rawData, setRawData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [courseCategories, setCourseCategories] = useState([]);
   const pageSize = 10;
+  const [isNavigatingToChapters, setIsNavigatingToChapters] = useState(false);
+  const [isChaptersModalOpen, setIsChaptersModalOpen] = useState(false);
+  const [courseChapters, setCourseChapters] = useState([]);
+  const [loadingChapters, setLoadingChapters] = useState(false);
+  const [isCreateChapterModalOpen, setIsCreateChapterModalOpen] = useState(false);
+  const [chapterForm] = Form.useForm();
+  const [creatingChapter, setCreatingChapter] = useState(false);
+  const [isUpdateChapterModalOpen, setIsUpdateChapterModalOpen] = useState(false);
+  const [selectedChapter, setSelectedChapter] = useState(null);
+  const [updateChapterForm] = Form.useForm();
+  const [updatingChapter, setUpdatingChapter] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
@@ -159,7 +255,7 @@ const CourseMaster = () => {
             else if (course["8J7jRVFyoko7vO"]) creator = "8J7jRVFyoko7vO";
           }
           
-return {
+          return {
             id: course.courseId || course.id || "N/A",
             name: course.courseName || "N/A",
             price: parseFloat(course.price) || 0,
@@ -173,7 +269,7 @@ return {
             creator: creator,
             certificate: course.certificateId ? true : false,
             quizId: course.quizId || "N/A"
-          };          
+          };
         });
         
         setCourses(mappedCourses);
@@ -236,7 +332,7 @@ return {
             onClick={() => handleUpdateCourse(record)}
             icon={<FaEdit size={14} />}
           >
-            Sửa
+            Cập nhật
           </CustomButton>
           <CustomButton 
             type="text" 
@@ -324,12 +420,132 @@ return {
 
   const handleUpdateCourse = (course) => {
     console.log("Updating course:", course);
+    setSelectedCourse(course);
+    updateForm.setFieldsValue({
+      courseName: course.name,
+      courseCategory: course.category || course.courseCategory,
+      price: course.price,
+      description: course.description,
+    });
+    setIsUpdateModalOpen(true);
   };
 
-  const handleDeleteCourse = (course) => {
-    const updatedCourses = courses.filter(c => c.id !== course.id);
-    setCourses(updatedCourses);
-    message.success("Đã xóa khóa học thành công");
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedCourse(null);
+    updateForm.resetFields();
+  };
+
+  const handleSaveUpdateCourse = async () => {
+    try {
+      const values = await updateForm.validateFields();
+      setLoading(true);
+      
+      // Kiểm tra các trường bắt buộc
+      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
+        message.error("Vui lòng điền đầy đủ thông tin khóa học");
+        return;
+      }
+      
+      // Chuẩn bị dữ liệu theo đúng format API yêu cầu
+      const courseData = {
+        courseId: selectedCourse.id,
+        courseName: values.courseName.trim(),
+        courseCategory: values.courseCategory.trim(),
+        description: values.description.trim(),
+        price: Number(values.price),
+      };
+
+      console.log("Sending updated course data:", courseData);
+      // Gọi API cập nhật khóa học
+      const response = await updateCourse(courseData);
+      
+      if (response && response.isSuccess) {
+        message.success(response.message || "Cập nhật khóa học thành công!");
+        setIsUpdateModalOpen(false);
+        updateForm.resetFields();
+        fetchCourses();
+      } else {
+        message.error(response?.message || "Có lỗi xảy ra khi cập nhật khóa học");
+      }
+    } catch (error) {
+      console.error("Error updating course:", error);
+      message.error("Có lỗi xảy ra: " + (error.message || "Vui lòng điền đầy đủ thông tin khóa học"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async (course) => {
+    try {
+      console.log("Bắt đầu xử lý xóa khóa học ID:", course.id);
+      
+      // Sử dụng Modal.confirm thay vì window.confirm
+      Modal.confirm({
+        title: 'Xác nhận xóa',
+        content: 'Bạn có chắc chắn muốn xóa khóa học này?',
+        okText: 'Xóa',
+        okType: 'danger',
+        cancelText: 'Hủy',
+        onOk: async () => {
+          try {
+            setLoading(true);
+            console.log('Đang xóa khóa học với ID:', course.id);
+            
+            // Gọi API xóa khóa học
+            const result = await deleteCourse(course.id);
+            console.log("Kết quả API xóa:", result);
+            
+            if (result && result.isSuccess) {
+              // Cập nhật state sau khi xóa thành công
+              const updatedCourses = courses.filter(c => c.id !== course.id);
+              setCourses(updatedCourses);
+              message.success("Đã xóa khóa học thành công");
+            } else {
+              message.error(result?.message || "Không thể xóa khóa học");
+              
+              // Nếu lỗi liên quan đến ràng buộc dữ liệu, hiển thị thông báo chi tiết hơn
+              if (result?.message?.includes('tham chiếu')) {
+                Modal.error({
+                  title: 'Không thể xóa khóa học',
+                  content: 'Khóa học này đang được sử dụng bởi dữ liệu khác trong hệ thống. Vui lòng xóa các dữ liệu liên quan trước khi xóa khóa học này.',
+                });
+              }
+            }
+          } catch (error) {
+            console.error("Lỗi khi xóa khóa học:", error);
+            
+            let errorMessage = 'Lỗi khi xóa khóa học';
+            
+            if (error.response) {
+              console.error('API error response:', error.response.data);
+              
+              // Xử lý lỗi 500 từ server
+              if (error.response.status === 500) {
+                errorMessage = 'Lỗi server: Không thể xóa khóa học. Có thể khóa học đang được sử dụng bởi dữ liệu khác.';
+                
+                Modal.error({
+                  title: 'Lỗi Server',
+                  content: 'Không thể xóa khóa học. Vui lòng liên hệ quản trị viên hoặc thử lại sau.',
+                });
+              } else {
+                errorMessage = error.response.data?.message || errorMessage;
+              }
+            }
+            
+            message.error(errorMessage);
+          } finally {
+            setLoading(false);
+          }
+        },
+        onCancel() {
+          console.log('Hủy xóa khóa học');
+        },
+      });
+    } catch (error) {
+      console.error('Lỗi trong hàm handleDeleteCourse:', error);
+      message.error('Đã xảy ra lỗi khi xử lý yêu cầu xóa khóa học');
+    }
   };
 
   const handlePageChange = (page) => {
@@ -366,6 +582,284 @@ return {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  // Cập nhật hàm fetchCourseChapters để sử dụng API thực tế
+  const fetchCourseChapters = async (courseId) => {
+    try {
+      setLoadingChapters(true);
+      console.log("Đang lấy danh sách chương cho khóa học:", courseId);
+      
+      const response = await getChaptersByCourseId(courseId);
+      
+      if (response && response.isSuccess && Array.isArray(response.data)) {
+        // Ánh xạ dữ liệu từ API vào state
+        const mappedChapters = response.data.map(chapter => {
+          return {
+            id: chapter.chapterId || chapter.id || "N/A",
+            title: chapter.chapterName || chapter.title || "N/A",
+            description: chapter.description || "N/A", 
+            duration: chapter.duration || 0,
+            order: chapter.order || chapter.orderNumber || 0,
+            content: chapter.content || "",
+            resourceUrl: chapter.resourceUrl || chapter.url || "",
+            // Thêm các trường khác nếu cần
+          };
+        });
+        
+        // Sắp xếp theo thứ tự nếu có
+        mappedChapters.sort((a, b) => a.order - b.order);
+        
+        setCourseChapters(mappedChapters);
+      } else {
+        // Trường hợp không có dữ liệu hoặc API trả về lỗi
+        console.error("API không trả về dữ liệu chương theo định dạng mong đợi:", response);
+        setCourseChapters([]);
+        
+        if (response && !response.isSuccess) {
+          message.error(response.message || "Không thể lấy danh sách chương");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách chương:", error);
+      message.error("Không thể tải danh sách chương. Vui lòng thử lại sau.");
+      setCourseChapters([]);
+    } finally {
+      setLoadingChapters(false);
+    }
+  };
+  
+  const handleViewChapters = (courseId) => {
+    console.log("Xem chương của khóa học:", courseId);
+    setIsNavigatingToChapters(true);
+    
+    // Chuyển hướng đến trang Chapter.jsx thay vì mở modal
+    navigate(`/course-chapters/${courseId}`);
+    setIsNavigatingToChapters(false);
+  };
+  
+  const handleCloseChaptersModal = () => {
+    setIsChaptersModalOpen(false);
+    setCourseChapters([]);
+  };
+
+  // Hàm mở modal tạo chương mới
+  const handleOpenCreateChapterModal = () => {
+    // Thiết lập giá trị mặc định cho thứ tự
+    const nextOrder = courseChapters.length > 0 
+      ? Math.max(...courseChapters.map(c => c.order || 0)) + 1 
+      : 1;
+    
+    chapterForm.setFieldsValue({
+      order: nextOrder,
+      duration: 30, // Giá trị mặc định 30 phút
+    });
+    
+    setIsCreateChapterModalOpen(true);
+  };
+  
+  // Hàm đóng modal tạo chương
+  const handleCloseCreateChapterModal = () => {
+    setIsCreateChapterModalOpen(false);
+    chapterForm.resetFields();
+  };
+  
+  // Hàm xử lý lưu chương mới
+  const handleSaveChapter = async () => {
+    try {
+      const values = await chapterForm.validateFields();
+      setCreatingChapter(true);
+      
+      // Chuẩn bị dữ liệu gửi lên API
+      const chapterData = {
+        courseId: selectedCourse.id,
+        chapterName: values.chapterName.trim(),
+        description: values.description.trim(),
+        duration: Number(values.duration),
+        order: Number(values.order),
+        videoUrl: values.videoUrl ? values.videoUrl.trim() : "",
+        content: values.content ? values.content.trim() : "",
+        resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
+      };
+      
+      console.log("Đang tạo chương mới với dữ liệu:", chapterData);
+      
+      // Gọi API tạo chương
+      const response = await createChapter(chapterData);
+      
+      if (response && response.isSuccess) {
+        message.success(response.message || "Tạo mới chương thành công!");
+        
+        // Cập nhật lại danh sách chương
+        const newChapter = {
+          id: response.data.chapterId || response.data.id,
+          title: response.data.chapterName,
+          description: response.data.description,
+          duration: response.data.duration,
+          order: response.data.order,
+          videoUrl: response.data.videoUrl,
+          content: response.data.content,
+          resourceUrl: response.data.resourceUrl,
+        };
+        
+        // Thêm chương mới vào danh sách và sắp xếp lại theo thứ tự
+        const updatedChapters = [...courseChapters, newChapter]
+          .sort((a, b) => a.order - b.order);
+          
+        setCourseChapters(updatedChapters);
+        
+        // Đóng modal và reset form
+        setIsCreateChapterModalOpen(false);
+        chapterForm.resetFields();
+      } else {
+        message.error(response?.message || "Không thể tạo chương mới");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo chương mới:", error);
+      message.error("Vui lòng điền đầy đủ thông tin chương");
+    } finally {
+      setCreatingChapter(false);
+    }
+  };
+
+  // Hàm mở modal chỉnh sửa chương
+  const handleUpdateChapter = (chapter) => {
+    console.log("Đang chỉnh sửa chương:", chapter);
+    setSelectedChapter(chapter);
+    
+    // Set giá trị ban đầu cho form
+    updateChapterForm.setFieldsValue({
+      chapterName: chapter.title,
+      description: chapter.description,
+      duration: chapter.duration,
+      order: chapter.order,
+      videoUrl: chapter.videoUrl,
+      content: chapter.content,
+      resourceUrl: chapter.resourceUrl,
+    });
+    
+    setIsUpdateChapterModalOpen(true);
+  };
+
+  // Hàm đóng modal chỉnh sửa chương
+  const handleCloseUpdateChapterModal = () => {
+    setIsUpdateChapterModalOpen(false);
+    setSelectedChapter(null);
+    updateChapterForm.resetFields();
+  };
+
+  // Hàm lưu chỉnh sửa chương
+  const handleSaveUpdateChapter = async () => {
+    try {
+      const values = await updateChapterForm.validateFields();
+      setUpdatingChapter(true);
+      
+      // Chuẩn bị dữ liệu cập nhật
+      const chapterData = {
+        chapterId: selectedChapter.id,
+        courseId: selectedCourse.id,
+        chapterName: values.chapterName.trim(),
+        description: values.description.trim(),
+        duration: Number(values.duration),
+        order: Number(values.order),
+        videoUrl: values.videoUrl ? values.videoUrl.trim() : "",
+        content: values.content ? values.content.trim() : "",
+        resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
+      };
+      
+      console.log("Đang cập nhật chương với dữ liệu:", chapterData);
+      
+      // Tạm thời mô phỏng API call cho việc cập nhật
+      // const response = await updateChapter(chapterData);
+      
+      // Giả lập response thành công
+      const response = {
+        isSuccess: true,
+        message: "Cập nhật chương thành công",
+        data: {
+          ...chapterData,
+          id: selectedChapter.id,
+          title: chapterData.chapterName,
+        }
+      };
+      
+      if (response && response.isSuccess) {
+        message.success(response.message || "Cập nhật chương thành công!");
+        
+        // Cập nhật lại danh sách chương
+        const updatedChapters = courseChapters.map(chapter => 
+          chapter.id === selectedChapter.id 
+            ? {
+                ...chapter,
+                title: chapterData.chapterName,
+                description: chapterData.description,
+                duration: chapterData.duration,
+                order: chapterData.order,
+                videoUrl: chapterData.videoUrl,
+                content: chapterData.content,
+                resourceUrl: chapterData.resourceUrl,
+              } 
+            : chapter
+        );
+        
+        // Sắp xếp lại theo thứ tự
+        updatedChapters.sort((a, b) => a.order - b.order);
+        setCourseChapters(updatedChapters);
+        
+        // Đóng modal và reset form
+        setIsUpdateChapterModalOpen(false);
+        updateChapterForm.resetFields();
+      } else {
+        message.error(response?.message || "Không thể cập nhật chương");
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật chương:", error);
+      message.error("Vui lòng điền đầy đủ thông tin chương");
+    } finally {
+      setUpdatingChapter(false);
+    }
+  };
+
+  // Hàm xóa chương
+  const handleDeleteChapter = (chapter) => {
+    console.log("Đang xóa chương:", chapter);
+    
+    // Sử dụng Modal.confirm để xác nhận xóa
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: `Bạn có chắc chắn muốn xóa chương "${chapter.title}"?`,
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      onOk: async () => {
+        try {
+          setLoadingChapters(true);
+          
+          // Tạm thời mô phỏng API call cho việc xóa
+          // const result = await deleteChapter(chapter.id);
+          
+          // Giả lập response thành công
+          const result = {
+            isSuccess: true,
+            message: "Xóa chương thành công",
+          };
+          
+          if (result && result.isSuccess) {
+            // Cập nhật state sau khi xóa thành công
+            const updatedChapters = courseChapters.filter(c => c.id !== chapter.id);
+            setCourseChapters(updatedChapters);
+            message.success("Đã xóa chương thành công");
+          } else {
+            message.error(result?.message || "Không thể xóa chương");
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa chương:", error);
+          message.error("Có lỗi xảy ra khi xóa chương");
+        } finally {
+          setLoadingChapters(false);
+        }
+      },
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -554,6 +1048,14 @@ return {
             </Row>
             
             <div className="flex justify-end gap-3 mt-6">
+              <CustomButton 
+                type="default"
+                onClick={() => handleViewChapters(selectedCourse.id)}
+                loading={isNavigatingToChapters}
+                icon={<Book className="h-4 w-4" />}
+              >
+                Xem chương
+              </CustomButton>
               <CustomButton onClick={handleCloseViewModal}>
                 Đóng
               </CustomButton>
@@ -569,6 +1071,243 @@ return {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal cập nhật khóa học */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Cập nhật khóa học
+          </div>
+        }
+        open={isUpdateModalOpen}
+        onCancel={handleCloseUpdateModal}
+        footer={null}
+        width={700}
+        className="course-modal"
+      >
+        <div className="p-4">
+          <CourseForm
+            form={updateForm}
+            initialData={selectedCourse ? {
+              courseName: selectedCourse.name,
+              courseCategory: selectedCourse.category || selectedCourse.courseCategory,
+              price: selectedCourse.price,
+              description: selectedCourse.description,
+            } : {}}
+            loading={loading}
+            courseCategories={courseCategories}
+          />
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={handleCloseUpdateModal}>
+              Hủy bỏ
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleSaveUpdateCourse} loading={loading}>
+              Cập nhật
+            </CustomButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal xem danh sách chương - cập nhật để thêm cột hành động */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Danh sách chương {selectedCourse ? `- ${selectedCourse.name}` : ''}
+          </div>
+        }
+        open={isChaptersModalOpen}
+        onCancel={handleCloseChaptersModal}
+        footer={null}
+        width={1000}
+        className="course-modal"
+      >
+        <div className="p-4">
+          {loadingChapters ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Đang tải danh sách chương...</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-medium text-gray-700">
+                  {courseChapters.length > 0 
+                    ? `Tổng cộng: ${courseChapters.length} chương` 
+                    : "Chưa có chương nào"}
+                </h3>
+                <CustomButton 
+                  type="primary" 
+                  icon={<FaPlus size={14} />} 
+                  onClick={handleOpenCreateChapterModal}
+                >
+                  Thêm chương mới
+                </CustomButton>
+              </div>
+              
+              {courseChapters.length === 0 ? (
+                <div className="text-center py-8 bg-gray-50 rounded-lg">
+                  <p className="text-gray-500 mb-4">Khóa học này chưa có chương nào</p>
+                  <CustomButton 
+                    type="primary" 
+                    icon={<FaPlus size={14} />} 
+                    onClick={handleOpenCreateChapterModal}
+                  >
+                    Tạo chương đầu tiên
+                  </CustomButton>
+                </div>
+              ) : (
+                <>
+                  <div className="mb-4 bg-gray-50 p-3 rounded-lg">
+                    <div className="grid grid-cols-12 gap-4 font-medium text-gray-700">
+                      <div className="col-span-1">Mã</div>
+                      <div className="col-span-2">Tiêu đề</div>
+                      <div className="col-span-2">Mô tả</div>
+                      <div className="col-span-2">Video</div>
+                      <div className="col-span-2">Thời lượng</div>
+                      <div className="col-span-1">Thứ tự</div>
+                      <div className="col-span-2">Hành động</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
+                    {courseChapters.map((chapter) => (
+                      <div 
+                        key={chapter.id} 
+                        className="grid grid-cols-12 gap-4 border-b border-gray-100 pb-3"
+                      >
+                        <div className="col-span-1 font-medium text-gray-700">{chapter.id}</div>
+                        <div className="col-span-2 text-gray-800">{chapter.title}</div>
+                        <div className="col-span-2 text-gray-600 text-sm">{chapter.description}</div>
+                        <div className="col-span-2 text-gray-600 text-sm">
+                          {chapter.videoUrl ? (
+                            <Tag color="blue">
+                              <a 
+                                href={chapter.videoUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1"
+                              >
+                                <FaEye size={12} />
+                                Xem video
+                              </a>
+                            </Tag>
+                          ) : (
+                            <Tag color="default">Không có</Tag>
+                          )}
+                        </div>
+                        <div className="col-span-2 text-gray-600">{formatDuration(chapter.duration)}</div>
+                        <div className="col-span-1 text-gray-600">
+                          {chapter.order || 'N/A'}
+                        </div>
+                        <div className="col-span-2">
+                          <div className="flex gap-2">
+                            <CustomButton 
+                              type="default" 
+                              size="small"
+                              onClick={() => handleUpdateChapter(chapter)}
+                              icon={<FaEdit size={14} />}
+                            >
+                              Sửa
+                            </CustomButton>
+                            <CustomButton 
+                              type="text" 
+                              danger 
+                              size="small"
+                              onClick={() => handleDeleteChapter(chapter)}
+                              icon={<FaTrash size={14} />}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-6 text-right">
+                    <p className="text-sm text-gray-500 mb-4">
+                      Tổng thời lượng: {formatDuration(courseChapters.reduce((total, chapter) => total + (chapter.duration || 0), 0))}
+                    </p>
+                    
+                    <CustomButton 
+                      onClick={handleCloseChaptersModal}
+                    >
+                      Đóng
+                    </CustomButton>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+      </Modal>
+      
+      {/* Modal tạo chương mới */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Tạo chương mới cho khóa học {selectedCourse ? `"${selectedCourse.name}"` : ''}
+          </div>
+        }
+        open={isCreateChapterModalOpen}
+        onCancel={handleCloseCreateChapterModal}
+        footer={null}
+        width={700}
+        className="course-modal"
+      >
+        <div className="p-4">
+          <ChapterForm 
+            form={chapterForm}
+            loading={creatingChapter} 
+          />
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={handleCloseCreateChapterModal}>
+              Hủy bỏ
+            </CustomButton>
+            <CustomButton 
+              type="primary" 
+              onClick={handleSaveChapter} 
+              loading={creatingChapter}
+            >
+              Tạo mới chương
+            </CustomButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal cập nhật chương */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Cập nhật chương {selectedChapter ? `"${selectedChapter.title}"` : ''}
+          </div>
+        }
+        open={isUpdateChapterModalOpen}
+        onCancel={handleCloseUpdateChapterModal}
+        footer={null}
+        width={700}
+        className="course-modal"
+      >
+        <div className="p-4">
+          <ChapterForm 
+            form={updateChapterForm}
+            loading={updatingChapter} 
+          />
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={handleCloseUpdateChapterModal}>
+              Hủy bỏ
+            </CustomButton>
+            <CustomButton 
+              type="primary" 
+              onClick={handleSaveUpdateChapter} 
+              loading={updatingChapter}
+            >
+              Cập nhật
+            </CustomButton>
+          </div>
+        </div>
       </Modal>
 
       <style jsx global>{`

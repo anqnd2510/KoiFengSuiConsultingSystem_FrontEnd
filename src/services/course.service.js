@@ -105,3 +105,92 @@ export const createCourse = async (courseData) => {
     throw error;
   }
 };
+
+// Delete Course API
+export const deleteCourse = async (courseId) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!courseId) {
+      throw new Error("ID khóa học không được để trống");
+    }
+
+    console.log("Đang gọi API xóa khóa học với ID:", courseId);
+    
+    // Đảm bảo courseId được truyền vào đúng vị trí thay vì chuỗi cố định "id"
+    const response = await apiClient.delete(`${COURSE_ENDPOINT}/delete-course/${courseId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log("Response từ API xóa:", response);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi xóa khóa học:", error);
+    throw error;
+  }
+};
+
+// Ví dụ xóa khóa học có ID: "0AA77A49-CAFF-4F01-B"
+const handleDelete = async (courseId) => {
+  try {
+    console.log("ID khóa học cần xóa:", courseId); // Log để kiểm tra
+    await deleteCourse(courseId);
+    alert("Xóa khóa học thành công!");
+    // Refresh lại danh sách
+    fetchCourses();
+  } catch (error) {
+    alert("Lỗi khi xóa: " + error.message);
+  }
+};
+
+// Update Course API
+export const updateCourse = async (courseData) => {
+  try {
+    // Kiểm tra người dùng đã đăng nhập qua token
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!courseData.courseId) {
+      throw new Error("ID khóa học không được để trống");
+    }
+
+    console.log("Calling API to update course with data:", courseData);
+    
+    // Đảm bảo dữ liệu gửi đi đúng định dạng
+    const courseRequest = {
+      courseId: courseData.courseId,
+      courseName: courseData.courseName,
+      courseCategory: courseData.courseCategory,
+      price: Number(courseData.price),
+      description: courseData.description || "",
+      videoUrl: courseData.videoUrl || "",
+      image: courseData.image || "",
+    };
+
+    // Kiểm tra request không được null
+    if (!courseRequest.courseName || !courseRequest.courseCategory || !courseRequest.price) {
+      throw new Error("Vui lòng điền đầy đủ thông tin khóa học");
+    }
+
+    console.log("Sending course update request:", courseRequest);
+    const response = await apiClient.put(`${COURSE_ENDPOINT}/update-course/${courseData.courseId}`, courseRequest, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    console.log("Update course API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating course:", error);
+    throw error;
+  }
+};
