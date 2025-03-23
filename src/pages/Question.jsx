@@ -105,74 +105,42 @@ const Question = () => {
         return;
       }
 
-      // Tạo câu hỏi trước
+      // Tạo câu hỏi
       const questionRequest = {
         QuestionText: values.questionText.trim(),
-        QuestionType: values.questionType,
-        Point: Number(values.point) || 0,
-        QuizId: quizId
+        QuestionType: values.questionType || "Multiple Choice", 
+        Point: Number(values.point) || 1,
+        QuizId: quizId,
+        Answers: []
       };
 
-      console.log("Question request:", questionRequest);
-
-      // Tạo câu hỏi và lấy questionId
+      // Gọi API tạo câu hỏi
       const response = await createQuestion(quizId, questionRequest);
       console.log("Create question response:", response);
 
-      if (!response?.data) {
-        message.error("Không nhận được phản hồi khi tạo câu hỏi");
-        return;
-      }
-
-      // Lấy questionId từ response
-      const questionData = response.data;
-      const newQuestionId = questionData.questionId;
-
-      if (!newQuestionId) {
-        message.error("Không nhận được ID câu hỏi");
-        return;
-      }
-
-      console.log("New question ID:", newQuestionId);
-
-      // Lấy đáp án đúng từ form
-      const correctAnswerIndex = createForm.getFieldValue('correctAnswer') || 0;
-      console.log("Correct answer index:", correctAnswerIndex);
-
-      // Tạo các đáp án cho câu hỏi
-      for (let i = 0; i < values.answers.length; i++) {
-        const answer = values.answers[i];
-        if (!answer.optionText?.trim()) {
-          console.warn(`Bỏ qua đáp án ${i + 1} vì không có nội dung`);
-          continue;
+      // Nếu có response.data thì coi như thành công
+      if (response?.data) {
+        // Đóng modal trước
+        handleCloseCreateModal();
+        
+        // Gọi API lấy danh sách câu hỏi mới nhất
+        const updatedResponse = await getQuestionsByQuizId(quizId);
+        
+        // Cập nhật state với dữ liệu mới
+        if (updatedResponse?.data?.data) {
+          setQuestions(updatedResponse.data.data);
+        } else if (updatedResponse?.data) {
+          setQuestions(updatedResponse.data);
         }
 
-        const answerRequest = {
-          QuestionId: newQuestionId,
-          OptionText: answer.optionText.trim(),
-          IsCorrect: i === correctAnswerIndex
-        };
-
-        try {
-          console.log(`Creating answer ${i + 1}:`, answerRequest);
-          const result = await createAnswer(newQuestionId, answerRequest);
-          console.log(`Answer ${i + 1} created:`, result);
-        } catch (err) {
-          console.error(`Error creating answer ${i + 1}:`, err);
-          message.warning(`Không thể tạo đáp án ${i + 1}`);
-        }
+        // Hiển thị thông báo thành công
+        message.success("Tạo câu hỏi thành công!");
+        return;
       }
-
-      message.success("Tạo câu hỏi và đáp án thành công!");
-      handleCloseCreateModal();
-      
-      // Refresh lại trang sau khi tạo thành công
-      await fetchQuestions(); // Fetch lại danh sách câu hỏi
-      window.location.reload(); // Refresh trang
 
     } catch (error) {
       console.error("Error creating question:", error);
-      message.error(error.message || "Có lỗi xảy ra khi tạo câu hỏi");
+      message.error("Có lỗi xảy ra khi tạo câu hỏi");
     } finally {
       setCreatingQuestion(false);
     }
@@ -518,14 +486,7 @@ const Question = () => {
           onFinish={handleCreateQuestion}
           initialValues={{
             questionType: "Multiple Choice",
-            point: 1,
-            correctAnswer: 0,
-            answers: [
-              { optionText: "" },
-              { optionText: "" },
-              { optionText: "" },
-              { optionText: "" }
-            ]
+            point: 1
           }}
         >
           <div className="p-4">
@@ -542,45 +503,6 @@ const Question = () => {
                 />
               </Form.Item>
             </div>
-
-            <Form.List name="answers">
-              {(fields) => (
-                <div className="grid grid-cols-2 gap-4">
-                  {fields.map((field, index) => (
-                    <div key={field.key}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 flex items-center justify-center">
-                          {String.fromCharCode(65 + index)}
-                        </div>
-                        <Form.Item name="correctAnswer">
-                          <Radio.Group>
-                            <Radio value={index}>Đáp án đúng</Radio>
-                          </Radio.Group>
-                        </Form.Item>
-                      </div>
-
-                      <Form.Item
-                        key={field.key} 
-                        name={[field.name, 'optionText']}
-                        rules={[{ required: true, message: 'Vui lòng nhập đáp án' }]}
-                      >
-                        <Input.TextArea
-                          rows={2}
-                          placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
-                          className="answer-input"
-                          style={{
-                            resize: 'none',
-                            backgroundColor: createForm.getFieldValue('correctAnswer') === index
-                              ? '#e8f5e9'
-                              : '#f5f5f5'
-                          }}
-                        />
-                      </Form.Item>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Form.List>
 
             <div className="flex justify-between items-center mt-8">
               <div className="flex items-center gap-4">
