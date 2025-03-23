@@ -9,6 +9,7 @@ import WorkshopCheck from "../pages/WorkshopCheck";
 import AudienceList from "../pages/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
+import Quiz from "../pages/Quiz";
 import CourseManagement from "../pages/CourseManagement";
 import ConsultingOnline from "../pages/ConsultingOnline";
 import KoiFishManagement from "../pages/KoiFishManagement";
@@ -63,6 +64,10 @@ export const mainRoutes = [
   {
     path: "course-chapters/:courseId",
     element: <Chapter />,
+  },
+  {
+    path: "course-quiz/:courseId",
+    element: <Quiz />,
   },
   {
     path: "course-management",

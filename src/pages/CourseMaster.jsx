@@ -7,7 +7,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
-import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2 } from "lucide-react";
+import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2, ClipboardList } from "lucide-react";
 import { getAllCourses, createCourse, deleteCourse, updateCourse } from "../services/course.service";
 import { formatDate, formatPrice } from '../utils/formatters';
 import { getChaptersByCourseId, formatDuration, createChapter } from "../services/chapter.service";
@@ -200,6 +200,9 @@ const CourseMaster = () => {
   const [updateChapterForm] = Form.useForm();
   const [updatingChapter, setUpdatingChapter] = useState(false);
   const navigate = useNavigate();
+  const [isViewQuizModalOpen, setIsViewQuizModalOpen] = useState(false);
+  const [selectedQuiz, setSelectedQuiz] = useState(null);
+  const [quizForm] = Form.useForm();
 
   useEffect(() => {
     fetchCourses();
@@ -628,6 +631,11 @@ const CourseMaster = () => {
     }
   };
   
+  const handleViewQuiz = (courseId) => {
+    console.log("Xem quiz của khóa học:", courseId);
+    navigate(`/course-quiz/${courseId}`);
+  };
+
   const handleViewChapters = (courseId) => {
     console.log("Xem chương của khóa học:", courseId);
     setIsNavigatingToChapters(true);
@@ -861,6 +869,41 @@ const CourseMaster = () => {
     });
   };
 
+  // Hàm xử lý mở modal xem quiz
+  const handleViewQuizModal = (courseId) => {
+    console.log("Xem quiz của khóa học:", courseId);
+    setSelectedQuiz({
+      id: courseId,
+      title: "Kiểm tra kiến thức Phong thủy cơ bản",
+      masterName: "Nguyễn Văn A",
+      createdDate: "2024-03-20",
+      score: 85,
+      questions: [
+        {
+          id: 1,
+          question: "Câu hỏi 1: Phong thủy là gì?",
+          options: ["A. Nghệ thuật", "B. Khoa học", "C. Cả A và B", "D. Không phải cả A và B"],
+          correctAnswer: "C",
+          score: 2
+        },
+        {
+          id: 2,
+          question: "Câu hỏi 2: Yếu tố nào quan trọng nhất trong phong thủy?",
+          options: ["A. Nước", "B. Gió", "C. Đất", "D. Tất cả đều quan trọng"],
+          correctAnswer: "D",
+          score: 2
+        }
+      ]
+    });
+    setIsViewQuizModalOpen(true);
+  };
+
+  // Hàm đóng modal quiz
+  const handleCloseQuizModal = () => {
+    setIsViewQuizModalOpen(false);
+    setSelectedQuiz(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -1055,6 +1098,13 @@ const CourseMaster = () => {
                 icon={<Book className="h-4 w-4" />}
               >
                 Xem chương
+              </CustomButton>
+              <CustomButton 
+                type="default"
+                onClick={() => handleViewQuiz(selectedCourse.id)}
+                icon={<ClipboardList className="h-4 w-4" />}
+              >
+                Xem quiz
               </CustomButton>
               <CustomButton onClick={handleCloseViewModal}>
                 Đóng
@@ -1308,6 +1358,135 @@ const CourseMaster = () => {
             </CustomButton>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal xem quiz */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Chi tiết bài kiểm tra
+          </div>
+        }
+        open={isViewQuizModalOpen}
+        onCancel={handleCloseQuizModal}
+        footer={null}
+        width={800}
+        className="course-modal"
+      >
+        {selectedQuiz && (
+          <div className="p-4">
+            <Row gutter={[24, 24]}>
+              <Col span={24}>
+                <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Thông tin chung</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-gray-600 block mb-1">Mã bài kiểm tra</label>
+                          <input
+                            type="text"
+                            value={selectedQuiz.id}
+                            readOnly
+                            className="w-full p-2 bg-white border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-600 block mb-1">Tiêu đề</label>
+                          <input
+                            type="text"
+                            value={selectedQuiz.title}
+                            readOnly
+                            className="w-full p-2 bg-white border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-600 block mb-1">Master phụ trách</label>
+                          <input
+                            type="text"
+                            value={selectedQuiz.masterName}
+                            readOnly
+                            className="w-full p-2 bg-white border rounded-md"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold mb-4">Thông tin chi tiết</h3>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-gray-600 block mb-1">Ngày tạo</label>
+                          <input
+                            type="text"
+                            value={selectedQuiz.createdDate}
+                            readOnly
+                            className="w-full p-2 bg-white border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-600 block mb-1">Điểm số</label>
+                          <input
+                            type="text"
+                            value={selectedQuiz.score}
+                            readOnly
+                            className="w-full p-2 bg-white border rounded-md"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-gray-600 block mb-1">Trạng thái</label>
+                          <Tag color={selectedQuiz.score >= 80 ? "success" : "error"} className="text-sm px-3 py-1">
+                            {selectedQuiz.score >= 80 ? "Đạt" : "Chưa đạt"}
+                          </Tag>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Col>
+
+              <Col span={24}>
+                <div className="bg-gray-50 p-6 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4">Danh sách câu hỏi</h3>
+                  <div className="space-y-6">
+                    {selectedQuiz.questions.map((question, index) => (
+                      <div key={question.id} className="bg-white p-4 rounded-lg border">
+                        <div className="flex justify-between items-start mb-3">
+                          <h4 className="font-medium text-gray-800">
+                            Câu {index + 1}: {question.question}
+                          </h4>
+                          <Tag color="blue">Điểm: {question.score}</Tag>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {question.options.map((option, optIndex) => (
+                            <div 
+                              key={optIndex}
+                              className={`p-2 rounded-md border ${
+                                option.startsWith(question.correctAnswer) 
+                                  ? 'border-green-500 bg-green-50' 
+                                  : 'border-gray-200'
+                              }`}
+                            >
+                              {option}
+                              {option.startsWith(question.correctAnswer) && (
+                                <span className="ml-2 text-green-600">(Đáp án đúng)</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            
+            <div className="flex justify-end gap-3 mt-6">
+              <CustomButton onClick={handleCloseQuizModal}>
+                Đóng
+              </CustomButton>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <style jsx global>{`

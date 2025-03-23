@@ -40,22 +40,14 @@ const PondCard = ({ title, image, onUpdate, onDelete, size, direction, shapeId, 
             >
               Cập nhật
             </CustomButton>
-            <Popconfirm
-              title="Xóa hồ cá"
-              description="Bạn có chắc chắn muốn xóa hồ cá này không?"
-              onConfirm={onDelete}
-              okText="Xóa"
-              cancelText="Hủy"
-            >
-              <span className="cursor-pointer">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                </svg>
-              </span>
-            </Popconfirm>
+            <span className="cursor-pointer" onClick={onDelete}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff0000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+            </span>
           </div>
         </div>
       </div>
@@ -80,6 +72,10 @@ const KoiPondManagement = () => {
 
   // State cho danh sách hồ cá từ API
   const [pondTypes, setPondTypes] = useState([]);
+
+  // Thêm state cho modal xác nhận xóa
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [pondToDelete, setPondToDelete] = useState(null);
 
   // Lấy danh sách hồ cá khi component được mount
   useEffect(() => {
@@ -150,96 +146,79 @@ const KoiPondManagement = () => {
     setIsEditModalVisible(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      setLoading(true);
-      console.log('Deleting pond with ID:', id);
-      
-      // Hiển thị xác nhận trước khi xóa
-      Modal.confirm({
-        title: 'Xác nhận xóa',
-        content: 'Bạn có chắc chắn muốn xóa hồ cá này không?',
-        okText: 'Xóa',
-        okType: 'danger',
-        cancelText: 'Hủy',
-        onOk: async () => {
-          try {
-            console.log('Confirmed deletion of pond ID:', id);
-            const response = await KoiPondService.deletePond(id);
-            console.log('Delete response:', response);
+  const handleDelete = (id) => {
+    const pondToDelete = pondTypes.find(pond => (pond.koiPondId || pond.id) === id);
+    console.log("Đang xóa hồ cá:", pondToDelete);
+    
+    // Sử dụng Modal.confirm để xác nhận xóa
+    Modal.confirm({
+      title: 'Xác nhận xóa',
+      content: `Bạn có chắc chắn muốn xóa hồ cá này không?`,
+      okText: 'Xóa',
+      okType: 'danger',
+      cancelText: 'Hủy',
+      centered: true, // Để modal hiển thị ở giữa màn hình
+      className: "delete-confirmation-modal", // Thêm class để styling
+      onOk: async () => {
+        try {
+          setLoading(true);
+          
+          // Gọi API xóa hồ cá
+          const response = await KoiPondService.deletePond(id);
+          console.log('Delete response:', response);
+          
+          // Kiểm tra kết quả xóa
+          if (response && (response.isSuccess === true || (response.data && response.data.isSuccess === true))) {
+            message.success('Xóa hồ cá thành công');
             
-            // Kiểm tra cả trường hợp response trả về từ catch block của service
-            if (response && (response.isSuccess === true || (response.data && response.data.isSuccess === true))) {
-              message.success('Xóa hồ cá thành công');
-              
-              // Sử dụng danh sách hồ cá đã cập nhật từ service
-              if (response.updatedPonds) {
-                console.log('Setting pond types from updatedPonds:', response.updatedPonds);
-                
-                // Kiểm tra cấu trúc dữ liệu trả về
-                if (response.updatedPonds.data) {
-                  console.log('Setting pond types from updatedPonds.data:', response.updatedPonds.data);
-                  setPondTypes(response.updatedPonds.data);
-                } else if (Array.isArray(response.updatedPonds)) {
-                  console.log('Setting pond types from array updatedPonds:', response.updatedPonds);
-                  setPondTypes(response.updatedPonds);
-                } else {
-                  console.log('Không nhận diện được cấu trúc dữ liệu, gọi lại fetchPonds');
-                  fetchPonds();
-                }
+            // Cập nhật danh sách sau khi xóa
+            if (response.updatedPonds) {
+              if (response.updatedPonds.data) {
+                setPondTypes(response.updatedPonds.data);
+              } else if (Array.isArray(response.updatedPonds)) {
+                setPondTypes(response.updatedPonds);
               } else {
-                // Nếu không có updatedPonds, vẫn gọi fetchPonds để cập nhật danh sách
-                console.log('No updatedPonds in response, calling fetchPonds');
                 fetchPonds();
               }
-              setLoading(false);
             } else {
-              console.error('Delete failed with response:', response);
-              // Hiển thị thông báo lỗi từ response
-              message.error(response?.message || 'Lỗi khi xóa hồ cá');
-              
-              // Nếu lỗi liên quan đến ràng buộc dữ liệu, hiển thị thông báo chi tiết hơn
-              if (response?.message?.includes('tham chiếu')) {
-                Modal.error({
-                  title: 'Không thể xóa hồ cá',
-                  content: 'Hồ cá này đang được sử dụng bởi dữ liệu khác trong hệ thống. Vui lòng xóa các dữ liệu liên quan trước khi xóa hồ cá này.',
-                });
-              }
+              fetchPonds();
             }
-          } catch (error) {
-            console.error('Error in delete confirmation:', error);
-            let errorMessage = 'Lỗi khi xóa hồ cá';
+          } else {
+            console.error('Delete failed with response:', response);
+            message.error(response?.message || 'Lỗi khi xóa hồ cá');
             
-            if (error.response) {
-              console.error('API error response:', error.response.data);
-              
-              // Xử lý lỗi 500 từ server
-              if (error.response.status === 500) {
-                errorMessage = 'Lỗi server: Không thể xóa hồ cá. Có thể hồ cá đang được sử dụng bởi dữ liệu khác.';
-                
-                Modal.error({
-                  title: 'Lỗi Server',
-                  content: 'Không thể xóa hồ cá. Vui lòng liên hệ quản trị viên hoặc thử lại sau.',
-                });
-              } else {
-                errorMessage = error.response.data?.message || errorMessage;
-              }
+            if (response?.message?.includes('tham chiếu')) {
+              Modal.error({
+                title: 'Không thể xóa hồ cá',
+                content: 'Hồ cá này đang được sử dụng bởi dữ liệu khác trong hệ thống. Vui lòng xóa các dữ liệu liên quan trước khi xóa hồ cá này.',
+              });
             }
-            
-            message.error(errorMessage);
-          } finally {
-            setLoading(false);
           }
-        },
-        onCancel() {
+        } catch (error) {
+          console.error('Error in delete confirmation:', error);
+          let errorMessage = 'Lỗi khi xóa hồ cá';
+          
+          if (error.response) {
+            console.error('API error response:', error.response.data);
+            
+            if (error.response.status === 500) {
+              errorMessage = 'Lỗi server: Không thể xóa hồ cá. Có thể hồ cá đang được sử dụng bởi dữ liệu khác.';
+              
+              Modal.error({
+                title: 'Lỗi Server',
+                content: 'Không thể xóa hồ cá. Vui lòng liên hệ quản trị viên hoặc thử lại sau.',
+              });
+            } else {
+              errorMessage = error.response.data?.message || errorMessage;
+            }
+          }
+          
+          message.error(errorMessage);
+        } finally {
           setLoading(false);
-        },
-      });
-    } catch (error) {
-      console.error('Error in handleDelete:', error);
-      message.error('Lỗi khi xóa hồ cá');
-      setLoading(false);
-    }
+        }
+      },
+    });
   };
 
   const handleCreatePond = () => {
@@ -532,26 +511,24 @@ const KoiPondManagement = () => {
         >
           <Form.Item
             name="pondName"
-            label="Tên hồ cá"
+            label={<span className="text-red-500">* Tên hồ cá</span>}
             rules={[{ required: true, message: 'Vui lòng nhập tên hồ cá' }]}
           >
             <input className="w-full p-2 border rounded" placeholder="Nhập tên hồ cá" />
           </Form.Item>
           <Form.Item
             name="size"
-            label="Kích thước"
+            label={<span className="text-red-500">* Kích thước</span>}
             rules={[{ required: true, message: 'Vui lòng nhập kích thước' }]}
           >
             <input 
               className="w-full p-2 border rounded" 
               placeholder="Nhập kích thước" 
-              type="number"
-              min="0"
             />
           </Form.Item>
           <Form.Item
             name="direction"
-            label="Hướng"
+            label={<span className="text-red-500">* Hướng</span>}
             rules={[{ required: true, message: 'Vui lòng nhập hướng' }]}
           >
             <select className="w-full p-2 border rounded">
@@ -568,14 +545,18 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="shapeId"
-            label="Hình dạng"
+            label={<span className="text-red-500">* Hình dạng</span>}
             rules={[{ required: true, message: 'Vui lòng chọn hình dạng' }]}
           >
             <select className="w-full p-2 border rounded">
               <option value="">Chọn hình dạng</option>
-              {pondShapes.map(shape => (
-                <option key={shape.id} value={shape.id}>{shape.name}</option>
-              ))}
+              {pondShapes.length > 0 ? (
+                pondShapes.map(shape => (
+                  <option key={shape.id} value={shape.id}>{shape.name}</option>
+                ))
+              ) : (
+                <option value="" disabled>Đang tải danh sách hình dạng...</option>
+              )}
             </select>
           </Form.Item>
           <div className="mt-4">
@@ -609,26 +590,24 @@ const KoiPondManagement = () => {
         >
           <Form.Item
             name="pondName"
-            label="Tên hồ cá"
+            label={<span className="text-red-500">* Tên hồ cá</span>}
             rules={[{ required: true, message: 'Vui lòng nhập tên hồ cá' }]}
           >
             <input className="w-full p-2 border rounded" placeholder="Nhập tên hồ cá" />
           </Form.Item>
           <Form.Item
             name="size"
-            label="Kích thước"
+            label={<span className="text-red-500">* Kích thước</span>}
             rules={[{ required: true, message: 'Vui lòng nhập kích thước' }]}
           >
             <input 
               className="w-full p-2 border rounded" 
               placeholder="Nhập kích thước" 
-              type="number"
-              min="0"
             />
           </Form.Item>
           <Form.Item
             name="direction"
-            label="Hướng"
+            label={<span className="text-red-500">* Hướng</span>}
             rules={[{ required: true, message: 'Vui lòng nhập hướng' }]}
           >
             <select className="w-full p-2 border rounded">
@@ -645,14 +624,18 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="shapeId"
-            label="Hình dạng"
+            label={<span className="text-red-500">* Hình dạng</span>}
             rules={[{ required: true, message: 'Vui lòng chọn hình dạng' }]}
           >
             <select className="w-full p-2 border rounded">
               <option value="">Chọn hình dạng</option>
-              {pondShapes.map(shape => (
-                <option key={shape.id} value={shape.id}>{shape.name}</option>
-              ))}
+              {pondShapes.length > 0 ? (
+                pondShapes.map(shape => (
+                  <option key={shape.id} value={shape.id}>{shape.name}</option>
+                ))
+              ) : (
+                <option value="" disabled>Đang tải danh sách hình dạng...</option>
+              )}
             </select>
           </Form.Item>
         </Form>
@@ -667,6 +650,37 @@ const KoiPondManagement = () => {
       >
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
+
+      {/* Thêm style cho modal xác nhận xóa */}
+      <style jsx global>{`
+        .delete-confirmation-modal .ant-modal-content {
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .delete-confirmation-modal .ant-modal-body {
+          padding: 24px;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-title {
+          font-size: 18px;
+          font-weight: 600;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-content {
+          margin-top: 8px;
+          margin-bottom: 24px;
+          font-size: 14px;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-btns {
+          margin-top: 24px;
+        }
+        .delete-confirmation-modal .ant-btn-primary {
+          background-color: #f5222d;
+          border-color: #f5222d;
+        }
+        .delete-confirmation-modal .ant-btn-primary:hover {
+          background-color: #ff4d4f;
+          border-color: #ff4d4f;
+        }
+      `}</style>
     </div>
   );
 };
