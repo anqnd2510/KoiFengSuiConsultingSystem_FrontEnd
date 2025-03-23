@@ -19,6 +19,7 @@ import Certificate from "../pages/Certificate";
 import Master from "../pages/Master";
 import Customer from "../pages/Customer";
 import ConsultationHistory from "../pages/ConsultationHistory";
+import Question from "../pages/Question";
 
 export const mainRoutes = [
   {
@@ -68,6 +69,10 @@ export const mainRoutes = [
   {
     path: "course-quiz/:courseId",
     element: <Quiz />,
+  },
+  {
+    path: "quiz/:quizId/questions",
+    element: <Question />,
   },
   {
     path: "course-management",

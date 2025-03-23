@@ -8,7 +8,7 @@ import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Error from "../components/Common/Error";
-import { getQuizzesByCourseId, getQuizById, createQuiz, updateQuiz } from "../services/quiz.service";
+import { getQuizzesByCourseId, getQuizById, createQuiz, updateQuiz, deleteQuiz } from "../services/quiz.service";
 import { getAllCourses } from "../services/course.service";
 
 const Quiz = () => {
@@ -29,6 +29,9 @@ const Quiz = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm] = Form.useForm();
   const [editingQuiz, setEditingQuiz] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingQuiz, setDeletingQuiz] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const pageSize = 10;
 
   useEffect(() => {
@@ -236,9 +239,29 @@ const Quiz = () => {
   };
 
   const handleDeleteQuiz = (quiz) => {
-    console.log("Delete quiz:", quiz);
-    // TODO: Implement delete functionality
-    message.info("Chức năng đang được phát triển");
+    setDeletingQuiz(quiz);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await deleteQuiz(deletingQuiz.quizId);
+      message.success("Xóa bài kiểm tra thành công!");
+      setIsDeleteModalOpen(false);
+      setDeletingQuiz(null);
+      fetchQuizzes();
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+      message.error(error.toString());
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingQuiz(null);
   };
 
   const columns = [
@@ -427,7 +450,7 @@ const Quiz = () => {
           <div className="p-4">
             <Row gutter={[24, 24]}>
               <Col span={24}>
-                <div className="bg-gray-50 p-6 rounded-lg mb-6">
+                <div className="bg-gray-50 p-6 rounded-lg">
                   <div className="grid grid-cols-2 gap-6">
                     <div>
                       <h3 className="text-lg font-semibold mb-4">Thông tin chung</h3>
@@ -493,44 +516,15 @@ const Quiz = () => {
                   </div>
                 </div>
               </Col>
-
-              <Col span={24}>
-                <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-lg font-semibold mb-4">Danh sách câu hỏi</h3>
-                  <div className="space-y-6">
-                    {selectedQuiz.questions && selectedQuiz.questions.map((question, index) => (
-                      <div key={question.questionId || `question-${index}`} className="bg-white p-4 rounded-lg border">
-                        <div className="flex justify-between items-start mb-3">
-                          <h4 className="font-medium text-gray-800">
-                            Câu {index + 1}: {question.questionText}
-                          </h4>
-                          <Tag color="blue">Điểm: {question.score}</Tag>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          {question.options && question.options.map((option, optionIndex) => (
-                            <div 
-                              key={option.optionId || `option-${question.questionId}-${optionIndex}`}
-                              className={`p-2 rounded-md border ${
-                                option.isCorrect
-                                  ? 'border-green-500 bg-green-50' 
-                                  : 'border-gray-200'
-                              }`}
-                            >
-                              {option.optionText}
-                              {option.isCorrect && (
-                                <span className="ml-2 text-green-600">(Đáp án đúng)</span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </Col>
             </Row>
             
             <div className="flex justify-end gap-3 mt-6">
+              <CustomButton 
+                type="primary"
+                onClick={() => navigate(`/quiz/${selectedQuiz.quizId}/questions`)}
+              >
+                Câu hỏi
+              </CustomButton>
               <CustomButton onClick={handleCloseViewModal}>
                 Đóng
               </CustomButton>
@@ -696,6 +690,50 @@ const Quiz = () => {
             </div>
           </div>
         </Form>
+      </Modal>
+
+      {/* Modal xác nhận xóa */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold text-red-600">
+            Xác nhận xóa bài kiểm tra
+          </div>
+        }
+        open={isDeleteModalOpen}
+        onCancel={handleCancelDelete}
+        footer={null}
+        width={500}
+        className="quiz-modal"
+      >
+        <div className="p-4">
+          <div className="mb-6">
+            <p className="text-gray-600">
+              Bạn có chắc chắn muốn xóa bài kiểm tra này?
+            </p>
+            {deletingQuiz && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="font-medium">{deletingQuiz.title}</p>
+                <p className="text-sm text-gray-500 mt-1">
+                  Mã bài kiểm tra: {deletingQuiz.quizId}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <CustomButton onClick={handleCancelDelete}>
+              Hủy
+            </CustomButton>
+            <CustomButton
+              type="primary"
+              danger
+              onClick={handleConfirmDelete}
+              loading={isDeleting}
+            >
+              Xác nhận xóa
+            </CustomButton>
+          </div>
+        </div>
       </Modal>
 
       <style jsx>{`

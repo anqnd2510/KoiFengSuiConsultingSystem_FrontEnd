@@ -111,3 +111,32 @@ export const updateQuiz = async (courseId, quizRequest) => {
   }
 };
 
+export const deleteQuiz = async (quizId) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!quizId) {
+      throw new Error("ID bài kiểm tra không được để trống");
+    }
+
+    console.log("Gọi API xóa bài kiểm tra với ID:", quizId);
+    
+    const response = await apiClient.delete(`${QUIZ_ENDPOINT}/${quizId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log("Kết quả API xóa bài kiểm tra:", response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi xóa bài kiểm tra:", error);
+    throw error;
+  }
+};
+
