@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const QUESTION_ENDPOINT = 'http://localhost:5261/api/Question';
+const API_URL = 'http://localhost:5261/api'; // Thay bằng URL API của bạn
 
 // Tạo instance axios riêng cho question service
 const questionApiClient = axios.create({
@@ -8,32 +8,13 @@ const questionApiClient = axios.create({
 });
 
 export const getQuestionsByQuizId = async (quizId) => {
-  try {
-    const token = localStorage.getItem('accessToken');
-    console.log('Token:', token);
-
-    if (!token) {
-      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+  const token = localStorage.getItem('accessToken');
+  return await axios.get(`${API_URL}/Question/quiz/${quizId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
     }
-
-    console.log('Fetching questions for quizId:', quizId);
-    const response = await questionApiClient.get(`${QUESTION_ENDPOINT}/quiz/${quizId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    console.log('API Response:', response);
-
-    if (response.data.isSuccess) {
-      return response.data.data;
-    }
-
-    throw new Error(response.data.message || "Không thể tải danh sách câu hỏi");
-  } catch (error) {
-    console.error('Error in getQuestionsByQuizId:', error);
-    throw new Error(error.message || "Có lỗi xảy ra khi tải danh sách câu hỏi");
-  }
+  });
 };
 
 export const createQuestion = async (quizId, questionRequest) => {
@@ -48,7 +29,7 @@ export const createQuestion = async (quizId, questionRequest) => {
     console.log('Creating question for quizId:', quizId);
     console.log('Question request:', questionRequest);
 
-    const response = await questionApiClient.post(`${QUESTION_ENDPOINT}/quiz/${quizId}`, questionRequest, {
+    const response = await questionApiClient.post(`${API_URL}/Question/quiz/${quizId}`, questionRequest, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -79,7 +60,7 @@ export const updateQuestion = async (questionId, questionRequest) => {
     console.log('Updating question:', questionId);
     console.log('Question request:', questionRequest);
 
-    const response = await questionApiClient.put(`${QUESTION_ENDPOINT}/${questionId}`, questionRequest, {
+    const response = await questionApiClient.put(`${API_URL}/Question/${questionId}`, questionRequest, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -109,7 +90,7 @@ export const deleteQuestion = async (questionId) => {
 
     console.log('Deleting question:', questionId);
 
-    const response = await questionApiClient.delete(`${QUESTION_ENDPOINT}/${questionId}`, {
+    const response = await questionApiClient.delete(`${API_URL}/Question/${questionId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }

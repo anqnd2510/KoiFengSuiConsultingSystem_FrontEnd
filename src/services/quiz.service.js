@@ -64,7 +64,7 @@ export const createQuiz = async (courseId, quizRequest) => {
     
     console.log('API Response:', response);
 
-    if (response.data.isSuccess) {
+    if (response.data.isSuccess) {  
       return response.data.data;
     }
     

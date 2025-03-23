@@ -8,6 +8,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
 import Error from "../components/Common/Error";
 import { getQuestionsByQuizId, createQuestion, updateQuestion, deleteQuestion } from "../services/question.service";
+import { getAnswerById, updateAnswer } from "../services/answer.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -25,6 +26,11 @@ const Question = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editForm] = Form.useForm();
   const [editingQuestion, setEditingQuestion] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deletingQuestion, setDeletingQuestion] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [answerDetails, setAnswerDetails] = useState(null);
+  const [loadingAnswer, setLoadingAnswer] = useState(false);
 
   useEffect(() => {
     if (quizId) {
@@ -36,20 +42,35 @@ const Question = () => {
     try {
       setLoading(true);
       setError("");
-      console.log("Fetching questions for quizId:", quizId);
-      const data = await getQuestionsByQuizId(quizId);
-      console.log("Received questions data:", data);
       
-      if (Array.isArray(data)) {
-        setQuestions(data);
-      } else {
-        console.warn("Received non-array data:", data);
-        setQuestions([]);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError("Vui lòng đăng nhập lại");
+        message.error("Vui lòng đăng nhập lại");
+        navigate('/login');
+        return;
       }
-    } catch (error) {
-      console.error("Error fetching questions:", error);
-      setError(error.toString());
-      message.error(error.toString());
+
+      const response = await getQuestionsByQuizId(quizId);
+      console.log("API Response:", response);
+      
+      if (response?.data?.data) {
+        setQuestions(response.data.data);
+      } else if (response?.data) {
+        setQuestions(response.data);
+      } else {
+        setQuestions([]);
+        console.warn("Không có dữ liệu câu hỏi");
+      }
+
+    } catch (err) {
+      console.error("Error fetching questions:", err);
+      if (err.response?.status === 401) {
+        setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
+        navigate('/login');
+      } else {
+        setError("Không thể tải danh sách câu hỏi");
+      }
       setQuestions([]);
     } finally {
       setLoading(false);
@@ -103,18 +124,51 @@ const Question = () => {
     }
   };
 
-  const handleEditQuestion = (question) => {
-    setSelectedQuestion(question);
-    editForm.setFieldsValue({
-      questionText: question.questionText,
-      questionType: question.questionType,
-      point: question.point,
-      answers: question.answers.map(answer => ({
-        optionText: answer.optionText,
-        isCorrect: answer.isCorrect
-      }))
-    });
-    setIsEditModalOpen(true);
+  const handleEditQuestion = async (question) => {
+    try {
+      setSelectedQuestion(question);
+      
+      // Fetch lại thông tin các đáp án từ API
+      const answerPromises = question.answers.map(answer => 
+        getAnswerById(answer.answerId)
+      );
+      
+      const answers = await Promise.all(answerPromises);
+      console.log("Đáp án từ DB:", answers);
+
+      // Tìm index của đáp án đúng từ DB
+      const correctAnswerIndex = answers.findIndex(answer => 
+        answer?.data?.isCorrect === true
+      );
+      console.log("Index đáp án đúng:", correctAnswerIndex);
+
+      // Map dữ liệu từ response API
+      const mappedAnswers = answers.map(answer => {
+        const answerData = answer?.data;
+        console.log("Answer data:", answerData);
+        return {
+          optionText: answerData?.optionText || '',
+          isCorrect: answerData?.isCorrect || false,
+          answerId: answerData?.answerId
+        };
+      });
+
+      console.log("Mapped answers:", mappedAnswers);
+
+      // Set giá trị form với đáp án mới nhất từ DB
+      editForm.setFieldsValue({
+        questionText: question.questionText,
+        questionType: question.questionType,
+        point: question.point,
+        correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
+        answers: mappedAnswers
+      });
+
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi lấy thông tin đáp án:", error);
+      message.error("Không thể tải thông tin đáp án");
+    }
   };
 
   const handleCloseEditModal = () => {
@@ -127,56 +181,118 @@ const Question = () => {
     try {
       setEditingQuestion(true);
       
-      // Validate dữ liệu
+      // Log để debug
+      console.log("Values from form:", values);
+      console.log("Selected question:", selectedQuestion);
+
+      // Validate dữ liệu đầu vào
       if (!values.questionText?.trim()) {
         throw new Error("Vui lòng nhập nội dung câu hỏi");
       }
-      
-      const point = Number(values.point);
-      if (isNaN(point) || point < 0 || point > 100) {
-        throw new Error("Điểm số phải từ 0-100");
-      }
 
+      // Cập nhật câu hỏi trước
       const questionRequest = {
         questionText: values.questionText.trim(),
         questionType: values.questionType,
-        point: point,
-        answers: values.answers.map(answer => ({
+        point: Number(values.point) || 0,
+        answers: values.answers.map((answer, index) => ({
           optionText: answer.optionText.trim(),
-          isCorrect: !!answer.isCorrect
+          isCorrect: index === values.correctAnswer
         }))
       };
 
       await updateQuestion(selectedQuestion.questionId, questionRequest);
+
+      // Cập nhật từng đáp án với cấu trúc request đúng
+      if (selectedQuestion.answers && selectedQuestion.answers.length > 0) {
+        for (let i = 0; i < selectedQuestion.answers.length; i++) {
+          const existingAnswer = selectedQuestion.answers[i];
+          if (existingAnswer.answerId) {
+            try {
+              // Chỉ gửi optionText và isCorrect trong request body
+              const answerRequest = {
+                optionText: values.answers[i].optionText.trim(),
+                isCorrect: i === values.correctAnswer
+              };
+              
+              console.log(`Request cập nhật đáp án ${i + 1}:`, {
+                answerId: existingAnswer.answerId,
+                ...answerRequest
+              });
+
+              // Gọi API với answerId trong URL và request body đơn giản
+              await updateAnswer(existingAnswer.answerId, answerRequest);
+              console.log(`Cập nhật đáp án ${i + 1} thành công`);
+            } catch (err) {
+              console.error(`Lỗi khi cập nhật đáp án ${i + 1}:`, err);
+              message.warning(`Không thể cập nhật đáp án ${i + 1}`);
+            }
+          }
+        }
+      }
       
       message.success("Cập nhật câu hỏi thành công!");
       handleCloseEditModal();
       fetchQuestions();
     } catch (error) {
       console.error("Error updating question:", error);
-      message.error(error.toString());
+      message.error(error.message || "Có lỗi xảy ra khi cập nhật câu hỏi");
     } finally {
       setEditingQuestion(false);
     }
   };
 
-  const handleDeleteQuestion = async (question) => {
+  const handleDeleteQuestion = (question) => {
+    setDeletingQuestion(question);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
-      const confirmDelete = window.confirm("Bạn có chắc chắn muốn xóa câu hỏi này?");
-      if (confirmDelete) {
-        await deleteQuestion(question.questionId);
-        message.success("Xóa câu hỏi thành công!");
-        fetchQuestions();
-      }
+      setIsDeleting(true);
+      await deleteQuestion(deletingQuestion.questionId);
+      message.success("Xóa câu hỏi thành công!");
+      setIsDeleteModalOpen(false);
+      setDeletingQuestion(null);
+      fetchQuestions();
     } catch (error) {
       console.error("Error deleting question:", error);
       message.error(error.toString());
+    } finally {
+      setIsDeleting(false);
     }
   };
 
-  const handleViewQuestion = (question) => {
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setDeletingQuestion(null);
+  };
+
+  const fetchAnswerDetails = async (answerId) => {
+    try {
+      setLoadingAnswer(true);
+      const data = await getAnswerById(answerId);
+      setAnswerDetails(data);
+    } catch (error) {
+      console.error("Error fetching answer details:", error);
+      message.error("Không thể tải thông tin đáp án");
+    } finally {
+      setLoadingAnswer(false);
+    }
+  };
+
+  const handleViewQuestion = async (question) => {
     setSelectedQuestion(question);
     setIsViewModalOpen(true);
+    
+    // Nếu câu hỏi có answerId thì fetch thông tin
+    if (question.answers && question.answers.length > 0) {
+      for (const answer of question.answers) {
+        if (answer.answerId) {
+          await fetchAnswerDetails(answer.answerId);
+        }
+      }
+    }
   };
 
   const handleCloseViewModal = () => {
@@ -327,6 +443,7 @@ const Question = () => {
               total={questions.length}
               pageSize={pageSize}
               onChange={handlePageChange}
+              onShowSizeChange={handlePageChange}
             />
           </div>
         </div>
@@ -502,13 +619,24 @@ const Question = () => {
                       </div>
                       <div className="flex-1">
                         <div className="text-base">{answer.optionText}</div>
-                        <div className={`text-sm mt-1 ${
-                          answer.isCorrect 
-                            ? 'text-green-600' 
-                            : 'text-red-600'
-                        }`}>
-                          {answer.isCorrect ? 'Đáp án đúng' : 'Đáp án sai'}
-                        </div>
+                        {loadingAnswer ? (
+                          <div className="text-sm mt-1 text-gray-500">Đang tải...</div>
+                        ) : (
+                          <>
+                            <div className={`text-sm mt-1 ${
+                              answer.isCorrect 
+                                ? 'text-green-600' 
+                                : 'text-red-600'
+                            }`}>
+                              {answer.isCorrect ? 'Đáp án đúng' : 'Đáp án sai'}
+                            </div>
+                            {answerDetails && (
+                              <div className="text-sm mt-1 text-gray-500">
+                                ID: {answer.answerId}
+                              </div>
+                            )}
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -660,6 +788,66 @@ const Question = () => {
             </div>
           </div>
         </Form>
+      </Modal>
+
+      {/* Modal xác nhận xóa */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold text-red-600">
+            Xác nhận xóa câu hỏi
+          </div>
+        }
+        open={isDeleteModalOpen}
+        onCancel={handleCancelDelete}
+        footer={null}
+        width={500}
+        className="question-modal"
+      >
+        <div className="p-4">
+          <div className="mb-6">
+            <p className="text-gray-600">
+              Bạn có chắc chắn muốn xóa câu hỏi này?
+            </p>
+            {deletingQuestion && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <p className="font-medium text-gray-800">
+                  {deletingQuestion.questionText}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <Tag color="blue">
+                    {deletingQuestion.questionType}
+                  </Tag>
+                  <Tag color="orange">
+                    Điểm: {deletingQuestion.point}
+                  </Tag>
+                </div>
+                <p className="text-sm text-gray-500 mt-2">
+                  Mã câu hỏi: {deletingQuestion.questionId}
+                </p>
+              </div>
+            )}
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan đến câu hỏi này sẽ bị xóa vĩnh viễn.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <CustomButton onClick={handleCancelDelete}>
+              Hủy
+            </CustomButton>
+            <CustomButton
+              type="primary"
+              danger
+              onClick={handleConfirmDelete}
+              loading={isDeleting}
+              icon={<FaTrash size={14} />}
+            >
+              Xác nhận xóa
+            </CustomButton>
+          </div>
+        </div>
       </Modal>
 
       {/* Thêm styles mới */}
