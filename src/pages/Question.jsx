@@ -8,7 +8,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
 import Error from "../components/Common/Error";
 import { getQuestionsByQuizId, createQuestion, updateQuestion, deleteQuestion } from "../services/question.service";
-import { getAnswerById, updateAnswer } from "../services/answer.service";
+import { getAnswerById, updateAnswer, createAnswer } from "../services/answer.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -99,26 +99,80 @@ const Question = () => {
       setCreatingQuestion(true);
       console.log("Creating question with values:", values);
 
-      // Chuẩn bị dữ liệu cho API
+      // Validate dữ liệu
+      if (!values.questionText?.trim()) {
+        message.error("Vui lòng nhập nội dung câu hỏi");
+        return;
+      }
+
+      // Tạo câu hỏi trước
       const questionRequest = {
-        questionText: values.questionText.trim(),
-        questionType: values.questionType,
-        point: Number(values.point),
-        answers: values.answers.map((answer, index) => ({
-          optionText: answer.optionText.trim(),
-          isCorrect: index === values.correctAnswer
-        }))
+        QuestionText: values.questionText.trim(),
+        QuestionType: values.questionType,
+        Point: Number(values.point) || 0,
+        QuizId: quizId
       };
 
       console.log("Question request:", questionRequest);
-      await createQuestion(quizId, questionRequest);
-      
-      message.success("Tạo câu hỏi mới thành công!");
+
+      // Tạo câu hỏi và lấy questionId
+      const response = await createQuestion(quizId, questionRequest);
+      console.log("Create question response:", response);
+
+      if (!response?.data) {
+        message.error("Không nhận được phản hồi khi tạo câu hỏi");
+        return;
+      }
+
+      // Lấy questionId từ response
+      const questionData = response.data;
+      const newQuestionId = questionData.questionId;
+
+      if (!newQuestionId) {
+        message.error("Không nhận được ID câu hỏi");
+        return;
+      }
+
+      console.log("New question ID:", newQuestionId);
+
+      // Lấy đáp án đúng từ form
+      const correctAnswerIndex = createForm.getFieldValue('correctAnswer') || 0;
+      console.log("Correct answer index:", correctAnswerIndex);
+
+      // Tạo các đáp án cho câu hỏi
+      for (let i = 0; i < values.answers.length; i++) {
+        const answer = values.answers[i];
+        if (!answer.optionText?.trim()) {
+          console.warn(`Bỏ qua đáp án ${i + 1} vì không có nội dung`);
+          continue;
+        }
+
+        const answerRequest = {
+          QuestionId: newQuestionId,
+          OptionText: answer.optionText.trim(),
+          IsCorrect: i === correctAnswerIndex
+        };
+
+        try {
+          console.log(`Creating answer ${i + 1}:`, answerRequest);
+          const result = await createAnswer(newQuestionId, answerRequest);
+          console.log(`Answer ${i + 1} created:`, result);
+        } catch (err) {
+          console.error(`Error creating answer ${i + 1}:`, err);
+          message.warning(`Không thể tạo đáp án ${i + 1}`);
+        }
+      }
+
+      message.success("Tạo câu hỏi và đáp án thành công!");
       handleCloseCreateModal();
-      fetchQuestions();
+      
+      // Refresh lại trang sau khi tạo thành công
+      await fetchQuestions(); // Fetch lại danh sách câu hỏi
+      window.location.reload(); // Refresh trang
+
     } catch (error) {
       console.error("Error creating question:", error);
-      message.error(error.toString());
+      message.error(error.message || "Có lỗi xảy ra khi tạo câu hỏi");
     } finally {
       setCreatingQuestion(false);
     }
@@ -209,18 +263,14 @@ const Question = () => {
           const existingAnswer = selectedQuestion.answers[i];
           if (existingAnswer.answerId) {
             try {
-              // Chỉ gửi optionText và isCorrect trong request body
               const answerRequest = {
-                optionText: values.answers[i].optionText.trim(),
-                isCorrect: i === values.correctAnswer
+                AnswerId: existingAnswer.answerId,
+                QuestionId: selectedQuestion.questionId,
+                OptionText: values.answers[i].optionText.trim(),
+                IsCorrect: i === values.correctAnswer
               };
               
-              console.log(`Request cập nhật đáp án ${i + 1}:`, {
-                answerId: existingAnswer.answerId,
-                ...answerRequest
-              });
-
-              // Gọi API với answerId trong URL và request body đơn giản
+              console.log(`Request cập nhật đáp án ${i + 1}:`, answerRequest);
               await updateAnswer(existingAnswer.answerId, answerRequest);
               console.log(`Cập nhật đáp án ${i + 1} thành công`);
             } catch (err) {
@@ -469,11 +519,12 @@ const Question = () => {
           initialValues={{
             questionType: "Multiple Choice",
             point: 1,
+            correctAnswer: 0,
             answers: [
-              { optionText: "", isCorrect: false },
-              { optionText: "", isCorrect: false },
-              { optionText: "", isCorrect: false },
-              { optionText: "", isCorrect: false }
+              { optionText: "" },
+              { optionText: "" },
+              { optionText: "" },
+              { optionText: "" }
             ]
           }}
         >
@@ -495,26 +546,21 @@ const Question = () => {
             <Form.List name="answers">
               {(fields) => (
                 <div className="grid grid-cols-2 gap-4">
-                  <Form.Item name="correctAnswer" className="hidden">
-                    <Input type="hidden" />
-                  </Form.Item>
                   {fields.map((field, index) => (
                     <div key={field.key}>
                       <div className="flex items-center gap-2 mb-2">
                         <div className="w-6 h-6 flex items-center justify-center">
                           {String.fromCharCode(65 + index)}
                         </div>
-                        <Form.Item
-                          noStyle
-                          name="correctAnswer"
-                          initialValue={0}
-                        >
-                          <Radio value={index}>Đáp án đúng</Radio>
+                        <Form.Item name="correctAnswer">
+                          <Radio.Group>
+                            <Radio value={index}>Đáp án đúng</Radio>
+                          </Radio.Group>
                         </Form.Item>
                       </div>
 
                       <Form.Item
-                        {...field}
+                        key={field.key} 
                         name={[field.name, 'optionText']}
                         rules={[{ required: true, message: 'Vui lòng nhập đáp án' }]}
                       >

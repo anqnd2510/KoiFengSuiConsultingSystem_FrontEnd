@@ -4,10 +4,7 @@ const ANSWER_ENDPOINT = "/Answer";
 
 export const getAnswerById = async (answerId) => {
   try {
-    // Kiểm tra token đăng nhập
     const token = localStorage.getItem('accessToken');
-    console.log('Token:', token);
-
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
@@ -16,14 +13,11 @@ export const getAnswerById = async (answerId) => {
       throw new Error("ID đáp án không được để trống");
     }
 
-    console.log("Gọi API lấy đáp án với ID:", answerId);
     const response = await apiClient.get(`${ANSWER_ENDPOINT}/get-by/${answerId}`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     });
-    
-    console.log("API Response:", response);
 
     if (response.data.isSuccess) {
       return response.data.data;
@@ -43,24 +37,98 @@ export const updateAnswer = async (answerId, answerRequest) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
+    // Chuẩn bị request body theo đúng model AnswerRequest
+    const requestBody = {
+      AnswerId: answerId,               // Thêm AnswerId vào request
+      QuestionId: answerRequest.questionId, // Thêm QuestionId nếu cần
+      OptionText: answerRequest.optionText.trim(),
+      IsCorrect: answerRequest.isCorrect
+    };
+
     // Log request để debug
-    console.log(`Gọi API PUT /Answer/update-by/${answerId}`, {
-      body: answerRequest
+    console.log("[UpdateAnswer] Request:", {
+      url: `${ANSWER_ENDPOINT}/update-by/${answerId}`,
+      body: requestBody
     });
 
-    const response = await apiClient.put(`/Answer/update-by/${answerId}`, answerRequest, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    const response = await apiClient.put(
+      `${ANSWER_ENDPOINT}/update-by/${answerId}`, 
+      requestBody,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
-    
-    // Log response để debug
-    console.log("Response from update answer:", response.data);
+    );
+
+    console.log("[UpdateAnswer] Response:", response.data);
     
     return response.data;
+
   } catch (error) {
-    console.error("Error in updateAnswer:", error);
+    console.error("[UpdateAnswer] Error:", {
+      message: error.message,
+      response: error.response?.data
+    });
+
+    if (error.response?.status === 400) {
+      throw new Error("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin đáp án");
+    }
+    throw error;
+  }
+};
+
+export const createAnswer = async (questionId, answerRequest) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!questionId) {
+      throw new Error("ID câu hỏi không được để trống");
+    }
+
+    if (!answerRequest?.optionText) {
+      throw new Error("Nội dung đáp án không được để trống");
+    }
+
+    // Chuẩn bị request body theo đúng model
+    const requestBody = {
+      QuestionId: questionId,
+      OptionText: answerRequest.optionText.trim(),
+      IsCorrect: !!answerRequest.isCorrect // Đảm bảo là boolean
+    };
+
+    console.log("[CreateAnswer] Request:", {
+      url: `${ANSWER_ENDPOINT}/create-by/${questionId}`,
+      body: requestBody
+    });
+
+    const response = await apiClient.post(
+      `${ANSWER_ENDPOINT}/create-by/${questionId}`,
+      requestBody,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("[CreateAnswer] Response:", response.data);
+    return response.data;
+
+  } catch (error) {
+    console.error("[CreateAnswer] Error:", {
+      message: error.message,
+      response: error.response?.data
+    });
+
+    if (error.response?.status === 400) {
+      throw new Error("Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin đáp án");
+    }
     throw error;
   }
 };
