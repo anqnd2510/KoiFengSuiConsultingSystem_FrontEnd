@@ -105,8 +105,9 @@ const Question = () => {
         quizId: quizId,
         answers: values.answers.map((answer, index) => ({
           optionText: answer.optionText.trim(),
-          optionType: "string",
-          isCorrect: index === values.correctAnswer,
+          optionType: answer.optionType || "Text",
+          //isCorrect: index === values.correctAnswer,
+          isCorrect: answer.isCorrect,
           createAt: new Date().toISOString()
         }))
       };
@@ -135,33 +136,68 @@ const Question = () => {
 
   const handleEditQuestion = async (question) => {
     try {
-      setSelectedQuestion(question);
+      setLoading(true);
       
-      // Không cần fetch lại thông tin đáp án, sử dụng dữ liệu có sẵn
-      const mappedAnswers = question.answers.map(answer => ({
-        optionText: answer.optionText || '',
-        isCorrect: answer.isCorrect || false,
-        answerId: answer.answerId
-      }));
+      // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
+      const response = await getQuestionsByQuizId(quizId);
+      let questionToEdit = question;
 
-      // Tìm index của đáp án đúng
-      const correctAnswerIndex = question.answers.findIndex(answer => 
+      if (response?.data?.data) {
+        // Tìm câu hỏi cụ thể trong danh sách mới
+        const updatedQuestion = response.data.data.find(q => q.questionId === question.questionId);
+        if (updatedQuestion) {
+          // Fetch chi tiết từng câu trả lời
+          const updatedAnswers = await Promise.all(
+            updatedQuestion.answers.map(async (answer) => {
+              try {
+                if (answer.answerId) {
+                  const answerDetail = await getAnswerById(answer.answerId);
+                  return {
+                    ...answer,
+                    ...answerDetail
+                  };
+                }
+                return answer;
+              } catch (error) {
+                console.error(`Lỗi khi tải chi tiết đáp án ${answer.answerId}:`, error);
+                return answer;
+              }
+            })
+          );
+
+          questionToEdit = {
+            ...updatedQuestion,
+            answers: updatedAnswers
+          };
+        }
+      }
+
+      setSelectedQuestion(questionToEdit);
+      
+      // Tìm index của đáp án đúng từ dữ liệu mới nhất
+      const correctAnswerIndex = questionToEdit.answers.findIndex(answer => 
         answer.isCorrect === true
       );
 
-      // Set giá trị form
+      // Set giá trị form với dữ liệu mới nhất
       editForm.setFieldsValue({
-        questionText: question.questionText,
-        questionType: question.questionType,
-        point: question.point,
+        questionText: questionToEdit.questionText,
+        questionType: questionToEdit.questionType,
+        point: questionToEdit.point,
         correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
-        answers: mappedAnswers
+        answerUpdateRequests: questionToEdit.answers.map(answer => ({
+          ...answer,
+          optionText: answer.optionText || '',
+          isCorrect: answer.isCorrect,
+        }))
       });
 
       setIsEditModalOpen(true);
     } catch (error) {
       console.error("Lỗi khi cập nhật câu hỏi:", error);
       message.error("Không thể cập nhật câu hỏi");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -180,17 +216,20 @@ const Question = () => {
         throw new Error("Vui lòng nhập nội dung câu hỏi");
       }
 
-      // Cập nhật câu hỏi
+      // Cập nhật câu hỏi với answerUpdateRequests
       const questionRequest = {
         questionText: values.questionText.trim(),
         questionType: values.questionType,
         point: Number(values.point) || 0,
-        answers: values.answers.map((answer, index) => ({
+        answerUpdateRequests: values.answerUpdateRequests.map((answer, index) => ({
+          answerId: selectedQuestion.answers[index].answerId,
           optionText: answer.optionText.trim(),
-          isCorrect: index === values.correctAnswer,
-          answerId: selectedQuestion.answers[index]?.answerId // Giữ lại answerId cũ
+          optionType: "Text",
+          isCorrect: answer.isCorrect // Lấy trực tiếp từ form data
         }))
       };
+
+      console.log('Update request:', questionRequest); // Thêm log để kiểm tra
 
       await updateQuestion(selectedQuestion.questionId, questionRequest);
       
@@ -725,12 +764,9 @@ const Question = () => {
               </Form.Item>
             </div>
 
-            <Form.List name="answers">
+            <Form.List name="answerUpdateRequests">
               {(fields) => (
                 <div className="grid grid-cols-2 gap-4">
-                  <Form.Item name="correctAnswer" className="hidden">
-                    <Input type="hidden" />
-                  </Form.Item>
                   {fields.map((field, index) => (
                     <div key={field.key}>
                       <div className="flex items-center gap-2 mb-2">
@@ -738,11 +774,23 @@ const Question = () => {
                           {String.fromCharCode(65 + index)}
                         </div>
                         <Form.Item
-                          noStyle
-                          name="correctAnswer"
-                          initialValue={0}
+                          {...field}
+                          name={[field.name, 'isCorrect']}
+                          valuePropName="checked"
                         >
-                          <Radio value={index}>Đáp án đúng</Radio>
+                          <Radio
+                            onChange={(e) => {
+                              // Cập nhật lại isCorrect cho tất cả các đáp án
+                              const currentAnswers = editForm.getFieldValue('answerUpdateRequests');
+                              const updatedAnswers = currentAnswers.map((ans, idx) => ({
+                                ...ans,
+                                isCorrect: idx === index
+                              }));
+                              editForm.setFieldsValue({ answerUpdateRequests: updatedAnswers });
+                            }}
+                          >
+                            Đáp án đúng
+                          </Radio>
                         </Form.Item>
                       </div>
 
@@ -757,7 +805,7 @@ const Question = () => {
                           className="answer-input"
                           style={{
                             resize: 'none',
-                            backgroundColor: editForm.getFieldValue('correctAnswer') === index
+                            backgroundColor: editForm.getFieldValue(['answerUpdateRequests', index, 'isCorrect'])
                               ? '#e8f5e9'
                               : '#f5f5f5'
                           }}
