@@ -275,8 +275,9 @@ const Question = () => {
   const fetchAnswerDetails = async (answerId) => {
     try {
       setLoadingAnswer(true);
-      const data = await getAnswerById(answerId);
-      setAnswerDetails(data);
+      // Bỏ qua việc fetch chi tiết đáp án vì không cần thiết
+      // const data = await getAnswerById(answerId);
+      // setAnswerDetails(data);
     } catch (error) {
       console.error("Error fetching answer details:", error);
       message.error("Không thể tải thông tin đáp án");
@@ -289,14 +290,14 @@ const Question = () => {
     setSelectedQuestion(question);
     setIsViewModalOpen(true);
     
-    // Nếu câu hỏi có answerId thì fetch thông tin
-    if (question.answers && question.answers.length > 0) {
-      for (const answer of question.answers) {
-        if (answer.answerId) {
-          await fetchAnswerDetails(answer.answerId);
-        }
-      }
-    }
+    // Bỏ qua phần fetch thông tin đáp án
+    // if (question.answers && question.answers.length > 0) {
+    //   for (const answer of question.answers) {
+    //     if (answer.answerId) {
+    //       await fetchAnswerDetails(answer.answerId);
+    //     }
+    //   }
+    // }
   };
 
   const handleCloseViewModal = () => {
@@ -474,8 +475,8 @@ const Question = () => {
             questionType: "Multiple Choice",
             point: 1,
             answers: [
-              { optionText: '', isCorrect: false },
-              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: true },
+              { optionText: '', isCorrect: false},
               { optionText: '', isCorrect: false },
               { optionText: '', isCorrect: false }
             ],
@@ -503,9 +504,6 @@ const Question = () => {
               <Form.List name="answers">
                 {(fields) => (
                   <div className="space-y-4">
-                    <Form.Item name="correctAnswer" className="hidden">
-                      <Input type="hidden" />
-                    </Form.Item>
                     {fields.map((field, index) => (
                       <div 
                         key={field.key}
@@ -516,11 +514,28 @@ const Question = () => {
                             {String.fromCharCode(65 + index)}
                           </div>
                           <Form.Item
-                            noStyle
                             name="correctAnswer"
                             initialValue={0}
+                            noStyle
                           >
-                            <Radio value={index}>Đáp án đúng</Radio>
+                            <Radio 
+                              value={index}
+                              checked={createForm.getFieldValue('correctAnswer') === index}
+                              onChange={() => {
+                                // Cập nhật correctAnswer khi radio thay đổi
+                                createForm.setFieldsValue({ correctAnswer: index });
+                                
+                                // Cập nhật lại isCorrect cho tất cả answers
+                                const currentAnswers = createForm.getFieldValue('answers');
+                                const updatedAnswers = currentAnswers.map((ans, idx) => ({
+                                  ...ans,
+                                  isCorrect: idx === index
+                                }));
+                                createForm.setFieldsValue({ answers: updatedAnswers });
+                              }}
+                            >
+                              Đáp án đúng
+                            </Radio>
                           </Form.Item>
                         </div>
 
