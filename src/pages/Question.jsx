@@ -8,7 +8,6 @@ import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
 import Error from "../components/Common/Error";
 import { getQuestionsByQuizId, createQuestion, updateQuestion, deleteQuestion } from "../services/question.service";
-import { getAnswerById, updateAnswer, createAnswer } from "../services/answer.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -97,50 +96,37 @@ const Question = () => {
   const handleCreateQuestion = async (values) => {
     try {
       setCreatingQuestion(true);
-      console.log("Creating question with values:", values);
-
-      // Validate dữ liệu
-      if (!values.questionText?.trim()) {
-        message.error("Vui lòng nhập nội dung câu hỏi");
-        return;
-      }
-
-      // Tạo câu hỏi
+      
       const questionRequest = {
-        QuestionText: values.questionText.trim(),
-        QuestionType: values.questionType || "Multiple Choice", 
-        Point: Number(values.point) || 1,
-        QuizId: quizId,
-        Answers: []
+        questionText: values.questionText.trim(),
+        questionType: values.questionType || "Multiple Choice",
+        point: Number(values.point) || 1,
+        quizId: quizId,
+        answers: values.answers.map((answer, index) => ({
+          optionText: answer.optionText.trim(),
+          optionType: "string",
+          isCorrect: index === values.correctAnswer,
+          createAt: new Date().toISOString()
+        }))
       };
 
-      // Gọi API tạo câu hỏi
+      // Log để kiểm tra dữ liệu gửi đi
+      console.log("Request data:", JSON.stringify(questionRequest, null, 2));
+
       const response = await createQuestion(quizId, questionRequest);
-      console.log("Create question response:", response);
+      console.log("Response:", response);
 
-      // Nếu có response.data thì coi như thành công
-      if (response?.data) {
-        // Đóng modal trước
+      if (response?.data?.isSuccess) {
         handleCloseCreateModal();
-        
-        // Gọi API lấy danh sách câu hỏi mới nhất
-        const updatedResponse = await getQuestionsByQuizId(quizId);
-        
-        // Cập nhật state với dữ liệu mới
-        if (updatedResponse?.data?.data) {
-          setQuestions(updatedResponse.data.data);
-        } else if (updatedResponse?.data) {
-          setQuestions(updatedResponse.data);
-        }
-
-        // Hiển thị thông báo thành công
-        message.success("Tạo câu hỏi thành công!");
-        return;
+        await fetchQuestions();
+        message.success("Tạo câu hỏi và đáp án thành công!");
+      } else {
+        throw new Error(response?.data?.message || "Có lỗi xảy ra");
       }
-
     } catch (error) {
       console.error("Error creating question:", error);
-      message.error("Có lỗi xảy ra khi tạo câu hỏi");
+      console.error("Error details:", error.response?.data);
+      message.error(error.message || "Có lỗi xảy ra khi tạo câu hỏi");
     } finally {
       setCreatingQuestion(false);
     }
@@ -214,12 +200,12 @@ const Question = () => {
 
       // Cập nhật câu hỏi trước
       const questionRequest = {
-        questionText: values.questionText.trim(),
-        questionType: values.questionType,
-        point: Number(values.point) || 0,
-        answers: values.answers.map((answer, index) => ({
-          optionText: answer.optionText.trim(),
-          isCorrect: index === values.correctAnswer
+        QuestionText: values.questionText.trim(),
+        QuestionType: values.questionType,
+        Point: Number(values.point) || 0,
+        Answers: values.answers.map((answer, index) => ({
+          OptionText: answer.optionText.trim(),
+          IsCorrect: index === values.correctAnswer
         }))
       };
 
@@ -486,7 +472,14 @@ const Question = () => {
           onFinish={handleCreateQuestion}
           initialValues={{
             questionType: "Multiple Choice",
-            point: 1
+            point: 1,
+            answers: [
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false },
+              { optionText: '', isCorrect: false }
+            ],
+            correctAnswer: 0
           }}
         >
           <div className="p-4">
@@ -502,6 +495,57 @@ const Question = () => {
                   style={{ fontSize: '1.2rem', padding: '15px' }}
                 />
               </Form.Item>
+            </div>
+
+            {/* Thêm phần đáp án */}
+            <div className="mb-8">
+              <div className="text-base font-medium mb-4">Đáp án</div>
+              <Form.List name="answers">
+                {(fields) => (
+                  <div className="space-y-4">
+                    <Form.Item name="correctAnswer" className="hidden">
+                      <Input type="hidden" />
+                    </Form.Item>
+                    {fields.map((field, index) => (
+                      <div 
+                        key={field.key}
+                        className="p-4 border rounded-lg hover:border-blue-500 transition-all"
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-8 h-8 flex items-center justify-center bg-blue-100 rounded-full text-blue-600 font-medium">
+                            {String.fromCharCode(65 + index)}
+                          </div>
+                          <Form.Item
+                            noStyle
+                            name="correctAnswer"
+                            initialValue={0}
+                          >
+                            <Radio value={index}>Đáp án đúng</Radio>
+                          </Form.Item>
+                        </div>
+
+                        <Form.Item
+                          {...field}
+                          name={[field.name, 'optionText']}
+                          rules={[{ required: true, message: 'Vui lòng nhập đáp án' }]}
+                        >
+                          <Input.TextArea
+                            rows={2}
+                            placeholder={`Nhập đáp án ${String.fromCharCode(65 + index)}`}
+                            className="answer-input"
+                            style={{
+                              resize: 'none',
+                              backgroundColor: createForm.getFieldValue('correctAnswer') === index
+                                ? '#e8f5e9'
+                                : '#ffffff'
+                            }}
+                          />
+                        </Form.Item>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Form.List>
             </div>
 
             <div className="flex justify-between items-center mt-8">
@@ -836,6 +880,30 @@ const Question = () => {
         .question-modal .answer-option:hover {
           transform: translateY(-2px);
           box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .answer-modal .ant-modal-content {
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .answer-modal .ant-modal-body {
+          padding: 20px;
+        }
+
+        .answer-input {
+          border-radius: 8px;
+          border: 1px solid #d9d9d9;
+          transition: all 0.3s ease;
+        }
+
+        .answer-input:hover {
+          border-color: #40a9ff;
+        }
+
+        .answer-input:focus {
+          border-color: #40a9ff;
+          box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
         }
       `}</style>
     </div>

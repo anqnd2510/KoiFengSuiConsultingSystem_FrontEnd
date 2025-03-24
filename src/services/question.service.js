@@ -17,34 +17,23 @@ export const getQuestionsByQuizId = async (quizId) => {
   });
 };
 
-export const createQuestion = async (quizId, questionRequest) => {
+export const createQuestion = async (quizId, questionData) => {
   try {
     const token = localStorage.getItem('accessToken');
-    console.log('Token:', token);
-
-    if (!token) {
-      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
-    }
-
-    console.log('Creating question for quizId:', quizId);
-    console.log('Question request:', questionRequest);
-
-    const response = await questionApiClient.post(`${API_URL}/Question/quiz/${quizId}`, questionRequest, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const response = await axios.post(
+      `${API_URL}/Question/quiz/${quizId}`,
+      questionData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       }
-    });
-
-    console.log('API Response:', response);
-
-    if (response.data.isSuccess) {
-      return response.data.data;
-    }
-
-    throw new Error(response.data.message || "Không thể tạo câu hỏi mới");
+    );
+    return response;
   } catch (error) {
-    console.error('Error in createQuestion:', error);
-    throw new Error(error.message || "Có lỗi xảy ra khi tạo câu hỏi mới");
+    console.error("Error in createQuestion:", error);
+    throw error;
   }
 };
 
