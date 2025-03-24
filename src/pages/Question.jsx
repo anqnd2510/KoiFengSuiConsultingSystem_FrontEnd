@@ -8,6 +8,7 @@ import CustomTable from "../components/Common/CustomTable";
 import Pagination from "../components/Common/Pagination";
 import Error from "../components/Common/Error";
 import { getQuestionsByQuizId, createQuestion, updateQuestion, deleteQuestion } from "../services/question.service";
+import { getAnswerById } from "../services/answer.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -136,34 +137,19 @@ const Question = () => {
     try {
       setSelectedQuestion(question);
       
-      // Fetch lại thông tin các đáp án từ API
-      const answerPromises = question.answers.map(answer => 
-        getAnswerById(answer.answerId)
+      // Không cần fetch lại thông tin đáp án, sử dụng dữ liệu có sẵn
+      const mappedAnswers = question.answers.map(answer => ({
+        optionText: answer.optionText || '',
+        isCorrect: answer.isCorrect || false,
+        answerId: answer.answerId
+      }));
+
+      // Tìm index của đáp án đúng
+      const correctAnswerIndex = question.answers.findIndex(answer => 
+        answer.isCorrect === true
       );
-      
-      const answers = await Promise.all(answerPromises);
-      console.log("Đáp án từ DB:", answers);
 
-      // Tìm index của đáp án đúng từ DB
-      const correctAnswerIndex = answers.findIndex(answer => 
-        answer?.data?.isCorrect === true
-      );
-      console.log("Index đáp án đúng:", correctAnswerIndex);
-
-      // Map dữ liệu từ response API
-      const mappedAnswers = answers.map(answer => {
-        const answerData = answer?.data;
-        console.log("Answer data:", answerData);
-        return {
-          optionText: answerData?.optionText || '',
-          isCorrect: answerData?.isCorrect || false,
-          answerId: answerData?.answerId
-        };
-      });
-
-      console.log("Mapped answers:", mappedAnswers);
-
-      // Set giá trị form với đáp án mới nhất từ DB
+      // Set giá trị form
       editForm.setFieldsValue({
         questionText: question.questionText,
         questionType: question.questionType,
@@ -174,8 +160,8 @@ const Question = () => {
 
       setIsEditModalOpen(true);
     } catch (error) {
-      console.error("Lỗi khi lấy thông tin đáp án:", error);
-      message.error("Không thể tải thông tin đáp án");
+      console.error("Lỗi khi cập nhật câu hỏi:", error);
+      message.error("Không thể cập nhật câu hỏi");
     }
   };
 
@@ -189,51 +175,24 @@ const Question = () => {
     try {
       setEditingQuestion(true);
       
-      // Log để debug
-      console.log("Values from form:", values);
-      console.log("Selected question:", selectedQuestion);
-
       // Validate dữ liệu đầu vào
       if (!values.questionText?.trim()) {
         throw new Error("Vui lòng nhập nội dung câu hỏi");
       }
 
-      // Cập nhật câu hỏi trước
+      // Cập nhật câu hỏi
       const questionRequest = {
-        QuestionText: values.questionText.trim(),
-        QuestionType: values.questionType,
-        Point: Number(values.point) || 0,
-        Answers: values.answers.map((answer, index) => ({
-          OptionText: answer.optionText.trim(),
-          IsCorrect: index === values.correctAnswer
+        questionText: values.questionText.trim(),
+        questionType: values.questionType,
+        point: Number(values.point) || 0,
+        answers: values.answers.map((answer, index) => ({
+          optionText: answer.optionText.trim(),
+          isCorrect: index === values.correctAnswer,
+          answerId: selectedQuestion.answers[index]?.answerId // Giữ lại answerId cũ
         }))
       };
 
       await updateQuestion(selectedQuestion.questionId, questionRequest);
-
-      // Cập nhật từng đáp án với cấu trúc request đúng
-      if (selectedQuestion.answers && selectedQuestion.answers.length > 0) {
-        for (let i = 0; i < selectedQuestion.answers.length; i++) {
-          const existingAnswer = selectedQuestion.answers[i];
-          if (existingAnswer.answerId) {
-            try {
-              const answerRequest = {
-                AnswerId: existingAnswer.answerId,
-                QuestionId: selectedQuestion.questionId,
-                OptionText: values.answers[i].optionText.trim(),
-                IsCorrect: i === values.correctAnswer
-              };
-              
-              console.log(`Request cập nhật đáp án ${i + 1}:`, answerRequest);
-              await updateAnswer(existingAnswer.answerId, answerRequest);
-              console.log(`Cập nhật đáp án ${i + 1} thành công`);
-            } catch (err) {
-              console.error(`Lỗi khi cập nhật đáp án ${i + 1}:`, err);
-              message.warning(`Không thể cập nhật đáp án ${i + 1}`);
-            }
-          }
-        }
-      }
       
       message.success("Cập nhật câu hỏi thành công!");
       handleCloseEditModal();
@@ -287,17 +246,53 @@ const Question = () => {
   };
 
   const handleViewQuestion = async (question) => {
-    setSelectedQuestion(question);
-    setIsViewModalOpen(true);
-    
-    // Bỏ qua phần fetch thông tin đáp án
-    // if (question.answers && question.answers.length > 0) {
-    //   for (const answer of question.answers) {
-    //     if (answer.answerId) {
-    //       await fetchAnswerDetails(answer.answerId);
-    //     }
-    //   }
-    // }
+    try {
+      setLoading(true);
+      // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
+      const response = await getQuestionsByQuizId(quizId);
+      
+      if (response?.data?.data) {
+        // Tìm câu hỏi cụ thể trong danh sách mới
+        const updatedQuestion = response.data.data.find(q => q.questionId === question.questionId);
+        
+        if (updatedQuestion) {
+          // Fetch chi tiết từng câu trả lời
+          const updatedAnswers = await Promise.all(
+            updatedQuestion.answers.map(async (answer) => {
+              try {
+                if (answer.answerId) {
+                  const answerDetail = await getAnswerById(answer.answerId);
+                  return {
+                    ...answer,
+                    ...answerDetail
+                  };
+                }
+                return answer;
+              } catch (error) {
+                console.error(`Lỗi khi tải chi tiết đáp án ${answer.answerId}:`, error);
+                return answer;
+              }
+            })
+          );
+
+          setSelectedQuestion({
+            ...updatedQuestion,
+            answers: updatedAnswers
+          });
+        } else {
+          setSelectedQuestion(question);
+        }
+      } else {
+        setSelectedQuestion(question);
+      }
+      setIsViewModalOpen(true);
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu:", error);
+      setSelectedQuestion(question);
+      setIsViewModalOpen(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCloseViewModal = () => {
