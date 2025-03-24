@@ -35,4 +35,5 @@ export const publicRoutes = [
     path: "/notifications",
     element: <Notifications />,
   },
+  
 ];

@@ -204,6 +204,7 @@ const ConsultationHistory = () => {
   const [typeFilter, setTypeFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [pageSize, setPageSize] = useState(10);
 
   // Tối ưu lại fetchConsultationHistory với useCallback
   const fetchConsultationHistory = useCallback(async () => {
@@ -268,10 +269,6 @@ const ConsultationHistory = () => {
   // Tối ưu các hàm xử lý với useCallback
   const handleSearch = useCallback((value) => {
     setSearchTerm(value);
-  }, []);
-
-  const handlePageChange = useCallback((page) => {
-    setCurrentPage(page);
   }, []);
 
   const handleOpenDetailModal = async (record) => {
@@ -355,8 +352,8 @@ const ConsultationHistory = () => {
 
   // Tối ưu paginatedData với useMemo
   const paginatedData = useMemo(() => {
-    return filteredData.slice((currentPage - 1) * 10, currentPage * 10);
-  }, [filteredData, currentPage]);
+    return filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [filteredData, currentPage, pageSize]);
 
   // Render columns theo dữ liệu từ hình ảnh
   const columns = [
@@ -525,21 +522,22 @@ const ConsultationHistory = () => {
 
           <Table
             columns={columns}
-            dataSource={paginatedData}
-            pagination={false}
+            dataSource={filteredData}
+            pagination={{
+              current: currentPage,
+              total: filteredData.length,
+              pageSize: pageSize,
+              showSizeChanger: true,
+              showTotal: (total) => `Tổng số ${total} lịch sử tư vấn`,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              }
+            }}
             rowKey="key"
             bordered
             loading={loading}
           />
-
-          <div className="mt-4 flex justify-end">
-            <Pagination
-              current={currentPage}
-              total={filteredData.length}
-              pageSize={10}
-              onChange={handlePageChange}
-            />
-          </div>
         </div>
       </div>
 

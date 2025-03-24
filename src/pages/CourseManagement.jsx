@@ -1,63 +1,120 @@
-import React, { useState } from "react";
-import { FaExclamationCircle } from "react-icons/fa";
-import { Tag } from "antd";
+import React, { useState, useEffect } from "react";
+import { FaExclamationCircle, FaSync, FaEye, FaTimes } from "react-icons/fa";
+import { Tag, Button, Modal, Dropdown, Checkbox, Menu } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import FilterBar from "../components/Common/FilterBar";
+import { getAllCourses } from "../services/course.service";
 
 const CourseManagement = () => {
   // State cho danh sách khóa học đã đăng ký
-  const [registrations, setRegistrations] = useState([
-    {
-      id: 1,
-      customerName: "John Smith",
-      courseName: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
-      date: "9/12",
-      count: 1,
-      paymentMethod: "VNPay",
-      total: 20.05,
-      status: "done"
-    },
-    {
-      id: 2,
-      customerName: "John Smith",
-      courseName: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
-      date: "6/12",
-      count: 2,
-      paymentMethod: "VNPay",
-      total: 40.1,
-      status: "cancel"
-    },
-    {
-      id: 3,
-      customerName: "John Smith",
-      courseName: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
-      date: "5/12",
-      count: 1,
-      paymentMethod: "VNPay",
-      total: 20.05,
-      status: "done"
-    },
-    {
-      id: 4,
-      customerName: "John Smith",
-      courseName: "Đại Đạo Chi Giản - Phong Thủy Cổ Học",
-      date: "3/11",
-      count: 1,
-      paymentMethod: "VNPay",
-      total: 20.05,
-      status: "done"
-    }
-  ]);
+  const [registrations, setRegistrations] = useState([]);
+  const [rawData, setRawData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
   // State cho lỗi
-  const [error, setError] = useState("Lỗi");
+  const [error, setError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
+  // State cho việc hiển thị cột
+  const [visibleColumns, setVisibleColumns] = useState({
+    courseName: true,
+    courseType: true,
+    date: true,
+    paymentMethod: false,
+    customerName: false,
+    total: true,
+    rating: false,
+    certificate: true,
+    quizCode: true,
+    creator: true,
+    status: true,
+    isBestSeller: false
+  });
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCourses();
+      console.log("API response:", response);
+      setRawData(response);
+      
+      // Kiểm tra cấu trúc phản hồi API
+      if (response && response.isSuccess && Array.isArray(response.data)) {
+        console.log("Course data array:", response.data);
+        
+        // Lấy mẫu dữ liệu đầu tiên để debug
+        if (response.data.length > 0) {
+          console.log("Sample course item:", response.data[0]);
+          // Log tất cả các thuộc tính để kiểm tra
+          const firstCourse = response.data[0];
+          console.log("All properties of the first course:");
+          Object.keys(firstCourse).forEach(key => {
+            console.log(`${key}:`, firstCourse[key]);
+          });
+        }
+        
+        // Ánh xạ dữ liệu từ API vào state dựa trên cấu trúc DB thực tế
+        setRegistrations(response.data.map(course => {
+          console.log("Processing course:", course);
+          
+          // Xác định người tạo từ các trường có thể
+          let creator = "N/A";
+          if (course.createBy) creator = course.createBy;
+          else if (course.createdBy) creator = course.createdBy;
+          else if (course.author) creator = course.author;
+          else if (course.CreateBy) creator = course.CreateBy; // Kiểm tra viết hoa
+          else if (course.creatorBy) creator = course.creatorBy;
+          
+          // Lấy trường của người tạo được ghi trong hình ảnh DB
+          if (creator === "N/A") {
+            if (course.y1QwrxpqEM9QM) creator = "y1QwrxpqEM9QM";
+            else if (course["1CB074F5-1D02-4BB8-A802-5B8B9A1C98FB"]) creator = "1CB074F5-1D02-4BB8-A802-5B8B9A1C98FB";
+            else if (course["26B871F0-EBC0-4F36-9D69-CCED82742789"]) creator = "26B871F0-EBC0-4F36-9D69-CCED82742789";
+            else if (course["8JexUUOPr0baxk"]) creator = "8JexUUOPr0baxk";
+            else if (course["8J7jRVFyoko7vO"]) creator = "8J7jRVFyoko7vO";
+          }
+          
+          return {
+            id: course.courseId || course.id || "N/A",
+            courseName: course.courseName || "N/A",
+            rating: course.rating || 0,
+            isBestSeller: course.isBestSeller || false,
+            courseType: course.courseCategory || course.courseType || "N/A",
+            status: course.status || "Active",
+            certificate: course.certificateId ? true : false,
+            certificateId: course.certificateId || "N/A",
+            quizCode: course.quizId || "N/A",
+            total: course.price || 0,
+            date: course.createAt || "N/A",
+            creator: creator,
+            updateAt: course.updateAt || "N/A",
+            description: course.description || "N/A"
+          };
+        }));
+        setError("");
+      } else {
+        console.error("API response structure is not as expected:", response);
+        setError("Định dạng dữ liệu không đúng. Vui lòng liên hệ quản trị viên.");
+      }
+    } catch (err) {
+      console.error("Error fetching courses:", err);
+      setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Xử lý tìm kiếm
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
@@ -74,7 +131,7 @@ const CourseManagement = () => {
 
   // Xử lý phân trang
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 20;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -83,11 +140,11 @@ const CourseManagement = () => {
   // Xác định màu sắc cho trạng thái
   const getStatusColor = (status) => {
     switch (status) {
-      case "done":
+      case "Active":
         return "success";
-      case "cancel":
+      case "Inactive":
         return "error";
-      case "pending":
+      case "Pending":
         return "warning";
       default:
         return "default";
@@ -96,16 +153,19 @@ const CourseManagement = () => {
 
   // Tùy chọn trạng thái cho bộ lọc
   const statusOptions = [
-    { value: "done", label: "Hoàn tất" },
-    { value: "cancel", label: "Đã hủy" },
-    { value: "pending", label: "Đang chờ" }
+    { value: "Active", label: "Hoạt động" },
+    { value: "Inactive", label: "Không hoạt động" },
+    { value: "Pending", label: "Đang chờ" }
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
   const filteredRegistrations = registrations.filter(registration => {
     const matchesSearch = 
-      registration.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.courseName.toLowerCase().includes(searchTerm.toLowerCase());
+      registration.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.courseType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.quizCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      registration.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (registration.id && registration.id.toString().toLowerCase().includes(searchTerm.toLowerCase()));
       
     const matchesStatus = statusFilter === "all" || registration.status === statusFilter;
     
@@ -118,37 +178,48 @@ const CourseManagement = () => {
     currentPage * pageSize
   );
 
-  const columns = [
+  // Xử lý thay đổi hiển thị cột
+  const handleColumnVisibilityChange = (columnKey) => {
+    setVisibleColumns(prev => ({
+      ...prev,
+      [columnKey]: !prev[columnKey]
+    }));
+  };
+
+  const allColumnsDefinition = [
     {
-      title: "KHÁCH HÀNG",
-      dataIndex: "customerName",
-      key: "customerName"
+      title: "ID",
+      dataIndex: "id",
+      key: "id",
+      width: 150
     },
     {
-      title: "KHÓA HỌC",
+      title: "TÊN KHÓA HỌC",
       dataIndex: "courseName",
       key: "courseName"
     },
     {
-      title: "NGÀY",
+      title: "LOẠI KHÓA HỌC",
+      dataIndex: "courseType",
+      key: "courseType"
+    },
+    {
+      title: "NGÀY TẠO",
       dataIndex: "date",
-      key: "date"
-    },
-    {
-      title: "SỐ LƯỢNG",
-      dataIndex: "count",
-      key: "count"
-    },
-    {
-      title: "PHƯƠNG THỨC THANH TOÁN",
-      dataIndex: "paymentMethod",
-      key: "paymentMethod"
-    },
-    {
-      title: "TỔNG TIỀN",
-      dataIndex: "total",
-      key: "total",
-      render: (total) => `$${total}`
+      key: "date",
+      render: (date) => {
+        if (!date || date === "N/A") return "Không có";
+        try {
+          const dateObj = new Date(date);
+          return dateObj.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+        } catch (error) {
+          return date;
+        }
+      }
     },
     {
       title: "TRẠNG THÁI",
@@ -156,28 +227,106 @@ const CourseManagement = () => {
       key: "status",
       render: (status) => (
         <Tag color={getStatusColor(status)}>
-          {status === "done" ? "Hoàn tất" : 
-           status === "cancel" ? "Đã hủy" : "Đang chờ"}
+          {status}
         </Tag>
       )
+    },
+    {
+      title: "GIẤY CHỨNG NHẬN",
+      dataIndex: "certificate",
+      key: "certificate",
+      render: (certificate) => (
+        <Tag color={certificate ? "green" : "default"}>
+          {certificate ? "Có" : "Không"}
+        </Tag>
+      )
+    },
+    {
+      title: "MÃ QUIZ",
+      dataIndex: "quizCode",
+      key: "quizCode"
+    },
+    {
+      title: "GIÁ",
+      dataIndex: "total",
+      key: "total",
+      render: (total) => `${total.toLocaleString()} đ`
+    },
+    {
+      title: "NGƯỜI TẠO",
+      dataIndex: "creator",
+      key: "creator",
+      render: (creator) => {
+        if (!creator || creator === "N/A") return "Không có";
+        // Hiển thị ID ngắn gọn nếu là GUID dài
+        if (creator.length > 20) {
+          return `${creator.substring(0, 8)}...`;
+        }
+        return creator;
+      }
     }
   ];
+
+  // Lọc các cột hiển thị
+  const columns = allColumnsDefinition.filter(col => visibleColumns[col.dataIndex]);
+
+  // Menu cho dropdown tùy chọn cột
+  const columnMenu = (
+    <Menu>
+      {allColumnsDefinition.map((column) => (
+        <Menu.Item key={column.dataIndex}>
+          <Checkbox
+            checked={visibleColumns[column.dataIndex]}
+            onChange={() => handleColumnVisibilityChange(column.dataIndex)}
+          >
+            {column.title}
+          </Checkbox>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
+
+  // Xử lý khi click vào hàng
+  const handleRowClick = (record) => {
+    console.log("Selected course:", record);
+    setSelectedCourse(record);
+    setIsModalVisible(true);
+  };
+
+  // Đóng modal
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        title="Quản lý đơn đăng ký khóa học"
-        description="Quản lý đơn đăng ký khóa học của khách hàng"
+        title="Quản lý khóa học"
+        description="Quản lý thông tin chi tiết về các khóa học và đăng ký"
       />
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
-            <SearchBar 
-              placeholder="Tìm khóa học theo tên khách hàng hoặc tên khóa học"
-              onSearch={handleSearch}
-              className="w-64 mb-2 md:mb-0"
-            />
+            <div className="flex items-center">
+              <SearchBar 
+                placeholder="Tìm theo tên khóa học, loại, mã quiz, người tạo"
+                onSearch={handleSearch}
+                className="w-64 mr-2"
+              />
+              <Button 
+                icon={<FaSync />} 
+                onClick={fetchCourses} 
+                loading={loading}
+                className="ml-2"
+                title="Làm mới dữ liệu"
+              />
+              <Dropdown overlay={columnMenu} trigger={['click']}>
+                <Button className="ml-2" icon={<FaEye />} title="Tùy chọn hiển thị cột">
+                  Hiển thị cột
+                </Button>
+              </Dropdown>
+            </div>
             
             <FilterBar 
               statusOptions={statusOptions}
@@ -189,24 +338,124 @@ const CourseManagement = () => {
             />
           </div>
 
-          {error && <Error message={error} />}
+          {error && (
+            <Error 
+              message={error} 
+              action={
+                <Button type="primary" onClick={fetchCourses} loading={loading}>
+                  Thử lại
+                </Button>
+              } 
+            />
+          )}
 
-          <CustomTable
-            columns={columns}
-            dataSource={paginatedRegistrations}
-            pagination={false}
-          />
+          {registrations.length === 0 && !loading && !error && (
+            <div className="p-4 text-center text-gray-500">
+              Không có dữ liệu khóa học nào
+            </div>
+          )}
+
+          <div className="overflow-x-auto">
+            <CustomTable
+              columns={columns}
+              dataSource={paginatedRegistrations}
+              pagination={false}
+              loading={loading}
+              scroll={{ x: true }}
+              onRow={(record) => ({
+                onClick: () => handleRowClick(record),
+                style: { cursor: 'pointer' }
+              })}
+            />
+          </div>
 
           <div className="mt-4 flex justify-end">
             <Pagination
-              current={currentPage}
-              total={filteredRegistrations.length}
-              pageSize={pageSize}
-              onChange={handlePageChange}
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredRegistrations.length / pageSize)}
+              onPageChange={handlePageChange}
             />
           </div>
         </div>
       </div>
+
+      {/* Modal hiển thị chi tiết khóa học */}
+      <Modal
+        title="Chi tiết khóa học"
+        open={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={[
+          <Button key="close" onClick={handleCloseModal}>
+            Đóng
+          </Button>
+        ]}
+        width={700}
+      >
+        {selectedCourse && (
+          <div className="course-details">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="detail-item">
+                <p className="font-semibold">ID:</p>
+                <p>{selectedCourse.id}</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Tên khóa học:</p>
+                <p>{selectedCourse.courseName}</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Loại khóa học:</p>
+                <p>{selectedCourse.courseType}</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Ngày tạo:</p>
+                <p>
+                  {selectedCourse.date === "N/A" ? "Không có" : 
+                    new Date(selectedCourse.date).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric'
+                    })
+                  }
+                </p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Giá:</p>
+                <p>{selectedCourse.total.toLocaleString()} đ</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Giấy chứng nhận:</p>
+                <p>
+                  <Tag color={selectedCourse.certificate ? "green" : "default"}>
+                    {selectedCourse.certificate ? "Có" : "Không"}
+                  </Tag>
+                </p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Mã Quiz:</p>
+                <p>{selectedCourse.quizCode === "N/A" ? "Không có" : selectedCourse.quizCode}</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Người tạo:</p>
+                <p>{selectedCourse.creator === "N/A" ? "Không có" : selectedCourse.creator}</p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Trạng thái:</p>
+                <p>
+                  <Tag color={getStatusColor(selectedCourse.status)}>
+                    {selectedCourse.status}
+                  </Tag>
+                </p>
+              </div>
+              {selectedCourse.description && (
+                <div className="detail-item col-span-2">
+                  <p className="font-semibold">Mô tả:</p>
+                  <p>{selectedCourse.description}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

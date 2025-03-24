@@ -564,32 +564,43 @@ const Master = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="flex flex-wrap justify-between items-center mb-4">
-          <div className="flex gap-2 mb-4">
-            <CustomButton type="primary" onClick={handleOpenCreateModal}>Thêm bậc thầy mới</CustomButton>
+        <div className="bg-white rounded-lg shadow-sm">
+          <div className="p-6">
+            <div className="flex flex-wrap justify-between items-center mb-4">
+              <div className="flex gap-2 mb-4">
+                <CustomButton type="primary" onClick={handleOpenCreateModal}>
+                  Thêm bậc thầy mới
+                </CustomButton>
+              </div>
+              <SearchBar
+                placeholder="Tìm kiếm theo tên, email, cấp bậc..."
+                onSearch={handleSearch}
+                className="w-64"
+              />
+            </div>
+
+            {error && <Error message={error} />}
+
+            <div className="overflow-x-auto">
+              <CustomTable
+                columns={columns}
+                dataSource={filteredData}
+                loading={loading}
+                pagination={{
+                  current: currentPage,
+                  total: filteredData.length,
+                  pageSize: pageSize,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Tổng số ${total} bậc thầy`,
+                  onChange: (page, pageSize) => {
+                    setCurrentPage(page);
+                    setPageSize(pageSize);
+                  }
+                }}
+                scroll={{ x: 1200 }}
+              />
+            </div>
           </div>
-          <SearchBar
-            placeholder="Tìm kiếm theo tên, email, cấp bậc..."
-            onSearch={handleSearch}
-            className="w-64"
-          />
-        </div>
-
-        {error && <Error message={error} />}
-
-        <CustomTable
-          columns={columns}
-          dataSource={paginatedData}
-          loading={loading}
-        />
-
-        <div className="mt-4 flex justify-end">
-          <Pagination
-            current={currentPage}
-            total={filteredData.length}
-            pageSize={pageSize}
-            onChange={handlePageChange}
-          />
         </div>
       </div>
 
