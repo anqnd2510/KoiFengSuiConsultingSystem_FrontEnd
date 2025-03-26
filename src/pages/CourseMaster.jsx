@@ -11,6 +11,7 @@ import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2, Clipb
 import { getAllCourses, createCourse, deleteCourse, updateCourse } from "../services/course.service";
 import { formatDate, formatPrice } from '../utils/formatters';
 import { getChaptersByCourseId, formatDuration, createChapter } from "../services/chapter.service";
+import { getCategoryById, getAllCategories, createCategory } from "../services/category.service";
 import { useNavigate } from "react-router-dom";
 import Chapter from "./Chapter";
 
@@ -35,10 +36,17 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
 
       <Form.Item
         label="Loại khóa học"
-        name="courseCategory"
-        rules={[{ required: true, message: "Vui lòng nhập loại khóa học" }]}
+        name="categoryName"
+        rules={[{ required: true, message: "Vui lòng chọn loại khóa học" }]}
       >
-        <Input placeholder="Nhập loại khóa học" />
+        <Select
+          placeholder="Chọn loại khóa học"
+          loading={!courseCategories}
+          options={courseCategories.map(category => ({
+            value: category.categoryName,
+            label: category.categoryName
+          }))}
+        />
       </Form.Item>
 
       <Form.Item
@@ -203,6 +211,9 @@ const CourseMaster = () => {
   const [isViewQuizModalOpen, setIsViewQuizModalOpen] = useState(false);
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [quizForm] = Form.useForm();
+  const [categoryNames, setCategoryNames] = useState({});
+  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false);
+  const [categoryForm] = Form.useForm();
 
   useEffect(() => {
     fetchCourses();
@@ -211,13 +222,22 @@ const CourseMaster = () => {
 
   const fetchCourseCategories = async () => {
     try {
-      const response = await getAllCourseCategories();
-      if (response && response.isSuccess && Array.isArray(response.data)) {
+      const response = await getAllCategories();
+      console.log("Categories API response:", response);
+      
+      // Kiểm tra response có đúng cấu trúc không
+      if (response && response.isSuccess && response.data) {
+        console.log("Categories data:", response.data);
         setCourseCategories(response.data);
+        return;
       }
+      
+      // Nếu không có data hoặc response không đúng cấu trúc, set mảng rỗng
+      console.warn("Invalid categories response structure:", response);
+      setCourseCategories([]);
     } catch (err) {
       console.error("Error fetching course categories:", err);
-      message.error("Không thể tải danh sách loại khóa học");
+      setCourseCategories([]); // Set mảng rỗng khi có lỗi
     }
   };
 
@@ -261,6 +281,7 @@ const CourseMaster = () => {
           return {
             id: course.courseId || course.id || "N/A",
             name: course.courseName || "N/A",
+            categoryName: course.categoryName || "Chưa phân loại",
             price: parseFloat(course.price) || 0,
             date: course.createAt || "N/A",
             createdAt: course.createAt || "N/A",
@@ -289,12 +310,37 @@ const CourseMaster = () => {
     }
   };
 
+  // Thêm hàm để lấy tên category
+  const fetchCategoryName = async (categoryId) => {
+    try {
+      const response = await getCategoryById(categoryId);
+      if (response && response.isSuccess) {
+        setCategoryNames(prev => ({
+          ...prev,
+          [categoryId]: response.data.categoryName
+        }));
+      }
+    } catch (err) {
+      console.error("Error fetching category name:", err);
+    }
+  };
+
   // Định nghĩa cột cho bảng
   const columns = [
     {
       title: "Tên khóa học",
       dataIndex: "name",
       key: "name",
+    },
+    {
+      title: "Loại khóa học",
+      dataIndex: "categoryName",
+      key: "categoryName",
+      render: (categoryName) => (
+        <Tag color="blue">
+          {categoryName}
+        </Tag>
+      ),
     },
     {
       title: "Giá",
@@ -367,35 +413,32 @@ const CourseMaster = () => {
       const values = await form.validateFields();
       setLoading(true);
       
-      // Kiểm tra các trường bắt buộc
-      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
-        message.error("Vui lòng điền đầy đủ thông tin khóa học");
-        return;
-      }
-      
       // Chuẩn bị dữ liệu theo đúng format API yêu cầu
       const courseData = {
         courseName: values.courseName.trim(),
-        courseCategory: values.courseCategory.trim(),
+        categoryName: values.categoryName,
         description: values.description.trim(),
         price: Number(values.price),
-        //author: "1CB074F5-15AB-4058-8" // Thêm author ID theo response body
       };
 
       console.log("Sending course data:", courseData);
       const response = await createCourse(courseData);
       
-      if (response.isSuccess) {
+      if (response && response.isSuccess) {
         message.success(response.message || "Tạo khóa học thành công!");
         setIsCreateModalOpen(false);
         form.resetFields();
         fetchCourses();
       } else {
-        message.error(response.message || "Có lỗi xảy ra khi tạo khóa học");
+        message.error(response?.message || "Có lỗi xảy ra khi tạo khóa học");
       }
     } catch (error) {
       console.error("Error saving course:", error);
-      message.error("Vui lòng điền đầy đủ thông tin khóa học");
+      if (error.errorFields) {
+        message.error("Vui lòng điền đầy đủ thông tin khóa học");
+      } else {
+        message.error("Có lỗi xảy ra: " + error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -426,7 +469,7 @@ const CourseMaster = () => {
     setSelectedCourse(course);
     updateForm.setFieldsValue({
       courseName: course.name,
-      courseCategory: course.category || course.courseCategory,
+      categoryName: course.categoryName,
       price: course.price,
       description: course.description,
     });
@@ -445,7 +488,7 @@ const CourseMaster = () => {
       setLoading(true);
       
       // Kiểm tra các trường bắt buộc
-      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
+      if (!values.courseName || !values.categoryName || !values.description || !values.price) {
         message.error("Vui lòng điền đầy đủ thông tin khóa học");
         return;
       }
@@ -454,7 +497,7 @@ const CourseMaster = () => {
       const courseData = {
         courseId: selectedCourse.id,
         courseName: values.courseName.trim(),
-        courseCategory: values.courseCategory.trim(),
+        categoryName: values.categoryName,
         description: values.description.trim(),
         price: Number(values.price),
       };
@@ -904,6 +947,60 @@ const CourseMaster = () => {
     setSelectedQuiz(null);
   };
 
+  const handleOpenCreateCategoryModal = () => {
+    setIsCreateCategoryModalOpen(true);
+  };
+
+  const handleCloseCreateCategoryModal = () => {
+    setIsCreateCategoryModalOpen(false);
+    categoryForm.resetFields();
+  };
+
+  const handleCreateCategory = async () => {
+    try {
+      setLoading(true);
+      
+      const values = await categoryForm.validateFields();
+      const categoryData = {
+        categoryName: values.categoryName.trim()
+      };
+
+      // Xử lý hình ảnh nếu có
+      if (values.image && values.image.length > 0) {
+        const file = values.image[0].originFileObj;
+        const reader = new FileReader();
+        
+        const imageBase64 = await new Promise((resolve, reject) => {
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+        
+        categoryData.image = imageBase64;
+      }
+
+      console.log("Category data:", categoryData);
+
+      const response = await createCategory(categoryData);
+      if (response.isSuccess) {
+        message.success("Tạo loại khóa học mới thành công!");
+        handleCloseCreateCategoryModal();
+        fetchCourseCategories();
+      } else {
+        message.error(response.message || "Có lỗi xảy ra khi tạo loại khóa học");
+      }
+    } catch (error) {
+      if (error.errorFields) {
+        message.error("Vui lòng điền đầy đủ thông tin");
+      } else {
+        message.error("Có lỗi xảy ra khi tạo loại khóa học");
+        console.error("Error creating category:", error);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
@@ -920,6 +1017,13 @@ const CourseMaster = () => {
               onClick={handleOpenCreateModal}
             >
               Thêm khóa học mới
+            </CustomButton>
+            <CustomButton 
+              type="default"
+              icon={<FaPlus />}
+              onClick={handleOpenCreateCategoryModal}
+            >
+              Thêm loại khóa học
             </CustomButton>
             <CustomButton 
               onClick={fetchCourses} 
@@ -1141,7 +1245,7 @@ const CourseMaster = () => {
             form={updateForm}
             initialData={selectedCourse ? {
               courseName: selectedCourse.name,
-              courseCategory: selectedCourse.category || selectedCourse.courseCategory,
+              categoryName: selectedCourse.categoryName,
               price: selectedCourse.price,
               description: selectedCourse.description,
             } : {}}
@@ -1487,6 +1591,71 @@ const CourseMaster = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Modal tạo loại khóa học mới */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Tạo loại khóa học mới
+          </div>
+        }
+        open={isCreateCategoryModalOpen}
+        onCancel={handleCloseCreateCategoryModal}
+        footer={null}
+        width={500}
+      >
+        <div className="p-4">
+          <Form
+            form={categoryForm}
+            layout="vertical"
+          >
+            <Form.Item
+              label="Tên loại khóa học"
+              name="categoryName"
+              rules={[
+                { required: true, message: "Vui lòng nhập tên loại khóa học" },
+                { whitespace: true, message: "Tên loại khóa học không được chỉ chứa khoảng trắng" },
+                { min: 2, message: "Tên loại khóa học phải có ít nhất 2 ký tự" }
+              ]}
+            >
+              <Input placeholder="Nhập tên loại khóa học" maxLength={100} />
+            </Form.Item>
+
+            <Form.Item
+              label="Hình ảnh"
+              name="image"
+              valuePropName="fileList"
+              getValueFromEvent={(e) => {
+                if (Array.isArray(e)) {
+                  return e;
+                }
+                return e?.fileList;
+              }}
+            >
+              <Upload
+                listType="picture-card"
+                maxCount={1}
+                beforeUpload={() => false}
+                accept="image/*"
+              >
+                <div className="flex flex-col items-center">
+                  <UploadCloud className="w-6 h-6 text-gray-400" />
+                  <div className="mt-2">Tải lên</div>
+                </div>
+              </Upload>
+            </Form.Item>
+          </Form>
+          
+          <div className="flex justify-end gap-3 mt-6">
+            <CustomButton onClick={handleCloseCreateCategoryModal}>
+              Hủy bỏ
+            </CustomButton>
+            <CustomButton type="primary" onClick={handleCreateCategory} loading={loading}>
+              Tạo mới
+            </CustomButton>
+          </div>
+        </div>
       </Modal>
 
       <style jsx global>{`

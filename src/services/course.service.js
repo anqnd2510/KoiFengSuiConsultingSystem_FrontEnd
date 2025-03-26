@@ -76,15 +76,12 @@ export const createCourse = async (courseData) => {
 
     console.log("Calling API to create new course with data:", courseData);
     
-    // Đảm bảo dữ liệu gửi đi đúng định dạng
+    // Đảm bảo dữ liệu gửi đi đúng định dạng theo yêu cầu của BE
     const courseRequest = {
       courseName: courseData.courseName,
-      courseCategory: courseData.courseCategory,
-      price: Number(courseData.price),
+      courseCategory: courseData.categoryName, // Sử dụng tên category thay vì ID
       description: courseData.description || "",
-      videoUrl: courseData.videoUrl || "",
-      image: courseData.image || "",
-      //status: 0  // 0 là Inactive, 1 là Active
+      price: Number(courseData.price)
     };
 
     // Kiểm tra request không được null
