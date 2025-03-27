@@ -20,6 +20,7 @@ import Master from "../pages/Master";
 import Customer from "../pages/Customer";
 import ConsultationHistory from "../pages/ConsultationHistory";
 import Question from "../pages/Question";
+import Profile from "../pages/Profile";
 
 export const mainRoutes = [
   {
@@ -109,5 +110,9 @@ export const mainRoutes = [
   {
     path: "consultation-history",
     element: <ConsultationHistory />,
+  },
+  {
+    path: "profile",
+    element: <Profile />,
   },
 ];
