@@ -121,8 +121,10 @@ const AccountManagement = () => {
     try {
       const response = await deleteAccount(accountId);
       if (response.isSuccess) {
+        setAccounts((prevAccounts) =>
+          prevAccounts.filter((account) => account.accountId !== accountId)
+        );
         message.success("Xóa tài khoản thành công");
-        fetchAccounts();
       } else {
         message.error(response.message || "Xóa tài khoản thất bại");
       }
@@ -171,6 +173,7 @@ const AccountManagement = () => {
     try {
       const { role, isActive } = values;
       const accountId = selectedAccount.accountId;
+      let updatedAccount = { ...selectedAccount };
       let hasChanges = false;
 
       // Kiểm tra nếu role thay đổi
@@ -179,6 +182,7 @@ const AccountManagement = () => {
         if (!roleResponse.isSuccess) {
           throw new Error(roleResponse.message || "Cập nhật vai trò thất bại");
         }
+        updatedAccount.role = role;
         hasChanges = true;
       }
 
@@ -190,12 +194,17 @@ const AccountManagement = () => {
             statusResponse.message || "Cập nhật trạng thái thất bại"
           );
         }
+        updatedAccount.isActive = isActive;
         hasChanges = true;
       }
 
       if (hasChanges) {
+        setAccounts((prevAccounts) =>
+          prevAccounts.map((account) =>
+            account.accountId === accountId ? updatedAccount : account
+          )
+        );
         message.success("Cập nhật tài khoản thành công");
-        fetchAccounts(); // Refresh lại danh sách
       }
 
       setIsModalVisible(false);
