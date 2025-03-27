@@ -19,6 +19,9 @@ const { TextArea } = Input;
 
 // Component form cho khóa học
 const CourseForm = ({ form, initialData, loading, courseCategories }) => {
+  console.log("Rendering CourseForm with initialData:", initialData);
+  console.log("Available courseCategories:", courseCategories);
+  
   return (
     <Form
       form={form}
@@ -36,14 +39,16 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
 
       <Form.Item
         label="Loại khóa học"
-        name="categoryName"
+        name="courseCategory"
         rules={[{ required: true, message: "Vui lòng chọn loại khóa học" }]}
       >
         <Select
           placeholder="Chọn loại khóa học"
-          loading={!courseCategories}
+          loading={!courseCategories || courseCategories.length === 0}
+          showSearch
+          optionFilterProp="label"
           options={courseCategories.map(category => ({
-            value: category.categoryName,
+            value: category.categoryId,
             label: category.categoryName
           }))}
         />
@@ -228,11 +233,18 @@ const CourseMaster = () => {
       // Kiểm tra response có đúng cấu trúc không
       if (response && response.isSuccess && response.data) {
         console.log("Categories data:", response.data);
-        setCourseCategories(response.data);
+        
+        // Map dữ liệu để đảm bảo có categoryId
+        const mappedCategories = response.data.map(category => ({
+          categoryId: category.categoryId, // Lấy categoryId
+          categoryName: category.categoryName,
+        }));
+        
+        console.log("Mapped categories:", mappedCategories);
+        setCourseCategories(mappedCategories);
         return;
       }
       
-      // Nếu không có data hoặc response không đúng cấu trúc, set mảng rỗng
       console.warn("Invalid categories response structure:", response);
       setCourseCategories([]);
     } catch (err) {
@@ -278,10 +290,18 @@ const CourseMaster = () => {
             else if (course["8J7jRVFyoko7vO"]) creator = "8J7jRVFyoko7vO";
           }
           
+          // Log để kiểm tra category Id
+          console.log("Course category data:", {
+            categoryName: course.categoryName,
+            courseCategory: course.courseCategory,
+            categoryId: course.categoryId
+          });
+          
           return {
             id: course.courseId || course.id || "N/A",
             name: course.courseName || "N/A",
             categoryName: course.categoryName || "Chưa phân loại",
+            categoryId: course.courseCategory || course.categoryId || null, // Thay đổi từ "N/A" thành null
             price: parseFloat(course.price) || 0,
             date: course.createAt || "N/A",
             createdAt: course.createAt || "N/A",
@@ -416,7 +436,7 @@ const CourseMaster = () => {
       // Chuẩn bị dữ liệu theo đúng format API yêu cầu
       const courseData = {
         courseName: values.courseName.trim(),
-        categoryName: values.categoryName,
+        courseCategory: values.courseCategory,
         description: values.description.trim(),
         price: Number(values.price),
       };
@@ -464,15 +484,81 @@ const CourseMaster = () => {
     setSelectedCourse(null);
   };
 
-  const handleUpdateCourse = (course) => {
+  const handleUpdateCourse = async (course) => {
     console.log("Updating course:", course);
     setSelectedCourse(course);
-    updateForm.setFieldsValue({
-      courseName: course.name,
-      categoryName: course.categoryName,
-      price: course.price,
-      description: course.description,
+    
+    // Đảm bảo danh sách category đã được tải
+    if (courseCategories.length === 0) {
+      message.info("Đang tải danh sách loại khóa học...");
+      await fetchCourseCategories();
+    }
+    
+    // Log chi tiết để kiểm tra
+    console.log("Course category values:", {
+      categoryId: course.categoryId,
+      categoryName: course.categoryName
     });
+    
+    // Kiểm tra nếu categoryId không hợp lệ
+    if (!course.categoryId || course.categoryId === "N/A" || course.categoryId === "null" || course.categoryId === null) {
+      console.warn("Invalid categoryId detected. Finding categoryId from categories list");
+      
+      // Tìm categoryId dựa trên categoryName
+      const categoryFound = courseCategories.find(cat => 
+        cat.categoryName.toLowerCase() === course.categoryName.toLowerCase()
+      );
+      
+      if (categoryFound) {
+        console.log("Found matching category:", categoryFound);
+        console.log("Setting form value with found categoryId:", categoryFound.categoryId);
+        
+        updateForm.setFieldsValue({
+          courseName: course.name,
+          courseCategory: categoryFound.categoryId,
+          price: course.price,
+          description: course.description,
+        });
+      } else {
+        console.warn("No matching category found for:", course.categoryName);
+        
+        // Hiển thị message cho người dùng
+        message.warning("Không tìm thấy thông tin loại khóa học. Vui lòng chọn lại.");
+        
+        // Tạm thời focus vào dropdown để người dùng chú ý chọn lại
+        setTimeout(() => {
+          const categorySelect = document.querySelector('[name="courseCategory"]');
+          if (categorySelect) categorySelect.focus();
+        }, 500);
+        
+        updateForm.setFieldsValue({
+          courseName: course.name,
+          courseCategory: undefined, // để trống để người dùng chọn lại
+          price: course.price,
+          description: course.description,
+        });
+      }
+    } else {
+      console.log("Valid categoryId found:", course.categoryId);
+      
+      // Kiểm tra xem categoryId có tồn tại trong danh sách không
+      const categoryExists = courseCategories.some(
+        cat => cat.categoryId === course.categoryId
+      );
+      
+      if (!categoryExists) {
+        console.warn("Category ID not found in current categories list:", course.categoryId);
+        message.warning("Loại khóa học của khóa học đã thay đổi. Vui lòng chọn lại loại khóa học.");
+      }
+      
+      updateForm.setFieldsValue({
+        courseName: course.name,
+        courseCategory: course.categoryId,
+        price: course.price,
+        description: course.description,
+      });
+    }
+    
     setIsUpdateModalOpen(true);
   };
 
@@ -488,7 +574,7 @@ const CourseMaster = () => {
       setLoading(true);
       
       // Kiểm tra các trường bắt buộc
-      if (!values.courseName || !values.categoryName || !values.description || !values.price) {
+      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
         message.error("Vui lòng điền đầy đủ thông tin khóa học");
         return;
       }
@@ -497,7 +583,7 @@ const CourseMaster = () => {
       const courseData = {
         courseId: selectedCourse.id,
         courseName: values.courseName.trim(),
-        categoryName: values.categoryName,
+        courseCategory: values.courseCategory,
         description: values.description.trim(),
         price: Number(values.price),
       };
@@ -510,13 +596,26 @@ const CourseMaster = () => {
         message.success(response.message || "Cập nhật khóa học thành công!");
         setIsUpdateModalOpen(false);
         updateForm.resetFields();
-        fetchCourses();
+        // Đợi thêm chút để đảm bảo server đã cập nhật dữ liệu
+        setTimeout(() => {
+          fetchCourses();
+        }, 500);
       } else {
         message.error(response?.message || "Có lỗi xảy ra khi cập nhật khóa học");
       }
     } catch (error) {
       console.error("Error updating course:", error);
-      message.error("Có lỗi xảy ra: " + (error.message || "Vui lòng điền đầy đủ thông tin khóa học"));
+      // Log chi tiết lỗi
+      if (error.response) {
+        console.error("API error response:", error.response.data);
+        message.error("Lỗi từ server: " + (error.response.data?.message || "Vui lòng thử lại"));
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+        message.error("Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng.");
+      } else {
+        console.error("Error details:", error.message);
+        message.error("Có lỗi xảy ra: " + (error.message || "Vui lòng điền đầy đủ thông tin khóa học"));
+      }
     } finally {
       setLoading(false);
     }
@@ -1243,12 +1342,7 @@ const CourseMaster = () => {
         <div className="p-4">
           <CourseForm
             form={updateForm}
-            initialData={selectedCourse ? {
-              courseName: selectedCourse.name,
-              categoryName: selectedCourse.categoryName,
-              price: selectedCourse.price,
-              description: selectedCourse.description,
-            } : {}}
+            initialData={{}}
             loading={loading}
             courseCategories={courseCategories}
           />
