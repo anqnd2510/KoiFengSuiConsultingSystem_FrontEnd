@@ -314,18 +314,19 @@ const Feedback = () => {
             columns={columns}
             dataSource={feedbacks}
             rowKey="id"
-            pagination={false}
             loading={loading}
+            pagination={{
+              current: currentPage,
+              total: feedbacks.length,
+              pageSize: pageSize,
+              showSizeChanger: true,
+              showTotal: (total) => `Tổng số ${total} đánh giá`,
+              onChange: (page, pageSize) => {
+                setCurrentPage(page);
+                setPageSize(pageSize);
+              }
+            }}
           />
-
-          <div className="mt-4 flex justify-end">
-            <Pagination
-              current={currentPage}
-              total={totalItems}
-              pageSize={pageSize}
-              onChange={handlePageChange}
-            />
-          </div>
         </div>
       </div>
       

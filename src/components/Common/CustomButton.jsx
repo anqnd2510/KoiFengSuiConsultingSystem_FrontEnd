@@ -7,7 +7,10 @@ const CustomButton = ({
   onClick, 
   children,
   danger = false,
-  icon
+  icon,
+  htmlType,
+  loading,
+  size
 }) => {
   return (
     <Button
@@ -16,6 +19,9 @@ const CustomButton = ({
       onClick={onClick}
       danger={danger}
       icon={icon}
+      htmlType={htmlType}
+      loading={loading}
+      size={size}
     >
       {children}
     </Button>
@@ -28,7 +34,10 @@ CustomButton.propTypes = {
   onClick: PropTypes.func,
   children: PropTypes.node,
   danger: PropTypes.bool,
-  icon: PropTypes.node
+  icon: PropTypes.node,
+  htmlType: PropTypes.string,
+  loading: PropTypes.bool,
+  size: PropTypes.string
 };
 
 export default CustomButton; 

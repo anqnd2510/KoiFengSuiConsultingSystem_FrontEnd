@@ -1,141 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Space, Table, Button, Typography, Tag, Popconfirm, message, Modal, Form, Input, Select, Upload, Divider, InputNumber, Row, Col } from "antd";
 import SearchBar from "../components/Common/SearchBar";
 import Pagination from "../components/Common/Pagination";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
+import KoiFishForm from "../components/KoiFishForm";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, Plus, Trash2 } from "lucide-react";
+import KoiFishService from "../services/koifish.service";
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-
-// Component form cho cá Koi
-const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }) => {
-  // Hàm thêm trường màu sắc
-  const addColorField = () => {
-    setColorFields([...colorFields, { name: "", value: "" }]);
-  };
-
-  // Hàm xóa trường màu sắc
-  const removeColorField = (index) => {
-    const newFields = [...colorFields];
-    newFields.splice(index, 1);
-    setColorFields(newFields);
-  };
-
-  // Hàm cập nhật trường màu sắc
-  const updateColorField = (index, field, value) => {
-    const newFields = [...colorFields];
-    newFields[index][field] = value;
-    setColorFields(newFields);
-  };
-
-  return (
-    <Form
-      form={form}
-      layout="vertical"
-      disabled={loading}
-    >
-      <Row gutter={16}>
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Tên giống cá Koi"
-            name="breed"
-            rules={[{ required: true, message: "Vui lòng nhập tên giống cá Koi" }]}
-          >
-            <Input placeholder="Nhập tên giống cá Koi" />
-          </Form.Item>
-        </Col>
-
-        <Col span={24} md={12}>
-          <Form.Item
-            label="Mệnh của cá"
-            name="element"
-            rules={[{ required: true, message: "Vui lòng chọn mệnh của cá" }]}
-          >
-            <Select placeholder="Chọn mệnh của cá">
-              <Option value="Thủy">Thủy</Option>
-              <Option value="Hỏa">Hỏa</Option>
-              <Option value="Thổ">Thổ</Option>
-              <Option value="Kim">Kim</Option>
-              <Option value="Mộc">Mộc</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
-
-      <Form.Item
-        label="Hình ảnh"
-        name="image"
-      >
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={() => false} // Ngăn tự động upload
-        >
-          <div className="flex flex-col items-center">
-            <UploadCloud className="w-6 h-6 text-gray-400" />
-            <div className="mt-2">Upload </div>
-          </div>
-        </Upload>
-      </Form.Item>
-
-      <Form.Item
-        label="Thông tin giới thiệu"
-        name="description"
-        rules={[{ required: true, message: "Vui lòng nhập thông tin giới thiệu" }]}
-      >
-        <TextArea
-          placeholder="Nhập thông tin giới thiệu về loài cá Koi"
-          autoSize={{ minRows: 3, maxRows: 6 }}
-        />
-      </Form.Item>
-
-      <Divider orientation="left">Màu sắc</Divider>
-      
-      <div className="mb-4">
-        {colorFields.map((field, index) => (
-          <div key={index} className="flex gap-2 mb-2">
-            <Input
-              placeholder="Tên màu"
-              value={field.name}
-              onChange={(e) => updateColorField(index, "name", e.target.value)}
-              style={{ width: "50%" }}
-            />
-            <InputNumber
-              placeholder="Tỷ lệ (0.0-1.0)"
-              min={0}
-              max={1}
-              step={0.01}
-              value={field.value}
-              onChange={(value) => updateColorField(index, "value", value)}
-              style={{ width: "30%" }}
-            />
-            <CustomButton
-              type="text"
-              danger
-              icon={<Trash2 size={16} />}
-              onClick={() => removeColorField(index)}
-              disabled={colorFields.length <= 1}
-            />
-          </div>
-        ))}
-        
-        <CustomButton 
-          type="dashed" 
-          onClick={addColorField}
-          block
-          icon={<Plus size={16} />}
-        >
-          Thêm màu sắc
-        </CustomButton>
-      </div>
-    </Form>
-  );
-};
 
 const KoiFishManagement = () => {
   const navigate = useNavigate();
@@ -143,71 +20,41 @@ const KoiFishManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedKoi, setSelectedKoi] = useState(null);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [colorFields, setColorFields] = useState([{ name: "", value: "" }]);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [colorFields, setColorFields] = useState([{ name: "", value: 0.5, colorCode: "#000000" }]);
 
   // States cho modal quản lý màu sắc
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const [colorForm] = Form.useForm();
   const [colorLoading, setColorLoading] = useState(false);
 
-  // Mock data cho các loại cá Koi
-  const initialData = [
-    {
-      id: 1,
-      breed: "Asagi",
-      image: "https://example.com/asagi.jpg",
-      element: "Thủy",
-      description: "Asagi chính là giống sản sinh ra Nishikigoi, chúng bắt nguồn từ loài cá chép Magoi cổ đại.",
-      colors: [
-        { name: "Đen", value: "0.50" },
-        { name: "Đỏ", value: "0.10" },
-        { name: "Trắng", value: "0.40" },
-      ],
-    },
-    {
-      id: 2,
-      breed: "Beni Kumonryu",
-      image: "https://example.com/beni-kumonryu.jpg",
-      element: "Hỏa",
-      description: "Koi Beni Kumonryu là một biến thể hiếm hoi của Kumonryu, chúng được lai tạo để có màu đỏ trên đầu.",
-      colors: [
-        { name: "Đen", value: "0.10" },
-        { name: "Đỏ", value: "0.60" },
-        { name: "Trắng", value: "0.30" },
-      ],
-    },
-    {
-      id: 3,
-      breed: "Gin Rin Yamato Nishiki",
-      image: "https://example.com/gin-rin.jpg",
-      element: "Hỏa",
-      description: "Gin Rin Yamato nishiki koi là loài cá được lai tạo khoảng thời gian đầu thế kỷ 20 tại Nhật Bản.",
-      colors: [
-        { name: "Cam", value: "0.70" },
-        { name: "Đen", value: "0.05" },
-        { name: "Trắng", value: "0.25" },
-      ],
-    },
-    {
-      id: 4,
-      breed: "Ginrin Chagoi",
-      image: "https://example.com/ginrin-chagoi.jpg",
-      element: "Thổ",
-      description: "Ginrin Chagoi luôn chiếm được sự yêu thích từ người chơi cá Koi. Chúng dễ nuôi và rất thân thiện.",
-      colors: [
-        { name: "Nâu", value: "0.20" },
-        { name: "Vàng", value: "0.80" },
-      ],
-    },
-  ];
+  const [data, setData] = useState([]);
 
-  const [data, setData] = useState(initialData);
+  // Fetch danh sách cá Koi từ API
+  useEffect(() => {
+    fetchKoiList();
+  }, []);
+
+  const fetchKoiList = async () => {
+    setLoading(true);
+    try {
+      const data = await KoiFishService.getAllKoiFish();
+      setData(data);
+      setError(null);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Không thể tải danh sách cá Koi';
+      setError(errorMessage);
+      message.error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Hàm xử lý tìm kiếm
   const handleSearch = (value) => {
@@ -216,10 +63,16 @@ const KoiFishManagement = () => {
   };
 
   // Hàm xóa cá Koi
-  const handleDelete = (id) => {
-    const newData = data.filter((item) => item.id !== id);
-    setData(newData);
-    message.success("Đã xóa cá Koi thành công");
+  const handleDelete = async (id) => {
+    try {
+      await KoiFishService.deleteKoiFish(id);
+      await fetchKoiList();
+      message.success("Đã xóa cá Koi thành công");
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Không thể xóa cá Koi';
+      setError(errorMessage);
+      message.error(errorMessage);
+    }
   };
 
   // Hàm chuyển trang
@@ -230,21 +83,36 @@ const KoiFishManagement = () => {
   // Hàm mở modal để tạo mới
   const handleOpenCreateModal = () => {
     setSelectedKoi(null);
-    setColorFields([{ name: "", value: "" }]);
+    setColorFields([{ name: "", value: 0.5, colorCode: "#000000" }]);
     form.resetFields();
     setIsModalOpen(true);
   };
 
   // Hàm mở modal để chỉnh sửa
-  const handleOpenEditModal = (koi) => {
-    setSelectedKoi(koi);
-    setColorFields(koi.colors);
-    form.setFieldsValue({
-      breed: koi.breed,
-      element: koi.element,
-      description: koi.description,
-    });
-    setIsModalOpen(true);
+  const handleOpenEditModal = async (koi) => {
+    try {
+      setModalLoading(true);
+      const koiDetail = await KoiFishService.getKoiFishById(koi.id);
+      
+      setSelectedKoi(koiDetail);
+      setColorFields(koiDetail.colors?.map(color => ({
+        name: color.colorName,
+        value: color.percentage / 100,
+        colorCode: color.colorCode
+      })) || []);
+      
+      form.setFieldsValue({
+        breed: koiDetail.varietyName,
+        description: koiDetail.description,
+      });
+      setIsModalOpen(true);
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Không thể tải thông tin cá Koi';
+      setError(errorMessage);
+      message.error(errorMessage);
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   // Đóng modal
@@ -255,45 +123,41 @@ const KoiFishManagement = () => {
   };
 
   // Hàm lưu dữ liệu
-  const handleSave = () => {
-    form.validateFields().then((values) => {
-      setLoading(true);
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+      setModalLoading(true);
       
       // Kết hợp giá trị từ form với danh sách màu sắc
       const formData = {
-        ...values,
-        colors: colorFields,
+        varietyName: values.breed,
+        description: values.description,
+        colors: colorFields.map(color => ({
+          colorName: color.name,
+          colorCode: color.colorCode || "#000000",
+          percentage: Math.round(color.value * 100)
+        }))
       };
       
-      setTimeout(() => {
-        if (selectedKoi) {
-          // Cập nhật
-          const newData = data.map(item => {
-            if (item.id === selectedKoi.id) {
-              return {
-                ...item,
-                ...formData
-              };
-            }
-            return item;
-          });
-          setData(newData);
-          message.success("Đã cập nhật thông tin cá Koi thành công");
-        } else {
-          // Tạo mới
-          const newId = Math.max(...data.map(item => item.id)) + 1;
-          const newKoi = {
-            id: newId,
-            ...formData
-          };
-          setData([...data, newKoi]);
-          message.success("Đã tạo mới loài cá Koi thành công");
-        }
-        
-        setLoading(false);
-        handleCloseModal();
-      }, 1000);
-    });
+      if (selectedKoi) {
+        // Cập nhật
+        await KoiFishService.updateKoiFish(selectedKoi.id, formData);
+        message.success("Đã cập nhật thông tin cá Koi thành công");
+      } else {
+        // Tạo mới
+        await KoiFishService.createKoiFish(formData);
+        message.success("Đã tạo mới loài cá Koi thành công");
+      }
+      
+      await fetchKoiList();
+      handleCloseModal();
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || err.message || 'Đã xảy ra lỗi';
+      setError(errorMessage);
+      message.error(errorMessage);
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   // Hàm mở modal quản lý màu sắc
@@ -341,8 +205,8 @@ const KoiFishManagement = () => {
   const columns = [
     {
       title: "Giống cá Koi",
-      dataIndex: "breed",
-      key: "breed",
+      dataIndex: "varietyName",
+      key: "varietyName",
       width: "15%",
     },
     {
@@ -354,7 +218,7 @@ const KoiFishManagement = () => {
         <div className="w-24 h-24 overflow-hidden">
           <img
             src={record.image}
-            alt={record.breed}
+            alt={record.varietyName}
             className="w-full h-full object-cover"
             onError={(e) => {
               e.target.src = "https://via.placeholder.com/150?text=Koi+Fish";
@@ -364,35 +228,22 @@ const KoiFishManagement = () => {
       ),
     },
     {
-      title: "Mệnh của cá",
-      dataIndex: "element",
-      key: "element",
-      width: "10%",
-      render: (element) => {
-        let color = "blue";
-        if (element === "Hỏa") color = "volcano";
-        if (element === "Thổ") color = "gold";
-        if (element === "Thủy") color = "blue";
-        return <Tag color={color}>{element}</Tag>;
-      },
-    },
-    {
       title: "Thông tin giới thiệu",
       dataIndex: "description",
       key: "description",
-      width: "25%",
+      width: "30%",
       ellipsis: true,
     },
     {
       title: "Màu sắc",
       key: "colors",
       dataIndex: "colors",
-      width: "20%",
+      width: "25%",
       render: (_, record) => (
         <ul className="list-disc pl-5">
-          {record.colors.map((color, index) => (
-            <li key={index}>
-              {color.name}: {color.value}
+          {record.colors && record.colors.map((color, index) => (
+            <li key={index} style={{ color: color.colorCode }}>
+              {color.colorName}: {color.percentage}%
             </li>
           ))}
         </ul>
@@ -426,13 +277,7 @@ const KoiFishManagement = () => {
 
   // Lọc dữ liệu theo tìm kiếm
   const filteredData = data.filter((item) =>
-    item.breed.toLowerCase().includes(searchText.toLowerCase())
-  );
-
-  // Phân trang dữ liệu
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
+    item.varietyName.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
@@ -460,20 +305,22 @@ const KoiFishManagement = () => {
 
         <Table
           columns={columns}
-          dataSource={paginatedData}
-          pagination={false}
+          dataSource={filteredData}
+          pagination={{
+            current: currentPage,
+            total: filteredData.length,
+            pageSize: pageSize,
+            showSizeChanger: true,
+            showTotal: (total) => `Tổng số ${total} cá Koi`,
+            onChange: (page, pageSize) => {
+              setCurrentPage(page);
+              setPageSize(pageSize);
+            }
+          }}
           rowKey="id"
           bordered
+          loading={loading}
         />
-
-        <div className="mt-4 flex justify-end">
-          <Pagination
-            current={currentPage}
-            total={filteredData.length}
-            pageSize={pageSize}
-            onChange={handlePageChange}
-          />
-        </div>
       </div>
 
       {/* Modal for Create/Edit */}
@@ -495,14 +342,14 @@ const KoiFishManagement = () => {
             initialData={selectedKoi}
             colorFields={colorFields}
             setColorFields={setColorFields}
-            loading={loading}
+            loading={modalLoading}
           />
           
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseModal}>
               Hủy bỏ
             </CustomButton>
-            <CustomButton type="primary" onClick={handleSave} loading={loading}>
+            <CustomButton type="primary" onClick={handleSave} loading={modalLoading}>
               {selectedKoi ? "Cập nhật" : "Tạo mới"}
             </CustomButton>
           </div>

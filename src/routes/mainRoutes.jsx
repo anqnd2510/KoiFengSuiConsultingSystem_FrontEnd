@@ -8,6 +8,8 @@ import WorkshopStaff from "../pages/WorkshopStaff";
 import WorkshopCheck from "../pages/WorkshopCheck";
 import AudienceList from "../pages/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
+import Chapter from "../pages/Chapter";
+import Quiz from "../pages/Quiz";
 import CourseManagement from "../pages/CourseManagement";
 import ConsultingOnline from "../pages/ConsultingOnline";
 import KoiFishManagement from "../pages/KoiFishManagement";
@@ -17,6 +19,8 @@ import Certificate from "../pages/Certificate";
 import Master from "../pages/Master";
 import Customer from "../pages/Customer";
 import ConsultationHistory from "../pages/ConsultationHistory";
+import Question from "../pages/Question";
+import Profile from "../pages/Profile";
 
 export const mainRoutes = [
   {
@@ -60,6 +64,18 @@ export const mainRoutes = [
     element: <CourseMaster />,
   },
   {
+    path: "course-chapters/:courseId",
+    element: <Chapter />,
+  },
+  {
+    path: "course-quiz/:courseId",
+    element: <Quiz />,
+  },
+  {
+    path: "quiz/:quizId/questions",
+    element: <Question />,
+  },
+  {
     path: "course-management",
     element: <CourseManagement />,
   },
@@ -94,5 +110,9 @@ export const mainRoutes = [
   {
     path: "consultation-history",
     element: <ConsultationHistory />,
+  },
+  {
+    path: "profile",
+    element: <Profile />,
   },
 ];
