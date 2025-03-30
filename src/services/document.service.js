@@ -34,14 +34,36 @@ export const getAllDocuments = async (params = {}) => {
 // Lấy chi tiết một hồ sơ
 export const getDocumentById = async (id) => {
   try {
+    console.log(`Fetching document details for ID: ${id}`);
+    
+    // Gọi API endpoint
     const response = await apiClient.get(`/FengShuiDocument/${id}`);
+    console.log("Document detail response:", response);
     
     // Kiểm tra cấu trúc response
-    if (response && response.data && response.data.isSuccess) {
-      return response.data.data; // Trả về data object từ response
+    if (response && response.data && response.data.isSuccess && response.data.data) {
+      const documentData = response.data.data;
+      console.log("Successfully fetched document details:", documentData);
+      
+      // Đảm bảo các trường dữ liệu được chuẩn hóa
+      const processedData = {
+        ...documentData,
+        // Đảm bảo các trường quan trọng luôn có giá trị
+        documentId: documentData.documentId || documentData.fengShuiDocumentId,
+        documentName: documentData.documentName,
+        status: documentData.status,
+        docNo: documentData.docNo,
+        version: documentData.version,
+        // Hỗ trợ cả 2 kiểu đặt tên trường
+        createdDate: documentData.createdDate || documentData.createDate,
+        updatedDate: documentData.updatedDate || documentData.updateDate,
+      };
+      
+      return processedData;
     }
     
-    throw new Error("Không thể lấy thông tin hồ sơ");
+    console.warn("API returned unexpected format:", response);
+    throw new Error(response?.data?.message || "Không thể lấy thông tin hồ sơ");
   } catch (error) {
     console.error(`Error fetching document with id ${id}:`, error.response || error);
     throw error;

@@ -22,8 +22,11 @@ import ConsultationHistory from "../pages/ConsultationHistory";
 import Question from "../pages/Question";
 import Profile from "../pages/Profile";
 import Attachment from "../pages/manager/Attachment";
+import AttachmentDetail from "../pages/manager/AttachmentDetail";
 import Contract from "../pages/manager/Contract";
+import ContractDetail from "../pages/manager/ContractDetail";
 import Document from "../pages/manager/Document";
+import DocumentDetail from "../pages/manager/DocumentDetail";
 
 export const mainRoutes = [
   {
@@ -123,12 +126,16 @@ export const mainRoutes = [
     element: <Attachment />,
   },
   {
+    path: "manager/attachment/:id",
+    element: <AttachmentDetail />,
+  },
+  {
     path: "manager/contract",
     element: <Contract />,
   },
   {
     path: "manager/contract/:id",
-    element: <Contract />,
+    element: <ContractDetail />,
   },
   {
     path: "manager/document",
@@ -136,6 +143,6 @@ export const mainRoutes = [
   },
   {
     path: "manager/document/:id",
-    element: <Document />,
+    element: <DocumentDetail />,
   },
 ];

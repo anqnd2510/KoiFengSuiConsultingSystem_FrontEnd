@@ -169,9 +169,6 @@ const Document = () => {
                           Tên hồ sơ
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                          DocumentURL
-                        </th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
                           Trạng thái
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
@@ -191,20 +188,6 @@ const Document = () => {
                           <td className="py-4 px-6 font-medium">{item.version || "-"}</td>
                           <td className="py-4 px-6 font-medium">{item.docNo}</td>
                           <td className="py-4 px-6 text-gray-600">{item.documentName}</td>
-                          <td className="py-4 px-6 text-gray-600">
-                            {item.documentUrl ? (
-                              <a 
-                                href={item.documentUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                Xem tài liệu
-                              </a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
                           <td className="py-4 px-6">
                             <span
                               className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${getStatusClass(

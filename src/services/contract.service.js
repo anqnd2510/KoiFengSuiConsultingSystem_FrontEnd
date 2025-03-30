@@ -34,14 +34,20 @@ export const getAllContracts = async (params = {}) => {
 // Lấy chi tiết một hợp đồng
 export const getContractById = async (id) => {
   try {
+    console.log(`Fetching contract details for ID: ${id}`);
+    
+    // Gọi API endpoint
     const response = await apiClient.get(`/Contract/${id}`);
+    console.log("Contract detail response:", response);
     
     // Kiểm tra cấu trúc response
-    if (response && response.data && response.data.isSuccess) {
+    if (response && response.data && response.data.isSuccess && response.data.data) {
+      console.log("Successfully fetched contract details:", response.data.data);
       return response.data.data; // Trả về data object từ response
     }
     
-    throw new Error("Không thể lấy thông tin hợp đồng");
+    console.warn("API returned unexpected format:", response);
+    throw new Error(response?.data?.message || "Không thể lấy thông tin hợp đồng");
   } catch (error) {
     console.error(`Error fetching contract with id ${id}:`, error.response || error);
     throw error;
