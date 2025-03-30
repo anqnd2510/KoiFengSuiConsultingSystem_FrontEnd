@@ -17,6 +17,9 @@ import {
   User,
   Settings,
   LogOut,
+  FileText,
+  File,
+  Files,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { logout } from "../../services/auth.service";
@@ -56,6 +59,21 @@ const menuItems = [
     icon: MessageCircle,
     label: "Consulting Offline",
     path: "/consulting-offline",
+  },
+  {
+    icon: FileText,
+    label: "Biên bản nghiệm thu",
+    path: "/manager/attachment",
+  },
+  {
+    icon: File,
+    label: "Hợp đồng",
+    path: "/manager/contract",
+  },
+  {
+    icon: Files,
+    label: "Hồ sơ",
+    path: "/manager/document",
   },
   {
     icon: Fish,
@@ -101,6 +119,22 @@ const Sidebar = () => {
         location.pathname.startsWith("/contract")
       );
     }
+    
+    if (path === "/manager/attachment") {
+      return location.pathname === "/manager/attachment" || 
+        location.pathname.startsWith("/manager/attachment/");
+    }
+    
+    if (path === "/manager/contract") {
+      return location.pathname === "/manager/contract" || 
+        location.pathname.startsWith("/manager/contract/");
+    }
+    
+    if (path === "/manager/document") {
+      return location.pathname === "/manager/document" || 
+        location.pathname.startsWith("/manager/document/");
+    }
+    
     return location.pathname === path;
   };
 
