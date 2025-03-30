@@ -172,9 +172,6 @@ const Contract = () => {
                           Tên hợp đồng
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                          Contract URL
-                        </th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
                           Ngày tạo
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
@@ -199,20 +196,6 @@ const Contract = () => {
                           </td>
                           <td className="py-4 px-6 font-medium">{item.docNo}</td>
                           <td className="py-4 px-6 text-gray-600">{item.contractName}</td>
-                          <td className="py-4 px-6 text-gray-600">
-                            {item.contractURL ? (
-                              <a 
-                                href={item.contractURL} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
-                                Xem tài liệu
-                              </a>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
                           <td className="py-4 px-6 text-gray-600">{formatDate(item.createdDate)}</td>
                           <td className="py-4 px-6 text-gray-600">{formatDate(item.updatedDate)}</td>
                           <td className="py-4 px-6">
