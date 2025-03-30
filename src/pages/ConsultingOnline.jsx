@@ -1,54 +1,77 @@
-import React, { useState } from "react";
-import { Select } from "antd";
+import React, { useState, useEffect } from "react";
+import { Select, Tag } from "antd";
 import Pagination from "../components/Common/Pagination";
 import CustomDatePicker from "../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import CustomTable from "../components/Common/CustomTable";
 import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
-import { Tag } from "antd";
+import { getOnlineConsultingBookings } from "../services/booking.service";
 
 const { Option } = Select;
 
-const mockConsultingData = [
-  {
-    id: "0001",
-    date: "2024-03-20",
-    customer: "Nguyễn Văn A",
-    description: "Tư vấn xây hồ",
-    package: "Cơ bản",
-    type: "Trực tuyến",
-    status: "Hoàn thành",
-  },
-  {
-    id: "0002",
-    date: "2024-03-20",
-    customer: "Trần Thị C",
-    description: "Tư vấn xây hồ",
-    package: "Cơ bản",
-    type: "Trực tuyến",
-    status: "Đã hủy",
-  },
-  // ... other mock data
-];
-
 const ConsultingOnline = () => {
   const [activeTab, setActiveTab] = useState("Tất cả");
-  const [consultingData, setConsultingData] = useState(mockConsultingData);
-  const tabs = ["Tất cả", "Đang diễn ra", "Đã hủy", "Hoàn thành", "Chờ xử lý"];
+  const [consultingData, setConsultingData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  //mai mốt cần thêm thì thêm ở dây
+  const tabs = ["Tất cả", "Chờ xử lý", "Đã xác nhận", "Hoàn thành"];
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [error, setError] = useState(null);
 
+  const fetchConsultingData = async (date) => {
+    setLoading(true);
+    try {
+      // Truyền ngày được chọn vào API call nếu cần
+      const response = await getOnlineConsultingBookings(
+        date?.format("YYYY-MM-DD")
+      );
+      setConsultingData(response.data || []);
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching consulting data:", err);
+      setError(
+        "Không thể tải dữ liệu tư vấn trực tuyến. Vui lòng thử lại sau."
+      );
+      setConsultingData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchConsultingData(selectedDate);
+    };
+    fetchData();
+  }, [selectedDate]);
+
+  // Ánh xạ trạng thái từ tiếng Anh sang tiếng Việt
+  const mapStatus = (status) => {
+    const statusMap = {
+      Confirmed: "Đã xác nhận",
+      Pending: "Chờ xử lý",
+      Completed: "Hoàn thành",
+    };
+    return statusMap[status] || status;
+  };
+
+  // Filter data based on active tab
+  const filteredData = consultingData.filter((item) => {
+    const vietnameseStatus = mapStatus(item.status);
+    if (activeTab === "Tất cả") return true;
+    return vietnameseStatus === activeTab;
+  });
+
   const getStatusColor = (status) => {
-    switch (status) {
+    const vietnameseStatus = mapStatus(status);
+    switch (vietnameseStatus) {
       case "Hoàn thành":
         return "success";
-      case "Đã hủy":
-        return "error";
-      case "Đang diễn ra":
-        return "processing";
       case "Chờ xử lý":
         return "warning";
+      case "Đã xác nhận":
+        return "blue";
       default:
         return "default";
     }
@@ -57,21 +80,21 @@ const ConsultingOnline = () => {
   const columns = [
     {
       title: "Mã",
-      dataIndex: "id",
-      key: "id",
+      dataIndex: "bookingOnlineId",
+      key: "bookingOnlineId",
       width: "10%",
-      render: (id) => <span>#{id}</span>,
+      render: (id) => <span>#{id.substring(0, 6)}</span>,
     },
     {
       title: "Ngày",
-      dataIndex: "date",
-      key: "date",
+      dataIndex: "bookingDate",
+      key: "bookingDate",
       width: "10%",
     },
     {
       title: "Khách hàng",
-      dataIndex: "customer",
-      key: "customer",
+      dataIndex: "customerName",
+      key: "customerName",
       width: "15%",
     },
     {
@@ -81,19 +104,21 @@ const ConsultingOnline = () => {
       width: "20%",
     },
     {
-      title: "Gói dịch vụ",
-      dataIndex: "package",
-      key: "package",
+      title: "Thời gian",
+      key: "time",
       width: "15%",
+      render: (_, record) => (
+        <span>
+          {record.startTime} - {record.endTime}
+        </span>
+      ),
     },
     {
       title: "Loại",
       dataIndex: "type",
       key: "type",
-      width: "15%",
-      render: (type) => (
-        <Tag color="default">{type}</Tag>
-      ),
+      width: "10%",
+      render: (type) => <Tag color="default">{type}</Tag>,
     },
     {
       title: "Trạng thái",
@@ -101,16 +126,21 @@ const ConsultingOnline = () => {
       key: "status",
       width: "15%",
       render: (status) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
+        <Tag color={getStatusColor(status)}>{mapStatus(status)}</Tag>
       ),
     },
   ];
+
+  // Hàm xử lý khi thay đổi tab
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   return (
     <div className="flex-1 flex">
       {/* Sidebar here */}
       <div className="flex-1">
-        <Header 
+        <Header
           title="Tư vấn trực tuyến"
           description="Quản lý và theo dõi các buổi tư vấn trực tuyến"
         />
@@ -118,10 +148,10 @@ const ConsultingOnline = () => {
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="inline-flex p-1 bg-white rounded-xl mb-6 shadow-sm">
-              {tabs.map((tab) => (
+              {tabs.map((tab, index) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
+                  key={`tab-${index}`}
+                  onClick={() => handleTabChange(tab)}
                   className={`
                     px-5 py-2.5 
                     rounded-lg 
@@ -149,14 +179,17 @@ const ConsultingOnline = () => {
 
           <CustomTable
             columns={columns}
-            dataSource={consultingData}
-            loading={false}
+            dataSource={filteredData.map((item) => ({
+              ...item,
+              key: item.bookingOnlineId,
+            }))}
+            loading={loading}
           />
 
           <div className="flex justify-end mt-6">
             <Pagination
               currentPage={1}
-              totalPages={5}
+              totalPages={Math.ceil(filteredData.length / 10)}
               onPageChange={(page) => {
                 console.log("Chuyển đến trang:", page);
               }}
