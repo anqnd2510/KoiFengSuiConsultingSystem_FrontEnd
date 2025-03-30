@@ -2,11 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 
 const CreateCourseModal = ({ isOpen, onClose, onSave }) => {
   const [courseData, setCourseData] = useState({
-    name: "",
-    whatWillLearn: "",
+    courseName: "",
+    courseCategory: "",
     description: "",
-    image: "",
-    video: ""
+    price: ""
   });
   
   const modalRef = useRef(null);
@@ -48,22 +47,22 @@ const CreateCourseModal = ({ isOpen, onClose, onSave }) => {
         
         <div className="max-h-[70vh] overflow-y-auto pr-2">
           <div className="mb-3">
-            <label className="block mb-1">Courses Name</label>
+            <label className="block mb-1">Course Name</label>
             <input
               type="text"
-              name="name"
-              value={courseData.name}
+              name="courseName"
+              value={courseData.courseName}
               onChange={handleChange}
               className="w-full border rounded-md p-2"
             />
           </div>
           
           <div className="mb-3">
-            <label className="block mb-1">What will you learn</label>
+            <label className="block mb-1">Course Category</label>
             <input
               type="text"
-              name="whatWillLearn"
-              value={courseData.whatWillLearn}
+              name="courseCategory"
+              value={courseData.categoryId}
               onChange={handleChange}
               className="w-full border rounded-md p-2"
             />
@@ -81,25 +80,11 @@ const CreateCourseModal = ({ isOpen, onClose, onSave }) => {
           </div>
           
           <div className="mb-3">
-            <label className="block mb-1">Image</label>
-            <div className="flex">
-              <input
-                type="text"
-                name="image"
-                value={courseData.image}
-                onChange={handleChange}
-                className="w-full border rounded-md p-2"
-              />
-              <button className="ml-2 border rounded-md p-2 w-10 flex items-center justify-center">+</button>
-            </div>
-          </div>
-          
-          <div className="mb-5">
-            <label className="block mb-1">Video</label>
+            <label className="block mb-1">Price</label>
             <input
-              type="text"
-              name="video"
-              value={courseData.video}
+              type="number"
+              name="price"
+              value={courseData.price}
               onChange={handleChange}
               className="w-full border rounded-md p-2"
             />

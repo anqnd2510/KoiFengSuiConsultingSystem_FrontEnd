@@ -79,7 +79,7 @@ export const createCourse = async (courseData) => {
     // Đảm bảo dữ liệu gửi đi đúng định dạng theo yêu cầu của BE
     const courseRequest = {
       courseName: courseData.courseName,
-      courseCategory: courseData.categoryName, // Sử dụng tên category thay vì ID
+      courseCategory: courseData.courseCategory, // Đây là categoryId
       description: courseData.description || "",
       price: Number(courseData.price)
     };
@@ -166,7 +166,7 @@ export const updateCourse = async (courseData) => {
     const courseRequest = {
       courseId: courseData.courseId,
       courseName: courseData.courseName,
-      courseCategory: courseData.courseCategory,
+      courseCategory: courseData.courseCategory, // Đây là categoryId
       price: Number(courseData.price),
       description: courseData.description || "",
       videoUrl: courseData.videoUrl || "",
@@ -179,13 +179,29 @@ export const updateCourse = async (courseData) => {
     }
 
     console.log("Sending course update request:", courseRequest);
-    const response = await apiClient.put(`${COURSE_ENDPOINT}/update-course/${courseData.courseId}`, courseRequest, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    try {
+      const response = await apiClient.put(`${COURSE_ENDPOINT}/update-course/${courseData.courseId}`, courseRequest, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      console.log("Update course API response:", response.data);
+      return response.data;
+    } catch (apiError) {
+      console.error("API error:", apiError);
+      if (apiError.response) {
+        console.error("Error response status:", apiError.response.status);
+        console.error("Error response data:", apiError.response.data);
+        
+        // Trả về lỗi có cấu trúc để client xử lý dễ dàng hơn
+        throw {
+          message: apiError.response.data?.message || "Lỗi từ server khi cập nhật khóa học",
+          status: apiError.response.status,
+          data: apiError.response.data
+        };
       }
-    });
-    console.log("Update course API response:", response.data);
-    return response.data;
+      throw apiError; // Re-throw lỗi nếu không phải lỗi response
+    }
   } catch (error) {
     console.error("Error updating course:", error);
     throw error;
