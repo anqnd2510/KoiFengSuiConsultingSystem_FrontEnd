@@ -2,7 +2,7 @@ import apiClient from "./apiClient";
 
 // Constants
 //const BOOKING_ENDPOINT = `${import.meta.env.BACK_END_BASE_URL}/BookingOnline`;
-const BOOKING_ENDPOINT = "http://localhost:5261/api/Booking";
+const BOOKING_ENDPOINT = "/Booking";
 
 // Get All Booking  APIs
 export const getBookingHistory = async () => {
@@ -53,6 +53,34 @@ export const assignMaster = async (bookingId, masterId) => {
     return response.data;
   } catch (error) {
     console.error("Error response:", error.response?.data);
+    throw error;
+  }
+};
+
+// Get All Online Consulting Bookings
+export const getOnlineConsultingBookings = async () => {
+  try {
+    const response = await apiClient.get(
+      `${BOOKING_ENDPOINT}/master/booking-onlines`
+    );
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online consulting bookings:", error);
+    throw error;
+  }
+};
+
+// Get All Offline Consulting Bookings
+export const getOfflineConsultingBookings = async () => {
+  try {
+    const response = await apiClient.get(
+      `${BOOKING_ENDPOINT}/master/booking-offlines`
+    );
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online consulting bookings:", error);
     throw error;
   }
 };
