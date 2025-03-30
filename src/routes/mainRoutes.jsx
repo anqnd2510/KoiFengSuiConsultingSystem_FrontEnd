@@ -21,6 +21,9 @@ import Customer from "../pages/Customer";
 import ConsultationHistory from "../pages/ConsultationHistory";
 import Question from "../pages/Question";
 import Profile from "../pages/Profile";
+import Attachment from "../pages/manager/Attachment";
+import Contract from "../pages/manager/Contract";
+import Document from "../pages/manager/Document";
 
 export const mainRoutes = [
   {
@@ -114,5 +117,25 @@ export const mainRoutes = [
   {
     path: "profile",
     element: <Profile />,
+  },
+  {
+    path: "manager/attachment",
+    element: <Attachment />,
+  },
+  {
+    path: "manager/contract",
+    element: <Contract />,
+  },
+  {
+    path: "manager/contract/:id",
+    element: <Contract />,
+  },
+  {
+    path: "manager/document",
+    element: <Document />,
+  },
+  {
+    path: "manager/document/:id",
+    element: <Document />,
   },
 ];

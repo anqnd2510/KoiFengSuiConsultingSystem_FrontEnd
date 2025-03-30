@@ -8,6 +8,7 @@ import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import FilterBar from "../components/Common/FilterBar";
 import { getAllCourses } from "../services/course.service";
+import { getAllCategories, getCategoryById } from "../services/category.service";
 
 const CourseManagement = () => {
   // State cho danh sách khóa học đã đăng ký
@@ -16,6 +17,9 @@ const CourseManagement = () => {
   const [loading, setLoading] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  // State cho danh mục khóa học
+  const [courseCategories, setCourseCategories] = useState([]);
+  const [categoryNames, setCategoryNames] = useState({});
 
   // State cho lỗi
   const [error, setError] = useState("");
@@ -40,7 +44,42 @@ const CourseManagement = () => {
 
   useEffect(() => {
     fetchCourses();
+    fetchCourseCategories();
   }, []);
+
+  const fetchCourseCategories = async () => {
+    try {
+      const response = await getAllCategories();
+      console.log("Categories API response:", response);
+      
+      // Kiểm tra response có đúng cấu trúc không
+      if (response && response.isSuccess && response.data) {
+        console.log("Categories data:", response.data);
+        
+        // Map dữ liệu để đảm bảo có categoryId
+        const mappedCategories = response.data.map(category => ({
+          categoryId: category.categoryId, // Lấy categoryId
+          categoryName: category.categoryName,
+        }));
+        
+        console.log("Mapped categories:", mappedCategories);
+        setCourseCategories(mappedCategories);
+        
+        // Tạo object mapping từ categoryId đến categoryName để dễ tra cứu
+        const categoryNameMapping = {};
+        mappedCategories.forEach(category => {
+          categoryNameMapping[category.categoryId] = category.categoryName;
+        });
+        setCategoryNames(categoryNameMapping);
+      } else {
+        console.warn("Invalid categories response structure:", response);
+        setCourseCategories([]);
+      }
+    } catch (err) {
+      console.error("Error fetching course categories:", err);
+      setCourseCategories([]); // Set mảng rỗng khi có lỗi
+    }
+  };
 
   const fetchCourses = async () => {
     setLoading(true);
@@ -91,6 +130,8 @@ const CourseManagement = () => {
             rating: course.rating || 0,
             isBestSeller: course.isBestSeller || false,
             courseType: course.courseCategory || course.courseType || "N/A",
+            categoryId: course.courseCategory || course.categoryId || null,
+            categoryName: course.categoryName || "Chưa phân loại",
             status: course.status || "Active",
             certificate: course.certificateId ? true : false,
             certificateId: course.certificateId || "N/A",
@@ -113,6 +154,12 @@ const CourseManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm để lấy tên category
+  const getCategoryName = (categoryId) => {
+    if (!categoryId || categoryId === "N/A") return "Chưa phân loại";
+    return categoryNames[categoryId] || categoryId;
   };
 
   // Xử lý tìm kiếm
@@ -162,7 +209,7 @@ const CourseManagement = () => {
   const filteredRegistrations = registrations.filter(registration => {
     const matchesSearch = 
       registration.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.courseType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getCategoryName(registration.categoryId).toLowerCase().includes(searchTerm.toLowerCase()) ||
       registration.quizCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       registration.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (registration.id && registration.id.toString().toLowerCase().includes(searchTerm.toLowerCase()));
@@ -201,7 +248,12 @@ const CourseManagement = () => {
     {
       title: "LOẠI KHÓA HỌC",
       dataIndex: "courseType",
-      key: "courseType"
+      key: "courseType",
+      render: (_, record) => (
+        <Tag color="blue">
+          {getCategoryName(record.categoryId)}
+        </Tag>
+      )
     },
     {
       title: "NGÀY TẠO",
@@ -404,7 +456,11 @@ const CourseManagement = () => {
               </div>
               <div className="detail-item">
                 <p className="font-semibold">Loại khóa học:</p>
-                <p>{selectedCourse.courseType}</p>
+                <p>
+                  <Tag color="blue">
+                    {getCategoryName(selectedCourse.categoryId)}
+                  </Tag>
+                </p>
               </div>
               <div className="detail-item">
                 <p className="font-semibold">Ngày tạo:</p>
