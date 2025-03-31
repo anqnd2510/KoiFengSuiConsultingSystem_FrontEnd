@@ -14,6 +14,7 @@ const PondCard = ({ title, image, onUpdate, onDelete, size, direction, shapeId, 
     <Card className="h-full">
       <div className="text-center">
         <h3 className="text-base font-medium mb-2">{title}</h3>
+        {/* Tạm thời ẩn phần hiển thị hình ảnh
         <div className="mb-3">
           <img 
             src={image} 
@@ -24,6 +25,7 @@ const PondCard = ({ title, image, onUpdate, onDelete, size, direction, shapeId, 
             }}
           />
         </div>
+        */}
         <div className="mb-3 text-sm text-left">
           <p><span className="font-medium">Kích thước:</span> {size || 'Không có'}</p>
           <p><span className="font-medium">Hướng:</span> {direction || 'Không có'}</p>
@@ -420,9 +422,12 @@ const KoiPondManagement = () => {
   };
 
   const handleImageUpdate = (pondType) => {
+    /* Tạm thời ẩn phần cập nhật hình ảnh
     setSelectedPond(pondType);
     setFileList([]);
     setIsModalVisible(true);
+    */
+    message.info("Chức năng cập nhật hình ảnh tạm thời đã bị vô hiệu hóa");
   };
 
   return (
@@ -478,6 +483,7 @@ const KoiPondManagement = () => {
       </div>
 
       {/* Modal cập nhật hình ảnh */}
+      {/* Tạm thời ẩn modal cập nhật hình ảnh
       <Modal
         title={`Cập nhật hình ảnh cho hồ ${selectedPond ? getPondName(selectedPond) : ""}`}
         open={isModalVisible}
@@ -494,6 +500,7 @@ const KoiPondManagement = () => {
           </Upload>
         </div>
       </Modal>
+      */}
 
       {/* Modal chỉnh sửa thông tin hồ cá */}
       <Modal
@@ -559,6 +566,7 @@ const KoiPondManagement = () => {
               )}
             </select>
           </Form.Item>
+          {/* Tạm thời ẩn nút cập nhật hình ảnh
           <div className="mt-4">
             <CustomButton 
               type="primary" 
@@ -571,6 +579,7 @@ const KoiPondManagement = () => {
               Cập nhật hình ảnh
             </CustomButton>
           </div>
+          */}
         </Form>
       </Modal>
 
@@ -642,6 +651,7 @@ const KoiPondManagement = () => {
       </Modal>
 
       {/* Modal xem trước hình ảnh */}
+      {/* Tạm thời ẩn modal xem trước hình ảnh
       <Modal
         open={previewVisible}
         title="Xem trước hình ảnh"
@@ -650,6 +660,7 @@ const KoiPondManagement = () => {
       >
         <img alt="example" style={{ width: '100%' }} src={previewImage} />
       </Modal>
+      */}
 
       {/* Thêm style cho modal xác nhận xóa */}
       <style jsx global>{`

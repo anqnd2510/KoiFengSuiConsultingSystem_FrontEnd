@@ -1,53 +1,35 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 
-const API_URL = 'http://localhost:5261/api';
-
-// Cấu hình axios
-axios.defaults.headers.common['Accept'] = 'application/json';
-axios.defaults.headers.common['Content-Type'] = 'application/json';
-axios.defaults.withCredentials = false; // Không gửi credentials (cookies) trong CORS requests
-
-// Cấu hình axios interceptors
-axios.interceptors.request.use(
-  config => {
-    console.log(`Gửi request đến: ${config.url}`, config);
-    return config;
-  },
-  error => {
-    console.error('Lỗi khi gửi request:', error);
-    return Promise.reject(error);
-  }
-);
-
-axios.interceptors.response.use(
-  response => {
-    console.log(`Nhận response từ: ${response.config.url}`, response.data);
-    return response;
-  },
-  error => {
-    console.error('Lỗi response:', error);
-    if (error.response) {
-      console.error('Status:', error.response.status);
-      console.error('Data:', error.response.data);
-      console.error('Headers:', error.response.headers);
-    } else if (error.request) {
-      console.error('Không nhận được response:', error.request);
-    } else {
-      console.error('Lỗi cấu hình request:', error.message);
-    }
-    return Promise.reject(error);
-  }
-);
+// Cấu hình API endpoint
+const KOI_ENDPOINT = '/KoiVariety';
 
 // Service cho cá Koi
 const KoiFishService = {
   // Lấy danh sách tất cả cá Koi
   getAllKoiFish: async () => {
     try {
-      // Thử sử dụng API thực tế
-      const response = await axios.get(`${API_URL}/KoiVariety`);
+      console.log('Gọi API lấy danh sách cá Koi');
+      const response = await apiClient.get(`${KOI_ENDPOINT}/get-all`);
       console.log('API response:', response);
-      return response.data.data || [];
+      
+      // Kiểm tra cấu trúc phản hồi và truy cập trường data
+      if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
+        // Đảm bảo dữ liệu hợp lệ trước khi trả về
+        return response.data.data.map(item => ({
+          id: item.koiVarietyId || item.id || 'unknown-id',
+          varietyName: item.name || item.varietyName || 'Không có tên',
+          description: item.description || null,
+          colors: Array.isArray(item.colors) ? item.colors.map(color => ({
+            colorName: color.colorName || 'Không tên',
+            colorCode: color.colorCode || '#000000',
+            percentage: color.percentage || 0
+          })) : []
+        }));
+      }
+      
+      // Nếu phản hồi API không có cấu trúc mong đợi, trả về mảng rỗng
+      console.warn('API không trả về dữ liệu đúng định dạng, trả về mảng rỗng');
+      return [];
     } catch (error) {
       console.error("Lỗi khi lấy danh sách cá Koi:", error);
       
@@ -65,8 +47,28 @@ const KoiFishService = {
   // Lấy thông tin chi tiết một cá Koi theo ID
   getKoiFishById: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/KoiVariety/${id}`);
-      return response.data.data || {};
+      const response = await apiClient.get(`${KOI_ENDPOINT}/${id}`);
+      console.log('API response getKoiFishById:', response);
+      
+      // Kiểm tra cấu trúc phản hồi và truy cập trường data
+      if (response.data && response.data.isSuccess && response.data.data) {
+        const item = response.data.data;
+        
+        // Đảm bảo dữ liệu hợp lệ trước khi trả về
+        return {
+          id: item.koiVarietyId || item.id || 'unknown-id',
+          varietyName: item.name || item.varietyName || 'Không có tên',
+          description: item.description || null,
+          colors: Array.isArray(item.colors) ? item.colors.map(color => ({
+            colorName: color.colorName || 'Không tên',
+            colorCode: color.colorCode || '#000000',
+            percentage: color.percentage || 0
+          })) : []
+        };
+      }
+      
+      console.warn('API không trả về dữ liệu chi tiết đúng định dạng');
+      throw new Error("Không thể tải thông tin cá Koi");
     } catch (error) {
       console.error(`Lỗi khi lấy thông tin cá Koi ID ${id}:`, error);
       
@@ -86,8 +88,14 @@ const KoiFishService = {
   // Tạo mới một cá Koi
   createKoiFish: async (koiFishData) => {
     try {
-      const response = await axios.post(`${API_URL}/KoiVariety`, koiFishData);
-      return response.data;
+      const response = await apiClient.post(`${KOI_ENDPOINT}`, koiFishData);
+      
+      // Kiểm tra cấu trúc phản hồi
+      if (response.data && response.data.isSuccess) {
+        return response.data;
+      }
+      
+      throw new Error(response.data?.message || "Không thể tạo mới cá Koi");
     } catch (error) {
       console.error("Lỗi khi tạo mới cá Koi:", error);
       
@@ -108,8 +116,14 @@ const KoiFishService = {
   // Cập nhật thông tin cá Koi
   updateKoiFish: async (id, koiFishData) => {
     try {
-      const response = await axios.put(`${API_URL}/KoiVariety/${id}`, koiFishData);
-      return response.data;
+      const response = await apiClient.put(`${KOI_ENDPOINT}/${id}`, koiFishData);
+      
+      // Kiểm tra cấu trúc phản hồi
+      if (response.data && response.data.isSuccess) {
+        return response.data;
+      }
+      
+      throw new Error(response.data?.message || "Không thể cập nhật thông tin cá Koi");
     } catch (error) {
       console.error(`Lỗi khi cập nhật cá Koi ID ${id}:`, error);
       
@@ -130,8 +144,14 @@ const KoiFishService = {
   // Xóa cá Koi
   deleteKoiFish: async (id) => {
     try {
-      const response = await axios.delete(`${API_URL}/KoiVariety/${id}`);
-      return response.data;
+      const response = await apiClient.delete(`${KOI_ENDPOINT}/${id}`);
+      
+      // Kiểm tra cấu trúc phản hồi
+      if (response.data && response.data.isSuccess) {
+        return response.data;
+      }
+      
+      throw new Error(response.data?.message || "Không thể xóa cá Koi");
     } catch (error) {
       console.error(`Lỗi khi xóa cá Koi ID ${id}:`, error);
       

@@ -45,6 +45,7 @@ const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }
         </Col>
       </Row>
 
+      {/* Tạm thời ẩn phần upload hình ảnh
       <Form.Item
         label="Hình ảnh"
         name="image"
@@ -60,6 +61,7 @@ const KoiFishForm = ({ form, initialData, colorFields, setColorFields, loading }
           </div>
         </Upload>
       </Form.Item>
+      */}
 
       <Form.Item
         label="Thông tin giới thiệu"
