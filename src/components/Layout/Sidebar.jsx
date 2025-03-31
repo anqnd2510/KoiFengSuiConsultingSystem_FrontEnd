@@ -34,7 +34,7 @@ const menuItems = [
   {
     icon: ClipboardList,
     label: "Booking Schedule",
-    path: "/booking-schedule",
+    path: "/staff/booking-schedule",
   },
   {
     icon: History,
@@ -119,22 +119,28 @@ const Sidebar = () => {
         location.pathname.startsWith("/contract")
       );
     }
-    
+
     if (path === "/manager/attachment") {
-      return location.pathname === "/manager/attachment" || 
-        location.pathname.startsWith("/manager/attachment/");
+      return (
+        location.pathname === "/manager/attachment" ||
+        location.pathname.startsWith("/manager/attachment/")
+      );
     }
-    
+
     if (path === "/manager/contract") {
-      return location.pathname === "/manager/contract" || 
-        location.pathname.startsWith("/manager/contract/");
+      return (
+        location.pathname === "/manager/contract" ||
+        location.pathname.startsWith("/manager/contract/")
+      );
     }
-    
+
     if (path === "/manager/document") {
-      return location.pathname === "/manager/document" || 
-        location.pathname.startsWith("/manager/document/");
+      return (
+        location.pathname === "/manager/document" ||
+        location.pathname.startsWith("/manager/document/")
+      );
     }
-    
+
     return location.pathname === path;
   };
 
@@ -169,25 +175,25 @@ const Sidebar = () => {
       </div>
 
       <div className="absolute bottom-4 left-4 flex items-center gap-2 w-[calc(100%-2rem)]">
-        <Link 
-          to="/profile" 
+        <Link
+          to="/profile"
           className={`flex items-center gap-3 px-4 py-2 rounded-lg flex-1 ${
-            location.pathname === "/profile" 
-              ? "bg-[#42855B] text-white" 
+            location.pathname === "/profile"
+              ? "bg-[#42855B] text-white"
               : "text-gray-800 hover:bg-[#42855B] hover:text-white"
           }`}
         >
           <div className="flex items-center gap-3 flex-1">
-            <img 
-              src="avatar.jpg" 
-              alt="User" 
+            <img
+              src="avatar.jpg"
+              alt="User"
               className="w-8 h-8 rounded-full object-cover"
             />
             <span>anh Duy An</span>
           </div>
           <Settings size={18} />
         </Link>
-        
+
         <button
           onClick={handleLogout}
           className="p-2 rounded-lg text-gray-800 hover:bg-[#42855B] hover:text-white transition-colors duration-200"

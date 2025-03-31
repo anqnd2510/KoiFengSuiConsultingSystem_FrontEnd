@@ -1,6 +1,6 @@
 import Dashboard from "../pages/Dashboard";
 import Schedule from "../pages/Schedule";
-import BookingSchedule from "../pages/BookingSchedule";
+import BookingSchedule from "../pages/staff/BookingSchedule";
 import BookingScheduleDetails from "../pages/BookingScheduleDetails";
 import Workshop from "../pages/Workshop";
 import WorkshopList from "../pages/WorkshopList";
@@ -27,6 +27,7 @@ import Contract from "../pages/manager/Contract";
 import ContractDetail from "../pages/manager/ContractDetail";
 import Document from "../pages/manager/Document";
 import DocumentDetail from "../pages/manager/DocumentDetail";
+import ConsultingContract from "../pages/staff/ConsultingContract";
 
 export const mainRoutes = [
   {
@@ -38,7 +39,7 @@ export const mainRoutes = [
     element: <Schedule />,
   },
   {
-    path: "booking-schedule",
+    path: "staff/booking-schedule",
     element: <BookingSchedule />,
   },
   {
@@ -144,5 +145,9 @@ export const mainRoutes = [
   {
     path: "manager/document/:id",
     element: <DocumentDetail />,
+  },
+  {
+    path: "staff/contracts",
+    element: <ConsultingContract />,
   },
 ];
