@@ -42,12 +42,53 @@ export const getBookingScheduleDetail = async (id) => {
 };
 
 // Assign Master APIs
-export const assignMaster = async (bookingId, masterId) => {
+export const assignMaster = async (
+  bookingOnlineId,
+  bookingOfflineId,
+  masterId
+) => {
   try {
-    console.log("Sending request with:", { bookingId, masterId });
+    console.log("Sending request with:", {
+      bookingOnlineId,
+      bookingOfflineId,
+      masterId,
+    });
+
+    // Xây dựng query parameters
+    const params = new URLSearchParams();
+
+    // Chỉ thêm tham số nếu có giá trị
+    if (bookingOnlineId) {
+      params.append("bookingonline", bookingOnlineId);
+    }
+
+    if (bookingOfflineId) {
+      params.append("bookingoffline", bookingOfflineId);
+    }
+
+    // MasterId là bắt buộc
+    if (!masterId) {
+      throw new Error("MasterId không được để trống");
+    }
+
+    params.append("masterId", masterId);
+
+    // Kiểm tra xem có ít nhất một loại booking được chỉ định
+    if (!bookingOnlineId && !bookingOfflineId) {
+      throw new Error(
+        "Phải chỉ định ít nhất một loại booking (online hoặc offline)"
+      );
+    }
+
+    // Sử dụng URLSearchParams để tạo query string đúng cách
+    const queryString = params.toString();
+
+    console.log(
+      `Sending request to: ${BOOKING_ENDPOINT}/assign-master?${queryString}`
+    );
 
     const response = await apiClient.put(
-      `${BOOKING_ENDPOINT}/assign-master?BookingId=${bookingId}&MasterId=${masterId}`
+      `${BOOKING_ENDPOINT}/assign-master?${queryString}`
     );
 
     return response.data;
@@ -81,6 +122,31 @@ export const getOfflineConsultingBookings = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching online consulting bookings:", error);
+    throw error;
+  }
+};
+
+// Get All Booking Offline
+export const getAllBookingOffline = async () => {
+  try {
+    const response = await apiClient.get(
+      `${BOOKING_ENDPOINT}/get-all-offlines`
+    );
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online bookings offlines:", error);
+    throw error;
+  }
+};
+// Get All Booking Offline
+export const getAllBookingOnline = async () => {
+  try {
+    const response = await apiClient.get(`${BOOKING_ENDPOINT}/get-all-onlines`);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online bookings onlines:", error);
     throw error;
   }
 };
