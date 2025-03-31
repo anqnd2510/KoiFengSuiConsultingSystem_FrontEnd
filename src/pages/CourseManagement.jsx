@@ -36,7 +36,6 @@ const CourseManagement = () => {
     total: true,
     rating: false,
     certificate: true,
-    quizCode: true,
     creator: true,
     status: true,
     isBestSeller: false
@@ -210,7 +209,6 @@ const CourseManagement = () => {
     const matchesSearch = 
       registration.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       getCategoryName(registration.categoryId).toLowerCase().includes(searchTerm.toLowerCase()) ||
-      registration.quizCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       registration.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (registration.id && registration.id.toString().toLowerCase().includes(searchTerm.toLowerCase()));
       
@@ -251,7 +249,7 @@ const CourseManagement = () => {
       key: "courseType",
       render: (_, record) => (
         <Tag color="blue">
-          {getCategoryName(record.categoryId)}
+          {record.categoryName || getCategoryName(record.categoryId)}
         </Tag>
       )
     },
@@ -292,11 +290,6 @@ const CourseManagement = () => {
           {certificate ? "Có" : "Không"}
         </Tag>
       )
-    },
-    {
-      title: "MÃ QUIZ",
-      dataIndex: "quizCode",
-      key: "quizCode"
     },
     {
       title: "GIÁ",
@@ -362,7 +355,7 @@ const CourseManagement = () => {
           <div className="flex flex-wrap justify-between items-center mb-4">
             <div className="flex items-center">
               <SearchBar 
-                placeholder="Tìm theo tên khóa học, loại, mã quiz, người tạo"
+                placeholder="Tìm theo tên khóa học, loại, người tạo"
                 onSearch={handleSearch}
                 className="w-64 mr-2"
               />
@@ -458,7 +451,7 @@ const CourseManagement = () => {
                 <p className="font-semibold">Loại khóa học:</p>
                 <p>
                   <Tag color="blue">
-                    {getCategoryName(selectedCourse.categoryId)}
+                    {selectedCourse.categoryName || getCategoryName(selectedCourse.categoryId)}
                   </Tag>
                 </p>
               </div>
@@ -485,10 +478,6 @@ const CourseManagement = () => {
                     {selectedCourse.certificate ? "Có" : "Không"}
                   </Tag>
                 </p>
-              </div>
-              <div className="detail-item">
-                <p className="font-semibold">Mã Quiz:</p>
-                <p>{selectedCourse.quizCode === "N/A" ? "Không có" : selectedCourse.quizCode}</p>
               </div>
               <div className="detail-item">
                 <p className="font-semibold">Người tạo:</p>

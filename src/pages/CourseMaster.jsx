@@ -8,7 +8,7 @@ import Header from "../components/Common/Header";
 import Error from "../components/Common/Error";
 import CustomButton from "../components/Common/CustomButton";
 import { UploadCloud, Book, Calendar, DollarSign, Award, FileText, Trash2, ClipboardList } from "lucide-react";
-import { getAllCourses, createCourse, deleteCourse, updateCourse } from "../services/course.service";
+import { getAllCourses, createCourse, deleteCourse, updateCourse, getAllCoursesByMaster } from "../services/course.service";
 import { formatDate, formatPrice } from '../utils/formatters';
 import { getChaptersByCourseId, formatDuration, createChapter } from "../services/chapter.service";
 import { getCategoryById, getAllCategories, createCategory } from "../services/category.service";
@@ -256,7 +256,8 @@ const CourseMaster = () => {
   const fetchCourses = async () => {
     setLoading(true);
     try {
-      const response = await getAllCourses();
+      // Sử dụng API mới để lấy danh sách khóa học theo master
+      const response = await getAllCoursesByMaster();
       console.log("API response:", response);
       setRawData(response);
       
@@ -320,7 +321,11 @@ const CourseMaster = () => {
         setError("");
       } else {
         console.error("API response structure is not as expected:", response);
-        setError("Định dạng dữ liệu không đúng. Vui lòng liên hệ quản trị viên.");
+        if (response && !response.isSuccess) {
+          setError(response.message || "Lỗi khi lấy danh sách khóa học. Vui lòng liên hệ quản trị viên.");
+        } else {
+          setError("Định dạng dữ liệu không đúng. Vui lòng liên hệ quản trị viên.");
+        }
       }
     } catch (err) {
       console.error("Error fetching courses:", err);
@@ -1103,8 +1108,8 @@ const CourseMaster = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
-        title="Quản lý khóa học"
-        description="Báo cáo và tổng quan về khóa học của bạn"
+        title="Quản lý khóa học của tôi"
+        description="Báo cáo và tổng quan về khóa học mà bạn làm master"
       />
 
       <div className="p-6">
