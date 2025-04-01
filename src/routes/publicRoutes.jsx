@@ -1,4 +1,3 @@
-import ConsultingOffline from "../pages/ConsultingOffline";
 import BlogManagement from "../pages/BlogManagement";
 import CreateBlog from "../pages/CreateBlog";
 import Login from "../pages/Login";
@@ -7,10 +6,6 @@ import ContractDetail from "../pages/ContractDetail";
 import Notifications from "../pages/Notifications";
 
 export const publicRoutes = [
-  {
-    path: "/consulting-offline",
-    element: <ConsultingOffline />,
-  },
   {
     path: "/blog-management",
     element: <BlogManagement />,
@@ -35,5 +30,4 @@ export const publicRoutes = [
     path: "/notifications",
     element: <Notifications />,
   },
-  
 ];

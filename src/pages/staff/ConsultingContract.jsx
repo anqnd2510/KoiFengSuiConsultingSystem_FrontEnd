@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import moment from "moment";
+import { FaEye, FaDownload } from "react-icons/fa";
 import Header from "../../components/Common/Header";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -23,8 +24,9 @@ import { getAllBookingOffline } from "../../services/booking.service";
 // Giả định service cho hợp đồng
 import {
   createContract,
-  getAllContracts,
+  getAllContractsByStaff,
 } from "../../services/contract.service";
+import { useNavigate } from "react-router-dom";
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -35,6 +37,7 @@ const ConsultingContract = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMinutesModalOpen, setIsMinutesModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [form] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,6 +52,8 @@ const ConsultingContract = () => {
     activeContracts: 0,
   });
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [contractSearchTerm, setContractSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   // Fetch danh sách booking offline
   const fetchBookings = useCallback(async () => {
@@ -104,15 +109,30 @@ const ConsultingContract = () => {
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await getAllContracts();
+      const response = await getAllContractsByStaff();
 
       if (response?.data && Array.isArray(response.data)) {
-        setContracts(response.data);
+        // Xử lý dữ liệu từ API mới
+        const formattedContracts = response.data.map((contract) => ({
+          id: contract.contractId,
+          contractNumber: contract.docNo,
+          customerName: contract.bookingOffline?.customerName || "Không có tên",
+          contractName: contract.contractName,
+          status: contract.status,
+          contractURL: contract.contractUrl,
+          createdDate: contract.createdDate,
+          // Thêm các trường cần thiết khác với giá trị mặc định
+          startDate: contract.createdDate,
+          endDate: null,
+          totalAmount: 0,
+        }));
+
+        setContracts(formattedContracts);
         setError(null);
 
         // Cập nhật số liệu thống kê
-        const activeCount = response.data.filter(
-          (c) => c.status === "active"
+        const activeCount = formattedContracts.filter(
+          (c) => c.status === "active" || c.status === "Active"
         ).length;
         setStats((prev) => ({
           ...prev,
@@ -238,6 +258,139 @@ const ConsultingContract = () => {
     }
   };
 
+  const handleContractSearch = (term) => {
+    setContractSearchTerm(term);
+  };
+
+  const filteredContracts = contracts.filter((contract) => {
+    return (
+      contract.contractNumber
+        ?.toLowerCase()
+        .includes(contractSearchTerm.toLowerCase()) ||
+      contract.contractName
+        ?.toLowerCase()
+        .includes(contractSearchTerm.toLowerCase()) ||
+      contract.customerName
+        ?.toLowerCase()
+        .includes(contractSearchTerm.toLowerCase())
+    );
+  });
+
+  const handleViewContract = (url) => {
+    if (url) {
+      window.open(url, "_blank");
+    } else {
+      message.error("Không tìm thấy đường dẫn hợp đồng");
+    }
+  };
+
+  const handleDownloadContract = async (url, name) => {
+    if (!url) {
+      message.error("Không tìm thấy đường dẫn hợp đồng");
+      return;
+    }
+
+    try {
+      message.loading({ content: "Đang tải hợp đồng...", key: "download" });
+
+      // Fetch dữ liệu từ URL
+      const response = await fetch(url);
+
+      // Kiểm tra nếu response không thành công
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Chuyển đổi response thành Blob
+      const blob = await response.blob();
+
+      // Tạo URL tạm thời từ Blob
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      // Tạo thẻ a để tải xuống
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = name || "contract.pdf";
+
+      // Thêm link vào DOM, click để tải xuống, và xóa
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Giải phóng URL tạm thời
+      window.URL.revokeObjectURL(blobUrl);
+
+      // Hiển thị thông báo thành công
+      message.success({ content: "Tải xuống thành công", key: "download" });
+    } catch (error) {
+      console.error("Lỗi khi tải xuống hợp đồng:", error);
+      message.error({
+        content: "Không thể tải xuống hợp đồng. Vui lòng thử lại sau.",
+        key: "download",
+      });
+    }
+  };
+
+  // Thêm hàm xử lý mở modal biên bản
+  const handleOpenMinutesModal = (booking) => {
+    setSelectedBooking(booking);
+    setIsMinutesModalOpen(true);
+  };
+
+  // Thêm hàm xử lý đóng modal biên bản
+  const handleCloseMinutesModal = () => {
+    setIsMinutesModalOpen(false);
+    setSelectedBooking(null);
+    setPreviewUrl(null);
+    form.resetFields();
+  };
+
+  // Thêm hàm xử lý tạo biên bản
+  const handleCreateMinutes = async (values) => {
+    try {
+      setLoading(true);
+
+      // Kiểm tra xem có file PDF được chọn không
+      if (
+        !values.pdfFile ||
+        !values.pdfFile.fileList ||
+        values.pdfFile.fileList.length === 0
+      ) {
+        message.error("Vui lòng tải lên file biên bản PDF");
+        setLoading(false);
+        return;
+      }
+
+      // Tạo FormData để gửi dữ liệu
+      const formData = new FormData();
+      formData.append("BookingOfflineId", values.bookingId);
+      formData.append("PdfFile", values.pdfFile.fileList[0].originFileObj);
+
+      // Gọi API tạo biên bản (giả định API tương tự như tạo hợp đồng)
+      // Thay thế bằng API thực tế khi có
+      const response = await createContract(formData);
+
+      // Kiểm tra response từ API
+      if (response && (response.status === 200 || response.status === 201)) {
+        message.success("Tạo biên bản thành công");
+        handleCloseMinutesModal();
+        // Cập nhật lại danh sách booking và hợp đồng
+        fetchBookings();
+        fetchContracts();
+      } else {
+        message.error(response?.data?.message || "Tạo biên bản thất bại");
+      }
+    } catch (err) {
+      console.error("Error creating minutes:", err);
+      message.error(
+        "Có lỗi xảy ra khi tạo biên bản: " +
+          (err.message || "Lỗi không xác định")
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const columns = [
     {
       title: "Mã hợp đồng",
@@ -245,27 +398,20 @@ const ConsultingContract = () => {
       key: "contractNumber",
     },
     {
+      title: "Tên hợp đồng",
+      dataIndex: "contractName",
+      key: "contractName",
+    },
+    {
       title: "Khách hàng",
       dataIndex: "customerName",
       key: "customerName",
     },
     {
-      title: "Ngày bắt đầu",
-      dataIndex: "startDate",
-      key: "startDate",
-      render: (date) => moment(date).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Ngày kết thúc",
-      dataIndex: "endDate",
-      key: "endDate",
-      render: (date) => moment(date).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Tổng giá trị",
-      dataIndex: "totalAmount",
-      key: "totalAmount",
-      render: (amount) => `${amount.toLocaleString()} VNĐ`,
+      title: "Ngày tạo",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : "-"),
     },
     {
       title: "Trạng thái",
@@ -277,14 +423,17 @@ const ConsultingContract = () => {
 
         switch (status) {
           case "active":
+          case "Active":
             color = "green";
             text = "Đang hiệu lực";
             break;
           case "expired":
+          case "Expired":
             color = "red";
             text = "Hết hạn";
             break;
           case "pending":
+          case "Pending":
             color = "orange";
             text = "Chờ xác nhận";
             break;
@@ -297,13 +446,25 @@ const ConsultingContract = () => {
     },
     {
       title: "Thao tác",
-      key: "actions",
+      key: "action",
       render: (_, record) => (
-        <div className="flex gap-2">
-          <CustomButton type="primary" size="small">
-            Xem chi tiết
-          </CustomButton>
-          <CustomButton size="small">In hợp đồng</CustomButton>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handleViewContract(record.contractURL)}
+            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
+            title="Xem hợp đồng"
+          >
+            <FaEye />
+          </button>
+          <button
+            onClick={() =>
+              handleDownloadContract(record.contractURL, record.contractName)
+            }
+            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200"
+            title="Tải xuống"
+          >
+            <FaDownload />
+          </button>
         </div>
       ),
     },
@@ -388,6 +549,14 @@ const ConsultingContract = () => {
             }
           >
             {record.hasContract ? "Đã có hợp đồng" : "Tạo hợp đồng"}
+          </CustomButton>
+          <CustomButton
+            type="default"
+            size="small"
+            onClick={() => handleOpenMinutesModal(record)}
+            className="bg-green-500 hover:bg-green-600 text-white"
+          >
+            Biên bản
           </CustomButton>
         </div>
       ),
@@ -513,7 +682,7 @@ const ConsultingContract = () => {
                 </p>
               </div>
               <SearchBar
-                onSearch={(term) => console.log("Tìm kiếm hợp đồng:", term)}
+                onSearch={handleContractSearch}
                 placeholder="Tìm kiếm hợp đồng..."
                 className="w-full md:w-64 mt-3 md:mt-0"
               />
@@ -527,7 +696,7 @@ const ConsultingContract = () => {
               <div className="bg-white rounded-lg shadow">
                 <Table
                   columns={columns}
-                  dataSource={contracts}
+                  dataSource={filteredContracts}
                   rowKey="id"
                   pagination={false}
                   locale={{ emptyText: "Chưa có hợp đồng nào được tạo" }}
@@ -694,6 +863,174 @@ const ConsultingContract = () => {
                   className="bg-blue-500 hover:bg-blue-600"
                 >
                   Tạo hợp đồng
+                </CustomButton>
+              </div>
+            </Form>
+          </div>
+        </Modal>
+
+        {/* Thêm Modal tạo biên bản */}
+        <Modal
+          title={
+            <div className="text-xl font-semibold">
+              Tạo biên bản buổi tư vấn
+              {selectedBooking && (
+                <div className="text-sm font-normal text-gray-500 mt-1">
+                  Khách hàng: {selectedBooking.customerName} -{" "}
+                  {selectedBooking.customerEmail}
+                </div>
+              )}
+            </div>
+          }
+          open={isMinutesModalOpen}
+          onCancel={handleCloseMinutesModal}
+          footer={null}
+          width={800}
+          className="contract-modal"
+        >
+          <div className="p-4">
+            <Form form={form} layout="vertical" onFinish={handleCreateMinutes}>
+              <Form.Item name="bookingId" hidden>
+                <Input />
+              </Form.Item>
+
+              {selectedBooking && (
+                <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-100">
+                  <h3 className="font-medium mb-2 text-blue-800">
+                    Thông tin buổi tư vấn
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        <strong>Khách hàng:</strong>{" "}
+                        {selectedBooking.customerName}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Email:</strong> {selectedBooking.customerEmail}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Địa điểm:</strong> {selectedBooking.location}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">
+                        <strong>Ngày tư vấn:</strong>{" "}
+                        {moment(selectedBooking.bookingDate).format(
+                          "DD/MM/YYYY HH:mm"
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Trạng thái:</strong>{" "}
+                        <span className="text-green-600">
+                          {selectedBooking.status === "Scheduled"
+                            ? "Đã lên lịch"
+                            : "Đã hoàn thành"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600">
+                      <strong>Mô tả:</strong> {selectedBooking.description}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-yellow-50 p-4 rounded-lg mb-4 border border-yellow-100">
+                <div className="flex items-start">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-yellow-500 mr-2 mt-0.5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="font-medium text-yellow-800 text-sm">
+                      Lưu ý quan trọng
+                    </h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Vui lòng tải lên file biên bản buổi tư vấn. Chỉ chấp nhận
+                      file PDF.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Form.Item
+                label="Tải lên file biên bản (PDF)"
+                name="pdfFile"
+                rules={[
+                  { required: true, message: "Vui lòng tải lên file biên bản" },
+                ]}
+              >
+                <Upload
+                  listType="picture"
+                  beforeUpload={(file) => {
+                    // Kiểm tra định dạng file
+                    const isPdf = file.type === "application/pdf";
+                    if (!isPdf) {
+                      message.error("Chỉ chấp nhận file PDF!");
+                    }
+                    return false; // Ngăn chặn tự động upload
+                  }}
+                  onChange={handleFileChange}
+                  accept=".pdf"
+                  maxCount={1}
+                >
+                  <Button
+                    icon={<UploadOutlined />}
+                    className="bg-white border border-gray-300 hover:bg-gray-50"
+                  >
+                    Chọn file PDF
+                  </Button>
+                </Upload>
+              </Form.Item>
+
+              {previewUrl && (
+                <div className="mt-4 border rounded-lg overflow-hidden">
+                  <div className="bg-gray-100 px-4 py-2 border-b flex justify-between items-center">
+                    <h3 className="font-medium text-gray-700">
+                      Xem trước biên bản
+                    </h3>
+                    <Button
+                      type="link"
+                      onClick={() => window.open(previewUrl, "_blank")}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      Mở rộng
+                    </Button>
+                  </div>
+                  <div className="pdf-preview-container">
+                    <iframe
+                      src={previewUrl}
+                      title="PDF Preview"
+                      className="w-full h-[400px] border-0"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 mt-6">
+                <CustomButton
+                  onClick={handleCloseMinutesModal}
+                  className="border border-gray-300"
+                >
+                  Hủy bỏ
+                </CustomButton>
+                <CustomButton
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  className="bg-blue-500 hover:bg-blue-600"
+                >
+                  Tạo biên bản
                 </CustomButton>
               </div>
             </Form>

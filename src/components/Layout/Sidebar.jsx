@@ -53,12 +53,12 @@ const menuItems = [
   {
     icon: MessageCircle,
     label: "Consulting Online",
-    path: "/consulting-online",
+    path: "/master/consulting-online",
   },
   {
     icon: MessageCircle,
     label: "Consulting Offline",
-    path: "/consulting-offline",
+    path: "/master/consulting-offline",
   },
   {
     icon: FileText,
@@ -113,10 +113,10 @@ const Sidebar = () => {
   };
 
   const isActive = (path) => {
-    if (path === "/consulting-offline") {
+    if (path === "/master/consulting-offline") {
       return (
-        location.pathname === "/consulting-offline" ||
-        location.pathname.startsWith("/contract")
+        location.pathname === "/master/consulting-offline" ||
+        location.pathname.startsWith("/master/consulting-offline/")
       );
     }
 
