@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Select, Tag } from "antd";
-import Pagination from "../components/Common/Pagination";
-import CustomDatePicker from "../components/Common/CustomDatePicker";
+import Pagination from "../../components/Common/Pagination";
+import CustomDatePicker from "../../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
-import CustomTable from "../components/Common/CustomTable";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import { getOnlineConsultingBookings } from "../services/booking.service";
+import CustomTable from "../../components/Common/CustomTable";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import { getOnlineConsultingBookings } from "../../services/booking.service";
 
 const { Option } = Select;
 

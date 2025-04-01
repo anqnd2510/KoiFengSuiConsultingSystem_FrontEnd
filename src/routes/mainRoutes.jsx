@@ -11,7 +11,8 @@ import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
 import Quiz from "../pages/Quiz";
 import CourseManagement from "../pages/CourseManagement";
-import ConsultingOnline from "../pages/ConsultingOnline";
+import ConsultingOnline from "../pages/master/ConsultingOnline";
+import ConsultingOffline from "../pages/master/ConsultingOffline";
 import KoiFishManagement from "../pages/KoiFishManagement";
 import KoiPondManagement from "../pages/KoiPondManagement";
 import Feedback from "../pages/Feedback";
@@ -28,7 +29,8 @@ import ContractDetail from "../pages/manager/ContractDetail";
 import Document from "../pages/manager/Document";
 import DocumentDetail from "../pages/manager/DocumentDetail";
 import ConsultingContract from "../pages/staff/ConsultingContract";
-
+import DocumentList from "../pages/master/DocumentList";
+import AttachmentList from "../pages/master/AttachmentList";
 export const mainRoutes = [
   {
     path: "/",
@@ -87,8 +89,12 @@ export const mainRoutes = [
     element: <CourseManagement />,
   },
   {
-    path: "consulting-online",
+    path: "master/consulting-online",
     element: <ConsultingOnline />,
+  },
+  {
+    path: "master/consulting-offline",
+    element: <ConsultingOffline />,
   },
   {
     path: "koi-fish-management",
@@ -149,5 +155,13 @@ export const mainRoutes = [
   {
     path: "staff/contracts",
     element: <ConsultingContract />,
+  },
+  {
+    path: "master/document",
+    element: <DocumentList />,
+  },
+  {
+    path: "master/attachments",
+    element: <AttachmentList />,
   },
 ];

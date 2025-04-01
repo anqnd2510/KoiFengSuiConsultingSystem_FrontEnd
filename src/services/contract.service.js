@@ -79,3 +79,42 @@ export const createContract = async (formData) => {
     throw error;
   }
 };
+
+// Thêm hàm mới để lấy hợp đồng theo staff
+export const getAllContractsByStaff = async () => {
+  try {
+    const response = await apiClient.get("/Contract/get-all-by-staff");
+
+    if (response && response.data && response.data.isSuccess) {
+      return response.data;
+    } else {
+      console.warn("API returned unexpected format:", response);
+      return { data: [] };
+    }
+  } catch (error) {
+    console.error("Error fetching contracts by staff:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm phê duyệt hợp đồng
+export const approveContract = async (id) => {
+  try {
+    const response = await apiClient.patch(`/Contract/confirm/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error approving contract:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm từ chối hợp đồng
+export const rejectContract = async (id) => {
+  try {
+    const response = await apiClient.patch(`/Contract/cancel/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error rejecting contract:", error);
+    throw error;
+  }
+};
