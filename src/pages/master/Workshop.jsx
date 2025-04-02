@@ -452,6 +452,15 @@ const Workshop = () => {
                   },
                 }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(workshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
             <TabPane
               tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`}
@@ -473,6 +482,15 @@ const Workshop = () => {
                   },
                 }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={pendingCurrentPage}
+                  totalPages={Math.ceil(pendingWorkshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setPendingCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
             <TabPane
               tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`}
@@ -494,6 +512,15 @@ const Workshop = () => {
                   },
                 }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={rejectedCurrentPage}
+                  totalPages={Math.ceil(rejectedWorkshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setRejectedCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
           </Tabs>
         </div>

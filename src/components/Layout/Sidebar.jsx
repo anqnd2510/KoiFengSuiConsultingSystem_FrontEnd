@@ -15,15 +15,10 @@ import {
   Droplets,
   Award,
   User,
-  Settings,
-  LogOut,
   FileText,
   File,
   Files,
 } from "lucide-react";
-import { Link } from "react-router-dom";
-import { logout } from "../../services/auth.service";
-import { message } from "antd";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
@@ -45,7 +40,6 @@ const menuItems = [
     label: "Consultation History",
     path: "/staff/consultation-history",
   },
-
   {
     icon: Newspaper,
     label: "Koi Feng Shui Blog",
@@ -118,23 +112,6 @@ const menuItems = [
 
 const Sidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      const response = await logout();
-      if (response) {
-        message.success("Đăng xuất thành công");
-        // Chuyển về trang login sau khi đăng xuất
-        navigate("/login");
-      }
-    } catch (error) {
-      console.error("Lỗi khi đăng xuất:", error);
-      message.error("Có lỗi xảy ra khi đăng xuất");
-      // Vẫn chuyển về trang login nếu có lỗi
-      navigate("/login");
-    }
-  };
 
   const isActive = (path) => {
     if (path === "/master/consulting-offline") {
@@ -169,7 +146,7 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-[#90B77D] min-h-screen relative">
+    <div className="w-64 bg-[#90B77D] min-h-screen">
       <div className="p-4">
         <div className="flex items-center gap-3 mb-8">
           <img
@@ -196,35 +173,6 @@ const Sidebar = () => {
             </NavLink>
           ))}
         </nav>
-      </div>
-
-      <div className="absolute bottom-4 left-4 flex items-center gap-2 w-[calc(100%-2rem)]">
-        <Link
-          to="/profile"
-          className={`flex items-center gap-3 px-4 py-2 rounded-lg flex-1 ${
-            location.pathname === "/profile"
-              ? "bg-[#42855B] text-white"
-              : "text-gray-800 hover:bg-[#42855B] hover:text-white"
-          }`}
-        >
-          <div className="flex items-center gap-3 flex-1">
-            <img
-              src="avatar.jpg"
-              alt="User"
-              className="w-8 h-8 rounded-full object-cover"
-            />
-            <span>anh Duy An</span>
-          </div>
-          <Settings size={18} />
-        </Link>
-
-        <button
-          onClick={handleLogout}
-          className="p-2 rounded-lg text-gray-800 hover:bg-[#42855B] hover:text-white transition-colors duration-200"
-          title="Đăng xuất"
-        >
-          <LogOut size={18} />
-        </button>
       </div>
     </div>
   );
