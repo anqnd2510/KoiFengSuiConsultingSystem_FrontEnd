@@ -210,7 +210,7 @@ const WorkshopStaff = () => {
           size="small"
           onClick={(e) => {
             e.stopPropagation();
-            navigate(`/audience?workshopId=${record.workshopId || record.id}`);
+            navigate(`/staff/audience/${record.workshopId || record.id}`);
           }}
         >
           Xem

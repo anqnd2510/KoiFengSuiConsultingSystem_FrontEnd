@@ -80,6 +80,11 @@ const menuItems = [
     path: "/manager/contract",
   },
   {
+    icon: File,
+    label: "Tạo hợp đồng",
+    path: "/staff/contracts",
+  },
+  {
     icon: Files,
     label: "Hồ sơ",
     path: "/manager/document",
