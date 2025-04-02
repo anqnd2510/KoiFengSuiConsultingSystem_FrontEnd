@@ -65,8 +65,8 @@ export const mainRoutes = [
     path: "workshopcheck",
     element: <WorkshopCheck />,
   },
-  {
-    path: "staff/audience",
+  { 
+    path: "staff/audience/:workshopId",
     element: <AudienceList />,
   },
   {

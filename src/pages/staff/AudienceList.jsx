@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   Tag,
   message,
@@ -93,9 +93,7 @@ const workshopInfo = {
 };
 
 const AudienceList = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const workshopId = queryParams.get("workshopId");
+  const { workshopId } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [audiences, setAudiences] = useState([]);
