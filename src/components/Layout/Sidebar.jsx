@@ -104,6 +104,16 @@ const menuItems = [
     label: "Master Management",
     path: "/master-management",
   },
+  {
+    icon: User,
+    label: "Course Master",
+    path: "/course-master",
+  },
+  {
+    icon: User,
+    label: "Workshop Master",
+    path: "/workshop-master",
+  },
 ];
 
 const Sidebar = () => {
