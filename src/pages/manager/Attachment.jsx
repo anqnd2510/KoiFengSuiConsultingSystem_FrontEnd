@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Common/Pagination";
 import CustomDatePicker from "../../components/Common/CustomDatePicker";
+import Header from "../../components/Common/Header";
 import dayjs from "dayjs";
 import { getAllAttachments } from "../../services/attachment.service";
 import { Spin, message, Empty, Button } from "antd";
@@ -96,11 +97,7 @@ const Attachment = () => {
 
   return (
     <>
-      <header className="h-[90px] bg-[#B4925A] flex items-center px-8">
-        <h1 className="text-2xl font-semibold text-white">
-          Biên bản nghiệm thu
-        </h1>
-      </header>
+      <Header title="Biên bản nghiệm thu" description="Báo cáo và tất cả biên bản nghiệm thu" />
 
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
