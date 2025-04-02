@@ -57,7 +57,7 @@ const menuItems = [
     label: "Workshop List",
     path: "/manager/workshop-list",
   },
-  { icon: Book, label: "Courses", path: "/course-management" },
+  { icon: Book, label: "Courses", path: "staff/course-management" },
   { icon: Award, label: "Certificate", path: "/certificate" },
   {
     icon: MessageCircle,

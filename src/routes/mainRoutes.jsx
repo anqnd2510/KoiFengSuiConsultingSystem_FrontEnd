@@ -11,7 +11,7 @@ import AudienceList from "../pages/staff/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
 import Quiz from "../pages/Quiz";
-import CourseManagement from "../pages/CourseManagement";
+import CourseManagement from "../pages/staff/CourseManagement";
 import ConsultingOnline from "../pages/master/ConsultingOnline";
 import ConsultingOffline from "../pages/master/ConsultingOffline";
 import KoiFishManagement from "../pages/staff/KoiFishManagement";
@@ -91,7 +91,7 @@ export const mainRoutes = [
     element: <Question />,
   },
   {
-    path: "course-management",
+    path: "staff/course-management",
     element: <CourseManagement />,
   },
   {
