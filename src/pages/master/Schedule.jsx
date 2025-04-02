@@ -1,8 +1,8 @@
-import Calendar from "../components/Schedule/Calendar";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
+import Calendar from "../../components/Schedule/Calendar";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
 import { useState, useEffect } from "react";
-import { getCurrentMasterSchedule } from "../services/masterSchedule.service";
+import { getCurrentMasterSchedule } from "../../services/masterSchedule.service";
 import { message, Spin } from "antd";
 import { useNavigate } from "react-router-dom";
 

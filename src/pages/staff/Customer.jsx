@@ -1,32 +1,46 @@
 import React, { useState } from "react";
-import { 
-  Space, 
-  Table, 
-  Button, 
-  Typography, 
-  Tag, 
-  Popconfirm, 
-  message, 
-  Modal, 
-  Form, 
-  Input, 
-  Select, 
-  DatePicker, 
-  Divider, 
-  Row, 
+import {
+  Space,
+  Table,
+  Button,
+  Typography,
+  Tag,
+  Popconfirm,
+  message,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Divider,
+  Row,
   Col,
   Upload,
   InputNumber,
-  Switch
+  Switch,
 } from "antd";
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import CustomButton from "../components/Common/CustomButton";
-import { User, Trash2, Calendar, Phone, Mail, Home, UploadCloud, FileText, CheckCircle, XCircle, Star, Shield, CreditCard } from "lucide-react";
-import dayjs from 'dayjs';
-import CustomTable from "../components/Common/CustomTable";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import CustomButton from "../../components/Common/CustomButton";
+import {
+  User,
+  Trash2,
+  Calendar,
+  Phone,
+  Mail,
+  Home,
+  UploadCloud,
+  FileText,
+  CheckCircle,
+  XCircle,
+  Star,
+  Shield,
+  CreditCard,
+} from "lucide-react";
+import dayjs from "dayjs";
+import CustomTable from "../../components/Common/CustomTable";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -58,7 +72,7 @@ const CustomerForm = ({ form, initialData, loading }) => {
             name="email"
             rules={[
               { required: true, message: "Vui lòng nhập email" },
-              { type: "email", message: "Email không hợp lệ" }
+              { type: "email", message: "Email không hợp lệ" },
             ]}
           >
             <Input placeholder="Nhập email" />
@@ -81,7 +95,9 @@ const CustomerForm = ({ form, initialData, loading }) => {
           <Form.Item
             label="Membership"
             name="membership"
-            rules={[{ required: true, message: "Vui lòng chọn gói thành viên" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn gói thành viên" },
+            ]}
           >
             <Select placeholder="Chọn gói thành viên">
               <Option value="Diamond">Kim cương</Option>
@@ -100,7 +116,11 @@ const CustomerForm = ({ form, initialData, loading }) => {
             name="birthDate"
             rules={[{ required: true, message: "Vui lòng chọn ngày sinh" }]}
           >
-            <DatePicker placeholder="Chọn ngày sinh" style={{ width: '100%' }} format="DD/MM/YYYY" />
+            <DatePicker
+              placeholder="Chọn ngày sinh"
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY"
+            />
           </Form.Item>
         </Col>
 
@@ -161,7 +181,11 @@ const CustomerForm = ({ form, initialData, loading }) => {
             name="registrationDate"
             rules={[{ required: true, message: "Vui lòng chọn ngày đăng ký" }]}
           >
-            <DatePicker placeholder="Chọn ngày đăng ký" style={{ width: '100%' }} format="DD/MM/YYYY" />
+            <DatePicker
+              placeholder="Chọn ngày đăng ký"
+              style={{ width: "100%" }}
+              format="DD/MM/YYYY"
+            />
           </Form.Item>
         </Col>
       </Row>
@@ -172,17 +196,14 @@ const CustomerForm = ({ form, initialData, loading }) => {
         valuePropName="checked"
         initialValue={initialData?.status === "Actived"}
       >
-        <Switch 
-          checkedChildren="Actived" 
-          unCheckedChildren="Banned" 
-          defaultChecked={initialData?.status === "Actived"} 
+        <Switch
+          checkedChildren="Actived"
+          unCheckedChildren="Banned"
+          defaultChecked={initialData?.status === "Actived"}
         />
       </Form.Item>
 
-      <Form.Item
-        label="Ảnh đại diện"
-        name="avatar"
-      >
+      <Form.Item label="Ảnh đại diện" name="avatar">
         <Upload
           listType="picture-card"
           maxCount={1}
@@ -195,10 +216,7 @@ const CustomerForm = ({ form, initialData, loading }) => {
         </Upload>
       </Form.Item>
 
-      <Form.Item
-        label="Ghi chú"
-        name="notes"
-      >
+      <Form.Item label="Ghi chú" name="notes">
         <TextArea
           placeholder="Nhập ghi chú về khách hàng"
           autoSize={{ minRows: 3, maxRows: 6 }}
@@ -213,7 +231,7 @@ const Customer = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [error, setError] = useState(null);
-  
+
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -234,8 +252,9 @@ const Customer = () => {
       status: "Actived",
       zodiac: "Kim Ngưu",
       lifeElement: "Mộc",
-      notes: "Khách hàng thân thiết, quan tâm đến phong thủy hồ cá và thiết kế không gian sống.",
-      avatar: "https://example.com/avatar1.jpg"
+      notes:
+        "Khách hàng thân thiết, quan tâm đến phong thủy hồ cá và thiết kế không gian sống.",
+      avatar: "https://example.com/avatar1.jpg",
     },
     {
       id: 2,
@@ -250,7 +269,7 @@ const Customer = () => {
       zodiac: "Sư Tử",
       lifeElement: "Hỏa",
       notes: "Khách hàng có sở thích nuôi cá Koi và học hỏi về phong thủy.",
-      avatar: "https://example.com/avatar2.jpg"
+      avatar: "https://example.com/avatar2.jpg",
     },
     {
       id: 3,
@@ -264,8 +283,9 @@ const Customer = () => {
       status: "Banned",
       zodiac: "Nhân Mã",
       lifeElement: "Thủy",
-      notes: "Khách hàng mới, quan tâm đến các hội thảo về phong thủy và nuôi cá Koi.",
-      avatar: "https://example.com/avatar3.jpg"
+      notes:
+        "Khách hàng mới, quan tâm đến các hội thảo về phong thủy và nuôi cá Koi.",
+      avatar: "https://example.com/avatar3.jpg",
     },
     {
       id: 4,
@@ -279,8 +299,9 @@ const Customer = () => {
       status: "Actived",
       zodiac: "Song Ngư",
       lifeElement: "Kim",
-      notes: "Khách hàng có sở thích sưu tầm cá Koi đắt tiền và rất quan tâm đến phong thủy.",
-      avatar: "https://example.com/avatar4.jpg"
+      notes:
+        "Khách hàng có sở thích sưu tầm cá Koi đắt tiền và rất quan tâm đến phong thủy.",
+      avatar: "https://example.com/avatar4.jpg",
     },
   ];
 
@@ -301,13 +322,13 @@ const Customer = () => {
 
   // Hàm chuyển đổi trạng thái
   const handleToggleStatus = (id) => {
-    const newData = data.map(item => {
+    const newData = data.map((item) => {
       if (item.id === id) {
         const newStatus = item.status === "Actived" ? "Banned" : "Actived";
         message.success(`Đã chuyển đổi trạng thái thành ${newStatus}`);
         return {
           ...item,
-          status: newStatus
+          status: newStatus,
         };
       }
       return item;
@@ -325,7 +346,7 @@ const Customer = () => {
     setSelectedCustomer(null);
     form.resetFields();
     form.setFieldsValue({
-      status: true // Mặc định là Actived
+      status: true, // Mặc định là Actived
     });
     setIsModalOpen(true);
   };
@@ -339,7 +360,9 @@ const Customer = () => {
       phone: customer.phone,
       membership: customer.membership,
       birthDate: customer.birthDate ? dayjs(customer.birthDate) : undefined,
-      registrationDate: customer.registrationDate ? dayjs(customer.registrationDate) : undefined,
+      registrationDate: customer.registrationDate
+        ? dayjs(customer.registrationDate)
+        : undefined,
       address: customer.address,
       status: customer.status === "Actived",
       zodiac: customer.zodiac,
@@ -354,7 +377,7 @@ const Customer = () => {
     try {
       // Đóng modal trước
       setIsModalOpen(false);
-      
+
       // Sau đó xóa dữ liệu sau khi animation đóng hoàn tất
       setTimeout(() => {
         setSelectedCustomer(null);
@@ -369,22 +392,26 @@ const Customer = () => {
   const handleSave = () => {
     form.validateFields().then((values) => {
       setLoading(true);
-      
+
       setTimeout(() => {
         const formattedValues = {
           ...values,
           status: values.status ? "Actived" : "Banned",
-          birthDate: values.birthDate ? values.birthDate.format('YYYY-MM-DD') : null,
-          registrationDate: values.registrationDate ? values.registrationDate.format('YYYY-MM-DD') : null,
+          birthDate: values.birthDate
+            ? values.birthDate.format("YYYY-MM-DD")
+            : null,
+          registrationDate: values.registrationDate
+            ? values.registrationDate.format("YYYY-MM-DD")
+            : null,
         };
 
         if (selectedCustomer) {
           // Cập nhật
-          const newData = data.map(item => {
+          const newData = data.map((item) => {
             if (item.id === selectedCustomer.id) {
               return {
                 ...item,
-                ...formattedValues
+                ...formattedValues,
               };
             }
             return item;
@@ -393,15 +420,15 @@ const Customer = () => {
           message.success("Đã cập nhật thông tin khách hàng thành công");
         } else {
           // Tạo mới
-          const newId = Math.max(...data.map(item => item.id)) + 1;
+          const newId = Math.max(...data.map((item) => item.id)) + 1;
           const newCustomer = {
             id: newId,
-            ...formattedValues
+            ...formattedValues,
           };
           setData([...data, newCustomer]);
           message.success("Đã tạo mới khách hàng thành công");
         }
-        
+
         setLoading(false);
         handleCloseModal();
       }, 1000);
@@ -441,11 +468,11 @@ const Customer = () => {
       render: (_, record) => (
         <div>
           <div>
-            <Phone className="inline-block mr-1 w-4 h-4" /> 
+            <Phone className="inline-block mr-1 w-4 h-4" />
             {record.phone}
           </div>
           <div className="mt-1">
-            <Mail className="inline-block mr-1 w-4 h-4" /> 
+            <Mail className="inline-block mr-1 w-4 h-4" />
             {record.email}
           </div>
         </div>
@@ -463,7 +490,10 @@ const Customer = () => {
         if (membership === "Silver") color = "gray";
         if (membership === "Basic") color = "blue";
         return (
-          <Tag color={color} icon={<CreditCard className="inline-block mr-1 w-4 h-4" />}>
+          <Tag
+            color={color}
+            icon={<CreditCard className="inline-block mr-1 w-4 h-4" />}
+          >
             {membership}
           </Tag>
         );
@@ -476,11 +506,11 @@ const Customer = () => {
       render: (_, record) => (
         <div>
           <div>
-            <Star className="inline-block mr-1 w-4 h-4" /> 
+            <Star className="inline-block mr-1 w-4 h-4" />
             {record.zodiac}
           </div>
           <div className="mt-1">
-            <Shield className="inline-block mr-1 w-4 h-4" /> 
+            <Shield className="inline-block mr-1 w-4 h-4" />
             {record.lifeElement}
           </div>
         </div>
@@ -493,8 +523,8 @@ const Customer = () => {
       width: "10%",
       render: (date) => (
         <div>
-          <Calendar className="inline-block mr-1 w-4 h-4" /> 
-          {dayjs(date).format('DD/MM/YYYY')}
+          <Calendar className="inline-block mr-1 w-4 h-4" />
+          {dayjs(date).format("DD/MM/YYYY")}
         </div>
       ),
     },
@@ -520,7 +550,7 @@ const Customer = () => {
       ellipsis: true,
       render: (address) => (
         <div>
-          <Home className="inline-block mr-1 w-4 h-4" /> 
+          <Home className="inline-block mr-1 w-4 h-4" />
           {address}
         </div>
       ),
@@ -531,8 +561,8 @@ const Customer = () => {
       width: "10%",
       render: (_, record) => (
         <Space size="middle">
-          <CustomButton 
-            type="primary" 
+          <CustomButton
+            type="primary"
             className="bg-blue-500"
             onClick={() => handleOpenEditModal(record)}
           >
@@ -552,16 +582,17 @@ const Customer = () => {
   ];
 
   // Lọc dữ liệu theo tìm kiếm
-  const filteredData = data.filter((item) =>
-    item.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.phone.toLowerCase().includes(searchText.toLowerCase()) ||
-    item.membership.toLowerCase().includes(searchText.toLowerCase())
+  const filteredData = data.filter(
+    (item) =>
+      item.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.phone.toLowerCase().includes(searchText.toLowerCase()) ||
+      item.membership.toLowerCase().includes(searchText.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         title="Quản lý khách hàng"
         description="Quản lý thông tin và danh sách khách hàng"
       />
@@ -591,7 +622,7 @@ const Customer = () => {
             onChange: (page, pageSize) => {
               setCurrentPage(page);
               setPageSize(pageSize);
-            }
+            },
           }}
         />
       </div>
@@ -600,7 +631,9 @@ const Customer = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            {selectedCustomer ? "Chỉnh sửa thông tin khách hàng" : "Thêm khách hàng mới"}
+            {selectedCustomer
+              ? "Chỉnh sửa thông tin khách hàng"
+              : "Thêm khách hàng mới"}
           </div>
         }
         open={isModalOpen}
@@ -620,12 +653,15 @@ const Customer = () => {
             initialData={selectedCustomer}
             loading={loading}
           />
-          
+
           <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={handleCloseModal}>
-              Hủy bỏ
-            </CustomButton>
-            <CustomButton type="primary" className="bg-blue-500" onClick={handleSave} loading={loading}>
+            <CustomButton onClick={handleCloseModal}>Hủy bỏ</CustomButton>
+            <CustomButton
+              type="primary"
+              className="bg-blue-500"
+              onClick={handleSave}
+              loading={loading}
+            >
               {selectedCustomer ? "Cập nhật" : "Tạo mới"}
             </CustomButton>
           </div>
@@ -662,4 +698,4 @@ const Customer = () => {
   );
 };
 
-export default Customer; 
+export default Customer;

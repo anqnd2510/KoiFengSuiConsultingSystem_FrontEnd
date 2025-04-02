@@ -37,7 +37,6 @@ const ConsultingContract = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isMinutesModalOpen, setIsMinutesModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [form] = Form.useForm();
   const [currentPage, setCurrentPage] = useState(1);
@@ -331,66 +330,6 @@ const ConsultingContract = () => {
     }
   };
 
-  // Thêm hàm xử lý mở modal biên bản
-  const handleOpenMinutesModal = (booking) => {
-    setSelectedBooking(booking);
-    setIsMinutesModalOpen(true);
-  };
-
-  // Thêm hàm xử lý đóng modal biên bản
-  const handleCloseMinutesModal = () => {
-    setIsMinutesModalOpen(false);
-    setSelectedBooking(null);
-    setPreviewUrl(null);
-    form.resetFields();
-  };
-
-  // Thêm hàm xử lý tạo biên bản
-  const handleCreateMinutes = async (values) => {
-    try {
-      setLoading(true);
-
-      // Kiểm tra xem có file PDF được chọn không
-      if (
-        !values.pdfFile ||
-        !values.pdfFile.fileList ||
-        values.pdfFile.fileList.length === 0
-      ) {
-        message.error("Vui lòng tải lên file biên bản PDF");
-        setLoading(false);
-        return;
-      }
-
-      // Tạo FormData để gửi dữ liệu
-      const formData = new FormData();
-      formData.append("BookingOfflineId", values.bookingId);
-      formData.append("PdfFile", values.pdfFile.fileList[0].originFileObj);
-
-      // Gọi API tạo biên bản (giả định API tương tự như tạo hợp đồng)
-      // Thay thế bằng API thực tế khi có
-      const response = await createContract(formData);
-
-      // Kiểm tra response từ API
-      if (response && (response.status === 200 || response.status === 201)) {
-        message.success("Tạo biên bản thành công");
-        handleCloseMinutesModal();
-        // Cập nhật lại danh sách booking và hợp đồng
-        fetchBookings();
-        fetchContracts();
-      } else {
-        message.error(response?.data?.message || "Tạo biên bản thất bại");
-      }
-    } catch (err) {
-      console.error("Error creating minutes:", err);
-      message.error(
-        "Có lỗi xảy ra khi tạo biên bản: " +
-          (err.message || "Lỗi không xác định")
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const columns = [
     {
       title: "Mã hợp đồng",
@@ -549,14 +488,6 @@ const ConsultingContract = () => {
             }
           >
             {record.hasContract ? "Đã có hợp đồng" : "Tạo hợp đồng"}
-          </CustomButton>
-          <CustomButton
-            type="default"
-            size="small"
-            onClick={() => handleOpenMinutesModal(record)}
-            className="bg-green-500 hover:bg-green-600 text-white"
-          >
-            Biên bản
           </CustomButton>
         </div>
       ),
@@ -863,174 +794,6 @@ const ConsultingContract = () => {
                   className="bg-blue-500 hover:bg-blue-600"
                 >
                   Tạo hợp đồng
-                </CustomButton>
-              </div>
-            </Form>
-          </div>
-        </Modal>
-
-        {/* Thêm Modal tạo biên bản */}
-        <Modal
-          title={
-            <div className="text-xl font-semibold">
-              Tạo biên bản buổi tư vấn
-              {selectedBooking && (
-                <div className="text-sm font-normal text-gray-500 mt-1">
-                  Khách hàng: {selectedBooking.customerName} -{" "}
-                  {selectedBooking.customerEmail}
-                </div>
-              )}
-            </div>
-          }
-          open={isMinutesModalOpen}
-          onCancel={handleCloseMinutesModal}
-          footer={null}
-          width={800}
-          className="contract-modal"
-        >
-          <div className="p-4">
-            <Form form={form} layout="vertical" onFinish={handleCreateMinutes}>
-              <Form.Item name="bookingId" hidden>
-                <Input />
-              </Form.Item>
-
-              {selectedBooking && (
-                <div className="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-100">
-                  <h3 className="font-medium mb-2 text-blue-800">
-                    Thông tin buổi tư vấn
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        <strong>Khách hàng:</strong>{" "}
-                        {selectedBooking.customerName}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Email:</strong> {selectedBooking.customerEmail}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Địa điểm:</strong> {selectedBooking.location}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        <strong>Ngày tư vấn:</strong>{" "}
-                        {moment(selectedBooking.bookingDate).format(
-                          "DD/MM/YYYY HH:mm"
-                        )}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        <strong>Trạng thái:</strong>{" "}
-                        <span className="text-green-600">
-                          {selectedBooking.status === "Scheduled"
-                            ? "Đã lên lịch"
-                            : "Đã hoàn thành"}
-                        </span>
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-600">
-                      <strong>Mô tả:</strong> {selectedBooking.description}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-yellow-50 p-4 rounded-lg mb-4 border border-yellow-100">
-                <div className="flex items-start">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-yellow-500 mr-2 mt-0.5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div>
-                    <h3 className="font-medium text-yellow-800 text-sm">
-                      Lưu ý quan trọng
-                    </h3>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Vui lòng tải lên file biên bản buổi tư vấn. Chỉ chấp nhận
-                      file PDF.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <Form.Item
-                label="Tải lên file biên bản (PDF)"
-                name="pdfFile"
-                rules={[
-                  { required: true, message: "Vui lòng tải lên file biên bản" },
-                ]}
-              >
-                <Upload
-                  listType="picture"
-                  beforeUpload={(file) => {
-                    // Kiểm tra định dạng file
-                    const isPdf = file.type === "application/pdf";
-                    if (!isPdf) {
-                      message.error("Chỉ chấp nhận file PDF!");
-                    }
-                    return false; // Ngăn chặn tự động upload
-                  }}
-                  onChange={handleFileChange}
-                  accept=".pdf"
-                  maxCount={1}
-                >
-                  <Button
-                    icon={<UploadOutlined />}
-                    className="bg-white border border-gray-300 hover:bg-gray-50"
-                  >
-                    Chọn file PDF
-                  </Button>
-                </Upload>
-              </Form.Item>
-
-              {previewUrl && (
-                <div className="mt-4 border rounded-lg overflow-hidden">
-                  <div className="bg-gray-100 px-4 py-2 border-b flex justify-between items-center">
-                    <h3 className="font-medium text-gray-700">
-                      Xem trước biên bản
-                    </h3>
-                    <Button
-                      type="link"
-                      onClick={() => window.open(previewUrl, "_blank")}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      Mở rộng
-                    </Button>
-                  </div>
-                  <div className="pdf-preview-container">
-                    <iframe
-                      src={previewUrl}
-                      title="PDF Preview"
-                      className="w-full h-[400px] border-0"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-end gap-3 mt-6">
-                <CustomButton
-                  onClick={handleCloseMinutesModal}
-                  className="border border-gray-300"
-                >
-                  Hủy bỏ
-                </CustomButton>
-                <CustomButton
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  Tạo biên bản
                 </CustomButton>
               </div>
             </Form>

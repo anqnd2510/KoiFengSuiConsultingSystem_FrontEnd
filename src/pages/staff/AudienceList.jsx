@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Tag, message, Spin, Button, Popconfirm, Alert, Typography } from "antd";
-import { CheckCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import CustomTable from "../components/Common/CustomTable";
-import Error from "../components/Common/Error";
-import { checkInAudience } from "../services/audience.service";
+import {
+  Tag,
+  message,
+  Spin,
+  Button,
+  Popconfirm,
+  Alert,
+  Typography,
+} from "antd";
+import { CheckCircleOutlined, QuestionCircleOutlined } from "@ant-design/icons";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import CustomTable from "../../components/Common/CustomTable";
+import Error from "../../components/Common/Error";
+import { checkInAudience } from "../../services/audience.service";
 
 const { Title } = Typography;
 
@@ -19,7 +27,7 @@ const audienceData = [
     attendName: "Jane Smith",
     phoneNumber: "0987654321",
     customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending"
+    status: "Pending",
   },
   {
     id: 2,
@@ -28,7 +36,7 @@ const audienceData = [
     attendName: "John Doe",
     phoneNumber: "1234567890",
     customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed"
+    status: "Confirmed",
   },
   {
     id: 3,
@@ -37,7 +45,7 @@ const audienceData = [
     attendName: "John Doe",
     phoneNumber: "1234567890",
     customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed"
+    status: "Confirmed",
   },
   {
     id: 4,
@@ -46,7 +54,7 @@ const audienceData = [
     attendName: "Jane Smith",
     phoneNumber: "0987654321",
     customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending"
+    status: "Pending",
   },
   {
     id: 5,
@@ -55,7 +63,7 @@ const audienceData = [
     attendName: "John Doe",
     phoneNumber: "1234567890",
     customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed"
+    status: "Confirmed",
   },
   {
     id: 6,
@@ -64,8 +72,8 @@ const audienceData = [
     attendName: "Jane Smith",
     phoneNumber: "0987654321",
     customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending"
-  }
+    status: "Pending",
+  },
 ];
 
 // Thông tin workshop
@@ -74,14 +82,14 @@ const workshopInfo = {
     name: "Feng Shui for Beginners",
     master: "Bob Chen",
     location: "Community Center",
-    date: "21/3/2023"
+    date: "21/3/2023",
   },
   "A9A5E712-15F4-448F-A": {
     name: "Advanced Koi Care",
     master: "Jane Smith",
     location: "Koi Farm",
-    date: "21/4/2023"
-  }
+    date: "21/4/2023",
+  },
 };
 
 const AudienceList = () => {
@@ -99,34 +107,36 @@ const AudienceList = () => {
   // Lấy dữ liệu dựa trên workshopId
   useEffect(() => {
     setLoading(true);
-    
+
     console.log("Workshop ID từ URL:", workshopId);
-    
+
     // Tìm thông tin workshop
     const info = workshopInfo[workshopId];
     setWorkshop(info);
-    
+
     // Lọc danh sách người tham dự theo workshopId
     // Nếu workshopId là null, lấy tất cả người tham dự có workshopId là NULL
     // Nếu có workshopId, lấy người tham dự có workshopId tương ứng
-    const filteredAudiences = workshopId 
-      ? audienceData.filter(a => a.workshopId === workshopId)
-      : audienceData.filter(a => a.workshopId === "NULL");
-    
+    const filteredAudiences = workshopId
+      ? audienceData.filter((a) => a.workshopId === workshopId)
+      : audienceData.filter((a) => a.workshopId === "NULL");
+
     setAudiences(filteredAudiences);
-    
+
     if (info) {
-      message.success(`Đã tải danh sách người tham dự cho workshop: ${info.name}`);
+      message.success(
+        `Đã tải danh sách người tham dự cho workshop: ${info.name}`
+      );
     } else {
       message.info("Đã tải danh sách người tham dự");
     }
-    
+
     setLoading(false);
   }, [workshopId]);
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
-    console.log('Searching for:', searchTerm);
+    console.log("Searching for:", searchTerm);
   };
 
   const handlePageChange = (page) => {
@@ -141,19 +151,17 @@ const AudienceList = () => {
     }
 
     setCheckingIn(true);
-    
+
     try {
       // Gọi API điểm danh
       const result = await checkInAudience(workshopId, audience.attendId);
-      
+
       if (result.success) {
         message.success(`Điểm danh thành công cho ${audience.attendName}`);
         // Cập nhật trạng thái người tham dự trong danh sách
-        setAudiences(prevAudiences => 
-          prevAudiences.map(item => 
-            item.id === audience.id 
-              ? { ...item, status: "Confirmed" } 
-              : item
+        setAudiences((prevAudiences) =>
+          prevAudiences.map((item) =>
+            item.id === audience.id ? { ...item, status: "Confirmed" } : item
           )
         );
       } else {
@@ -161,14 +169,12 @@ const AudienceList = () => {
       }
     } catch (err) {
       console.error("Lỗi khi điểm danh:", err);
-      
+
       // Nếu API gặp lỗi, vẫn cập nhật UI để demo
       message.warning("API điểm danh gặp lỗi, nhưng đã cập nhật UI để demo");
-      setAudiences(prevAudiences => 
-        prevAudiences.map(item => 
-          item.id === audience.id 
-            ? { ...item, status: "Confirmed" } 
-            : item
+      setAudiences((prevAudiences) =>
+        prevAudiences.map((item) =>
+          item.id === audience.id ? { ...item, status: "Confirmed" } : item
         )
       );
     } finally {
@@ -203,12 +209,18 @@ const AudienceList = () => {
   };
 
   // Lọc dữ liệu theo từ khóa tìm kiếm
-  const filteredAudiences = audiences.filter(audience => {
+  const filteredAudiences = audiences.filter((audience) => {
     return (
-      (audience.attendName && audience.attendName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.phoneNumber && audience.phoneNumber.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.customerId && audience.customerId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (audience.attendId && audience.attendId.toLowerCase().includes(searchTerm.toLowerCase()))
+      (audience.attendName &&
+        audience.attendName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.phoneNumber &&
+        audience.phoneNumber
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (audience.customerId &&
+        audience.customerId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (audience.attendId &&
+        audience.attendId.toLowerCase().includes(searchTerm.toLowerCase()))
     );
   });
 
@@ -244,23 +256,21 @@ const AudienceList = () => {
       key: "phoneNumber",
       width: "15%",
     },
-    
+
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: "15%",
       render: (status) => (
-        <Tag color={getStatusColor(status)}>
-          {getStatusText(status)}
-        </Tag>
+        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
       ),
     },
     {
       title: "Hành động",
       key: "action",
       width: "10%",
-      render: (_, record) => (
+      render: (_, record) =>
         record.status !== "Confirmed" ? (
           <Popconfirm
             title="Điểm danh người tham dự"
@@ -268,11 +278,11 @@ const AudienceList = () => {
             onConfirm={() => handleCheckIn(record)}
             okText="Có"
             cancelText="Không"
-            icon={<QuestionCircleOutlined style={{ color: 'green' }} />}
+            icon={<QuestionCircleOutlined style={{ color: "green" }} />}
           >
-            <Button 
-              type="primary" 
-              icon={<CheckCircleOutlined />} 
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
               size="small"
               loading={checkingIn}
             >
@@ -280,16 +290,15 @@ const AudienceList = () => {
             </Button>
           </Popconfirm>
         ) : (
-          <Button 
-            type="primary" 
-            icon={<CheckCircleOutlined />} 
-            size="small" 
+          <Button
+            type="primary"
+            icon={<CheckCircleOutlined />}
+            size="small"
             disabled
           >
             Đã điểm danh
           </Button>
-        )
-      ),
+        ),
     },
   ];
 
@@ -298,7 +307,9 @@ const AudienceList = () => {
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
         <h1 className="text-white text-xl font-semibold">Người tham dự</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tất cả khán giả đã tham gia trong hội thảo</p>
+        <p className="text-white/80 text-sm">
+          Báo cáo và tất cả khán giả đã tham gia trong hội thảo
+        </p>
       </div>
 
       {/* Main Content */}
@@ -335,7 +346,7 @@ const AudienceList = () => {
           </div>
         ) : (
           <>
-            <CustomTable 
+            <CustomTable
               columns={columns}
               dataSource={paginatedAudiences}
               loading={loading}

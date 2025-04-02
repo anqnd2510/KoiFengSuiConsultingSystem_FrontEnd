@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Select } from "antd";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
 import {
   BarChart,
   Bar,

@@ -16,11 +16,11 @@ import {
   Row,
   Col,
 } from "antd";
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import CustomButton from "../components/Common/CustomButton";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import CustomButton from "../../components/Common/CustomButton";
 import {
   User,
   Trash2,
@@ -37,7 +37,7 @@ import {
 import {
   getBookingHistory,
   getBookingDetail,
-} from "../services/booking.service";
+} from "../../services/booking.service";
 import { SearchOutlined, FilterOutlined } from "@ant-design/icons";
 
 const { Title } = Typography;
@@ -352,7 +352,10 @@ const ConsultationHistory = () => {
 
   // Tối ưu paginatedData với useMemo
   const paginatedData = useMemo(() => {
-    return filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    return filteredData.slice(
+      (currentPage - 1) * pageSize,
+      currentPage * pageSize
+    );
   }, [filteredData, currentPage, pageSize]);
 
   // Render columns theo dữ liệu từ hình ảnh
@@ -532,7 +535,7 @@ const ConsultationHistory = () => {
               onChange: (page, pageSize) => {
                 setCurrentPage(page);
                 setPageSize(pageSize);
-              }
+              },
             }}
             rowKey="key"
             bordered
