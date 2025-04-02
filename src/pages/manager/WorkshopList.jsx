@@ -88,7 +88,7 @@ const WorkshopList = () => {
               <CustomButton
                 onClick={() => {
                   try {
-                    navigate("/staff/workshop-staff");
+                    navigate("/manager/workshop-manager");
                   } catch (err) {
                     setError("Không thể chuyển đến trang quản lý");
                   }
