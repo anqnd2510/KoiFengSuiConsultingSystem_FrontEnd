@@ -1,23 +1,48 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Modal, Form, Input, Select, InputNumber, Upload, DatePicker, message, Row, Col, Tag, Divider, Tabs } from "antd";
-import { UploadCloud, Plus, Calendar, MapPin, Ticket, Info, Eye } from "lucide-react";
-import WorkshopTable from "../components/Workshop/WorkshopTable";
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import CustomButton from "../components/Common/CustomButton";
-import { 
-  getAllWorkshops, 
-  getWorkshopById, 
-  createWorkshop, 
-  updateWorkshop, 
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  InputNumber,
+  Upload,
+  DatePicker,
+  message,
+  Row,
+  Col,
+  Tag,
+  Divider,
+  Tabs,
+} from "antd";
+import {
+  UploadCloud,
+  Plus,
+  Calendar,
+  MapPin,
+  Ticket,
+  Info,
+  Eye,
+} from "lucide-react";
+import WorkshopTable from "../../components/Workshop/WorkshopTable";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import CustomButton from "../../components/Common/CustomButton";
+import {
+  getAllWorkshops,
+  getWorkshopById,
+  createWorkshop,
+  updateWorkshop,
   deleteWorkshop,
-  formatWorkshopsData
-} from "../services/workshopmaster.service";
-import { getPendingWorkshops, formatPendingWorkshopsData } from "../services/approve.service";
-import { isAuthenticated } from "../services/auth.service";
+  formatWorkshopsData,
+} from "../../services/workshopmaster.service";
+import {
+  getPendingWorkshops,
+  formatPendingWorkshopsData,
+} from "../../services/approve.service";
+import { isAuthenticated } from "../../services/auth.service";
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -26,11 +51,7 @@ const { TabPane } = Tabs;
 // Component form cho workshop
 const WorkshopForm = ({ form, loading }) => {
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      disabled={loading}
-    >
+    <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
         label="Tên hội thảo"
         name="name"
@@ -52,9 +73,9 @@ const WorkshopForm = ({ form, loading }) => {
         name="date"
         rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
       >
-        <DatePicker 
-          format="DD/MM/YYYY" 
-          style={{ width: '100%' }} 
+        <DatePicker
+          format="DD/MM/YYYY"
+          style={{ width: "100%" }}
           placeholder="Chọn ngày tổ chức"
         />
       </Form.Item>
@@ -72,7 +93,11 @@ const WorkshopForm = ({ form, loading }) => {
         name="ticketSlots"
         rules={[{ required: true, message: "Vui lòng nhập số lượng vé" }]}
       >
-        <InputNumber min={1} placeholder="Nhập số lượng vé" style={{ width: '100%' }} />
+        <InputNumber
+          min={1}
+          placeholder="Nhập số lượng vé"
+          style={{ width: "100%" }}
+        />
       </Form.Item>
 
       <Form.Item
@@ -86,11 +111,7 @@ const WorkshopForm = ({ form, loading }) => {
           return e?.fileList;
         }}
       >
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={() => false}
-        >
+        <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
           <div className="flex flex-col items-center">
             <UploadCloud className="w-6 h-6 text-gray-400" />
             <div className="mt-2">Upload</div>
@@ -103,7 +124,7 @@ const WorkshopForm = ({ form, loading }) => {
         name="description"
         rules={[{ required: true, message: "Vui lòng nhập mô tả hội thảo" }]}
       >
-        <TextArea 
+        <TextArea
           placeholder="Nhập mô tả về hội thảo"
           autoSize={{ minRows: 3, maxRows: 6 }}
         />
@@ -151,11 +172,11 @@ const Workshop = () => {
     };
 
     // Đăng ký sự kiện focus
-    window.addEventListener('focus', refreshOnFocus);
+    window.addEventListener("focus", refreshOnFocus);
 
     // Cleanup
     return () => {
-      window.removeEventListener('focus', refreshOnFocus);
+      window.removeEventListener("focus", refreshOnFocus);
     };
   }, []);
 
@@ -165,30 +186,33 @@ const Workshop = () => {
       setLoading(true);
       const data = await getAllWorkshops();
       const formattedData = formatWorkshopsData(data);
-      
+
       // Lọc các workshop đã bị từ chối
-      const rejected = formattedData.filter(workshop => workshop.status === "Từ chối");
+      const rejected = formattedData.filter(
+        (workshop) => workshop.status === "Từ chối"
+      );
       setRejectedWorkshops(rejected);
       setRejectedTotalPages(Math.ceil(rejected.length / 10));
-      
+
       // Lọc các workshop không bị từ chối và không phải chờ duyệt để hiển thị ở tab 1
-      const approved = formattedData.filter(workshop => 
-        workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
+      const approved = formattedData.filter(
+        (workshop) =>
+          workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
       );
       setWorkshops(approved);
       setTotalPages(Math.ceil(approved.length / 10));
-      
+
       setError(null);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
-      
+
       // Xử lý lỗi 401
       if (err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
         return;
       }
-      
+
       setError("Không thể tải danh sách hội thảo. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
@@ -205,15 +229,17 @@ const Workshop = () => {
       setPendingTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
-      
+
       // Xử lý lỗi 401
       if (err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
         return;
       }
-      
-      message.error("Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau.");
+
+      message.error(
+        "Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau."
+      );
     } finally {
       setLoading(false);
     }
@@ -221,7 +247,7 @@ const Workshop = () => {
 
   const handleSearch = (searchTerm) => {
     // Xử lý tìm kiếm ở đây
-    console.log('Searching for:', searchTerm);
+    console.log("Searching for:", searchTerm);
     // Có thể thêm logic tìm kiếm từ API ở đây
   };
 
@@ -267,72 +293,83 @@ const Workshop = () => {
       return;
     }
 
-    form.validateFields().then(async (values) => {
-      try {
-        setLoading(true);
-        
-        // Xử lý giá vé
-        let ticketPrice = 0;
-        if (values.ticketPrice) {
-          // Loại bỏ tất cả các ký tự không phải số
-          const numericValue = values.ticketPrice.replace(/[^\d]/g, '');
-          ticketPrice = numericValue ? parseFloat(numericValue) : 0;
-        }
-        
-        // Đảm bảo số lượng vé là số nguyên
-        const ticketSlots = values.ticketSlots ? parseInt(values.ticketSlots, 10) : 0;
-        
-        // Đảm bảo ngày có định dạng đúng (YYYY-MM-DD)
-        const formattedDate = values.date 
-          ? values.date.format('YYYY-MM-DD') 
-          : new Date().toISOString().split('T')[0];
-        
-        // Chuẩn bị dữ liệu để gửi lên API
-        const workshopData = {
-          name: values.name,
-          location: values.location,
-          date: formattedDate,
-          ticketPrice: ticketPrice,
-          ticketSlots: ticketSlots,
-          description: values.description || ""
-        };
-        
-        console.log("Dữ liệu gửi đi:", workshopData);
-        
+    form
+      .validateFields()
+      .then(async (values) => {
         try {
-          // Gọi API để tạo workshop mới
-          const result = await createWorkshop(workshopData);
-          console.log("Kết quả từ API:", result);
-          
-          if (result) {
-            message.success("Đã tạo mới hội thảo thành công");
-            refreshData(); // Refresh cả hai danh sách
-            setIsCreateModalOpen(false);
-          } else {
-            message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
+          setLoading(true);
+
+          // Xử lý giá vé
+          let ticketPrice = 0;
+          if (values.ticketPrice) {
+            // Loại bỏ tất cả các ký tự không phải số
+            const numericValue = values.ticketPrice.replace(/[^\d]/g, "");
+            ticketPrice = numericValue ? parseFloat(numericValue) : 0;
           }
-        } catch (apiError) {
-          console.error("Lỗi API:", apiError);
-          
-          // Xử lý lỗi 401
-          if (apiError.message.includes("đăng nhập")) {
-            message.error(apiError.message);
-            navigate("/login");
-            return;
+
+          // Đảm bảo số lượng vé là số nguyên
+          const ticketSlots = values.ticketSlots
+            ? parseInt(values.ticketSlots, 10)
+            : 0;
+
+          // Đảm bảo ngày có định dạng đúng (YYYY-MM-DD)
+          const formattedDate = values.date
+            ? values.date.format("YYYY-MM-DD")
+            : new Date().toISOString().split("T")[0];
+
+          // Chuẩn bị dữ liệu để gửi lên API
+          const workshopData = {
+            name: values.name,
+            location: values.location,
+            date: formattedDate,
+            ticketPrice: ticketPrice,
+            ticketSlots: ticketSlots,
+            description: values.description || "",
+          };
+
+          console.log("Dữ liệu gửi đi:", workshopData);
+
+          try {
+            // Gọi API để tạo workshop mới
+            const result = await createWorkshop(workshopData);
+            console.log("Kết quả từ API:", result);
+
+            if (result) {
+              message.success("Đã tạo mới hội thảo thành công");
+              refreshData(); // Refresh cả hai danh sách
+              setIsCreateModalOpen(false);
+            } else {
+              message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
+            }
+          } catch (apiError) {
+            console.error("Lỗi API:", apiError);
+
+            // Xử lý lỗi 401
+            if (apiError.message.includes("đăng nhập")) {
+              message.error(apiError.message);
+              navigate("/login");
+              return;
+            }
+
+            const errorMessage =
+              apiError.response?.data?.message ||
+              apiError.message ||
+              "Lỗi không xác định";
+            message.error("Lỗi API: " + errorMessage);
           }
-          
-          const errorMessage = apiError.response?.data?.message || apiError.message || "Lỗi không xác định";
-          message.error("Lỗi API: " + errorMessage);
+        } catch (err) {
+          console.error("Lỗi khi tạo workshop:", err);
+          message.error(
+            "Đã xảy ra lỗi khi tạo hội thảo: " +
+              (err.message || "Lỗi không xác định")
+          );
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error("Lỗi khi tạo workshop:", err);
-        message.error("Đã xảy ra lỗi khi tạo hội thảo: " + (err.message || "Lỗi không xác định"));
-      } finally {
-        setLoading(false);
-      }
-    }).catch(err => {
-      console.log("Validation failed:", err);
-    });
+      })
+      .catch((err) => {
+        console.log("Validation failed:", err);
+      });
   };
 
   const handlePageChange = (page) => {
@@ -374,15 +411,17 @@ const Workshop = () => {
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
         <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo của bạn</p>
+        <p className="text-white/80 text-sm">
+          Báo cáo và tổng quan về các hội thảo của bạn
+        </p>
       </div>
 
       {/* Main Content */}
       <div id="main-content" className="p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex gap-3">
-            <CustomButton 
-              type="primary" 
+            <CustomButton
+              type="primary"
               icon={<Plus size={16} />}
               onClick={handleOpenCreateModal}
             >
@@ -397,8 +436,8 @@ const Workshop = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Tabs defaultActiveKey="1" onChange={handleTabChange}>
             <TabPane tab="Hội thảo đã duyệt" key="1">
-              <WorkshopTable 
-                workshops={workshops} 
+              <WorkshopTable
+                workshops={workshops}
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
                 pagination={{
@@ -410,13 +449,16 @@ const Workshop = () => {
                   onChange: (page, pageSize) => {
                     setCurrentPage(page);
                     setPageSize(pageSize);
-                  }
+                  },
                 }}
               />
             </TabPane>
-            <TabPane tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`} key="2">
-              <WorkshopTable 
-                workshops={pendingWorkshops} 
+            <TabPane
+              tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`}
+              key="2"
+            >
+              <WorkshopTable
+                workshops={pendingWorkshops}
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
                 pagination={{
@@ -428,13 +470,16 @@ const Workshop = () => {
                   onChange: (page, pageSize) => {
                     setPendingCurrentPage(page);
                     setPageSize(pageSize);
-                  }
+                  },
                 }}
               />
             </TabPane>
-            <TabPane tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`} key="3">
-              <WorkshopTable 
-                workshops={rejectedWorkshops} 
+            <TabPane
+              tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`}
+              key="3"
+            >
+              <WorkshopTable
+                workshops={rejectedWorkshops}
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
                 pagination={{
@@ -446,7 +491,7 @@ const Workshop = () => {
                   onChange: (page, pageSize) => {
                     setRejectedCurrentPage(page);
                     setPageSize(pageSize);
-                  }
+                  },
                 }}
               />
             </TabPane>
@@ -456,11 +501,7 @@ const Workshop = () => {
 
       {/* Modal tạo workshop mới */}
       <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Tạo mới hội thảo
-          </div>
-        }
+        title={<div className="text-xl font-semibold">Tạo mới hội thảo</div>}
         open={isCreateModalOpen}
         onCancel={handleCloseCreateModal}
         footer={null}
@@ -468,16 +509,15 @@ const Workshop = () => {
         className="workshop-modal"
       >
         <div className="p-4">
-          <WorkshopForm
-            form={form}
-            loading={loading}
-          />
-          
+          <WorkshopForm form={form} loading={loading} />
+
           <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={handleCloseCreateModal}>
-              Hủy bỏ
-            </CustomButton>
-            <CustomButton type="primary" onClick={handleSaveWorkshop} loading={loading}>
+            <CustomButton onClick={handleCloseCreateModal}>Hủy bỏ</CustomButton>
+            <CustomButton
+              type="primary"
+              onClick={handleSaveWorkshop}
+              loading={loading}
+            >
               Tạo mới
             </CustomButton>
           </div>
@@ -486,11 +526,7 @@ const Workshop = () => {
 
       {/* Modal xem chi tiết workshop */}
       <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Chi tiết hội thảo
-          </div>
-        }
+        title={<div className="text-xl font-semibold">Chi tiết hội thảo</div>}
         open={isViewModalOpen}
         onCancel={handleCloseViewModal}
         footer={null}
@@ -503,46 +539,54 @@ const Workshop = () => {
               {/* Cột bên trái cho hình ảnh */}
               <Col xs={24} md={12}>
                 <div className="rounded-lg overflow-hidden h-64 bg-gray-200 mb-4">
-                  <img 
-                    src={selectedWorkshop.image} 
+                  <img
+                    src={selectedWorkshop.image}
                     alt={selectedWorkshop.name}
                     className="w-full h-full object-cover"
-                    onError={(e) => {e.target.src = "https://via.placeholder.com/400x300?text=Workshop+Image"}}
+                    onError={(e) => {
+                      e.target.src =
+                        "https://via.placeholder.com/400x300?text=Workshop+Image";
+                    }}
                   />
                 </div>
-                <Tag color={getStatusColor(selectedWorkshop.status)} className="text-sm px-3 py-1">
+                <Tag
+                  color={getStatusColor(selectedWorkshop.status)}
+                  className="text-sm px-3 py-1"
+                >
                   {selectedWorkshop.status}
                 </Tag>
               </Col>
-              
+
               {/* Cột bên phải cho thông tin */}
               <Col xs={24} md={12}>
-                <h3 className="text-xl font-semibold mb-4">{selectedWorkshop.name}</h3>
-                
+                <h3 className="text-xl font-semibold mb-4">
+                  {selectedWorkshop.name}
+                </h3>
+
                 <div className="mb-3 flex items-center">
                   <Calendar size={16} className="text-gray-500 mr-2" />
                   <span>{selectedWorkshop.date}</span>
                 </div>
-                
+
                 <div className="mb-3 flex items-center">
                   <MapPin size={16} className="text-gray-500 mr-2" />
                   <span>{selectedWorkshop.location}</span>
                 </div>
-                
+
                 <div className="mb-3 flex items-center">
                   <Ticket size={16} className="text-gray-500 mr-2" />
                   <span>Giá vé: {selectedWorkshop.ticketPrice}</span>
                 </div>
-                
+
                 <div className="mb-3 flex items-center">
                   <Info size={16} className="text-gray-500 mr-2" />
                   <span>Số lượng vé: {selectedWorkshop.ticketSlots}</span>
                 </div>
               </Col>
             </Row>
-            
+
             <Divider className="my-4" />
-            
+
             {/* Phần mô tả */}
             {selectedWorkshop.description && (
               <div className="mb-4">
@@ -550,35 +594,52 @@ const Workshop = () => {
                 <p className="text-gray-600">{selectedWorkshop.description}</p>
               </div>
             )}
-            
+
             {/* Hiển thị lý do từ chối nếu workshop bị từ chối */}
             {selectedWorkshop.status === "Từ chối" && (
               <div className="mb-4">
-                <h4 className="text-md font-medium mb-2 text-red-500">Lý do từ chối</h4>
+                <h4 className="text-md font-medium mb-2 text-red-500">
+                  Lý do từ chối
+                </h4>
                 {(() => {
                   try {
-                    const rejectionHistory = JSON.parse(localStorage.getItem('rejectionHistory') || '{}');
+                    const rejectionHistory = JSON.parse(
+                      localStorage.getItem("rejectionHistory") || "{}"
+                    );
                     const rejectionInfo = rejectionHistory[selectedWorkshop.id];
                     if (rejectionInfo && rejectionInfo.reason) {
                       return (
                         <div>
-                          <p className="text-gray-600">{rejectionInfo.reason}</p>
+                          <p className="text-gray-600">
+                            {rejectionInfo.reason}
+                          </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            Từ chối vào: {new Date(rejectionInfo.timestamp).toLocaleString('vi-VN')}
+                            Từ chối vào:{" "}
+                            {new Date(rejectionInfo.timestamp).toLocaleString(
+                              "vi-VN"
+                            )}
                           </p>
                         </div>
                       );
                     } else {
-                      return <p className="text-gray-600">Không có thông tin về lý do từ chối.</p>;
+                      return (
+                        <p className="text-gray-600">
+                          Không có thông tin về lý do từ chối.
+                        </p>
+                      );
                     }
                   } catch (e) {
                     console.error("Lỗi khi đọc lý do từ chối:", e);
-                    return <p className="text-gray-600">Không thể hiển thị lý do từ chối.</p>;
+                    return (
+                      <p className="text-gray-600">
+                        Không thể hiển thị lý do từ chối.
+                      </p>
+                    );
                   }
                 })()}
               </div>
             )}
-            
+
             <div className="flex justify-end gap-3 mt-6">
               <CustomButton type="primary" onClick={handleCloseViewModal}>
                 Đóng
@@ -608,4 +669,4 @@ const Workshop = () => {
   );
 };
 
-export default Workshop; 
+export default Workshop;

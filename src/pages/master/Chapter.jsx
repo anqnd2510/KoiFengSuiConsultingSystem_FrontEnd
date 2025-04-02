@@ -1,24 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Modal, Form, Input, InputNumber, message, Tag, Divider, Row, Col, Tooltip } from "antd";
-import { FaPlus, FaEye, FaEdit, FaTrash, FaArrowLeft, FaPlay, FaList, FaClock } from "react-icons/fa";
+import {
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  message,
+  Tag,
+  Divider,
+  Row,
+  Col,
+  Tooltip,
+} from "antd";
+import {
+  FaPlus,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaArrowLeft,
+  FaPlay,
+  FaList,
+  FaClock,
+} from "react-icons/fa";
 import { Book, Video, FileText } from "lucide-react";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import CustomButton from "../components/Common/CustomButton";
-import { getChaptersByCourseId, formatDuration, createChapter, updateChapter, deleteChapter } from "../services/chapter.service";
-import { getAllCourses } from "../services/course.service";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import CustomButton from "../../components/Common/CustomButton";
+import {
+  getChaptersByCourseId,
+  formatDuration,
+  createChapter,
+  updateChapter,
+  deleteChapter,
+} from "../../services/chapter.service";
+import { getAllCourses } from "../../services/course.service";
 
 const { TextArea } = Input;
 
 // Form component cho chương
 const ChapterForm = ({ form, loading }) => {
   return (
-    <Form
-      form={form}
-      layout="vertical"
-      disabled={loading}
-    >
+    <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
         label="Tiêu đề chương"
         name="chapterName"
@@ -46,7 +68,7 @@ const ChapterForm = ({ form, loading }) => {
         <InputNumber
           placeholder="Nhập thời lượng (phút)"
           min={1}
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
         />
       </Form.Item>
 
@@ -58,7 +80,7 @@ const ChapterForm = ({ form, loading }) => {
         <InputNumber
           placeholder="Nhập thứ tự hiển thị"
           min={1}
-          style={{ width: '100%' }}
+          style={{ width: "100%" }}
         />
       </Form.Item>
 
@@ -70,20 +92,14 @@ const ChapterForm = ({ form, loading }) => {
         <Input placeholder="Nhập URL video bài giảng (YouTube, Vimeo...)" />
       </Form.Item>
 
-      <Form.Item
-        label="Nội dung chi tiết"
-        name="content"
-      >
+      <Form.Item label="Nội dung chi tiết" name="content">
         <TextArea
           placeholder="Nhập nội dung chi tiết chương (không bắt buộc)"
           autoSize={{ minRows: 4, maxRows: 10 }}
         />
       </Form.Item>
 
-      <Form.Item
-        label="Đường dẫn tài nguyên"
-        name="resourceUrl"
-      >
+      <Form.Item label="Đường dẫn tài nguyên" name="resourceUrl">
         <Input placeholder="Nhập đường dẫn đến tài liệu (không bắt buộc)" />
       </Form.Item>
     </Form>
@@ -99,14 +115,16 @@ const Chapter = () => {
   const [loadingChapters, setLoadingChapters] = useState(false);
   const [courseInfo, setCourseInfo] = useState(null);
   const [selectedVideoChapter, setSelectedVideoChapter] = useState(null);
-  
+
   // State cho modal tạo chương
-  const [isCreateChapterModalOpen, setIsCreateChapterModalOpen] = useState(false);
+  const [isCreateChapterModalOpen, setIsCreateChapterModalOpen] =
+    useState(false);
   const [chapterForm] = Form.useForm();
   const [creatingChapter, setCreatingChapter] = useState(false);
-  
+
   // State cho modal cập nhật chương
-  const [isUpdateChapterModalOpen, setIsUpdateChapterModalOpen] = useState(false);
+  const [isUpdateChapterModalOpen, setIsUpdateChapterModalOpen] =
+    useState(false);
   const [selectedChapter, setSelectedChapter] = useState(null);
   const [updateChapterForm] = Form.useForm();
   const [updatingChapter, setUpdatingChapter] = useState(false);
@@ -124,9 +142,11 @@ const Chapter = () => {
     try {
       setLoading(true);
       const response = await getAllCourses();
-      
+
       if (response && response.isSuccess && Array.isArray(response.data)) {
-        const course = response.data.find(c => c.courseId === courseId || c.id === courseId);
+        const course = response.data.find(
+          (c) => c.courseId === courseId || c.id === courseId
+        );
         if (course) {
           setCourseInfo({
             id: course.courseId || course.id,
@@ -154,16 +174,16 @@ const Chapter = () => {
     try {
       setLoadingChapters(true);
       console.log("Đang lấy danh sách chương cho khóa học:", courseId);
-      
+
       const response = await getChaptersByCourseId(courseId);
-      
+
       if (response && response.isSuccess && Array.isArray(response.data)) {
         // Ánh xạ dữ liệu từ API vào state
-        const mappedChapters = response.data.map(chapter => {
+        const mappedChapters = response.data.map((chapter) => {
           return {
             id: chapter.chapterId || chapter.id || "N/A",
             title: chapter.chapterName || chapter.title || "N/A",
-            description: chapter.description || "N/A", 
+            description: chapter.description || "N/A",
             duration: chapter.duration || 0,
             order: chapter.order || chapter.orderNumber || 0,
             content: chapter.content || "",
@@ -173,24 +193,29 @@ const Chapter = () => {
             isActive: false,
           };
         });
-        
+
         // Sắp xếp theo thứ tự nếu có
         mappedChapters.sort((a, b) => a.order - b.order);
-        
+
         // Nếu có dữ liệu, chọn chương đầu tiên có video làm mặc định
-        const firstChapterWithVideo = mappedChapters.find(chapter => chapter.videoUrl);
+        const firstChapterWithVideo = mappedChapters.find(
+          (chapter) => chapter.videoUrl
+        );
         if (firstChapterWithVideo) {
           firstChapterWithVideo.isActive = true;
           setSelectedVideoChapter(firstChapterWithVideo);
         }
-        
+
         setCourseChapters(mappedChapters);
         setError("");
       } else {
         // Trường hợp không có dữ liệu hoặc API trả về lỗi
-        console.error("API không trả về dữ liệu chương theo định dạng mong đợi:", response);
+        console.error(
+          "API không trả về dữ liệu chương theo định dạng mong đợi:",
+          response
+        );
         setCourseChapters([]);
-        
+
         if (response && !response.isSuccess) {
           setError(response.message || "Không thể lấy danh sách chương");
         }
@@ -210,13 +235,13 @@ const Chapter = () => {
       message.warning("Chương này không có video");
       return;
     }
-    
+
     // Cập nhật trạng thái isActive cho tất cả các chương
-    const updatedChapters = courseChapters.map(ch => ({
+    const updatedChapters = courseChapters.map((ch) => ({
       ...ch,
-      isActive: ch.id === chapter.id
+      isActive: ch.id === chapter.id,
     }));
-    
+
     setCourseChapters(updatedChapters);
     setSelectedVideoChapter(chapter);
   };
@@ -224,30 +249,31 @@ const Chapter = () => {
   // Hàm mở modal tạo chương mới
   const handleOpenCreateChapterModal = () => {
     // Thiết lập giá trị mặc định cho thứ tự
-    const nextOrder = courseChapters.length > 0 
-      ? Math.max(...courseChapters.map(c => c.order || 0)) + 1 
-      : 1;
-    
+    const nextOrder =
+      courseChapters.length > 0
+        ? Math.max(...courseChapters.map((c) => c.order || 0)) + 1
+        : 1;
+
     chapterForm.setFieldsValue({
       order: nextOrder,
       duration: 30, // Giá trị mặc định 30 phút
     });
-    
+
     setIsCreateChapterModalOpen(true);
   };
-  
+
   // Hàm đóng modal tạo chương
   const handleCloseCreateChapterModal = () => {
     setIsCreateChapterModalOpen(false);
     chapterForm.resetFields();
   };
-  
+
   // Hàm xử lý lưu chương mới
   const handleSaveChapter = async () => {
     try {
       const values = await chapterForm.validateFields();
       setCreatingChapter(true);
-      
+
       // Chuẩn bị dữ liệu gửi lên API
       const chapterData = {
         courseId: courseId,
@@ -259,15 +285,15 @@ const Chapter = () => {
         content: values.content ? values.content.trim() : "",
         resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
       };
-      
+
       console.log("Đang tạo chương mới với dữ liệu:", chapterData);
-      
+
       // Gọi API tạo chương
       const response = await createChapter(chapterData);
-      
+
       if (response && response.isSuccess) {
         message.success(response.message || "Tạo mới chương thành công!");
-        
+
         // Cập nhật lại danh sách chương
         const newChapter = {
           id: response.data.chapterId || response.data.id,
@@ -279,13 +305,14 @@ const Chapter = () => {
           content: response.data.content,
           resourceUrl: response.data.resourceUrl,
         };
-        
+
         // Thêm chương mới vào danh sách và sắp xếp lại theo thứ tự
-        const updatedChapters = [...courseChapters, newChapter]
-          .sort((a, b) => a.order - b.order);
-          
+        const updatedChapters = [...courseChapters, newChapter].sort(
+          (a, b) => a.order - b.order
+        );
+
         setCourseChapters(updatedChapters);
-        
+
         // Đóng modal và reset form
         setIsCreateChapterModalOpen(false);
         chapterForm.resetFields();
@@ -304,7 +331,7 @@ const Chapter = () => {
   const handleUpdateChapter = (chapter) => {
     console.log("Đang chỉnh sửa chương:", chapter);
     setSelectedChapter(chapter);
-    
+
     // Set giá trị ban đầu cho form
     updateChapterForm.setFieldsValue({
       chapterName: chapter.title,
@@ -315,7 +342,7 @@ const Chapter = () => {
       content: chapter.content,
       resourceUrl: chapter.resourceUrl,
     });
-    
+
     setIsUpdateChapterModalOpen(true);
   };
 
@@ -331,7 +358,7 @@ const Chapter = () => {
     try {
       const values = await updateChapterForm.validateFields();
       setUpdatingChapter(true);
-      
+
       // Chuẩn bị dữ liệu cập nhật
       const chapterData = {
         chapterId: selectedChapter.id,
@@ -344,18 +371,18 @@ const Chapter = () => {
         content: values.content ? values.content.trim() : "",
         resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
       };
-      
+
       console.log("Đang cập nhật chương với dữ liệu:", chapterData);
-      
+
       // Gọi API cập nhật chương
       const response = await updateChapter(chapterData);
-      
+
       if (response && response.isSuccess) {
         message.success(response.message || "Cập nhật chương thành công!");
-        
+
         // Cập nhật lại danh sách chương
-        const updatedChapters = courseChapters.map(chapter => 
-          chapter.id === selectedChapter.id 
+        const updatedChapters = courseChapters.map((chapter) =>
+          chapter.id === selectedChapter.id
             ? {
                 ...chapter,
                 title: chapterData.chapterName,
@@ -366,16 +393,19 @@ const Chapter = () => {
                 content: chapterData.content,
                 resourceUrl: chapterData.resourceUrl,
                 isActive: chapter.isActive, // Giữ trạng thái active
-              } 
+              }
             : chapter
         );
-        
+
         // Sắp xếp lại theo thứ tự
         updatedChapters.sort((a, b) => a.order - b.order);
         setCourseChapters(updatedChapters);
-        
+
         // Nếu đang cập nhật chương được chọn để xem video, cũng cập nhật nó
-        if (selectedVideoChapter && selectedVideoChapter.id === selectedChapter.id) {
+        if (
+          selectedVideoChapter &&
+          selectedVideoChapter.id === selectedChapter.id
+        ) {
           setSelectedVideoChapter({
             ...selectedVideoChapter,
             title: chapterData.chapterName,
@@ -387,7 +417,7 @@ const Chapter = () => {
             resourceUrl: chapterData.resourceUrl,
           });
         }
-        
+
         // Đóng modal và reset form
         setIsUpdateChapterModalOpen(false);
         updateChapterForm.resetFields();
@@ -405,35 +435,42 @@ const Chapter = () => {
   // Hàm xóa chương
   const handleDeleteChapter = (chapter) => {
     console.log("Đang xóa chương:", chapter);
-    
+
     // Sử dụng Modal.confirm để xác nhận xóa
     Modal.confirm({
-      title: 'Xác nhận xóa',
+      title: "Xác nhận xóa",
       content: `Bạn có chắc chắn muốn xóa chương "${chapter.title}"?`,
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
+      okText: "Xóa",
+      okType: "danger",
+      cancelText: "Hủy",
       onOk: async () => {
         try {
           setLoadingChapters(true);
-          
+
           // Gọi API xóa chương
           const result = await deleteChapter(chapter.id);
-          
+
           if (result && result.isSuccess) {
             // Cập nhật state sau khi xóa thành công
-            const updatedChapters = courseChapters.filter(c => c.id !== chapter.id);
+            const updatedChapters = courseChapters.filter(
+              (c) => c.id !== chapter.id
+            );
             setCourseChapters(updatedChapters);
-            
+
             // Nếu đang xóa chương đang được chọn để xem video, reset selectedVideoChapter
-            if (selectedVideoChapter && selectedVideoChapter.id === chapter.id) {
+            if (
+              selectedVideoChapter &&
+              selectedVideoChapter.id === chapter.id
+            ) {
               // Tìm chương có video để hiển thị nếu có
-              const nextChapterWithVideo = updatedChapters.find(ch => ch.videoUrl);
+              const nextChapterWithVideo = updatedChapters.find(
+                (ch) => ch.videoUrl
+              );
               if (nextChapterWithVideo) {
                 // Đánh dấu chapter mới là active
-                const newUpdatedChapters = updatedChapters.map(ch => ({
+                const newUpdatedChapters = updatedChapters.map((ch) => ({
                   ...ch,
-                  isActive: ch.id === nextChapterWithVideo.id
+                  isActive: ch.id === nextChapterWithVideo.id,
                 }));
                 setCourseChapters(newUpdatedChapters);
                 setSelectedVideoChapter(nextChapterWithVideo);
@@ -441,7 +478,7 @@ const Chapter = () => {
                 setSelectedVideoChapter(null);
               }
             }
-            
+
             message.success("Đã xóa chương thành công");
           } else {
             message.error(result?.message || "Không thể xóa chương");
@@ -458,27 +495,27 @@ const Chapter = () => {
 
   // Hàm quay lại trang quản lý khóa học
   const handleGoBack = () => {
-    navigate('/course-master');
+    navigate("/master/course-master");
   };
 
   // Hàm hiển thị embed video từ URL
   const renderVideoEmbed = (videoUrl) => {
     if (!videoUrl) return null;
-    
+
     // Xử lý URL YouTube
-    if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be')) {
+    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
       // Trích xuất ID video từ URL YouTube
-      let videoId = '';
-      if (videoUrl.includes('v=')) {
-        videoId = videoUrl.split('v=')[1];
-        const ampersandPosition = videoId.indexOf('&');
+      let videoId = "";
+      if (videoUrl.includes("v=")) {
+        videoId = videoUrl.split("v=")[1];
+        const ampersandPosition = videoId.indexOf("&");
         if (ampersandPosition !== -1) {
           videoId = videoId.substring(0, ampersandPosition);
         }
-      } else if (videoUrl.includes('youtu.be/')) {
-        videoId = videoUrl.split('youtu.be/')[1];
+      } else if (videoUrl.includes("youtu.be/")) {
+        videoId = videoUrl.split("youtu.be/")[1];
       }
-      
+
       return (
         <iframe
           className="w-full h-full rounded-lg"
@@ -490,10 +527,10 @@ const Chapter = () => {
         ></iframe>
       );
     }
-    
+
     // Xử lý URL Vimeo
-    if (videoUrl.includes('vimeo.com')) {
-      const vimeoId = videoUrl.split('/').pop();
+    if (videoUrl.includes("vimeo.com")) {
+      const vimeoId = videoUrl.split("/").pop();
       return (
         <iframe
           className="w-full h-full rounded-lg"
@@ -505,11 +542,16 @@ const Chapter = () => {
         ></iframe>
       );
     }
-    
+
     // Xử lý các trường hợp khác hoặc URL không hỗ trợ
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-        <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+        <a
+          href={videoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500"
+        >
           <div className="flex flex-col items-center">
             <Video size={48} className="mb-2" />
             <span>Mở video trong tab mới</span>
@@ -521,7 +563,7 @@ const Chapter = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">
-      <Header 
+      <Header
         title={courseInfo ? `${courseInfo.name}` : "Quản lý chương"}
         description="Xem và quản lý nội dung các chương của khóa học"
       />
@@ -529,8 +571,8 @@ const Chapter = () => {
       <div className="p-4 md:p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <CustomButton 
-              type="default" 
+            <CustomButton
+              type="default"
               icon={<FaArrowLeft size={14} />}
               onClick={handleGoBack}
             >
@@ -540,8 +582,8 @@ const Chapter = () => {
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>
           </div>
-          <CustomButton 
-            type="primary" 
+          <CustomButton
+            type="primary"
             icon={<FaPlus size={14} />}
             onClick={handleOpenCreateChapterModal}
           >
@@ -550,13 +592,17 @@ const Chapter = () => {
         </div>
 
         {error && (
-          <Error 
-            message={error} 
+          <Error
+            message={error}
             action={
-              <CustomButton type="primary" onClick={fetchCourseChapters} loading={loadingChapters}>
+              <CustomButton
+                type="primary"
+                onClick={fetchCourseChapters}
+                loading={loadingChapters}
+              >
                 Thử lại
               </CustomButton>
-            } 
+            }
           />
         )}
 
@@ -569,10 +615,12 @@ const Chapter = () => {
           <>
             {courseChapters.length === 0 ? (
               <div className="bg-white p-8 rounded-lg shadow text-center">
-                <p className="text-gray-500 mb-4">Khóa học này chưa có chương nào</p>
-                <CustomButton 
-                  type="primary" 
-                  icon={<FaPlus size={14} />} 
+                <p className="text-gray-500 mb-4">
+                  Khóa học này chưa có chương nào
+                </p>
+                <CustomButton
+                  type="primary"
+                  icon={<FaPlus size={14} />}
                   onClick={handleOpenCreateChapterModal}
                 >
                   Tạo chương đầu tiên
@@ -591,34 +639,42 @@ const Chapter = () => {
                         <div className="w-full h-full flex items-center justify-center">
                           <div className="text-center p-6">
                             <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                            <p className="text-gray-500">Chọn một chương có video để xem</p>
+                            <p className="text-gray-500">
+                              Chọn một chương có video để xem
+                            </p>
                           </div>
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Thông tin video đang phát */}
                     {selectedVideoChapter && (
                       <div className="p-4 border-t border-gray-100">
-                        <h3 className="text-xl font-semibold mb-2">{selectedVideoChapter.title}</h3>
+                        <h3 className="text-xl font-semibold mb-2">
+                          {selectedVideoChapter.title}
+                        </h3>
                         <div className="flex items-center text-gray-500 text-sm mb-4">
                           <div className="flex items-center mr-4">
                             <FaClock className="mr-1" size={14} />
-                            <span>{formatDuration(selectedVideoChapter.duration)}</span>
+                            <span>
+                              {formatDuration(selectedVideoChapter.duration)}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <FileText className="mr-1" size={14} />
                             <span>Chương {selectedVideoChapter.order}</span>
                           </div>
                         </div>
-                        <p className="text-gray-600 text-sm">{selectedVideoChapter.description}</p>
-                        
+                        <p className="text-gray-600 text-sm">
+                          {selectedVideoChapter.description}
+                        </p>
+
                         {/* Liên kết tài nguyên */}
                         {selectedVideoChapter.resourceUrl && (
                           <div className="mt-4 pt-4 border-t border-gray-100">
-                            <a 
-                              href={selectedVideoChapter.resourceUrl} 
-                              target="_blank" 
+                            <a
+                              href={selectedVideoChapter.resourceUrl}
+                              target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-600 flex items-center hover:underline"
                             >
@@ -631,35 +687,45 @@ const Chapter = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Danh sách chương kiểu YouTube */}
                 <div className="lg:col-span-1">
                   <div className="bg-white rounded-lg shadow p-4">
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center">
                         <FaList size={16} className="text-gray-500 mr-2" />
-                        <h3 className="font-medium text-gray-800">Danh sách chương ({courseChapters.length})</h3>
+                        <h3 className="font-medium text-gray-800">
+                          Danh sách chương ({courseChapters.length})
+                        </h3>
                       </div>
                       <div className="text-sm text-gray-500">
-                        {formatDuration(courseChapters.reduce((total, chapter) => total + (chapter.duration || 0), 0))}
+                        {formatDuration(
+                          courseChapters.reduce(
+                            (total, chapter) => total + (chapter.duration || 0),
+                            0
+                          )
+                        )}
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 h-[calc(100vh-320px)] overflow-y-auto pr-2">
                       {courseChapters.map((chapter, index) => (
-                        <div 
+                        <div
                           key={chapter.id}
                           onClick={() => handleSelectChapter(chapter)}
                           className={`flex p-2 rounded-md cursor-pointer transition duration-200 ${
-                            chapter.isActive 
-                              ? 'bg-blue-50 border border-blue-100' 
-                              : 'hover:bg-gray-100 border border-transparent'
+                            chapter.isActive
+                              ? "bg-blue-50 border border-blue-100"
+                              : "hover:bg-gray-100 border border-transparent"
                           }`}
                         >
                           <div className="flex-shrink-0 w-8 text-center text-gray-500 font-medium">
                             {chapter.videoUrl ? (
                               chapter.isActive ? (
-                                <FaPlay size={14} className="text-blue-600 mx-auto" />
+                                <FaPlay
+                                  size={14}
+                                  className="text-blue-600 mx-auto"
+                                />
                               ) : (
                                 index + 1
                               )
@@ -670,17 +736,27 @@ const Chapter = () => {
                             )}
                           </div>
                           <div className="ml-2 flex-grow">
-                            <h4 className={`font-medium line-clamp-2 text-sm ${
-                              chapter.isActive ? 'text-blue-700' : 'text-gray-800'
-                            } ${!chapter.videoUrl ? 'opacity-50' : ''}`}>
+                            <h4
+                              className={`font-medium line-clamp-2 text-sm ${
+                                chapter.isActive
+                                  ? "text-blue-700"
+                                  : "text-gray-800"
+                              } ${!chapter.videoUrl ? "opacity-50" : ""}`}
+                            >
                               {chapter.title}
                             </h4>
                             <div className="flex items-center mt-1 text-xs text-gray-500">
-                              <span className="mr-2">{formatDuration(chapter.duration)}</span>
-                              {chapter.order && <span className="mr-2">• Thứ tự: {chapter.order}</span>}
+                              <span className="mr-2">
+                                {formatDuration(chapter.duration)}
+                              </span>
+                              {chapter.order && (
+                                <span className="mr-2">
+                                  • Thứ tự: {chapter.order}
+                                </span>
+                              )}
                             </div>
                           </div>
-                          
+
                           {/* Thêm nút quản lý */}
                           <div className="flex-shrink-0 flex items-center">
                             <Tooltip title="Chỉnh sửa">
@@ -721,7 +797,8 @@ const Chapter = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            Tạo chương mới cho khóa học {courseInfo ? `"${courseInfo.name}"` : ''}
+            Tạo chương mới cho khóa học{" "}
+            {courseInfo ? `"${courseInfo.name}"` : ""}
           </div>
         }
         open={isCreateChapterModalOpen}
@@ -731,18 +808,15 @@ const Chapter = () => {
         className="chapter-modal"
       >
         <div className="p-4">
-          <ChapterForm 
-            form={chapterForm}
-            loading={creatingChapter} 
-          />
-          
+          <ChapterForm form={chapterForm} loading={creatingChapter} />
+
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseCreateChapterModal}>
               Hủy bỏ
             </CustomButton>
-            <CustomButton 
-              type="primary" 
-              onClick={handleSaveChapter} 
+            <CustomButton
+              type="primary"
+              onClick={handleSaveChapter}
               loading={creatingChapter}
             >
               Tạo mới chương
@@ -755,7 +829,8 @@ const Chapter = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            Cập nhật chương {selectedChapter ? `"${selectedChapter.title}"` : ''}
+            Cập nhật chương{" "}
+            {selectedChapter ? `"${selectedChapter.title}"` : ""}
           </div>
         }
         open={isUpdateChapterModalOpen}
@@ -765,18 +840,15 @@ const Chapter = () => {
         className="chapter-modal"
       >
         <div className="p-4">
-          <ChapterForm 
-            form={updateChapterForm}
-            loading={updatingChapter} 
-          />
-          
+          <ChapterForm form={updateChapterForm} loading={updatingChapter} />
+
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseUpdateChapterModal}>
               Hủy bỏ
             </CustomButton>
-            <CustomButton 
-              type="primary" 
-              onClick={handleSaveUpdateChapter} 
+            <CustomButton
+              type="primary"
+              onClick={handleSaveUpdateChapter}
               loading={updatingChapter}
             >
               Cập nhật

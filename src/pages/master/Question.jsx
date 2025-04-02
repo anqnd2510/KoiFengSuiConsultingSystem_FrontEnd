@@ -2,13 +2,18 @@ import React, { useState, useEffect } from "react";
 import { Row, Col, Tag, message, Form, Input, Modal, Radio } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaEye } from "react-icons/fa";
-import Header from "../components/Common/Header";
-import CustomButton from "../components/Common/CustomButton";
-import CustomTable from "../components/Common/CustomTable";
-import Pagination from "../components/Common/Pagination";
-import Error from "../components/Common/Error";
-import { getQuestionsByQuizId, createQuestion, updateQuestion, deleteQuestion } from "../services/question.service";
-import { getAnswerById } from "../services/answer.service";
+import Header from "../../components/Common/Header";
+import CustomButton from "../../components/Common/CustomButton";
+import CustomTable from "../../components/Common/CustomTable";
+import Pagination from "../../components/Common/Pagination";
+import Error from "../../components/Common/Error";
+import {
+  getQuestionsByQuizId,
+  createQuestion,
+  updateQuestion,
+  deleteQuestion,
+} from "../../services/question.service";
+import { getAnswerById } from "../../services/answer.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -42,18 +47,18 @@ const Question = () => {
     try {
       setLoading(true);
       setError("");
-      
-      const token = localStorage.getItem('accessToken');
+
+      const token = localStorage.getItem("accessToken");
       if (!token) {
         setError("Vui lòng đăng nhập lại");
         message.error("Vui lòng đăng nhập lại");
-        navigate('/login');
+        navigate("/login");
         return;
       }
 
       const response = await getQuestionsByQuizId(quizId);
       console.log("API Response:", response);
-      
+
       if (response?.data?.data) {
         setQuestions(response.data.data);
       } else if (response?.data) {
@@ -62,12 +67,11 @@ const Question = () => {
         setQuestions([]);
         console.warn("Không có dữ liệu câu hỏi");
       }
-
     } catch (err) {
       console.error("Error fetching questions:", err);
       if (err.response?.status === 401) {
         setError("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
-        navigate('/login');
+        navigate("/login");
       } else {
         setError("Không thể tải danh sách câu hỏi");
       }
@@ -97,7 +101,7 @@ const Question = () => {
   const handleCreateQuestion = async (values) => {
     try {
       setCreatingQuestion(true);
-      
+
       const questionRequest = {
         questionText: values.questionText.trim(),
         questionType: values.questionType || "Multiple Choice",
@@ -108,8 +112,8 @@ const Question = () => {
           optionType: answer.optionType || "Text",
           //isCorrect: index === values.correctAnswer,
           isCorrect: answer.isCorrect,
-          createAt: new Date().toISOString()
-        }))
+          createAt: new Date().toISOString(),
+        })),
       };
 
       // Log để kiểm tra dữ liệu gửi đi
@@ -137,14 +141,16 @@ const Question = () => {
   const handleEditQuestion = async (question) => {
     try {
       setLoading(true);
-      
+
       // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
       const response = await getQuestionsByQuizId(quizId);
       let questionToEdit = question;
 
       if (response?.data?.data) {
         // Tìm câu hỏi cụ thể trong danh sách mới
-        const updatedQuestion = response.data.data.find(q => q.questionId === question.questionId);
+        const updatedQuestion = response.data.data.find(
+          (q) => q.questionId === question.questionId
+        );
         if (updatedQuestion) {
           // Fetch chi tiết từng câu trả lời
           const updatedAnswers = await Promise.all(
@@ -154,12 +160,15 @@ const Question = () => {
                   const answerDetail = await getAnswerById(answer.answerId);
                   return {
                     ...answer,
-                    ...answerDetail
+                    ...answerDetail,
                   };
                 }
                 return answer;
               } catch (error) {
-                console.error(`Lỗi khi tải chi tiết đáp án ${answer.answerId}:`, error);
+                console.error(
+                  `Lỗi khi tải chi tiết đáp án ${answer.answerId}:`,
+                  error
+                );
                 return answer;
               }
             })
@@ -167,16 +176,16 @@ const Question = () => {
 
           questionToEdit = {
             ...updatedQuestion,
-            answers: updatedAnswers
+            answers: updatedAnswers,
           };
         }
       }
 
       setSelectedQuestion(questionToEdit);
-      
+
       // Tìm index của đáp án đúng từ dữ liệu mới nhất
-      const correctAnswerIndex = questionToEdit.answers.findIndex(answer => 
-        answer.isCorrect === true
+      const correctAnswerIndex = questionToEdit.answers.findIndex(
+        (answer) => answer.isCorrect === true
       );
 
       // Set giá trị form với dữ liệu mới nhất
@@ -185,11 +194,11 @@ const Question = () => {
         questionType: questionToEdit.questionType,
         point: questionToEdit.point,
         correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
-        answerUpdateRequests: questionToEdit.answers.map(answer => ({
+        answerUpdateRequests: questionToEdit.answers.map((answer) => ({
           ...answer,
-          optionText: answer.optionText || '',
+          optionText: answer.optionText || "",
           isCorrect: answer.isCorrect,
-        }))
+        })),
       });
 
       setIsEditModalOpen(true);
@@ -210,7 +219,7 @@ const Question = () => {
   const handleUpdateQuestion = async (values) => {
     try {
       setEditingQuestion(true);
-      
+
       // Validate dữ liệu đầu vào
       if (!values.questionText?.trim()) {
         throw new Error("Vui lòng nhập nội dung câu hỏi");
@@ -221,18 +230,20 @@ const Question = () => {
         questionText: values.questionText.trim(),
         questionType: values.questionType,
         point: Number(values.point) || 0,
-        answerUpdateRequests: values.answerUpdateRequests.map((answer, index) => ({
-          answerId: selectedQuestion.answers[index].answerId,
-          optionText: answer.optionText.trim(),
-          optionType: "Text",
-          isCorrect: answer.isCorrect // Lấy trực tiếp từ form data
-        }))
+        answerUpdateRequests: values.answerUpdateRequests.map(
+          (answer, index) => ({
+            answerId: selectedQuestion.answers[index].answerId,
+            optionText: answer.optionText.trim(),
+            optionType: "Text",
+            isCorrect: answer.isCorrect, // Lấy trực tiếp từ form data
+          })
+        ),
       };
 
-      console.log('Update request:', questionRequest); // Thêm log để kiểm tra
+      console.log("Update request:", questionRequest); // Thêm log để kiểm tra
 
       await updateQuestion(selectedQuestion.questionId, questionRequest);
-      
+
       message.success("Cập nhật câu hỏi thành công!");
       handleCloseEditModal();
       fetchQuestions();
@@ -289,11 +300,13 @@ const Question = () => {
       setLoading(true);
       // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
       const response = await getQuestionsByQuizId(quizId);
-      
+
       if (response?.data?.data) {
         // Tìm câu hỏi cụ thể trong danh sách mới
-        const updatedQuestion = response.data.data.find(q => q.questionId === question.questionId);
-        
+        const updatedQuestion = response.data.data.find(
+          (q) => q.questionId === question.questionId
+        );
+
         if (updatedQuestion) {
           // Fetch chi tiết từng câu trả lời
           const updatedAnswers = await Promise.all(
@@ -303,12 +316,15 @@ const Question = () => {
                   const answerDetail = await getAnswerById(answer.answerId);
                   return {
                     ...answer,
-                    ...answerDetail
+                    ...answerDetail,
                   };
                 }
                 return answer;
               } catch (error) {
-                console.error(`Lỗi khi tải chi tiết đáp án ${answer.answerId}:`, error);
+                console.error(
+                  `Lỗi khi tải chi tiết đáp án ${answer.answerId}:`,
+                  error
+                );
                 return answer;
               }
             })
@@ -316,7 +332,7 @@ const Question = () => {
 
           setSelectedQuestion({
             ...updatedQuestion,
-            answers: updatedAnswers
+            answers: updatedAnswers,
           });
         } else {
           setSelectedQuestion(question);
@@ -363,9 +379,7 @@ const Question = () => {
       dataIndex: "point",
       key: "point",
       width: "10%",
-      render: (point) => (
-        <Tag color="blue">{point}</Tag>
-      ),
+      render: (point) => <Tag color="blue">{point}</Tag>,
     },
     {
       title: "Hành động",
@@ -412,24 +426,24 @@ const Question = () => {
   // Thêm styles mới
   const answerStyles = {
     correct: {
-      backgroundColor: '#4CAF50',
-      color: 'white',
-      border: '2px solid #45a049'
+      backgroundColor: "#4CAF50",
+      color: "white",
+      border: "2px solid #45a049",
     },
     incorrect: {
-      backgroundColor: '#ff4444',
-      color: 'white',
-      border: '2px solid #cc0000'
+      backgroundColor: "#ff4444",
+      color: "white",
+      border: "2px solid #cc0000",
     },
     default: {
-      backgroundColor: '#f0f0f0',
-      border: '2px solid #d9d9d9'
-    }
+      backgroundColor: "#f0f0f0",
+      border: "2px solid #d9d9d9",
+    },
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         title="Quản lý câu hỏi"
         description={`Danh sách câu hỏi của bài kiểm tra ${quizId}`}
       />
@@ -437,8 +451,8 @@ const Question = () => {
       <div className="p-4 md:p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <CustomButton 
-              type="default" 
+            <CustomButton
+              type="default"
               icon={<FaArrowLeft size={14} />}
               onClick={handleGoBack}
             >
@@ -448,8 +462,8 @@ const Question = () => {
               Danh sách câu hỏi
             </h2>
           </div>
-          <CustomButton 
-            type="primary" 
+          <CustomButton
+            type="primary"
             icon={<FaPlus size={14} />}
             onClick={handleOpenCreateModal}
           >
@@ -458,13 +472,17 @@ const Question = () => {
         </div>
 
         {error && (
-          <Error 
-            message={error} 
+          <Error
+            message={error}
             action={
-              <CustomButton type="primary" onClick={fetchQuestions} loading={loading}>
+              <CustomButton
+                type="primary"
+                onClick={fetchQuestions}
+                loading={loading}
+              >
                 Thử lại
               </CustomButton>
-            } 
+            }
           />
         )}
 
@@ -490,11 +508,7 @@ const Question = () => {
 
       {/* Modal tạo câu hỏi mới */}
       <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Thêm câu hỏi mới
-          </div>
-        }
+        title={<div className="text-xl font-semibold">Thêm câu hỏi mới</div>}
         open={isCreateModalOpen}
         onCancel={handleCloseCreateModal}
         footer={null}
@@ -509,25 +523,27 @@ const Question = () => {
             questionType: "Multiple Choice",
             point: 1,
             answers: [
-              { optionText: '', isCorrect: true },
-              { optionText: '', isCorrect: false},
-              { optionText: '', isCorrect: false },
-              { optionText: '', isCorrect: false }
+              { optionText: "", isCorrect: true },
+              { optionText: "", isCorrect: false },
+              { optionText: "", isCorrect: false },
+              { optionText: "", isCorrect: false },
             ],
-            correctAnswer: 0
+            correctAnswer: 0,
           }}
         >
           <div className="p-4">
             <div className="mb-8">
               <Form.Item
                 name="questionText"
-                rules={[{ required: true, message: "Vui lòng nhập nội dung câu hỏi" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập nội dung câu hỏi" },
+                ]}
               >
-                <Input.TextArea 
+                <Input.TextArea
                   rows={3}
                   placeholder="Nhập câu hỏi của bạn ở đây..."
                   className="text-lg"
-                  style={{ fontSize: '1.2rem', padding: '15px' }}
+                  style={{ fontSize: "1.2rem", padding: "15px" }}
                 />
               </Form.Item>
             </div>
@@ -539,7 +555,7 @@ const Question = () => {
                 {(fields) => (
                   <div className="space-y-4">
                     {fields.map((field, index) => (
-                      <div 
+                      <div
                         key={field.key}
                         className="p-4 border rounded-lg hover:border-blue-500 transition-all"
                       >
@@ -552,20 +568,30 @@ const Question = () => {
                             initialValue={0}
                             noStyle
                           >
-                            <Radio 
+                            <Radio
                               value={index}
-                              checked={createForm.getFieldValue('correctAnswer') === index}
+                              checked={
+                                createForm.getFieldValue("correctAnswer") ===
+                                index
+                              }
                               onChange={() => {
                                 // Cập nhật correctAnswer khi radio thay đổi
-                                createForm.setFieldsValue({ correctAnswer: index });
-                                
+                                createForm.setFieldsValue({
+                                  correctAnswer: index,
+                                });
+
                                 // Cập nhật lại isCorrect cho tất cả answers
-                                const currentAnswers = createForm.getFieldValue('answers');
-                                const updatedAnswers = currentAnswers.map((ans, idx) => ({
-                                  ...ans,
-                                  isCorrect: idx === index
-                                }));
-                                createForm.setFieldsValue({ answers: updatedAnswers });
+                                const currentAnswers =
+                                  createForm.getFieldValue("answers");
+                                const updatedAnswers = currentAnswers.map(
+                                  (ans, idx) => ({
+                                    ...ans,
+                                    isCorrect: idx === index,
+                                  })
+                                );
+                                createForm.setFieldsValue({
+                                  answers: updatedAnswers,
+                                });
                               }}
                             >
                               Đáp án đúng
@@ -575,18 +601,24 @@ const Question = () => {
 
                         <Form.Item
                           {...field}
-                          name={[field.name, 'optionText']}
-                          rules={[{ required: true, message: 'Vui lòng nhập đáp án' }]}
+                          name={[field.name, "optionText"]}
+                          rules={[
+                            { required: true, message: "Vui lòng nhập đáp án" },
+                          ]}
                         >
                           <Input.TextArea
                             rows={2}
-                            placeholder={`Nhập đáp án ${String.fromCharCode(65 + index)}`}
+                            placeholder={`Nhập đáp án ${String.fromCharCode(
+                              65 + index
+                            )}`}
                             className="answer-input"
                             style={{
-                              resize: 'none',
-                              backgroundColor: createForm.getFieldValue('correctAnswer') === index
-                                ? '#e8f5e9'
-                                : '#ffffff'
+                              resize: "none",
+                              backgroundColor:
+                                createForm.getFieldValue("correctAnswer") ===
+                                index
+                                  ? "#e8f5e9"
+                                  : "#ffffff",
                             }}
                           />
                         </Form.Item>
@@ -599,25 +631,20 @@ const Question = () => {
 
             <div className="flex justify-between items-center mt-8">
               <div className="flex items-center gap-4">
-                <Form.Item
-                  name="point"
-                  label="Điểm"
-                  className="mb-0"
-                >
+                <Form.Item name="point" label="Điểm" className="mb-0">
                   <Input
                     type="number"
                     min={1}
                     max={100}
-                    style={{ width: '100px' }}
+                    style={{ width: "100px" }}
                   />
                 </Form.Item>
-                
-                <Form.Item
-                  name="questionType"
-                  className="mb-0"
-                >
+
+                <Form.Item name="questionType" className="mb-0">
                   <Radio.Group buttonStyle="solid">
-                    <Radio.Button value="Multiple Choice">Trắc nghiệm</Radio.Button>
+                    <Radio.Button value="Multiple Choice">
+                      Trắc nghiệm
+                    </Radio.Button>
                     <Radio.Button value="True/False">Đúng/Sai</Radio.Button>
                   </Radio.Group>
                 </Form.Item>
@@ -642,11 +669,7 @@ const Question = () => {
 
       {/* Modal xem chi tiết câu hỏi */}
       <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Chi tiết câu hỏi
-          </div>
-        }
+        title={<div className="text-xl font-semibold">Chi tiết câu hỏi</div>}
         open={isViewModalOpen}
         onCancel={handleCloseViewModal}
         footer={null}
@@ -659,37 +682,43 @@ const Question = () => {
               <div className="text-lg font-medium mb-4">
                 {selectedQuestion.questionText}
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 {selectedQuestion.answers?.map((answer, index) => (
                   <div
                     key={answer.answerId || index}
                     className={`p-4 rounded-lg border-2 ${
-                      answer.isCorrect 
-                        ? 'border-green-500 bg-green-50' 
-                        : 'border-red-500 bg-red-50'
+                      answer.isCorrect
+                        ? "border-green-500 bg-green-50"
+                        : "border-red-500 bg-red-50"
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${
-                        answer.isCorrect 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-red-500 text-white'
-                      }`}>
+                      <div
+                        className={`w-8 h-8 flex items-center justify-center rounded-full ${
+                          answer.isCorrect
+                            ? "bg-green-500 text-white"
+                            : "bg-red-500 text-white"
+                        }`}
+                      >
                         {String.fromCharCode(65 + index)}
                       </div>
                       <div className="flex-1">
                         <div className="text-base">{answer.optionText}</div>
                         {loadingAnswer ? (
-                          <div className="text-sm mt-1 text-gray-500">Đang tải...</div>
+                          <div className="text-sm mt-1 text-gray-500">
+                            Đang tải...
+                          </div>
                         ) : (
                           <>
-                            <div className={`text-sm mt-1 ${
-                              answer.isCorrect 
-                                ? 'text-green-600' 
-                                : 'text-red-600'
-                            }`}>
-                              {answer.isCorrect ? 'Đáp án đúng' : 'Đáp án sai'}
+                            <div
+                              className={`text-sm mt-1 ${
+                                answer.isCorrect
+                                  ? "text-green-600"
+                                  : "text-red-600"
+                              }`}
+                            >
+                              {answer.isCorrect ? "Đáp án đúng" : "Đáp án sai"}
                             </div>
                             {answerDetails && (
                               <div className="text-sm mt-1 text-gray-500">
@@ -712,7 +741,9 @@ const Question = () => {
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-500 text-sm mb-1">Loại câu hỏi</div>
-                <div className="font-medium">{selectedQuestion.questionType}</div>
+                <div className="font-medium">
+                  {selectedQuestion.questionType}
+                </div>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-500 text-sm mb-1">Điểm số</div>
@@ -723,9 +754,7 @@ const Question = () => {
             </div>
 
             <div className="flex justify-end">
-              <CustomButton onClick={handleCloseViewModal}>
-                Đóng
-              </CustomButton>
+              <CustomButton onClick={handleCloseViewModal}>Đóng</CustomButton>
             </div>
           </div>
         )}
@@ -733,33 +762,27 @@ const Question = () => {
 
       {/* Modal cập nhật câu hỏi */}
       <Modal
-        title={
-          <div className="text-xl font-semibold">
-            Cập nhật câu hỏi
-          </div>
-        }
+        title={<div className="text-xl font-semibold">Cập nhật câu hỏi</div>}
         open={isEditModalOpen}
         onCancel={handleCloseEditModal}
         footer={null}
         width={800}
         className="question-modal"
       >
-        <Form
-          form={editForm}
-          layout="vertical"
-          onFinish={handleUpdateQuestion}
-        >
+        <Form form={editForm} layout="vertical" onFinish={handleUpdateQuestion}>
           <div className="p-4">
             <div className="mb-8">
               <Form.Item
                 name="questionText"
-                rules={[{ required: true, message: "Vui lòng nhập nội dung câu hỏi" }]}
+                rules={[
+                  { required: true, message: "Vui lòng nhập nội dung câu hỏi" },
+                ]}
               >
-                <Input.TextArea 
+                <Input.TextArea
                   rows={3}
                   placeholder="Nhập câu hỏi của bạn ở đây..."
                   className="text-lg"
-                  style={{ fontSize: '1.2rem', padding: '15px' }}
+                  style={{ fontSize: "1.2rem", padding: "15px" }}
                 />
               </Form.Item>
             </div>
@@ -775,18 +798,24 @@ const Question = () => {
                         </div>
                         <Form.Item
                           {...field}
-                          name={[field.name, 'isCorrect']}
+                          name={[field.name, "isCorrect"]}
                           valuePropName="checked"
                         >
                           <Radio
                             onChange={(e) => {
                               // Cập nhật lại isCorrect cho tất cả các đáp án
-                              const currentAnswers = editForm.getFieldValue('answerUpdateRequests');
-                              const updatedAnswers = currentAnswers.map((ans, idx) => ({
-                                ...ans,
-                                isCorrect: idx === index
-                              }));
-                              editForm.setFieldsValue({ answerUpdateRequests: updatedAnswers });
+                              const currentAnswers = editForm.getFieldValue(
+                                "answerUpdateRequests"
+                              );
+                              const updatedAnswers = currentAnswers.map(
+                                (ans, idx) => ({
+                                  ...ans,
+                                  isCorrect: idx === index,
+                                })
+                              );
+                              editForm.setFieldsValue({
+                                answerUpdateRequests: updatedAnswers,
+                              });
                             }}
                           >
                             Đáp án đúng
@@ -796,18 +825,26 @@ const Question = () => {
 
                       <Form.Item
                         {...field}
-                        name={[field.name, 'optionText']}
-                        rules={[{ required: true, message: 'Vui lòng nhập đáp án' }]}
+                        name={[field.name, "optionText"]}
+                        rules={[
+                          { required: true, message: "Vui lòng nhập đáp án" },
+                        ]}
                       >
                         <Input.TextArea
                           rows={2}
-                          placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
+                          placeholder={`Đáp án ${String.fromCharCode(
+                            65 + index
+                          )}`}
                           className="answer-input"
                           style={{
-                            resize: 'none',
-                            backgroundColor: editForm.getFieldValue(['answerUpdateRequests', index, 'isCorrect'])
-                              ? '#e8f5e9'
-                              : '#f5f5f5'
+                            resize: "none",
+                            backgroundColor: editForm.getFieldValue([
+                              "answerUpdateRequests",
+                              index,
+                              "isCorrect",
+                            ])
+                              ? "#e8f5e9"
+                              : "#f5f5f5",
                           }}
                         />
                       </Form.Item>
@@ -819,34 +856,27 @@ const Question = () => {
 
             <div className="flex justify-between items-center mt-8">
               <div className="flex items-center gap-4">
-                <Form.Item
-                  name="point"
-                  label="Điểm"
-                  className="mb-0"
-                >
+                <Form.Item name="point" label="Điểm" className="mb-0">
                   <Input
                     type="number"
                     min={1}
                     max={100}
-                    style={{ width: '100px' }}
+                    style={{ width: "100px" }}
                   />
                 </Form.Item>
-                
-                <Form.Item
-                  name="questionType"
-                  className="mb-0"
-                >
+
+                <Form.Item name="questionType" className="mb-0">
                   <Radio.Group buttonStyle="solid">
-                    <Radio.Button value="Multiple Choice">Trắc nghiệm</Radio.Button>
+                    <Radio.Button value="Multiple Choice">
+                      Trắc nghiệm
+                    </Radio.Button>
                     <Radio.Button value="True/False">Đúng/Sai</Radio.Button>
                   </Radio.Group>
                 </Form.Item>
               </div>
 
               <div className="flex gap-3">
-                <CustomButton onClick={handleCloseEditModal}>
-                  Hủy
-                </CustomButton>
+                <CustomButton onClick={handleCloseEditModal}>Hủy</CustomButton>
                 <CustomButton
                   type="primary"
                   htmlType="submit"
@@ -884,12 +914,8 @@ const Question = () => {
                   {deletingQuestion.questionText}
                 </p>
                 <div className="mt-2 flex items-center gap-2">
-                  <Tag color="blue">
-                    {deletingQuestion.questionType}
-                  </Tag>
-                  <Tag color="orange">
-                    Điểm: {deletingQuestion.point}
-                  </Tag>
+                  <Tag color="blue">{deletingQuestion.questionType}</Tag>
+                  <Tag color="orange">Điểm: {deletingQuestion.point}</Tag>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
                   Mã câu hỏi: {deletingQuestion.questionId}
@@ -898,15 +924,14 @@ const Question = () => {
             )}
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-yellow-800 text-sm">
-                <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả dữ liệu liên quan đến câu hỏi này sẽ bị xóa vĩnh viễn.
+                <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả
+                dữ liệu liên quan đến câu hỏi này sẽ bị xóa vĩnh viễn.
               </p>
             </div>
           </div>
 
           <div className="flex justify-end gap-3">
-            <CustomButton onClick={handleCancelDelete}>
-              Hủy
-            </CustomButton>
+            <CustomButton onClick={handleCancelDelete}>Hủy</CustomButton>
             <CustomButton
               type="primary"
               danger
@@ -937,7 +962,7 @@ const Question = () => {
 
         .question-modal .answer-option:hover {
           transform: translateY(-2px);
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .answer-modal .ant-modal-content {

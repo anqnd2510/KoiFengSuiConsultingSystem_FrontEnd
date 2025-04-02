@@ -102,17 +102,17 @@ const menuItems = [
   {
     icon: User,
     label: "Master Management",
-    path: "/master-management",
+    path: "/staff/master-management",
   },
   {
     icon: User,
     label: "Course Master",
-    path: "/course-master",
+    path: "/master/course-master",
   },
   {
     icon: User,
     label: "Workshop Master",
-    path: "/workshop-master",
+    path: "/master/workshop-master",
   },
 ];
 

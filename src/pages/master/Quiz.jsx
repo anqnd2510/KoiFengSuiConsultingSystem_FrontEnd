@@ -1,15 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Tag, message, Form, Input, Modal } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaSearch, FaPlus, FaEye, FaEdit, FaTrash, FaArrowLeft } from "react-icons/fa";
-import Header from "../components/Common/Header";
-import CustomButton from "../components/Common/CustomButton";
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import CustomTable from "../components/Common/CustomTable";
-import Error from "../components/Common/Error";
-import { getQuizzesByCourseId, getQuizById, createQuiz, updateQuiz, deleteQuiz } from "../services/quiz.service";
-import { getAllCourses } from "../services/course.service";
+import {
+  FaSearch,
+  FaPlus,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaArrowLeft,
+} from "react-icons/fa";
+import Header from "../../components/Common/Header";
+import CustomButton from "../../components/Common/CustomButton";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import CustomTable from "../../components/Common/CustomTable";
+import Error from "../../components/Common/Error";
+import {
+  getQuizzesByCourseId,
+  getQuizById,
+  createQuiz,
+  updateQuiz,
+  deleteQuiz,
+} from "../../services/quiz.service";
+import { getAllCourses } from "../../services/course.service";
 
 const Quiz = () => {
   const { courseId } = useParams();
@@ -50,9 +63,11 @@ const Quiz = () => {
     try {
       setLoading(true);
       const response = await getAllCourses();
-      
+
       if (response && response.isSuccess && Array.isArray(response.data)) {
-        const course = response.data.find(c => c.courseId === courseId || c.id === courseId);
+        const course = response.data.find(
+          (c) => c.courseId === courseId || c.id === courseId
+        );
         if (course) {
           setCourseInfo({
             id: course.courseId || course.id,
@@ -76,7 +91,7 @@ const Quiz = () => {
 
   // Hàm quay lại trang quản lý khóa học
   const handleGoBack = () => {
-    navigate('/course-master');
+    navigate("/master/course-master");
   };
 
   const fetchQuizzes = async () => {
@@ -86,7 +101,7 @@ const Quiz = () => {
       console.log("Fetching quizzes for courseId:", courseId);
       const data = await getQuizzesByCourseId(courseId);
       console.log("Received quiz data:", data);
-      
+
       if (Array.isArray(data)) {
         setQuizzes(data);
       } else {
@@ -118,7 +133,7 @@ const Quiz = () => {
       console.log("Fetching quiz details for:", quiz.quizId);
       const quizDetails = await getQuizById(quiz.quizId);
       console.log("Received quiz details:", quizDetails);
-      
+
       if (quizDetails) {
         setSelectedQuiz(quizDetails);
         setIsViewModalOpen(true);
@@ -153,17 +168,17 @@ const Quiz = () => {
       setCreatingQuiz(true);
       console.log("Creating quiz with values:", values);
       console.log("CourseId:", courseId);
-      
+
       // Validate dữ liệu
       if (!values.title?.trim()) {
         throw new Error("Tiêu đề không được để trống");
       }
-      
+
       const score = Number(values.score);
       if (isNaN(score) || score < 0 || score > 100) {
         throw new Error("Điểm số phải từ 0-100");
       }
-      
+
       if (!courseId) {
         throw new Error("Không tìm thấy mã khóa học");
       }
@@ -171,14 +186,14 @@ const Quiz = () => {
       // Tạo request object
       const quizRequest = {
         title: values.title.trim(),
-        score: score
+        score: score,
       };
-      
+
       console.log("Sending quiz request:", quizRequest);
 
       const result = await createQuiz(courseId, quizRequest);
       console.log("Create quiz result:", result);
-      
+
       message.success("Tạo bài kiểm tra mới thành công!");
       handleCloseCreateModal();
       fetchQuizzes(); // Refresh danh sách
@@ -193,7 +208,7 @@ const Quiz = () => {
   const handleEditQuiz = (quiz) => {
     editForm.setFieldsValue({
       title: quiz.title,
-      score: quiz.score
+      score: quiz.score,
     });
     setSelectedQuiz(quiz);
     setIsEditModalOpen(true);
@@ -208,12 +223,12 @@ const Quiz = () => {
   const handleUpdateQuiz = async (values) => {
     try {
       setEditingQuiz(true);
-      
+
       // Validate dữ liệu
       if (!values.title?.trim()) {
         throw new Error("Tiêu đề không được để trống");
       }
-      
+
       const score = Number(values.score);
       if (isNaN(score) || score < 0 || score > 100) {
         throw new Error("Điểm số phải từ 0-100");
@@ -222,11 +237,11 @@ const Quiz = () => {
       const quizRequest = {
         title: values.title.trim(),
         score: score,
-        quizId: selectedQuiz.quizId
+        quizId: selectedQuiz.quizId,
       };
 
       await updateQuiz(courseId, quizRequest);
-      
+
       message.success("Cập nhật bài kiểm tra thành công!");
       handleCloseEditModal();
       fetchQuizzes();
@@ -288,7 +303,8 @@ const Quiz = () => {
       dataIndex: "createdDate",
       key: "createdDate",
       width: "15%",
-      render: (date) => date ? new Date(date).toLocaleDateString("vi-VN") : "",
+      render: (date) =>
+        date ? new Date(date).toLocaleDateString("vi-VN") : "",
     },
     {
       title: "Điểm số",
@@ -296,9 +312,7 @@ const Quiz = () => {
       key: "score",
       width: "10%",
       render: (score) => (
-        <Tag color={score >= 80 ? "success" : "error"}>
-          {score || 0}
-        </Tag>
+        <Tag color={score >= 80 ? "success" : "error"}>{score || 0}</Tag>
       ),
     },
     {
@@ -322,7 +336,7 @@ const Quiz = () => {
             onClick={() => handleEditQuiz(record)}
             icon={<FaEdit size={14} />}
           >
-            Cập nhật 
+            Cập nhật
           </CustomButton>
           <CustomButton
             type="primary"
@@ -339,10 +353,11 @@ const Quiz = () => {
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm
-  const filteredQuizzes = (quizzes || []).filter(quiz =>
-    (quiz?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (quiz?.quizId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (quiz?.masterName || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredQuizzes = (quizzes || []).filter(
+    (quiz) =>
+      (quiz?.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quiz?.quizId || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quiz?.masterName || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Phân trang dữ liệu
@@ -353,7 +368,7 @@ const Quiz = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
+      <Header
         title="Quản lý bài kiểm tra"
         description={`Danh sách các bài kiểm tra của khóa học ${courseId}`}
       />
@@ -361,8 +376,8 @@ const Quiz = () => {
       <div className="p-4 md:p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <CustomButton 
-              type="default" 
+            <CustomButton
+              type="default"
               icon={<FaArrowLeft size={14} />}
               onClick={handleGoBack}
             >
@@ -372,8 +387,8 @@ const Quiz = () => {
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>
           </div>
-          <CustomButton 
-            type="primary" 
+          <CustomButton
+            type="primary"
             icon={<FaPlus size={14} />}
             onClick={handleOpenCreateModal}
           >
@@ -382,29 +397,37 @@ const Quiz = () => {
         </div>
 
         {error && (
-          <Error 
-            message={error} 
+          <Error
+            message={error}
             action={
-              <CustomButton type="primary" onClick={fetchQuizzes} loading={loading}>
+              <CustomButton
+                type="primary"
+                onClick={fetchQuizzes}
+                loading={loading}
+              >
                 Thử lại
               </CustomButton>
-            } 
+            }
           />
         )}
 
         {loading ? (
           <div className="bg-white p-8 rounded-lg shadow text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Đang tải danh sách bài kiểm tra...</p>
+            <p className="mt-4 text-gray-600">
+              Đang tải danh sách bài kiểm tra...
+            </p>
           </div>
         ) : (
           <>
             {quizzes.length === 0 ? (
               <div className="bg-white p-8 rounded-lg shadow text-center">
-                <p className="text-gray-500 mb-4">Khóa học này chưa có bài kiểm tra nào</p>
-                <CustomButton 
-                  type="primary" 
-                  icon={<FaPlus size={14} />} 
+                <p className="text-gray-500 mb-4">
+                  Khóa học này chưa có bài kiểm tra nào
+                </p>
+                <CustomButton
+                  type="primary"
+                  icon={<FaPlus size={14} />}
                   onClick={handleOpenCreateModal}
                 >
                   Tạo bài kiểm tra đầu tiên
@@ -436,9 +459,7 @@ const Quiz = () => {
       {/* Modal xem chi tiết quiz */}
       <Modal
         title={
-          <div className="text-xl font-semibold">
-            Chi tiết bài kiểm tra
-          </div>
+          <div className="text-xl font-semibold">Chi tiết bài kiểm tra</div>
         }
         open={isViewModalOpen}
         onCancel={handleCloseViewModal}
@@ -453,10 +474,14 @@ const Quiz = () => {
                 <div className="bg-gray-50 p-6 rounded-lg">
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">Thông tin chung</h3>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Thông tin chung
+                      </h3>
                       <div className="space-y-4">
                         <div>
-                          <label className="text-gray-600 block mb-1">Mã bài kiểm tra</label>
+                          <label className="text-gray-600 block mb-1">
+                            Mã bài kiểm tra
+                          </label>
                           <input
                             type="text"
                             value={selectedQuiz.quizId || ""}
@@ -465,7 +490,9 @@ const Quiz = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-600 block mb-1">Tiêu đề</label>
+                          <label className="text-gray-600 block mb-1">
+                            Tiêu đề
+                          </label>
                           <input
                             type="text"
                             value={selectedQuiz.title || ""}
@@ -474,7 +501,9 @@ const Quiz = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-600 block mb-1">Master phụ trách</label>
+                          <label className="text-gray-600 block mb-1">
+                            Master phụ trách
+                          </label>
                           <input
                             type="text"
                             value={selectedQuiz.masterName || ""}
@@ -485,19 +514,31 @@ const Quiz = () => {
                       </div>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">Thông tin chi tiết</h3>
+                      <h3 className="text-lg font-semibold mb-4">
+                        Thông tin chi tiết
+                      </h3>
                       <div className="space-y-4">
                         <div>
-                          <label className="text-gray-600 block mb-1">Ngày tạo</label>
+                          <label className="text-gray-600 block mb-1">
+                            Ngày tạo
+                          </label>
                           <input
                             type="text"
-                            value={selectedQuiz.createdDate ? new Date(selectedQuiz.createdDate).toLocaleDateString("vi-VN") : ""}
+                            value={
+                              selectedQuiz.createdDate
+                                ? new Date(
+                                    selectedQuiz.createdDate
+                                  ).toLocaleDateString("vi-VN")
+                                : ""
+                            }
                             readOnly
                             className="w-full p-2 bg-white border rounded-md"
                           />
                         </div>
                         <div>
-                          <label className="text-gray-600 block mb-1">Điểm số</label>
+                          <label className="text-gray-600 block mb-1">
+                            Điểm số
+                          </label>
                           <input
                             type="text"
                             value={selectedQuiz.score || 0}
@@ -506,8 +547,15 @@ const Quiz = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-gray-600 block mb-1">Trạng thái</label>
-                          <Tag color={selectedQuiz.score >= 80 ? "success" : "error"} className="text-sm px-3 py-1">
+                          <label className="text-gray-600 block mb-1">
+                            Trạng thái
+                          </label>
+                          <Tag
+                            color={
+                              selectedQuiz.score >= 80 ? "success" : "error"
+                            }
+                            className="text-sm px-3 py-1"
+                          >
                             {selectedQuiz.score >= 80 ? "Đạt" : "Chưa đạt"}
                           </Tag>
                         </div>
@@ -517,17 +565,17 @@ const Quiz = () => {
                 </div>
               </Col>
             </Row>
-            
+
             <div className="flex justify-end gap-3 mt-6">
-              <CustomButton 
+              <CustomButton
                 type="primary"
-                onClick={() => navigate(`/quiz/${selectedQuiz.quizId}/questions`)}
+                onClick={() =>
+                  navigate(`/quiz/${selectedQuiz.quizId}/questions`)
+                }
               >
                 Câu hỏi
               </CustomButton>
-              <CustomButton onClick={handleCloseViewModal}>
-                Đóng
-              </CustomButton>
+              <CustomButton onClick={handleCloseViewModal}>Đóng</CustomButton>
             </div>
           </div>
         )}
@@ -536,9 +584,7 @@ const Quiz = () => {
       {/* Modal tạo quiz mới */}
       <Modal
         title={
-          <div className="text-xl font-semibold">
-            Tạo bài kiểm tra mới
-          </div>
+          <div className="text-xl font-semibold">Tạo bài kiểm tra mới</div>
         }
         open={isCreateModalOpen}
         onCancel={handleCloseCreateModal}
@@ -558,7 +604,7 @@ const Quiz = () => {
           }}
           initialValues={{
             title: "",
-            score: 0
+            score: 0,
           }}
         >
           <div className="p-4">
@@ -567,9 +613,7 @@ const Quiz = () => {
               label="Tiêu đề bài kiểm tra"
               rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
             >
-              <Input 
-                placeholder="Nhập tiêu đề bài kiểm tra"
-              />
+              <Input placeholder="Nhập tiêu đề bài kiểm tra" />
             </Form.Item>
 
             <Form.Item
@@ -577,16 +621,16 @@ const Quiz = () => {
               label="Điểm số"
               rules={[
                 { required: true, message: "Vui lòng nhập điểm số" },
-                { 
-                  type: 'number',
+                {
+                  type: "number",
                   transform: (value) => Number(value),
-                  min: 0, 
-                  max: 100, 
-                  message: "Điểm phải từ 0-100" 
-                }
+                  min: 0,
+                  max: 100,
+                  message: "Điểm phải từ 0-100",
+                },
               ]}
             >
-              <Input 
+              <Input
                 type="number"
                 min={0}
                 max={100}
@@ -601,9 +645,7 @@ const Quiz = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-3 mt-6">
-              <CustomButton onClick={handleCloseCreateModal}>
-                Hủy
-              </CustomButton>
+              <CustomButton onClick={handleCloseCreateModal}>Hủy</CustomButton>
               <CustomButton
                 type="primary"
                 htmlType="submit"
@@ -619,9 +661,7 @@ const Quiz = () => {
       {/* Modal chỉnh sửa quiz */}
       <Modal
         title={
-          <div className="text-xl font-semibold">
-            Chỉnh sửa bài kiểm tra
-          </div>
+          <div className="text-xl font-semibold">Chỉnh sửa bài kiểm tra</div>
         }
         open={isEditModalOpen}
         onCancel={handleCloseEditModal}
@@ -643,9 +683,7 @@ const Quiz = () => {
               label="Tiêu đề bài kiểm tra"
               rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
             >
-              <Input 
-                placeholder="Nhập tiêu đề bài kiểm tra"
-              />
+              <Input placeholder="Nhập tiêu đề bài kiểm tra" />
             </Form.Item>
 
             <Form.Item
@@ -653,16 +691,16 @@ const Quiz = () => {
               label="Điểm số"
               rules={[
                 { required: true, message: "Vui lòng nhập điểm số" },
-                { 
-                  type: 'number',
+                {
+                  type: "number",
                   transform: (value) => Number(value),
-                  min: 0, 
-                  max: 100, 
-                  message: "Điểm phải từ 0-100" 
-                }
+                  min: 0,
+                  max: 100,
+                  message: "Điểm phải từ 0-100",
+                },
               ]}
             >
-              <Input 
+              <Input
                 type="number"
                 min={0}
                 max={100}
@@ -677,9 +715,7 @@ const Quiz = () => {
             </Form.Item>
 
             <div className="flex justify-end gap-3 mt-6">
-              <CustomButton onClick={handleCloseEditModal}>
-                Hủy
-              </CustomButton>
+              <CustomButton onClick={handleCloseEditModal}>Hủy</CustomButton>
               <CustomButton
                 type="primary"
                 htmlType="submit"
@@ -721,9 +757,7 @@ const Quiz = () => {
           </div>
 
           <div className="flex justify-end gap-3">
-            <CustomButton onClick={handleCancelDelete}>
-              Hủy
-            </CustomButton>
+            <CustomButton onClick={handleCancelDelete}>Hủy</CustomButton>
             <CustomButton
               type="primary"
               danger
@@ -757,4 +791,3 @@ const Quiz = () => {
 };
 
 export default Quiz;
-
