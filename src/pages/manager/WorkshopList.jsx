@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import Header from "../components/Common/Header";
-import CustomButton from "../components/Common/CustomButton";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import Header from "../../components/Common/Header";
+import CustomButton from "../../components/Common/CustomButton";
 
 const WorkshopList = () => {
   const navigate = useNavigate();
@@ -70,7 +70,7 @@ const WorkshopList = () => {
               <CustomButton
                 onClick={() => {
                   try {
-                    navigate("/workshopcheck");
+                    navigate("/manager/workshopcheck");
                   } catch (err) {
                     setError("Không thể chuyển đến trang kiểm tra");
                   }
@@ -88,7 +88,7 @@ const WorkshopList = () => {
               <CustomButton
                 onClick={() => {
                   try {
-                    navigate("/workshop-staff");
+                    navigate("/staff/workshop-staff");
                   } catch (err) {
                     setError("Không thể chuyển đến trang quản lý");
                   }

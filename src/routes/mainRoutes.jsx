@@ -3,9 +3,9 @@ import Schedule from "../pages/master/Schedule";
 import BookingSchedule from "../pages/staff/BookingSchedule";
 import BookingScheduleDetails from "../pages/BookingScheduleDetails";
 import Workshop from "../pages/Workshop";
-import WorkshopList from "../pages/WorkshopList";
-import WorkshopStaff from "../pages/WorkshopStaff";
-import WorkshopCheck from "../pages/WorkshopCheck";
+import WorkshopList from "../pages/manager/WorkshopList";
+import WorkshopStaff from "../pages/staff/WorkshopStaff";
+import WorkshopCheck from "../pages/manager/WorkshopCheck";
 import AudienceList from "../pages/staff/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
@@ -54,15 +54,15 @@ export const mainRoutes = [
     element: <Workshop />,
   },
   {
-    path: "workshop-company",
+    path: "manager/workshop-list",
     element: <WorkshopList />,
   },
   {
-    path: "workshop-staff",
+    path: "staff/workshop-staff",
     element: <WorkshopStaff />,
   },
   {
-    path: "workshopcheck",
+    path: "manager/workshopcheck",
     element: <WorkshopCheck />,
   },
   {

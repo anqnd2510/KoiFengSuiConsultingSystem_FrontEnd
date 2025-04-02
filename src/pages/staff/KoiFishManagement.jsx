@@ -65,18 +65,16 @@ const KoiFishManagement = () => {
     try {
       const response = await KoiFishService.getAllKoiFish();
       console.log("Nhận dữ liệu từ service:", response);
-      
+
       // Dữ liệu đã được xử lý bởi service
       setData(response);
       setError(null);
     } catch (err) {
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
       console.error("Lỗi khi fetch danh sách cá:", err);
-      const errorMessage = err.response?.data?.message || err.message || 'Không thể tải danh sách cá Koi';
-=======
       const errorMessage =
-        err.response?.data?.message || "Không thể tải danh sách cá Koi";
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể tải danh sách cá Koi";
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -96,7 +94,7 @@ const KoiFishManagement = () => {
       console.log("Xóa cá Koi ID:", id);
       const response = await KoiFishService.deleteKoiFish(id);
       console.log("Phản hồi từ API xóa:", response);
-      
+
       if (response && response.isSuccess) {
         message.success(response.message || "Đã xóa cá Koi thành công");
         await fetchKoiList();
@@ -104,13 +102,9 @@ const KoiFishManagement = () => {
         throw new Error(response?.message || "Có lỗi xảy ra khi xóa");
       }
     } catch (err) {
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
       console.error("Lỗi khi xóa cá Koi:", err);
-      const errorMessage = err.response?.data?.message || err.message || 'Không thể xóa cá Koi';
-=======
       const errorMessage =
-        err.response?.data?.message || "Không thể xóa cá Koi";
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
+        err.response?.data?.message || err.message || "Không thể xóa cá Koi";
       setError(errorMessage);
       message.error(errorMessage);
     }
@@ -134,43 +128,30 @@ const KoiFishManagement = () => {
     try {
       setModalLoading(true);
       const koiDetail = await KoiFishService.getKoiFishById(koi.id);
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
       console.log("Chi tiết cá Koi:", koiDetail);
-      
-      setSelectedKoi(koiDetail);
-      
-      // Kiểm tra xem có trường colors không, nếu không thì sử dụng mảng rỗng
-      const koiColors = koiDetail.colors || [];
-      setColorFields(koiColors.map(color => ({
-        name: color.colorName,
-        value: color.percentage / 100,
-        colorCode: color.colorCode
-      })) || []);
-      
-=======
 
       setSelectedKoi(koiDetail);
+
+      // Kiểm tra xem có trường colors không, nếu không thì sử dụng mảng rỗng
+      const koiColors = koiDetail.colors || [];
       setColorFields(
-        koiDetail.colors?.map((color) => ({
+        koiColors.map((color) => ({
           name: color.colorName,
           value: color.percentage / 100,
           colorCode: color.colorCode,
         })) || []
       );
 
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
       form.setFieldsValue({
         breed: koiDetail.varietyName,
         description: koiDetail.description,
       });
       setIsModalOpen(true);
     } catch (err) {
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
-      const errorMessage = err.response?.data?.message || err.message || 'Không thể tải thông tin cá Koi';
-=======
       const errorMessage =
-        err.response?.data?.message || "Không thể tải thông tin cá Koi";
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể tải thông tin cá Koi";
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -201,21 +182,19 @@ const KoiFishManagement = () => {
           percentage: Math.round(color.value * 100),
         })),
       };
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
-      
-      let response;
-      
-=======
 
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
+      let response;
+
       if (selectedKoi) {
         // Cập nhật
         console.log("Cập nhật cá Koi:", selectedKoi.id, formData);
         response = await KoiFishService.updateKoiFish(selectedKoi.id, formData);
         console.log("Phản hồi từ API cập nhật:", response);
-        
+
         if (response && response.isSuccess) {
-          message.success(response.message || "Đã cập nhật thông tin cá Koi thành công");
+          message.success(
+            response.message || "Đã cập nhật thông tin cá Koi thành công"
+          );
         } else {
           throw new Error(response?.message || "Có lỗi xảy ra khi cập nhật");
         }
@@ -224,9 +203,11 @@ const KoiFishManagement = () => {
         console.log("Tạo mới cá Koi:", formData);
         response = await KoiFishService.createKoiFish(formData);
         console.log("Phản hồi từ API tạo mới:", response);
-        
+
         if (response && response.isSuccess) {
-          message.success(response.message || "Đã tạo mới loài cá Koi thành công");
+          message.success(
+            response.message || "Đã tạo mới loài cá Koi thành công"
+          );
         } else {
           throw new Error(response?.message || "Có lỗi xảy ra khi tạo mới");
         }
@@ -235,13 +216,9 @@ const KoiFishManagement = () => {
       await fetchKoiList();
       handleCloseModal();
     } catch (err) {
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
       console.error("Lỗi khi lưu dữ liệu:", err);
-      const errorMessage = err.response?.data?.message || err.message || 'Đã xảy ra lỗi';
-=======
       const errorMessage =
         err.response?.data?.message || err.message || "Đã xảy ra lỗi";
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -290,10 +267,15 @@ const KoiFishManagement = () => {
   };
 
   // Lọc dữ liệu theo tìm kiếm
-  const filteredData = Array.isArray(data) 
+  const filteredData = Array.isArray(data)
     ? data.filter((item) => {
-        if (!item || typeof item !== 'object') return false;
-        return item.varietyName && item.varietyName.toLowerCase().includes((searchText || '').toLowerCase());
+        if (!item || typeof item !== "object") return false;
+        return (
+          item.varietyName &&
+          item.varietyName
+            .toLowerCase()
+            .includes((searchText || "").toLowerCase())
+        );
       })
     : [];
 
@@ -341,20 +323,15 @@ const KoiFishManagement = () => {
       width: "25%",
       render: (_, record) => (
         <ul className="list-disc pl-5">
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
-          {Array.isArray(record?.colors) && record.colors.length > 0 ? record.colors.map((color, index) => (
-            <li key={index} style={{ color: color?.colorCode || "#000000" }}>
-              {color?.colorName || "Không tên"}: {color?.percentage || 0}%
-            </li>
-          )) : <li>Không có dữ liệu màu sắc</li>}
-=======
-          {record.colors &&
+          {Array.isArray(record?.colors) && record.colors.length > 0 ? (
             record.colors.map((color, index) => (
-              <li key={index} style={{ color: color.colorCode }}>
-                {color.colorName}: {color.percentage}%
+              <li key={index} style={{ color: color?.colorCode || "#000000" }}>
+                {color?.colorName || "Không tên"}: {color?.percentage || 0}%
               </li>
-            ))}
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
+            ))
+          ) : (
+            <li>Không có dữ liệu màu sắc</li>
+          )}
         </ul>
       ),
     },
@@ -371,37 +348,21 @@ const KoiFishManagement = () => {
           >
             Chỉnh sửa
           </CustomButton>
-<<<<<<< HEAD:src/pages/KoiFishManagement.jsx
-          <CustomButton 
-            type="text" 
-            danger 
-            size="small" 
+          <CustomButton
+            type="text"
+            danger
+            size="small"
             icon={<Trash2 size={16} />}
             onClick={() => {
               Modal.confirm({
-                title: 'Xác nhận xóa',
-                content: 'Bạn có chắc chắn muốn xóa cá Koi này không?',
-                okText: 'Có',
-                cancelText: 'Không',
-                onOk: () => handleDelete(record.id)
+                title: "Xác nhận xóa",
+                content: "Bạn có chắc chắn muốn xóa cá Koi này không?",
+                okText: "Có",
+                cancelText: "Không",
+                onOk: () => handleDelete(record.id),
               });
             }}
           />
-=======
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa cá Koi này không?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <CustomButton
-              type="text"
-              danger
-              size="small"
-              icon={<Trash2 size={16} />}
-            />
-          </Popconfirm>
->>>>>>> e04ef2b621be742362957fc69ae965b8f49449dd:src/pages/staff/KoiFishManagement.jsx
         </Space>
       ),
     },
