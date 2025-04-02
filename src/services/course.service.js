@@ -207,3 +207,29 @@ export const updateCourse = async (courseData) => {
     throw error;
   }
 };
+
+// Lấy danh sách khóa học theo master
+export const getAllCoursesByMaster = async () => {
+  try {
+    // Kiểm tra người dùng đã đăng nhập qua token
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    console.log("Gọi API để lấy tất cả khóa học theo master");
+    const response = await apiClient.get(`${COURSE_ENDPOINT}/get-all-course-by-master`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    console.log("Raw API response status:", response.status);
+    console.log("API response data:", response.data);
+    
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách khóa học theo master:", error);
+    throw error;
+  }
+};
