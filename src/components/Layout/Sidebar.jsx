@@ -26,11 +26,15 @@ import { logout } from "../../services/auth.service";
 import { message } from "antd";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/dashboard" },
-  { icon: Calendar, label: "Schedule", path: "/schedule" },
+  { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
+  { icon: Calendar, label: "Schedule", path: "/master/schedule" },
   { icon: MessageSquare, label: "Feedback", path: "/feedback" },
-  { icon: Users, label: "Customer Management", path: "/customer-management" },
-  { icon: Bell, label: "Notifications", path: "/notifications" },
+  {
+    icon: Users,
+    label: "Customer Management",
+    path: "/staff/customer-management",
+  },
+  { icon: Bell, label: "Notifications", path: "/staff/notifications" },
   {
     icon: ClipboardList,
     label: "Booking Schedule",
@@ -39,7 +43,7 @@ const menuItems = [
   {
     icon: History,
     label: "Consultation History",
-    path: "/consultation-history",
+    path: "/staff/consultation-history",
   },
 
   {
@@ -78,12 +82,12 @@ const menuItems = [
   {
     icon: Fish,
     label: "Koi Fish ",
-    path: "/koi-fish-management",
+    path: "/staff/koi-fish-management",
   },
   {
     icon: Droplets,
     label: "Koi Pond ",
-    path: "/koi-pond-management",
+    path: "/staff/koi-pond-management",
   },
   {
     icon: User,

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { 
-  Form, 
-  Input, 
-  Button, 
-  Select, 
-  Upload, 
-  Space, 
-  Divider, 
+import {
+  Form,
+  Input,
+  Button,
+  Select,
+  Upload,
+  Space,
+  Divider,
   Card,
   message,
   InputNumber,
   Row,
-  Col
+  Col,
 } from "antd";
 import { ArrowLeft, UploadCloud, Plus, Trash2 } from "lucide-react";
-import BackButton from "../components/Common/BackButton";
+import BackButton from "../../components/Common/BackButton";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -34,7 +34,8 @@ const KoiFishDetail = () => {
     breed: "Asagi",
     image: "https://example.com/asagi.jpg",
     element: "Thủy",
-    description: "Asagi chính là giống sản sinh ra Nishikigoi, chúng bắt nguồn từ loài cá chép Magoi cổ đại.",
+    description:
+      "Asagi chính là giống sản sinh ra Nishikigoi, chúng bắt nguồn từ loài cá chép Magoi cổ đại.",
     colors: [
       { name: "Đen", value: "0.50" },
       { name: "Đỏ", value: "0.10" },
@@ -52,7 +53,7 @@ const KoiFishDetail = () => {
           element: koiFishData.element,
           description: koiFishData.description,
         });
-        
+
         // Cập nhật state colorFields
         setColorFields(koiFishData.colors);
         setLoading(false);
@@ -62,20 +63,22 @@ const KoiFishDetail = () => {
 
   const onFinish = (values) => {
     setLoading(true);
-    
+
     // Kết hợp giá trị từ form với danh sách màu sắc
     const formData = {
       ...values,
       colors: colorFields,
     };
-    
+
     console.log("Form data:", formData);
-    
+
     // Giả lập việc gửi API
     setTimeout(() => {
       setLoading(false);
-      message.success(`Đã ${isEditMode ? "cập nhật" : "tạo mới"} thông tin cá Koi thành công`);
-      navigate("/koi-fish-management");
+      message.success(
+        `Đã ${isEditMode ? "cập nhật" : "tạo mới"} thông tin cá Koi thành công`
+      );
+      navigate("/staff/koi-fish-management");
     }, 1500);
   };
 
@@ -103,13 +106,15 @@ const KoiFishDetail = () => {
       {/* Header */}
       <div className="bg-[#B89D71] p-4">
         <div className="flex items-center gap-2">
-          <BackButton onClick={() => navigate("/koi-fish-management")} />
+          <BackButton onClick={() => navigate("/staff/koi-fish-management")} />
           <h1 className="text-white text-xl font-semibold">
             {isEditMode ? "Chỉnh sửa thông tin cá Koi" : "Tạo mới loài cá Koi"}
           </h1>
         </div>
         <p className="text-white/80 text-sm ml-8">
-          {isEditMode ? "Cập nhật thông tin và đặc điểm của loài cá" : "Thêm thông tin chi tiết cho loài cá Koi mới"}
+          {isEditMode
+            ? "Cập nhật thông tin và đặc điểm của loài cá"
+            : "Thêm thông tin chi tiết cho loài cá Koi mới"}
         </p>
       </div>
 
@@ -127,7 +132,12 @@ const KoiFishDetail = () => {
                 <Form.Item
                   label="Tên giống cá Koi"
                   name="breed"
-                  rules={[{ required: true, message: "Vui lòng nhập tên giống cá Koi" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Vui lòng nhập tên giống cá Koi",
+                    },
+                  ]}
                 >
                   <Input placeholder="Nhập tên giống cá Koi" />
                 </Form.Item>
@@ -137,7 +147,9 @@ const KoiFishDetail = () => {
                 <Form.Item
                   label="Mệnh của cá"
                   name="element"
-                  rules={[{ required: true, message: "Vui lòng chọn mệnh của cá" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn mệnh của cá" },
+                  ]}
                 >
                   <Select placeholder="Chọn mệnh của cá">
                     <Option value="Thủy">Thủy</Option>
@@ -150,10 +162,7 @@ const KoiFishDetail = () => {
               </Col>
             </Row>
 
-            <Form.Item
-              label="Hình ảnh"
-              name="image"
-            >
+            <Form.Item label="Hình ảnh" name="image">
               <Upload
                 listType="picture-card"
                 maxCount={1}
@@ -169,7 +178,12 @@ const KoiFishDetail = () => {
             <Form.Item
               label="Thông tin giới thiệu"
               name="description"
-              rules={[{ required: true, message: "Vui lòng nhập thông tin giới thiệu" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng nhập thông tin giới thiệu",
+                },
+              ]}
             >
               <TextArea
                 placeholder="Nhập thông tin giới thiệu về loài cá Koi"
@@ -178,14 +192,16 @@ const KoiFishDetail = () => {
             </Form.Item>
 
             <Divider orientation="left">Màu sắc</Divider>
-            
+
             <div className="mb-4">
               {colorFields.map((field, index) => (
                 <div key={index} className="flex gap-2 mb-2">
                   <Input
                     placeholder="Tên màu"
                     value={field.name}
-                    onChange={(e) => updateColorField(index, "name", e.target.value)}
+                    onChange={(e) =>
+                      updateColorField(index, "name", e.target.value)
+                    }
                     style={{ width: "50%" }}
                   />
                   <InputNumber
@@ -194,7 +210,9 @@ const KoiFishDetail = () => {
                     max={1}
                     step={0.01}
                     value={field.value}
-                    onChange={(value) => updateColorField(index, "value", value)}
+                    onChange={(value) =>
+                      updateColorField(index, "value", value)
+                    }
                     style={{ width: "30%" }}
                   />
                   <Button
@@ -206,9 +224,9 @@ const KoiFishDetail = () => {
                   />
                 </div>
               ))}
-              
-              <Button 
-                type="dashed" 
+
+              <Button
+                type="dashed"
                 onClick={addColorField}
                 block
                 icon={<Plus size={16} />}
@@ -222,7 +240,7 @@ const KoiFishDetail = () => {
                 <Button type="primary" htmlType="submit" loading={loading}>
                   {isEditMode ? "Cập nhật" : "Tạo mới"}
                 </Button>
-                <Button onClick={() => navigate("/koi-fish-management")}>
+                <Button onClick={() => navigate("/staff/koi-fish-management")}>
                   Hủy bỏ
                 </Button>
               </Space>
@@ -234,4 +252,4 @@ const KoiFishDetail = () => {
   );
 };
 
-export default KoiFishDetail; 
+export default KoiFishDetail;
