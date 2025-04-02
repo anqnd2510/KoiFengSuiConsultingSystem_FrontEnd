@@ -2,15 +2,15 @@ import Dashboard from "../pages/manager/Dashboard";
 import Schedule from "../pages/master/Schedule";
 import BookingSchedule from "../pages/staff/BookingSchedule";
 import BookingScheduleDetails from "../pages/BookingScheduleDetails";
-import Workshop from "../pages/Workshop";
+import Workshop from "../pages/master/Workshop";
 import WorkshopList from "../pages/manager/WorkshopList";
 import WorkshopStaff from "../pages/staff/WorkshopStaff";
 import WorkshopCheck from "../pages/manager/WorkshopCheck";
 import WorkshopManager from "../pages/manager/WorkshopManager";
 import AudienceList from "../pages/staff/AudienceList";
-import CourseMaster from "../pages/CourseMaster";
-import Chapter from "../pages/Chapter";
-import Quiz from "../pages/Quiz";
+import CourseMaster from "../pages/master/CourseMaster";
+import Chapter from "../pages/master/Chapter";
+import Quiz from "../pages/master/Quiz";
 import CourseManagement from "../pages/staff/CourseManagement";
 import ConsultingOnline from "../pages/master/ConsultingOnline";
 import ConsultingOffline from "../pages/master/ConsultingOffline";
@@ -18,11 +18,11 @@ import KoiFishManagement from "../pages/staff/KoiFishManagement";
 import KoiPondManagement from "../pages/staff/KoiPondManagement";
 import Feedback from "../pages/Feedback";
 import Certificate from "../pages/Certificate";
-import Master from "../pages/Master";
+import Master from "../pages/staff/Master";
 import Customer from "../pages/staff/Customer";
 import Notifications from "../pages/staff/Notifications";
 import ConsultationHistory from "../pages/staff/ConsultationHistory";
-import Question from "../pages/Question";
+import Question from "../pages/master/Question";
 import Profile from "../pages/Profile";
 import Attachment from "../pages/manager/Attachment";
 import AttachmentDetail from "../pages/manager/AttachmentDetail";
@@ -51,7 +51,7 @@ export const mainRoutes = [
     element: <BookingScheduleDetails />,
   },
   {
-    path: "workshop-master",
+    path: "master/workshop-master",
     element: <Workshop />,
   },
   {
@@ -75,19 +75,19 @@ export const mainRoutes = [
     element: <AudienceList />,
   },
   {
-    path: "course-master",
+    path: "master/course-master",
     element: <CourseMaster />,
   },
   {
-    path: "course-chapters/:courseId",
+    path: "master/course-chapters/:courseId",
     element: <Chapter />,
   },
   {
-    path: "course-quiz/:courseId",
+    path: "master/course-quiz/:courseId",
     element: <Quiz />,
   },
   {
-    path: "quiz/:quizId/questions",
+    path: "master/quiz/:quizId/questions",
     element: <Question />,
   },
   {
@@ -119,7 +119,7 @@ export const mainRoutes = [
     element: <Certificate />,
   },
   {
-    path: "master-management",
+    path: "staff/master-management",
     element: <Master />,
   },
   {
