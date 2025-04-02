@@ -200,17 +200,29 @@ const WorkshopManager = () => {
       title: "HÀNH ĐỘNG",
       key: "action",
       render: (_, record) => (
-        <Button
-          type="primary"
-          icon={<EyeOutlined />}
-          size="small"
-          onClick={(e) => {
-            e.stopPropagation();
-            openWorkshopDetail(record);
-          }}
-        >
-          Xem
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            type="primary"
+            icon={<EyeOutlined />}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              openWorkshopDetail(record);
+            }}
+          >
+            Xem
+          </Button>
+          <Button
+            type="default"
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/staff/audience/${record.workshopId || record.id}`);
+            }}
+          >
+            Người tham dự
+          </Button>
+        </div>
       ),
     },
   ];

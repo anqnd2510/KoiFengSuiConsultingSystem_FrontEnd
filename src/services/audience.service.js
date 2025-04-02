@@ -6,6 +6,60 @@ import apiClient from "./apiClient";
 
 // URL cơ sở của API
 const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
+const REGISTER_ATTEND_ENDPOINT = "http://localhost:5261/api/RegisterAttend";
+
+/**
+ * Lấy danh sách người tham dự của một workshop
+ * @param {string} workshopId - ID của workshop
+ * @returns {Promise<Array>} Danh sách người tham dự
+ */
+export const getAudiencesByWorkshopId = async (workshopId) => {
+  try {
+    // Kiểm tra token
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      console.warn("Chưa đăng nhập hoặc token hết hạn, có thể sẽ gặp lỗi 401");
+    }
+    
+    console.log(`Gọi API lấy danh sách người tham dự cho workshop ID: ${workshopId}`);
+    
+    // Gọi API lấy danh sách người tham dự
+    const response = await apiClient.get(`${REGISTER_ATTEND_ENDPOINT}/workshop/${workshopId}`);
+    
+    console.log("API Response danh sách người tham dự:", response.data);
+    
+    if (response.data && response.data.isSuccess) {
+      return {
+        success: true,
+        data: response.data.data || [],
+        message: "Lấy danh sách người tham dự thành công"
+      };
+    } else {
+      console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
+      return {
+        success: false,
+        data: [],
+        message: response.data.message || "Không thể lấy danh sách người tham dự"
+      };
+    }
+  } catch (error) {
+    console.error(`Lỗi khi lấy danh sách người tham dự workshop ID ${workshopId}:`, error);
+    console.error('Chi tiết lỗi:', error.response?.data || error.message);
+    
+    // Xử lý lỗi 401
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+    
+    throw {
+      success: false,
+      data: [],
+      message: error.response?.data?.message || error.message || "Lỗi không xác định khi lấy danh sách người tham dự"
+    };
+  }
+};
 
 /**
  * Điểm danh người tham dự
@@ -80,5 +134,6 @@ const mapAudienceStatus = (status) => {
 
 export default {
   checkInAudience,
+  getAudiencesByWorkshopId,
   mapAudienceStatus
 }; 
