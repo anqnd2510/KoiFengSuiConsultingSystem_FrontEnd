@@ -372,10 +372,10 @@ const Workshop = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Quản lý hội thảo</h1>
-        <p className="text-white/80 text-sm">Báo cáo và tổng quan về các hội thảo của bạn</p>
-      </div>
+      <Header 
+        title="Quản lý hội thảo" 
+        description="Báo cáo và tổng quan về các hội thảo của bạn" 
+      />
 
       {/* Main Content */}
       <div id="main-content" className="p-6">
@@ -401,54 +401,48 @@ const Workshop = () => {
                 workshops={workshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
-                pagination={{
-                  current: currentPage,
-                  total: workshops.length,
-                  pageSize: pageSize,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng số ${total} hội thảo`,
-                  onChange: (page, pageSize) => {
-                    setCurrentPage(page);
-                    setPageSize(pageSize);
-                  }
-                }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(workshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
             <TabPane tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`} key="2">
               <WorkshopTable 
                 workshops={pendingWorkshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
-                pagination={{
-                  current: pendingCurrentPage,
-                  total: pendingWorkshops.length,
-                  pageSize: pageSize,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng số ${total} hội thảo`,
-                  onChange: (page, pageSize) => {
-                    setPendingCurrentPage(page);
-                    setPageSize(pageSize);
-                  }
-                }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={pendingCurrentPage}
+                  totalPages={Math.ceil(pendingWorkshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setPendingCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
             <TabPane tab={`Hội thảo bị từ chối (${rejectedWorkshops.length})`} key="3">
               <WorkshopTable 
                 workshops={rejectedWorkshops} 
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
-                pagination={{
-                  current: rejectedCurrentPage,
-                  total: rejectedWorkshops.length,
-                  pageSize: pageSize,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng số ${total} hội thảo`,
-                  onChange: (page, pageSize) => {
-                    setRejectedCurrentPage(page);
-                    setPageSize(pageSize);
-                  }
-                }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={rejectedCurrentPage}
+                  totalPages={Math.ceil(rejectedWorkshops.length / pageSize)}
+                  onPageChange={(page) => {
+                    setRejectedCurrentPage(page);
+                  }}
+                />
+              </div>
             </TabPane>
           </Tabs>
         </div>

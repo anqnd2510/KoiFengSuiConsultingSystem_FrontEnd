@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Pagination from "../../components/Common/Pagination";
 import CustomDatePicker from "../../components/Common/CustomDatePicker";
+import Header from "../../components/Common/Header";
 import dayjs from "dayjs";
 import { getAllDocuments } from "../../services/document.service";
 import { Spin, message, Empty, Button } from "antd";
@@ -104,11 +105,7 @@ const Document = () => {
 
   return (
     <>
-      <header className="h-[90px] bg-[#B4925A] flex items-center px-8">
-        <h1 className="text-2xl font-semibold text-white">
-          Quản lý hồ sơ
-        </h1>
-      </header>
+      <Header title="Quản lý hồ sơ" description="Báo cáo và tất cả hồ sơ" />
 
       <div className="p-8">
         <div className="flex items-center justify-between mb-8">
