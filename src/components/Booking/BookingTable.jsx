@@ -32,11 +32,20 @@ const BookingTable = ({ bookings, loading, onMasterChange }) => {
     fetchMasterList();
   }, []);
 
-  const handleMasterAssigned = (selectedValue, recordId) => {
-    // Tìm tên master từ masterList dựa vào selectedValue (masterId)
-    const selectedMaster = masterList.find((m) => m.value === selectedValue);
-    // Gọi onMasterChange với masterName thay vì masterId
-    onMasterChange(selectedMaster?.label || "Chưa phân công", recordId);
+  const handleMasterAssigned = (
+    selectedValue,
+    recordId,
+    masterName,
+    reload = false
+  ) => {
+    // Nếu cần reload dữ liệu (khi đã có master trước đó)
+    if (reload) {
+      onMasterChange(null, null, null, true); // Gọi hàm reload dữ liệu
+      return;
+    }
+
+    // Gọi onMasterChange với cả masterId và masterName
+    onMasterChange(selectedValue, masterName || "Chưa phân công", recordId);
   };
 
   const getStatusColor = (status) => {
@@ -99,20 +108,24 @@ const BookingTable = ({ bookings, loading, onMasterChange }) => {
       key: "master",
       width: "200px",
       render: (master, record) => {
-        if (!master || master === "Chưa phân công") {
-          return (
-            <div className="flex items-center">
-              <StaffAssign
-                staffId={master}
-                recordId={record.id}
-                staffList={masterList}
-                onSave={handleMasterAssigned}
-                defaultValue="Chưa phân công"
-              />
-            </div>
-          );
+        // Nếu đã có master được assign, hiển thị tên master
+        if (master && master !== "Chưa phân công") {
+          return <span className="text-gray-700">{master}</span>;
         }
-        return <span className="text-gray-700">{master}</span>;
+
+        // Nếu chưa có master, hiển thị dropdown để assign
+        return (
+          <div className="flex items-center">
+            <StaffAssign
+              staffId={master}
+              recordId={record.id}
+              staffList={masterList}
+              onSave={handleMasterAssigned}
+              defaultValue="Chưa phân công"
+              consultingType={record.consultingType}
+            />
+          </div>
+        );
       },
     },
     {

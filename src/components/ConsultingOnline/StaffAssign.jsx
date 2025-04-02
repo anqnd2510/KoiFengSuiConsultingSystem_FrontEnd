@@ -13,9 +13,12 @@ const StaffAssign = ({
   staffList,
   onSave,
   defaultValue = "Chưa phân công",
+  consultingType = "Online",
 }) => {
   const [editingMode, setEditingMode] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(defaultValue);
+  const [loading, setLoading] = useState(false);
+  const [assignedMaster, setAssignedMaster] = useState(null);
 
   const handleStaffChange = (value) => {
     setSelectedStaff(value);
@@ -29,29 +32,86 @@ const StaffAssign = ({
         selectedStaff !== "Chưa phân công" &&
         selectedStaff !== "none"
       ) {
+        setLoading(true);
+
+        if (!recordId) {
+          message.error("ID của booking không được để trống");
+          setLoading(false);
+          return;
+        }
+
         console.log("Sending to API:", {
           bookingId: recordId.toString(),
           masterId: selectedStaff.toString(),
+          consultingType: consultingType,
         });
 
-        const response = await assignMaster(
-          recordId.toString(),
-          selectedStaff.toString()
-        );
+        let bookingOnlineId = null;
+        let bookingOfflineId = null;
 
-        if (response.isSuccess) {
-          onSave(selectedStaff, recordId);
-          setEditingMode(false);
-          message.success("Phân công bậc thầy thành công!");
+        if (consultingType === "Online") {
+          bookingOnlineId = recordId.toString();
+        } else if (consultingType === "Offline") {
+          bookingOfflineId = recordId.toString();
         } else {
-          message.error(response.message || "Phân công bậc thầy thất bại!");
+          bookingOnlineId = recordId.toString();
         }
+
+        try {
+          const response = await assignMaster(
+            bookingOnlineId,
+            bookingOfflineId,
+            selectedStaff.toString()
+          );
+
+          if (response.isSuccess) {
+            const selectedMasterObj = staffList.find(
+              (staff) => staff.value === selectedStaff
+            );
+            const masterName = selectedMasterObj
+              ? selectedMasterObj.label
+              : selectedStaff;
+
+            setAssignedMaster(masterName);
+
+            onSave(selectedStaff, recordId, masterName);
+
+            setEditingMode(false);
+            message.success("Phân công bậc thầy thành công!");
+          } else {
+            message.error(response.message || "Phân công bậc thầy thất bại!");
+          }
+        } catch (error) {
+          console.error("API Error:", error);
+
+          if (
+            error.response?.data?.message?.includes(
+              "Nullable object must have a value"
+            )
+          ) {
+            message.error("Thiếu thông tin bắt buộc khi phân công bậc thầy");
+          } else if (
+            error.response?.data?.message === "Lịch tư vấn này đã có Master"
+          ) {
+            message.info("Lịch tư vấn này đã được phân công bậc thầy trước đó");
+            onSave(null, recordId, null, true);
+          } else {
+            message.error(
+              error.response?.data?.message ||
+                "Có lỗi xảy ra khi phân công bậc thầy!"
+            );
+          }
+        }
+      } else {
+        message.warning("Vui lòng chọn nhân viên để phân công");
       }
     } catch (error) {
       console.error("Error in handleSave:", error);
       message.error(
         error.response?.data?.message || "Có lỗi xảy ra khi phân công bậc thầy!"
       );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,6 +119,10 @@ const StaffAssign = ({
     setSelectedStaff(defaultValue);
     setEditingMode(false);
   };
+
+  if (assignedMaster) {
+    return <span className="text-gray-700">{assignedMaster}</span>;
+  }
 
   return (
     <div className="inline-flex items-center gap-2 relative">
@@ -70,6 +134,7 @@ const StaffAssign = ({
         onChange={handleStaffChange}
         options={staffList}
         dropdownMatchSelectWidth={false}
+        disabled={loading}
       />
 
       {editingMode && (
@@ -77,24 +142,47 @@ const StaffAssign = ({
           <button
             onClick={handleSave}
             className="p-1 rounded bg-green-500 hover:bg-green-600 transition-colors"
+            disabled={loading}
           >
-            <svg
-              className="w-3.5 h-3.5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
+            {loading ? (
+              <svg
+                className="w-3.5 h-3.5 text-white animate-spin"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                ></circle>
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
+              </svg>
+            ) : (
+              <svg
+                className="w-3.5 h-3.5 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
           </button>
           <button
             onClick={handleCancel}
             className="p-1 rounded bg-gray-400 hover:bg-gray-500 transition-colors"
+            disabled={loading}
           >
             <svg
               className="w-3.5 h-3.5 text-white"

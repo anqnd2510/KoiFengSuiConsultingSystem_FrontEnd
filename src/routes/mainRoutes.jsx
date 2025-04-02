@@ -1,24 +1,26 @@
-import Dashboard from "../pages/Dashboard";
-import Schedule from "../pages/Schedule";
-import BookingSchedule from "../pages/BookingSchedule";
+import Dashboard from "../pages/manager/Dashboard";
+import Schedule from "../pages/master/Schedule";
+import BookingSchedule from "../pages/staff/BookingSchedule";
 import BookingScheduleDetails from "../pages/BookingScheduleDetails";
 import Workshop from "../pages/Workshop";
 import WorkshopList from "../pages/WorkshopList";
 import WorkshopStaff from "../pages/WorkshopStaff";
 import WorkshopCheck from "../pages/WorkshopCheck";
-import AudienceList from "../pages/AudienceList";
+import AudienceList from "../pages/staff/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
 import Quiz from "../pages/Quiz";
 import CourseManagement from "../pages/CourseManagement";
-import ConsultingOnline from "../pages/ConsultingOnline";
-import KoiFishManagement from "../pages/KoiFishManagement";
-import KoiPondManagement from "../pages/KoiPondManagement";
+import ConsultingOnline from "../pages/master/ConsultingOnline";
+import ConsultingOffline from "../pages/master/ConsultingOffline";
+import KoiFishManagement from "../pages/staff/KoiFishManagement";
+import KoiPondManagement from "../pages/staff/KoiPondManagement";
 import Feedback from "../pages/Feedback";
 import Certificate from "../pages/Certificate";
 import Master from "../pages/Master";
-import Customer from "../pages/Customer";
-import ConsultationHistory from "../pages/ConsultationHistory";
+import Customer from "../pages/staff/Customer";
+import Notifications from "../pages/staff/Notifications";
+import ConsultationHistory from "../pages/staff/ConsultationHistory";
 import Question from "../pages/Question";
 import Profile from "../pages/Profile";
 import Attachment from "../pages/manager/Attachment";
@@ -27,18 +29,20 @@ import Contract from "../pages/manager/Contract";
 import ContractDetail from "../pages/manager/ContractDetail";
 import Document from "../pages/manager/Document";
 import DocumentDetail from "../pages/manager/DocumentDetail";
-
+import ConsultingContract from "../pages/staff/ConsultingContract";
+import DocumentList from "../pages/master/DocumentList";
+import AttachmentList from "../pages/master/AttachmentList";
 export const mainRoutes = [
   {
-    path: "/",
+    path: "manager/dashboard",
     element: <Dashboard />,
   },
   {
-    path: "schedule",
+    path: "master/schedule",
     element: <Schedule />,
   },
   {
-    path: "booking-schedule",
+    path: "staff/booking-schedule",
     element: <BookingSchedule />,
   },
   {
@@ -62,7 +66,7 @@ export const mainRoutes = [
     element: <WorkshopCheck />,
   },
   {
-    path: "audience",
+    path: "staff/audience",
     element: <AudienceList />,
   },
   {
@@ -86,15 +90,19 @@ export const mainRoutes = [
     element: <CourseManagement />,
   },
   {
-    path: "consulting-online",
+    path: "master/consulting-online",
     element: <ConsultingOnline />,
   },
   {
-    path: "koi-fish-management",
+    path: "master/consulting-offline",
+    element: <ConsultingOffline />,
+  },
+  {
+    path: "staff/koi-fish-management",
     element: <KoiFishManagement />,
   },
   {
-    path: "koi-pond-management",
+    path: "staff/koi-pond-management",
     element: <KoiPondManagement />,
   },
   {
@@ -110,11 +118,11 @@ export const mainRoutes = [
     element: <Master />,
   },
   {
-    path: "customer-management",
+    path: "staff/customer-management",
     element: <Customer />,
   },
   {
-    path: "consultation-history",
+    path: "staff/consultation-history",
     element: <ConsultationHistory />,
   },
   {
@@ -144,5 +152,21 @@ export const mainRoutes = [
   {
     path: "manager/document/:id",
     element: <DocumentDetail />,
+  },
+  {
+    path: "staff/contracts",
+    element: <ConsultingContract />,
+  },
+  {
+    path: "master/document",
+    element: <DocumentList />,
+  },
+  {
+    path: "master/attachments",
+    element: <AttachmentList />,
+  },
+  {
+    path: "staff/notifications",
+    element: <Notifications />,
   },
 ];

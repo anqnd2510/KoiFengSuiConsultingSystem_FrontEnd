@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Sidebar from "../components/Layout/Sidebar";
-import Header from "../components/Common/Header";
+import Sidebar from "../../components/Layout/Sidebar";
+import Header from "../../components/Common/Header";
 import {
   BellOutlined,
   CheckCircleOutlined,
@@ -148,7 +148,6 @@ const Notifications = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
       <div className="flex-1 overflow-hidden">
         <Header
           title="Thông báo"

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
-import SearchBar from "../components/Common/SearchBar";
-import BookingTable from "../components/Booking/BookingTable";
-import Pagination from "../components/Common/Pagination";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
+import React, { useState, useEffect, useCallback } from "react";
+import SearchBar from "../../components/Common/SearchBar";
+import BookingTable from "../../components/Booking/BookingTable";
+import Pagination from "../../components/Common/Pagination";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
 import {
   Modal,
   Form,
@@ -14,8 +14,11 @@ import {
   Spin,
   message,
 } from "antd";
-import CustomButton from "../components/Common/CustomButton";
-import { getBookingHistory, assignMaster } from "../services/booking.service";
+import CustomButton from "../../components/Common/CustomButton";
+import {
+  getBookingHistory,
+  assignMaster,
+} from "../../services/booking.service";
 
 const BookingSchedule = () => {
   const [bookings, setBookings] = useState([]);
@@ -25,38 +28,38 @@ const BookingSchedule = () => {
   const [form] = Form.useForm();
   const [masterList, setMasterList] = useState([]);
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        setLoading(true);
-        const response = await getBookingHistory();
+  const fetchBookings = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getBookingHistory();
 
-        if (response?.data && Array.isArray(response.data)) {
-          const transformedData = response.data.map((booking) => ({
-            id: booking.id || "",
-            customerName: booking.customerName || "",
-            description: booking.description || "",
-            date: booking.bookingDate || "",
-            consultingType: booking.type,
-            master: booking.masterName || "Chưa phân công",
-            status: booking.status || "pending",
-          }));
+      if (response?.data && Array.isArray(response.data)) {
+        const transformedData = response.data.map((booking) => ({
+          id: booking.id || "",
+          customerName: booking.customerName || "",
+          description: booking.description || "",
+          date: booking.bookingDate || "",
+          consultingType: booking.type,
+          master: booking.masterName || "Chưa phân công",
+          status: booking.status || "pending",
+        }));
 
-          setBookings(transformedData);
-          setError(null);
-        } else {
-          setError("Không có dữ liệu từ server");
-        }
-      } catch (err) {
-        setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
-        console.error("Error fetching bookings:", err);
-      } finally {
-        setLoading(false);
+        setBookings(transformedData);
+        setError(null);
+      } else {
+        setError("Không có dữ liệu từ server");
       }
-    };
-
-    fetchBookings();
+    } catch (err) {
+      setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
+      console.error("Error fetching bookings:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchBookings();
+  }, [fetchBookings]);
 
   const handleSearch = (searchTerm) => {
     console.log("Tìm kiếm:", searchTerm);
@@ -82,19 +85,21 @@ const BookingSchedule = () => {
     });
   };
 
-  const handleMasterChange = (masterValue, recordId) => {
-    // Tìm tên master từ masterValue (masterId)
-    const selectedMaster = masterList.find((m) => m.value === masterValue);
-    const masterName = selectedMaster ? selectedMaster.label : masterValue;
+  const handleMasterChange = async (masterValue, masterName, recordId) => {
+    try {
+      const updatedBookings = bookings.map((booking) => {
+        if (booking.id === recordId) {
+          return { ...booking, master: masterName };
+        }
+        return booking;
+      });
+      setBookings(updatedBookings);
 
-    const updatedBookings = bookings.map((booking) => {
-      if (booking.id === recordId) {
-        return { ...booking, master: masterName };
-      }
-      return booking;
-    });
-
-    setBookings(updatedBookings);
+      await fetchBookings();
+    } catch (error) {
+      console.error("Error updating master:", error);
+      message.error("Có lỗi xảy ra khi cập nhật dữ liệu");
+    }
   };
 
   return (

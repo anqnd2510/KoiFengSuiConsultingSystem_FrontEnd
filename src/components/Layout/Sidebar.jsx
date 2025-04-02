@@ -26,20 +26,24 @@ import { logout } from "../../services/auth.service";
 import { message } from "antd";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/dashboard" },
-  { icon: Calendar, label: "Schedule", path: "/schedule" },
+  { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
+  { icon: Calendar, label: "Schedule", path: "/master/schedule" },
   { icon: MessageSquare, label: "Feedback", path: "/feedback" },
-  { icon: Users, label: "Customer Management", path: "/customer-management" },
-  { icon: Bell, label: "Notifications", path: "/notifications" },
+  {
+    icon: Users,
+    label: "Customer Management",
+    path: "/staff/customer-management",
+  },
+  { icon: Bell, label: "Notifications", path: "/staff/notifications" },
   {
     icon: ClipboardList,
     label: "Booking Schedule",
-    path: "/booking-schedule",
+    path: "/staff/booking-schedule",
   },
   {
     icon: History,
     label: "Consultation History",
-    path: "/consultation-history",
+    path: "/staff/consultation-history",
   },
 
   {
@@ -53,12 +57,12 @@ const menuItems = [
   {
     icon: MessageCircle,
     label: "Consulting Online",
-    path: "/consulting-online",
+    path: "/master/consulting-online",
   },
   {
     icon: MessageCircle,
     label: "Consulting Offline",
-    path: "/consulting-offline",
+    path: "/master/consulting-offline",
   },
   {
     icon: FileText,
@@ -78,12 +82,12 @@ const menuItems = [
   {
     icon: Fish,
     label: "Koi Fish ",
-    path: "/koi-fish-management",
+    path: "/staff/koi-fish-management",
   },
   {
     icon: Droplets,
     label: "Koi Pond ",
-    path: "/koi-pond-management",
+    path: "/staff/koi-pond-management",
   },
   {
     icon: User,
@@ -113,28 +117,34 @@ const Sidebar = () => {
   };
 
   const isActive = (path) => {
-    if (path === "/consulting-offline") {
+    if (path === "/master/consulting-offline") {
       return (
-        location.pathname === "/consulting-offline" ||
-        location.pathname.startsWith("/contract")
+        location.pathname === "/master/consulting-offline" ||
+        location.pathname.startsWith("/master/consulting-offline/")
       );
     }
-    
+
     if (path === "/manager/attachment") {
-      return location.pathname === "/manager/attachment" || 
-        location.pathname.startsWith("/manager/attachment/");
+      return (
+        location.pathname === "/manager/attachment" ||
+        location.pathname.startsWith("/manager/attachment/")
+      );
     }
-    
+
     if (path === "/manager/contract") {
-      return location.pathname === "/manager/contract" || 
-        location.pathname.startsWith("/manager/contract/");
+      return (
+        location.pathname === "/manager/contract" ||
+        location.pathname.startsWith("/manager/contract/")
+      );
     }
-    
+
     if (path === "/manager/document") {
-      return location.pathname === "/manager/document" || 
-        location.pathname.startsWith("/manager/document/");
+      return (
+        location.pathname === "/manager/document" ||
+        location.pathname.startsWith("/manager/document/")
+      );
     }
-    
+
     return location.pathname === path;
   };
 
@@ -169,25 +179,25 @@ const Sidebar = () => {
       </div>
 
       <div className="absolute bottom-4 left-4 flex items-center gap-2 w-[calc(100%-2rem)]">
-        <Link 
-          to="/profile" 
+        <Link
+          to="/profile"
           className={`flex items-center gap-3 px-4 py-2 rounded-lg flex-1 ${
-            location.pathname === "/profile" 
-              ? "bg-[#42855B] text-white" 
+            location.pathname === "/profile"
+              ? "bg-[#42855B] text-white"
               : "text-gray-800 hover:bg-[#42855B] hover:text-white"
           }`}
         >
           <div className="flex items-center gap-3 flex-1">
-            <img 
-              src="avatar.jpg" 
-              alt="User" 
+            <img
+              src="avatar.jpg"
+              alt="User"
               className="w-8 h-8 rounded-full object-cover"
             />
             <span>anh Duy An</span>
           </div>
           <Settings size={18} />
         </Link>
-        
+
         <button
           onClick={handleLogout}
           className="p-2 rounded-lg text-gray-800 hover:bg-[#42855B] hover:text-white transition-colors duration-200"
