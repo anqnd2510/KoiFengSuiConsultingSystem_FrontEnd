@@ -1,19 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Modal, message, Input } from "antd";
-import SearchBar from "../components/Common/SearchBar";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import CustomButton from "../components/Common/CustomButton";
-import CustomTable from "../components/Common/CustomTable";
-import Pagination from "../components/Common/Pagination";
+import SearchBar from "../../components/Common/SearchBar";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import CustomButton from "../../components/Common/CustomButton";
+import CustomTable from "../../components/Common/CustomTable";
+import Pagination from "../../components/Common/Pagination";
 import {
   getPendingWorkshops,
   approveWorkshop,
   formatPendingWorkshopsData,
-} from "../services/approve.service";
-import { rejectWorkshop } from "../services/reject.service";
-import { isAuthenticated } from "../services/auth.service";
+} from "../../services/approve.service";
+import { rejectWorkshop } from "../../services/reject.service";
+import { isAuthenticated } from "../../services/auth.service";
 
 const { TextArea } = Input;
 
@@ -68,7 +68,7 @@ const WorkshopCheck = () => {
 
   const handleManageWorkshops = () => {
     try {
-      navigate("/workshop-staff");
+      navigate("/staff/workshop-staff");
     } catch (err) {
       setError("Không thể chuyển đến trang quản lý hội thảo");
     }

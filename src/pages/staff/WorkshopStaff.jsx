@@ -1,14 +1,21 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag, message, Spin, Button, Tooltip, Typography } from "antd";
-import { ReloadOutlined, InfoCircleOutlined, EyeOutlined } from '@ant-design/icons';
-import SearchBar from "../components/Common/SearchBar";
-import Pagination from "../components/Common/Pagination";
-import CustomTable from "../components/Common/CustomTable";
-import Header from "../components/Common/Header";
-import Error from "../components/Common/Error";
-import FilterBar from "../components/Common/FilterBar";
-import { getWorkshopsByCreatedDate, formatWorkshopsData } from "../services/workshopstaff.service";
+import {
+  ReloadOutlined,
+  InfoCircleOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import SearchBar from "../../components/Common/SearchBar";
+import Pagination from "../../components/Common/Pagination";
+import CustomTable from "../../components/Common/CustomTable";
+import Header from "../../components/Common/Header";
+import Error from "../../components/Common/Error";
+import FilterBar from "../../components/Common/FilterBar";
+import {
+  getWorkshopsByCreatedDate,
+  formatWorkshopsData,
+} from "../../services/workshopstaff.service";
 
 const { Paragraph } = Typography;
 
@@ -18,10 +25,10 @@ const stringToColor = (str) => {
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
-  let color = '#';
+  let color = "#";
   for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xFF;
-    color += ('00' + value.toString(16)).substr(-2);
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ("00" + value.toString(16)).substr(-2);
   }
   return color;
 };
@@ -39,11 +46,11 @@ const WorkshopStaff = () => {
   const fetchWorkshops = async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const data = await getWorkshopsByCreatedDate();
       console.log("Dữ liệu workshop gốc:", data);
-      
+
       if (!data || data.length === 0) {
         message.info("Không có dữ liệu workshop");
         setWorkshops([]);
@@ -61,12 +68,12 @@ const WorkshopStaff = () => {
       setLoading(false);
     }
   };
-  
+
   // Gọi API khi component được mount
   useEffect(() => {
     fetchWorkshops();
   }, []);
-  
+
   // Hàm chuyển đổi trạng thái từ API sang UI
   const getStatusColor = (status) => {
     switch (status) {
@@ -83,7 +90,7 @@ const WorkshopStaff = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
-    console.log('Searching for:', searchTerm);
+    console.log("Searching for:", searchTerm);
   };
 
   const handleStatusFilterChange = (value) => {
@@ -105,19 +112,24 @@ const WorkshopStaff = () => {
   const statusOptions = [
     { value: "Sắp diễn ra", label: "Sắp diễn ra" },
     { value: "Đang diễn ra", label: "Đang diễn ra" },
-    { value: "Đã xong", label: "Đã xong" }
+    { value: "Đã xong", label: "Đã xong" },
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
-  const filteredWorkshops = workshops.filter(workshop => {
-    const matchesSearch = 
-      (workshop.name && workshop.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.master && workshop.master.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.location && workshop.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.workshopId && workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-    const matchesStatus = statusFilter === "all" || workshop.status === statusFilter;
-    
+  const filteredWorkshops = workshops.filter((workshop) => {
+    const matchesSearch =
+      (workshop.name &&
+        workshop.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (workshop.master &&
+        workshop.master.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (workshop.location &&
+        workshop.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (workshop.workshopId &&
+        workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    const matchesStatus =
+      statusFilter === "all" || workshop.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -132,7 +144,7 @@ const WorkshopStaff = () => {
       dataIndex: "workshopId",
       key: "workshopId",
       width: 180,
-      render: (text) => text
+      render: (text) => text,
     },
     {
       title: "TÊN WORKSHOP",
@@ -143,11 +155,11 @@ const WorkshopStaff = () => {
           {text}
           {record.description && (
             <Tooltip title={record.description}>
-              <InfoCircleOutlined style={{ marginLeft: 8, color: '#1890ff' }} />
+              <InfoCircleOutlined style={{ marginLeft: 8, color: "#1890ff" }} />
             </Tooltip>
           )}
         </div>
-      )
+      ),
     },
     {
       title: "MASTER",
@@ -155,39 +167,38 @@ const WorkshopStaff = () => {
       key: "master",
       render: (text, record) => {
         // Kiểm tra email người dùng
-        const userEmail = localStorage.getItem('userEmail');
-        
+        const userEmail = localStorage.getItem("userEmail");
+
         // Nếu người dùng đăng nhập là bob@example.com
         if (userEmail === "bob@example.com") {
           return "Bob Chen";
         }
-        
+
         return text;
-      }
+      },
     },
     {
       title: "ĐỊA ĐIỂM",
       dataIndex: "location",
-      key: "location"
+      key: "location",
     },
     {
       title: "NGÀY",
       dataIndex: "date",
-      key: "date"
+      key: "date",
     },
     {
       title: "GIÁ",
       dataIndex: "price",
       key: "price",
-      render: (price) => price ? `${price.toLocaleString('vi-VN')} VND` : "N/A"
+      render: (price) =>
+        price ? `${price.toLocaleString("vi-VN")} VND` : "N/A",
     },
     {
       title: "TRẠNG THÁI",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      )
+      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
       title: "HÀNH ĐỘNG",
@@ -204,29 +215,26 @@ const WorkshopStaff = () => {
         >
           Xem
         </Button>
-      )
-    }
+      ),
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      <Header
-        title="Workshop"
-        description="Quản lý workshop"
-      />
+      <Header title="Workshop" description="Quản lý workshop" />
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
             <div className="flex items-center">
-              <SearchBar 
+              <SearchBar
                 placeholder="Tìm workshop..."
                 onSearch={handleSearch}
               />
             </div>
-            
+
             <div className="flex items-center space-x-2">
-              <FilterBar 
+              <FilterBar
                 statusOptions={statusOptions}
                 onStatusChange={handleStatusFilterChange}
                 defaultValue="all"
@@ -246,8 +254,14 @@ const WorkshopStaff = () => {
             <>
               {workshops.length === 0 ? (
                 <div className="text-center py-10">
-                  <p className="text-gray-500 mb-4">Không có dữ liệu workshop. Vui lòng thử lại sau.</p>
-                  <Button type="primary" onClick={fetchWorkshops} icon={<ReloadOutlined />}>
+                  <p className="text-gray-500 mb-4">
+                    Không có dữ liệu workshop. Vui lòng thử lại sau.
+                  </p>
+                  <Button
+                    type="primary"
+                    onClick={fetchWorkshops}
+                    icon={<ReloadOutlined />}
+                  >
                     Thử lại
                   </Button>
                 </div>
@@ -279,4 +293,4 @@ const WorkshopStaff = () => {
   );
 };
 
-export default WorkshopStaff; 
+export default WorkshopStaff;

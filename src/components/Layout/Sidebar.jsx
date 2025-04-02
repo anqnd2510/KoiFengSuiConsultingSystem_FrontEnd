@@ -51,8 +51,12 @@ const menuItems = [
     label: "Koi Feng Shui Blog",
     path: "/blog-management",
   },
-  { icon: ClipboardList, label: "Danh sách hội thảo", path: "/workshop-list" },
-  { icon: ClipboardList, label: "Quản lý hội thảo", path: "/workshop-staff" },
+  { icon: ClipboardList, label: "Workshop", path: "/staff/workshop-staff" },
+  {
+    icon: ClipboardList,
+    label: "Workshop List",
+    path: "/manager/workshop-list",
+  },
   { icon: Book, label: "Courses", path: "/course-management" },
   { icon: Award, label: "Certificate", path: "/certificate" },
   {
