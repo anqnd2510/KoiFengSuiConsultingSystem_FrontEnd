@@ -54,7 +54,7 @@ export const mainRoutes = [
     element: <Workshop />,
   },
   {
-    path: "workshop-company",
+    path: "workshop-list",
     element: <WorkshopList />,
   },
   {
