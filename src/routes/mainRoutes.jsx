@@ -6,6 +6,7 @@ import Workshop from "../pages/Workshop";
 import WorkshopList from "../pages/manager/WorkshopList";
 import WorkshopStaff from "../pages/staff/WorkshopStaff";
 import WorkshopCheck from "../pages/manager/WorkshopCheck";
+import WorkshopManager from "../pages/manager/WorkshopManager";
 import AudienceList from "../pages/staff/AudienceList";
 import CourseMaster from "../pages/CourseMaster";
 import Chapter from "../pages/Chapter";
@@ -60,6 +61,10 @@ export const mainRoutes = [
   {
     path: "staff/workshop-staff",
     element: <WorkshopStaff />,
+  },
+  {
+    path: "manager/workshop-manager",
+    element: <WorkshopManager />,
   },
   {
     path: "manager/workshopcheck",
