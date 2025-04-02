@@ -14,82 +14,16 @@ import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import CustomTable from "../../components/Common/CustomTable";
 import Error from "../../components/Common/Error";
-import { checkInAudience } from "../../services/audience.service";
+import { checkInAudience, getAudiencesByWorkshopId } from "../../services/audience.service";
 
 const { Title } = Typography;
 
-// Dữ liệu mẫu dựa trên hình ảnh
-const audienceData = [
-  {
-    id: 1,
-    attendId: "0BA1CFE1-53D2-47E3-B",
-    workshopId: "NULL",
-    attendName: "Jane Smith",
-    phoneNumber: "0987654321",
-    customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending",
-  },
-  {
-    id: 2,
-    attendId: "3DAF1138-8D95-40BD-8",
-    workshopId: "NULL",
-    attendName: "John Doe",
-    phoneNumber: "1234567890",
-    customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed",
-  },
-  {
-    id: 3,
-    attendId: "7D544216-AE7C-4A0B-8",
-    workshopId: "NULL",
-    attendName: "John Doe",
-    phoneNumber: "1234567890",
-    customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed",
-  },
-  {
-    id: 4,
-    attendId: "D05BB2F7-6D35-4352-8",
-    workshopId: "NULL",
-    attendName: "Jane Smith",
-    phoneNumber: "0987654321",
-    customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending",
-  },
-  {
-    id: 5,
-    attendId: "E61CB314-41C9-4AAD-B",
-    workshopId: "357B32FE-63D8-4493-8",
-    attendName: "John Doe",
-    phoneNumber: "1234567890",
-    customerId: "05369D4A-A270-4E52-A",
-    status: "Confirmed",
-  },
-  {
-    id: 6,
-    attendId: "EE5E0887-6D93-4E0A-B",
-    workshopId: "A9A5E712-15F4-448F-A",
-    attendName: "Jane Smith",
-    phoneNumber: "0987654321",
-    customerId: "CEDBA518-5EC0-4469-B",
-    status: "Pending",
-  },
-];
-
-// Thông tin workshop
-const workshopInfo = {
-  "357B32FE-63D8-4493-8": {
-    name: "Feng Shui for Beginners",
-    master: "Bob Chen",
-    location: "Community Center",
-    date: "21/3/2023",
-  },
-  "A9A5E712-15F4-448F-A": {
-    name: "Advanced Koi Care",
-    master: "Jane Smith",
-    location: "Koi Farm",
-    date: "21/4/2023",
-  },
+// Thông tin workshop mặc định (sẽ được thay thế bằng dữ liệu từ API)
+const defaultWorkshopInfo = {
+  name: "Workshop",
+  master: "Không xác định",
+  location: "Không xác định",
+  date: "Không xác định",
 };
 
 const AudienceList = () => {
@@ -100,36 +34,68 @@ const AudienceList = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [checkingIn, setCheckingIn] = useState(false);
-  const [workshop, setWorkshop] = useState(null);
+  const [workshop, setWorkshop] = useState(defaultWorkshopInfo);
 
-  // Lấy dữ liệu dựa trên workshopId
+  // Lấy dữ liệu dựa trên workshopId từ API
   useEffect(() => {
-    setLoading(true);
+    const fetchAudiences = async () => {
+      setLoading(true);
+      setError(null);
 
-    console.log("Workshop ID từ URL:", workshopId);
+      try {
+        console.log("Đang lấy danh sách người tham dự cho workshop ID:", workshopId);
+        
+        // Gọi API để lấy danh sách người tham dự
+        const result = await getAudiencesByWorkshopId(workshopId);
+        
+        if (result.success) {
+          console.log("Lấy danh sách người tham dự thành công:", result.data);
+          
+          // Định dạng dữ liệu từ API
+          const formattedAudiences = result.data.map((audience, index) => ({
+            id: index + 1,
+            attendId: audience.attendId,
+            workshopId: workshopId,
+            attendName: audience.workshopName || "Người tham dự",
+            phoneNumber: audience.phoneNumber || "Không có",
+            customerId: audience.customerName || "Không có",
+            status: audience.status || "Pending",
+          }));
+          
+          setAudiences(formattedAudiences);
+          
+          // Nếu có data từ API, cập nhật thông tin workshop
+          if (formattedAudiences.length > 0 && formattedAudiences[0].workshopName) {
+            setWorkshop({
+              name: formattedAudiences[0].workshopName || "Workshop",
+              master: formattedAudiences[0].masterName || "Không xác định",
+              location: formattedAudiences[0].location || "Không xác định",
+              date: formattedAudiences[0].date || "Không xác định",
+            });
+          }
+          
+          message.success(`Đã tải ${formattedAudiences.length} người tham dự`);
+        } else {
+          console.error("Lỗi khi lấy danh sách người tham dự:", result.message);
+          setError(result.message || "Không thể lấy danh sách người tham dự");
+          setAudiences([]);
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu người tham dự:", err);
+        setError(`Không thể tải dữ liệu người tham dự: ${err.message}`);
+        message.error("Không thể tải dữ liệu người tham dự");
+        setAudiences([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Tìm thông tin workshop
-    const info = workshopInfo[workshopId];
-    setWorkshop(info);
-
-    // Lọc danh sách người tham dự theo workshopId
-    // Nếu workshopId là null, lấy tất cả người tham dự có workshopId là NULL
-    // Nếu có workshopId, lấy người tham dự có workshopId tương ứng
-    const filteredAudiences = workshopId
-      ? audienceData.filter((a) => a.workshopId === workshopId)
-      : audienceData.filter((a) => a.workshopId === "NULL");
-
-    setAudiences(filteredAudiences);
-
-    if (info) {
-      message.success(
-        `Đã tải danh sách người tham dự cho workshop: ${info.name}`
-      );
+    if (workshopId) {
+      fetchAudiences();
     } else {
-      message.info("Đã tải danh sách người tham dự");
+      setError("Không tìm thấy workshop ID");
+      setLoading(false);
     }
-
-    setLoading(false);
   }, [workshopId]);
 
   const handleSearch = (searchTerm) => {
@@ -167,14 +133,7 @@ const AudienceList = () => {
       }
     } catch (err) {
       console.error("Lỗi khi điểm danh:", err);
-
-      // Nếu API gặp lỗi, vẫn cập nhật UI để demo
-      message.warning("API điểm danh gặp lỗi, nhưng đã cập nhật UI để demo");
-      setAudiences((prevAudiences) =>
-        prevAudiences.map((item) =>
-          item.id === audience.id ? { ...item, status: "Confirmed" } : item
-        )
-      );
+      message.error("Lỗi khi điểm danh: " + (err.message || "Không xác định"));
     } finally {
       setCheckingIn(false);
     }
@@ -183,6 +142,7 @@ const AudienceList = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Confirmed":
+      case "CheckedIn":
         return "success";
       case "Pending":
         return "warning";
@@ -196,6 +156,7 @@ const AudienceList = () => {
   const getStatusText = (status) => {
     switch (status) {
       case "Confirmed":
+      case "CheckedIn":
         return "Đã điểm danh";
       case "Pending":
         return "Chờ xác nhận";
@@ -237,16 +198,10 @@ const AudienceList = () => {
       width: "15%",
     },
     {
-      title: "Mã khách hàng",
-      dataIndex: "customerId",
-      key: "customerId",
-      width: "15%",
-    },
-    {
       title: "Tên người tham dự",
       dataIndex: "attendName",
       key: "attendName",
-      width: "15%",
+      width: "20%",
     },
     {
       title: "Số điện thoại",
@@ -254,7 +209,12 @@ const AudienceList = () => {
       key: "phoneNumber",
       width: "15%",
     },
-
+    {
+      title: "Khách hàng",
+      dataIndex: "customerId",
+      key: "customerId",
+      width: "20%",
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -267,9 +227,9 @@ const AudienceList = () => {
     {
       title: "Hành động",
       key: "action",
-      width: "10%",
+      width: "15%",
       render: (_, record) =>
-        record.status !== "Confirmed" ? (
+        record.status !== "Confirmed" && record.status !== "CheckedIn" ? (
           <Popconfirm
             title="Điểm danh người tham dự"
             description={`Bạn có chắc muốn điểm danh cho ${record.attendName}?`}
@@ -332,7 +292,10 @@ const AudienceList = () => {
           </div>
         )}
 
-        <div className="mb-6 flex justify-end">
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-medium">Danh sách người tham dự (ID: {workshopId})</h2>
+          </div>
           <SearchBar onSearch={handleSearch} />
         </div>
 
@@ -344,19 +307,30 @@ const AudienceList = () => {
           </div>
         ) : (
           <>
-            <CustomTable
-              columns={columns}
-              dataSource={paginatedAudiences}
-              loading={loading}
-            />
-
-            <div className="mt-6">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
+            {audiences.length === 0 ? (
+              <Alert
+                message="Không có dữ liệu"
+                description="Không tìm thấy người tham dự cho workshop này. Vui lòng kiểm tra lại ID workshop hoặc thử lại sau."
+                type="info"
+                showIcon
               />
-            </div>
+            ) : (
+              <>
+                <CustomTable
+                  columns={columns}
+                  dataSource={paginatedAudiences}
+                  loading={loading}
+                />
+
+                <div className="mt-6">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
