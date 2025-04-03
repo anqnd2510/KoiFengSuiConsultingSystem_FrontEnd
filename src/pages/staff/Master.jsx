@@ -35,6 +35,7 @@ import {
   Star,
 } from "lucide-react";
 import CustomTable from "../../components/Common/CustomTable";
+import { getMasterList } from "../../services/master.service";
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -214,67 +215,50 @@ const Master = () => {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewMaster, setViewMaster] = useState(null);
 
-  // Mock data cho danh sách bậc thầy
-  const initialData = [
-    {
-      id: 1,
-      fullName: "Nguyễn Văn A",
-      email: "nguyenvana@example.com",
-      phone: "0901234567",
-      level: "Cao cấp",
-      experience: 15,
-      rating: 5,
-      expertise: ["Phong thủy hồ Koi", "Tư vấn thiết kế hồ"],
-      workingHours: ["08:00", "17:00"],
-      workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"],
-      bio: "Chuyên gia phong thủy với hơn 15 năm kinh nghiệm trong lĩnh vực thiết kế và bố trí hồ cá Koi.",
-      avatar: "https://example.com/avatar1.jpg",
-    },
-    {
-      id: 2,
-      fullName: "Trần Thị B",
-      email: "tranthib@example.com",
-      phone: "0912345678",
-      level: "Trung cấp",
-      experience: 8,
-      rating: 4,
-      expertise: ["Cách bài trí cá Koi", "Phong thủy nhà ở"],
-      workingHours: ["09:00", "18:00"],
-      workingDays: ["Thứ 2", "Thứ 4", "Thứ 6", "Thứ 7"],
-      bio: "Chuyên gia tư vấn phong thủy nhà ở với sở trường về bài trí cá Koi trong không gian sống.",
-      avatar: "https://example.com/avatar2.jpg",
-    },
-    {
-      id: 3,
-      fullName: "Lê Văn C",
-      email: "levanc@example.com",
-      phone: "0923456789",
-      level: "Cao cấp",
-      experience: 20,
-      rating: 5,
-      expertise: ["Phong thủy văn phòng", "Phong thủy hồ Koi"],
-      workingHours: ["10:00", "19:00"],
-      workingDays: ["Thứ 3", "Thứ 5", "Thứ 7", "Chủ nhật"],
-      bio: "Bậc thầy phong thủy với chuyên môn về không gian làm việc và kết hợp yếu tố nước trong văn phòng.",
-      avatar: "https://example.com/avatar3.jpg",
-    },
-    {
-      id: 4,
-      fullName: "Phạm Thị D",
-      email: "phamthid@example.com",
-      phone: "0934567890",
-      level: "Sơ cấp",
-      experience: 3,
-      rating: 3,
-      expertise: ["Tư vấn thiết kế hồ"],
-      workingHours: ["08:30", "17:30"],
-      workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"],
-      bio: "Chuyên viên tư vấn thiết kế hồ mới vào nghề, có kiến thức tốt về các loại hồ cá Koi phù hợp với từng không gian.",
-      avatar: "https://example.com/avatar4.jpg",
-    },
-  ];
+  // Thêm state để quản lý loading khi fetch API
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [data, setData] = useState(initialData);
+  // Fetch dữ liệu từ API khi component mount
+  useEffect(() => {
+    const fetchMasters = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const response = await getMasterList();
+        
+        if (response.isSuccess) {
+          // Chuyển đổi dữ liệu từ API để phù hợp với cấu trúc hiện tại
+          const formattedData = response.data.map(master => ({
+            id: master.masterId,
+            fullName: master.masterName,
+            email: master.email || "Chưa cập nhật",
+            phone: master.phone || "Chưa cập nhật",
+            level: master.rating || "Chưa cập nhật",
+            experience: master.experience || "Chưa cập nhật",
+            rating: 5,
+            expertise: [master.expertise || "Master"],
+            workingHours: ["08:00", "17:00"],
+            workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"],
+            bio: master.biography || "Chưa cập nhật",
+            // avatar: master.imageUrl || "https://via.placeholder.com/40?text=Master",
+          }));
+          setData(formattedData);
+        } else {
+          throw new Error(response.message || "Có lỗi xảy ra khi tải dữ liệu");
+        }
+      } catch (error) {
+        console.error("Lỗi khi tải danh sách bậc thầy:", error);
+        setError("Không thể tải danh sách bậc thầy. Vui lòng thử lại sau.");
+        message.error("Không thể tải danh sách bậc thầy");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMasters();
+  }, []);
+
+  const [data, setData] = useState([]);
 
   // Hàm xử lý tìm kiếm
   const handleSearch = (value) => {
@@ -449,13 +433,20 @@ const Master = () => {
   // Cấu hình các cột cho bảng
   const columns = [
     {
-      title: "Bậc thầy",
+      title: "Mã thầy phong thủy",
+      dataIndex: "id",
+      key: "id",
+      width: "10%",
+      render: (id) => <span className="font-medium">#{id}</span>,
+    },
+    {
+      title: "Tên thầy phong thủy",
       dataIndex: "fullName",
       key: "fullName",
-      width: "15%",
+      width: "20%",
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 overflow-hidden rounded-full">
+          {/* <div className="w-10 h-10 overflow-hidden rounded-full">
             <img
               src={record.avatar}
               alt={record.fullName}
@@ -464,7 +455,7 @@ const Master = () => {
                 e.target.src = "https://via.placeholder.com/40?text=Master";
               }}
             />
-          </div>
+          </div> */}
           <div>
             <div className="font-medium">{record.fullName}</div>
             <div className="text-xs text-gray-500">{record.email}</div>
@@ -473,39 +464,10 @@ const Master = () => {
       ),
     },
     {
-      title: "Cấp bậc",
-      dataIndex: "level",
-      key: "level",
-      width: "10%",
-      render: (level) => {
-        let color = "blue";
-        if (level === "Cao cấp") color = "gold";
-        if (level === "Trung cấp") color = "green";
-        if (level === "Sơ cấp") color = "blue";
-        return <Tag color={color}>{level}</Tag>;
-      },
-    },
-    {
-      title: "Kinh nghiệm & Đánh giá",
-      key: "experience",
-      width: "15%",
-      render: (_, record) => (
-        <div>
-          <div>
-            <Award className="inline-block mr-1 w-4 h-4" />
-            {record.experience} năm kinh nghiệm
-          </div>
-          <div className="mt-1">
-            <Rate disabled defaultValue={record.rating} />
-          </div>
-        </div>
-      ),
-    },
-    {
       title: "Chuyên môn",
       key: "expertise",
       dataIndex: "expertise",
-      width: "15%",
+      width: "20%",
       render: (expertise) => (
         <>
           {expertise.map((tag) => (
@@ -517,31 +479,22 @@ const Master = () => {
       ),
     },
     {
-      title: "Thời gian làm việc",
-      key: "workingTime",
-      width: "20%",
-      render: (_, record) => (
+      title: "Kinh nghiệm",
+      key: "experience",
+      dataIndex: "experience",
+      width: "15%",
+      render: (experience) => (
         <div>
-          <div>
-            <Clock className="inline-block mr-1 w-4 h-4" />
-            {record.workingHours &&
-            Array.isArray(record.workingHours) &&
-            record.workingHours.length === 2
-              ? `${record.workingHours[0]} - ${record.workingHours[1]}`
-              : "Chưa có thông tin"}
-          </div>
-          <div className="mt-1">
-            <Calendar className="inline-block mr-1 w-4 h-4" />
-            {record.workingDays.join(", ")}
-          </div>
+          <Award className="inline-block mr-1 w-4 h-4" />
+          {experience}
         </div>
       ),
     },
     {
-      title: "Giới thiệu",
+      title: "Tiểu sử",
       dataIndex: "bio",
       key: "bio",
-      width: "10%",
+      width: "20%",
       ellipsis: true,
     },
     {
@@ -627,18 +580,15 @@ const Master = () => {
             <div className="overflow-x-auto">
               <CustomTable
                 columns={columns}
-                dataSource={filteredData}
-                loading={loading}
+                dataSource={paginatedData}
+                loading={isLoading}
                 pagination={{
                   current: currentPage,
                   total: filteredData.length,
                   pageSize: pageSize,
                   showSizeChanger: true,
                   showTotal: (total) => `Tổng số ${total} bậc thầy`,
-                  onChange: (page, pageSize) => {
-                    setCurrentPage(page);
-                    setPageSize(pageSize);
-                  },
+                  onChange: handlePageChange,
                 }}
                 scroll={{ x: 1200 }}
               />
@@ -707,7 +657,7 @@ const Master = () => {
         {viewMaster && (
           <div className="p-4">
             <div className="flex items-center gap-4 mb-6">
-              <div className="w-20 h-20 overflow-hidden rounded-full">
+              {/* <div className="w-20 h-20 overflow-hidden rounded-full">
                 <img
                   src={viewMaster.avatar}
                   alt={viewMaster.fullName}
@@ -716,7 +666,7 @@ const Master = () => {
                     e.target.src = "https://via.placeholder.com/80?text=Master";
                   }}
                 />
-              </div>
+              </div> */}
               <div>
                 <h2 className="text-xl font-bold">{viewMaster.fullName}</h2>
                 <Tag
