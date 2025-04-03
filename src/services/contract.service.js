@@ -100,7 +100,7 @@ export const getAllContractsByStaff = async () => {
 // Thêm hàm phê duyệt hợp đồng
 export const approveContract = async (id) => {
   try {
-    const response = await apiClient.patch(`/Contract/confirm/${id}`);
+    const response = await apiClient.patch(`/Contract/manager/confirm/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error approving contract:", error);
@@ -111,7 +111,7 @@ export const approveContract = async (id) => {
 // Thêm hàm từ chối hợp đồng
 export const rejectContract = async (id) => {
   try {
-    const response = await apiClient.patch(`/Contract/cancel/${id}`);
+    const response = await apiClient.patch(`/Contract/manager/cancel/${id}`);
     return response.data;
   } catch (error) {
     console.error("Error rejecting contract:", error);

@@ -49,7 +49,7 @@ const Login = () => {
 
         console.log("Tokens saved, navigating to schedule...");
 
-        navigate("/schedule", { replace: true });
+        navigate("/master/schedule", { replace: true });
       } else {
         message.error(
           "Đăng nhập thất bại: " + (response.message || "Vui lòng thử lại")

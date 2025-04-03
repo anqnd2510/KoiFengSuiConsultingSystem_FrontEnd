@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import SearchBar from "../../components/Common/SearchBar";
-import BookingTable from "../../components/Booking/BookingTable";
+import BookingTableManager from "../../components/Booking/BookingTableManager";
 import Pagination from "../../components/Common/Pagination";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
@@ -15,40 +15,66 @@ import {
   message,
 } from "antd";
 import CustomButton from "../../components/Common/CustomButton";
-import { getAllBookingByStaff } from "../../services/booking.service";
+import { getBookingHistory } from "../../services/booking.service";
 
-const BookingSchedule = () => {
+const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
-  const [masterList, setMasterList] = useState([]);
 
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await getAllBookingByStaff();
+      const response = await getBookingHistory();
+      console.log("Booking API response:", response);
+
+      // Lấy dữ liệu phân công từ localStorage
+      const assignmentData = JSON.parse(
+        localStorage.getItem("staffAssignments") || "{}"
+      );
+      console.log("Local assignments:", assignmentData);
 
       if (response?.data && Array.isArray(response.data)) {
-        const transformedData = response.data.map((booking) => ({
-          id: booking.id || "",
-          customerName: booking.customerName || "",
-          description: booking.description || "",
-          date: booking.bookingDate || "",
-          consultingType: booking.type,
-          master: booking.masterName || "Chưa phân công",
-          status: booking.status || "pending",
-        }));
+        const transformedData = response.data.map((booking) => {
+          console.log("Processing booking:", booking);
 
+          // Kiểm tra nếu có dữ liệu phân công trong localStorage
+          const localAssignment = assignmentData[booking.id];
+
+          // Ưu tiên dữ liệu từ API, nếu không có thì dùng localStorage
+          const hasStaff = booking.staffName && booking.staffName.trim() !== "";
+          const staffName = hasStaff
+            ? booking.staffName
+            : localAssignment
+            ? localAssignment.staffName
+            : "Chưa phân công";
+          const staffId =
+            booking.staffId ||
+            (localAssignment ? localAssignment.staffId : null);
+
+          return {
+            id: booking.id || "",
+            customerName: booking.customerName || "",
+            description: booking.description || "",
+            date: booking.bookingDate || "",
+            consultingType: booking.type || "Online",
+            staff: staffName,
+            staffId: staffId,
+            status: booking.status || "pending",
+          };
+        });
+
+        console.log("Transformed bookings:", transformedData);
         setBookings(transformedData);
         setError(null);
       } else {
         setError("Không có dữ liệu từ server");
       }
     } catch (err) {
-      setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
       console.error("Error fetching bookings:", err);
+      setError("Có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -82,19 +108,50 @@ const BookingSchedule = () => {
     });
   };
 
-  const handleMasterChange = async (masterValue, masterName, recordId) => {
-    try {
-      const updatedBookings = bookings.map((booking) => {
-        if (booking.id === recordId) {
-          return { ...booking, master: masterName };
-        }
-        return booking;
-      });
-      setBookings(updatedBookings);
+  const handleStaffChange = async (
+    staffValue,
+    staffName,
+    recordId,
+    reload = false
+  ) => {
+    console.log("handleStaffChange called with:", {
+      staffValue,
+      staffName,
+      recordId,
+      reload,
+    });
 
-      await fetchBookings();
+    try {
+      if (reload) {
+        console.log("Reloading all bookings");
+        await fetchBookings();
+        return;
+      }
+
+      // Lưu trạng thái phân công vào localStorage để giữ lại sau khi refresh
+      const assignmentData = JSON.parse(
+        localStorage.getItem("staffAssignments") || "{}"
+      );
+      assignmentData[recordId] = { staffId: staffValue, staffName };
+      localStorage.setItem("staffAssignments", JSON.stringify(assignmentData));
+
+      // Cập nhật dữ liệu local ngay lập tức
+      setBookings((prevBookings) =>
+        prevBookings.map((booking) =>
+          booking.id === recordId
+            ? { ...booking, staff: staffName, staffId: staffValue }
+            : booking
+        )
+      );
+
+      message.success(`Đã phân công ${staffName} thành công!`);
+
+      // Tải lại dữ liệu từ server sau khi cập nhật
+      setTimeout(() => {
+        fetchBookings();
+      }, 1000);
     } catch (error) {
-      console.error("Error updating master:", error);
+      console.error("Error updating staff:", error);
       message.error("Có lỗi xảy ra khi cập nhật dữ liệu");
     }
   };
@@ -118,9 +175,10 @@ const BookingSchedule = () => {
             <Spin size="large" />
           </div>
         ) : (
-          <BookingTable
+          <BookingTableManager
             bookings={bookings}
-            onMasterChange={handleMasterChange}
+            loading={loading}
+            onStaffChange={handleStaffChange}
           />
         )}
 
@@ -203,4 +261,4 @@ const BookingSchedule = () => {
   );
 };
 
-export default BookingSchedule;
+export default BookingManagement;
