@@ -33,6 +33,7 @@ import DocumentDetail from "../pages/manager/DocumentDetail";
 import ConsultingContract from "../pages/staff/ConsultingContract";
 import DocumentList from "../pages/master/DocumentList";
 import AttachmentList from "../pages/master/AttachmentList";
+import BookingManagement from "../pages/manager/BookingManagement";
 export const mainRoutes = [
   {
     path: "manager/dashboard",
@@ -173,5 +174,9 @@ export const mainRoutes = [
   {
     path: "staff/notifications",
     element: <Notifications />,
+  },
+  {
+    path: "manager/booking-management",
+    element: <BookingManagement />,
   },
 ];

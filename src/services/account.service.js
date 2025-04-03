@@ -84,3 +84,19 @@ export const updateAccountRole = async (accountId, newRole) => {
     throw error;
   }
 };
+
+/**
+ * Lấy danh sách tất cả nhân viên từ hệ thống
+ * @returns {Promise<Array>} Promise chứa mảng thông tin nhân viên
+ * @throws {Error} Lỗi khi không thể lấy danh sách nhân viên
+ */
+export const getAllStaff = async () => {
+  try {
+    const response = await apiClient.get(`${ACCOUNT_ENDPOINT}/get-all-staff`);
+    console.log("API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching staff:", error);
+    throw error;
+  }
+};

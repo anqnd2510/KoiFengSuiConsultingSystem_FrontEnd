@@ -150,3 +150,74 @@ export const getAllBookingOnline = async () => {
     throw error;
   }
 };
+
+// Get All Booking By Staff
+export const getAllBookingByStaff = async () => {
+  try {
+    const response = await apiClient.get(
+      `${BOOKING_ENDPOINT}/get-all-booking-by-staf`
+    );
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching online bookings onlines:", error);
+    throw error;
+  }
+};
+
+// Assign Staff APIs
+export const assignStaff = async (
+  bookingOnlineId,
+  bookingOfflineId,
+  staffId
+) => {
+  try {
+    console.log("Sending request with:", {
+      bookingOnlineId,
+      bookingOfflineId,
+      staffId,
+    });
+
+    // Xây dựng query parameters
+    const params = new URLSearchParams();
+
+    // Chỉ thêm tham số nếu có giá trị
+    if (bookingOnlineId) {
+      params.append("bookingonline", bookingOnlineId);
+    }
+
+    if (bookingOfflineId) {
+      params.append("bookingoffline", bookingOfflineId);
+    }
+
+    // MasterId là bắt buộc
+    if (!staffId) {
+      throw new Error("StaffId không được để trống");
+    }
+
+    params.append("staffId", staffId);
+
+    // Kiểm tra xem có ít nhất một loại booking được chỉ định
+    if (!bookingOnlineId && !bookingOfflineId) {
+      throw new Error(
+        "Phải chỉ định ít nhất một loại booking (online hoặc offline)"
+      );
+    }
+
+    // Sử dụng URLSearchParams để tạo query string đúng cách
+    const queryString = params.toString();
+
+    console.log(
+      `Sending request to: ${BOOKING_ENDPOINT}/assign-staff?${queryString}`
+    );
+
+    const response = await apiClient.put(
+      `${BOOKING_ENDPOINT}/assign-staff?${queryString}`
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error response:", error.response?.data);
+    throw error;
+  }
+};

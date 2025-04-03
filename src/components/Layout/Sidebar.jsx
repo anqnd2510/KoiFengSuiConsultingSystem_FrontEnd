@@ -108,6 +108,11 @@ const menuItems = [
     label: "Workshop Master",
     path: "/master/workshop-master",
   },
+  {
+    icon: ClipboardList,
+    label: "Booking Management",
+    path: "/manager/booking-management",
+  },
 ];
 
 const Sidebar = () => {

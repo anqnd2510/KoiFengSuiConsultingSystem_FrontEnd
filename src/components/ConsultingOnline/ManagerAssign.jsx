@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Select, message } from "antd";
-import { assignMaster } from "../../services/booking.service";
+import { assignStaff } from "../../services/booking.service";
 
 const { Option } = Select;
 
 /**
  * Component dùng để phân công nhân viên cho các buổi tư vấn
  */
-const StaffAssign = ({
+const ManagerAssign = ({
   staffId,
   recordId,
   staffList,
@@ -18,18 +18,51 @@ const StaffAssign = ({
   const [editingMode, setEditingMode] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(defaultValue);
   const [loading, setLoading] = useState(false);
-  const [assignedMaster, setAssignedMaster] = useState(null);
+  const [assignedStaff, setAssignedStaff] = useState(null);
+
+  useEffect(() => {
+    console.log("ManagerAssign props:", {
+      staffId,
+      recordId,
+      defaultValue,
+    });
+
+    // Kiểm tra dữ liệu từ localStorage
+    if (recordId) {
+      const assignmentData = JSON.parse(
+        localStorage.getItem("staffAssignments") || "{}"
+      );
+      const localAssignment = assignmentData[recordId];
+
+      if (localAssignment) {
+        console.log("Found local assignment:", localAssignment);
+        setSelectedStaff(localAssignment.staffId);
+        setAssignedStaff(localAssignment.staffName);
+        return;
+      }
+    }
+
+    // Nếu không có dữ liệu trong localStorage, sử dụng props
+    if (staffId && staffId !== "Chưa phân công" && staffId !== "none") {
+      setSelectedStaff(staffId);
+
+      // Tìm tên nhân viên từ staffList
+      const staffItem = staffList.find((item) => item.value === staffId);
+      if (staffItem) {
+        setAssignedStaff(staffItem.label);
+      }
+    } else {
+      setSelectedStaff(defaultValue);
+    }
+  }, [staffId, recordId, defaultValue, staffList]);
 
   const handleStaffChange = (value) => {
     setSelectedStaff(value);
     setEditingMode(true);
   };
 
-  const handleSave = async (event) => {
+  const handleSave = async () => {
     try {
-      // Ngăn chặn event mặc định nếu có
-      event && event.preventDefault && event.preventDefault();
-
       if (
         selectedStaff &&
         selectedStaff !== "Chưa phân công" &&
@@ -45,7 +78,7 @@ const StaffAssign = ({
 
         console.log("Sending to API:", {
           bookingId: recordId.toString(),
-          masterId: selectedStaff.toString(),
+          staffId: selectedStaff.toString(),
           consultingType: consultingType,
         });
 
@@ -61,42 +94,45 @@ const StaffAssign = ({
         }
 
         try {
-          const response = await assignMaster(
+          // Ngăn chặn event mặc định nếu có
+          event && event.preventDefault && event.preventDefault();
+
+          const response = await assignStaff(
             bookingOnlineId,
             bookingOfflineId,
             selectedStaff.toString()
           );
 
           if (response.isSuccess) {
-            const selectedMasterObj = staffList.find(
+            const selectedStaffObj = staffList.find(
               (staff) => staff.value === selectedStaff
             );
-            const masterName = selectedMasterObj
-              ? selectedMasterObj.label
+            const staffName = selectedStaffObj
+              ? selectedStaffObj.label
               : selectedStaff;
 
-            setAssignedMaster(masterName);
+            setAssignedStaff(staffName);
 
             // Lưu vào localStorage để tránh mất dữ liệu khi refresh
             const assignmentData = JSON.parse(
-              localStorage.getItem("masterAssignments") || "{}"
+              localStorage.getItem("staffAssignments") || "{}"
             );
             assignmentData[recordId] = {
-              masterId: selectedStaff,
-              masterName: masterName,
+              staffId: selectedStaff,
+              staffName: staffName,
             };
             localStorage.setItem(
-              "masterAssignments",
+              "staffAssignments",
               JSON.stringify(assignmentData)
             );
 
             // Gọi onSave với tham số false ở cuối để không trigger reload
-            onSave(selectedStaff, recordId, masterName, false);
+            onSave(selectedStaff, recordId, staffName, false);
 
             setEditingMode(false);
-            message.success("Phân công bậc thầy thành công!");
+            message.success("Phân công nhân viên thành công!");
           } else {
-            message.error(response.message || "Phân công bậc thầy thất bại!");
+            message.error(response.message || "Phân công nhân viên thất bại!");
           }
         } catch (error) {
           console.error("API Error:", error);
@@ -106,16 +142,18 @@ const StaffAssign = ({
               "Nullable object must have a value"
             )
           ) {
-            message.error("Thiếu thông tin bắt buộc khi phân công bậc thầy");
+            message.error("Thiếu thông tin bắt buộc khi phân công nhân viên");
           } else if (
-            error.response?.data?.message === "Lịch tư vấn này đã có Master"
+            error.response?.data?.message === "Lịch tư vấn này đã có Staff"
           ) {
-            message.info("Lịch tư vấn này đã được phân công bậc thầy trước đó");
+            message.info(
+              "Lịch tư vấn này đã được phân công nhân viên trước đó"
+            );
             onSave(null, recordId, null, true);
           } else {
             message.error(
               error.response?.data?.message ||
-                "Có lỗi xảy ra khi phân công bậc thầy!"
+                "Có lỗi xảy ra khi phân công nhân viên!"
             );
           }
         }
@@ -125,7 +163,8 @@ const StaffAssign = ({
     } catch (error) {
       console.error("Error in handleSave:", error);
       message.error(
-        error.response?.data?.message || "Có lỗi xảy ra khi phân công bậc thầy!"
+        error.response?.data?.message ||
+          "Có lỗi xảy ra khi phân công nhân viên!"
       );
     } finally {
       setLoading(false);
@@ -137,8 +176,8 @@ const StaffAssign = ({
     setEditingMode(false);
   };
 
-  if (assignedMaster) {
-    return <span className="text-gray-700">{assignedMaster}</span>;
+  if (assignedStaff) {
+    return <span className="text-gray-700">{assignedStaff}</span>;
   }
 
   return (
@@ -221,4 +260,4 @@ const StaffAssign = ({
   );
 };
 
-export default StaffAssign;
+export default ManagerAssign;
