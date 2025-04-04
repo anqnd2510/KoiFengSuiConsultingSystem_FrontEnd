@@ -24,7 +24,10 @@ import dayjs from "dayjs";
 import "dayjs/locale/vi";
 import { Modal, Select, Tag } from "antd";
 import CustomTable from "../../components/Common/CustomTable";
-import { getOfflineConsultingBookings } from "../../services/booking.service";
+import {
+  getOfflineConsultingBookings,
+  getBookingOfflineDetail,
+} from "../../services/booking.service";
 import { message } from "antd";
 import { createDocument } from "../../services/document.service";
 import { createAttachment } from "../../services/attachment.service";
@@ -52,6 +55,9 @@ const ConsultingOffline = () => {
     content: "",
     conclusion: "",
   });
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedBookingDetail, setSelectedBookingDetail] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
     fetchOfflineConsultingBookings();
@@ -270,10 +276,17 @@ const ConsultingOffline = () => {
   const columns = [
     {
       title: "Mã",
-      dataIndex: "bookingOfflineId",
-      key: "bookingOfflineId",
+      dataIndex: "id",
+      key: "id",
       render: (text) => (
-        <span className="font-semibold text-[#B4925A]">
+        <span
+          className="font-semibold text-[#B4925A] cursor-pointer hover:underline"
+          onClick={(e) => {
+            e.stopPropagation();
+            const record = bookings.find((booking) => booking.id === text);
+            handleViewDetail(record);
+          }}
+        >
           #{text ? text.toString().padStart(4, "0") : "0000"}
         </span>
       ),
@@ -437,8 +450,30 @@ const ConsultingOffline = () => {
     }
   };
 
+  const handleViewDetail = async (record) => {
+    setDetailLoading(true);
+    try {
+      const response = await getBookingOfflineDetail(record.id);
+      setSelectedBookingDetail(response.data || record);
+      setDetailModalVisible(true);
+    } catch (err) {
+      console.error("Lỗi khi lấy chi tiết booking:", err);
+      // Nếu không lấy được chi tiết, hiển thị thông tin cơ bản từ record
+      setSelectedBookingDetail(record);
+      setDetailModalVisible(true);
+      message.error("Không thể lấy thông tin chi tiết. Vui lòng thử lại sau.");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleCloseDetailModal = () => {
+    setDetailModalVisible(false);
+    setSelectedBookingDetail(null);
+  };
+
   return (
-    <div className="flex">
+    <div className="flex h-screen bg-gray-100">
       <div className="flex-1 bg-gray-50 min-h-screen">
         <Header
           title="Tư vấn trực tiếp"
@@ -487,7 +522,12 @@ const ConsultingOffline = () => {
                   dataSource={bookings}
                   loading={loading}
                   className="custom-table"
-                  rowClassName="hover:bg-gray-50 transition-colors"
+                  rowClassName={() =>
+                    "hover:bg-gray-50 cursor-pointer transition-colors"
+                  }
+                  onRow={(record) => ({
+                    onClick: () => handleViewDetail(record),
+                  })}
                 />
               </div>
 
@@ -780,6 +820,155 @@ const ConsultingOffline = () => {
                   Tạo biên bản
                 </button>
               </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* Modal chi tiết booking */}
+        <Modal
+          title={
+            <div className="text-xl font-medium text-gray-800">
+              Chi tiết đặt lịch tư vấn trực tiếp
+            </div>
+          }
+          open={detailModalVisible}
+          onCancel={handleCloseDetailModal}
+          footer={[
+            <button
+              key="close"
+              onClick={handleCloseDetailModal}
+              className="px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              Đóng
+            </button>,
+          ]}
+          width={700}
+          centered
+          closeIcon={<span className="text-gray-500 text-xl">&times;</span>}
+        >
+          {detailLoading ? (
+            <div className="flex justify-center items-center h-40">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#B4925A]"></div>
+            </div>
+          ) : selectedBookingDetail ? (
+            <div className="space-y-6">
+              {/* Thông tin cơ bản */}
+              <div className="bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-gray-500 text-sm">Mã đặt lịch</p>
+                    <p className="font-medium text-gray-800">
+                      #
+                      {selectedBookingDetail.bookingOfflineId
+                        ?.toString()
+                        .padStart(4, "0") ||
+                        selectedBookingDetail.id?.toString().padStart(4, "0") ||
+                        "0000"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-sm">Trạng thái</p>
+                    <Tag color={getStatusColor(selectedBookingDetail.status)}>
+                      {selectedBookingDetail.status}
+                    </Tag>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thông tin khách hàng */}
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-3 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 text-[#B4925A]"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Thông tin khách hàng
+                </h3>
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-500 text-sm">Họ tên</p>
+                      <p className="font-medium text-gray-800">
+                        {selectedBookingDetail.customerName ||
+                          "Không có thông tin"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Email</p>
+                      <p className="font-medium text-gray-800">
+                        {selectedBookingDetail.customerEmail ||
+                          "Không có thông tin"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Thông tin buổi tư vấn */}
+              <div>
+                <h3 className="text-md font-medium text-gray-700 mb-3 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 text-[#B4925A]"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  Chi tiết buổi tư vấn
+                </h3>
+                <div className="bg-white p-4 rounded-lg border border-gray-200">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-gray-500 text-sm">Ngày đặt lịch</p>
+                      <p className="font-medium text-gray-800">
+                        {selectedBookingDetail.bookingDate ||
+                          selectedBookingDetail.date ||
+                          "Chưa có thông tin"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-sm">Giá dịch vụ</p>
+                      <p className="font-medium text-gray-800">
+                        {selectedBookingDetail.selectedPrice?.toLocaleString(
+                          "vi-VN"
+                        ) || "0"}{" "}
+                        VNĐ
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="text-gray-500 text-sm">Địa điểm</p>
+                    <p className="font-medium text-gray-800">
+                      {selectedBookingDetail.location || "Không có thông tin"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-500 text-sm">Mô tả</p>
+                    <div className="font-medium text-gray-800 bg-gray-50 p-3 rounded-md">
+                      {selectedBookingDetail.description || "Không có mô tả"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Không có thông tin chi tiết</p>
             </div>
           )}
         </Modal>

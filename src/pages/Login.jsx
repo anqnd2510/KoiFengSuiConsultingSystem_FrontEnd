@@ -47,9 +47,49 @@ const Login = () => {
         localStorage.setItem("accessToken", response.accessToken);
         localStorage.setItem("refreshToken", response.refreshToken);
 
-        console.log("Tokens saved, navigating to schedule...");
+        // Xác định role dựa trên email hoặc thông tin khác
+        let role = "";
 
-        navigate("/master/schedule", { replace: true });
+        // Nếu API không trả về role, xác định dựa trên email
+        if (response.email && response.email.includes("manager")) {
+          role = "manager";
+        } else if (response.email && response.email.includes("master")) {
+          role = "master";
+        } else if (response.email && response.email.includes("staff")) {
+          role = "staff";
+        } else if (formData.email.includes("manager")) {
+          role = "manager";
+        } else if (formData.email.includes("master")) {
+          role = "master";
+        } else if (formData.email.includes("staff")) {
+          role = "staff";
+        }
+
+        console.log("Determined role:", role);
+
+        localStorage.setItem("role", role);
+        localStorage.setItem("userRole", role);
+
+        console.log("Tokens saved, navigating based on role:", role);
+
+        setTimeout(() => {
+          if (role === "manager") {
+            console.log("Navigating to manager dashboard...");
+            navigate("/manager/dashboard", { replace: true });
+          } else if (role === "master") {
+            console.log("Navigating to master schedule...");
+            navigate("/master/schedule", { replace: true });
+          } else if (role === "staff") {
+            console.log("Navigating to staff booking schedule...");
+            navigate("/staff/notifications", { replace: true });
+          } else {
+            console.log("No matching role, using default role: manager");
+            // Sử dụng role mặc định là manager nếu không xác định được
+            localStorage.setItem("role", "staff");
+            localStorage.setItem("userRole", "staff");
+            navigate("/staff/notifications", { replace: true });
+          }
+        }, 500);
       } else {
         message.error(
           "Đăng nhập thất bại: " + (response.message || "Vui lòng thử lại")
@@ -104,9 +144,7 @@ const Login = () => {
               <div className="w-12 h-12 rounded-full border-2 border-[#B69D74] flex items-center justify-center bg-white">
                 <span className="text-[#B69D74] text-xl font-bold">KF</span>
               </div>
-              <div className="text-[#B69D74] font-semibold">
-                Koi Feng Shui
-              </div>
+              <div className="text-[#B69D74] font-semibold">Koi Feng Shui</div>
             </div>
           </div>
 
@@ -115,7 +153,7 @@ const Login = () => {
             <div className="relative w-full max-w-xl">
               {/* Background circles */}
               <div className="absolute inset-0 bg-[#90B77D]/10 rounded-full filter blur-3xl transform scale-150"></div>
-              
+
               {/* Main image */}
               <div className="relative z-10">
                 <img
@@ -144,7 +182,10 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-white mb-2"
+                >
                   Email
                 </label>
                 <input
@@ -160,7 +201,10 @@ const Login = () => {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-white mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-white mb-2"
+                >
                   Mật khẩu
                 </label>
                 <div className="relative">
@@ -180,13 +224,31 @@ const Login = () => {
                     className="absolute inset-y-0 right-0 px-4 flex items-center text-white/70 hover:text-white"
                   >
                     {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
                         <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                        <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z" clipRule="evenodd" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z"
+                          clipRule="evenodd"
+                        />
                         <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
                       </svg>
                     )}
@@ -204,12 +266,18 @@ const Login = () => {
                     onChange={handleChange}
                     className="h-4 w-4 text-[#B69D74] focus:ring-[#B69D74] border-2 border-white/30 rounded bg-white/10"
                   />
-                  <label htmlFor="rememberMe" className="ml-3 block text-sm text-white">
+                  <label
+                    htmlFor="rememberMe"
+                    className="ml-3 block text-sm text-white"
+                  >
                     Ghi nhớ đăng nhập
                   </label>
                 </div>
                 <div className="text-sm">
-                  <a href="#" className="font-medium text-white hover:text-[#B69D74]">
+                  <a
+                    href="#"
+                    className="font-medium text-white hover:text-[#B69D74]"
+                  >
                     Quên mật khẩu?
                   </a>
                 </div>
@@ -227,7 +295,10 @@ const Login = () => {
             <div className="mt-8 text-center">
               <p className="text-sm text-white">
                 Chưa có tài khoản?{" "}
-                <a href="#" className="font-medium text-white hover:text-[#B69D74]">
+                <a
+                  href="#"
+                  className="font-medium text-white hover:text-[#B69D74]"
+                >
                   Đăng ký ngay
                 </a>
               </p>

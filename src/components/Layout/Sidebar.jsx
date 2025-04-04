@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -19,104 +19,171 @@ import {
   File,
   Files,
 } from "lucide-react";
+import { mainRoutes } from "../../routes/mainRoutes";
 
 const menuItems = [
-  { icon: Home, label: "Dashboard", path: "/manager/dashboard" },
-  { icon: Calendar, label: "Schedule", path: "/master/schedule" },
-  { icon: MessageSquare, label: "Feedback", path: "/feedback" },
+  {
+    icon: Home,
+    label: "Dashboard",
+    path: "/manager/dashboard",
+    roles: ["manager"],
+  },
+  {
+    icon: Calendar,
+    label: "Schedule",
+    path: "/master/schedule",
+    roles: ["master"],
+  },
+  {
+    icon: MessageSquare,
+    label: "Feedback",
+    path: "/feedback",
+    roles: ["staff", "master", "manager"],
+  },
   {
     icon: Users,
     label: "Customer Management",
     path: "/staff/customer-management",
+    roles: ["staff"],
   },
-  { icon: Bell, label: "Notifications", path: "/staff/notifications" },
+  {
+    icon: Bell,
+    label: "Notifications",
+    path: "/staff/notifications",
+    roles: ["staff"],
+  },
   {
     icon: ClipboardList,
     label: "Booking Schedule",
     path: "/staff/booking-schedule",
+    roles: ["staff"],
   },
   {
     icon: History,
     label: "Consultation History",
     path: "/staff/consultation-history",
+    roles: ["staff"],
   },
   {
     icon: Newspaper,
     label: "Koi Feng Shui Blog",
     path: "/blog-management",
+    roles: ["staff", "master", "manager"],
   },
-  { icon: ClipboardList, label: "Workshop", path: "/staff/workshop-staff" },
+  {
+    icon: ClipboardList,
+    label: "Workshop",
+    path: "/staff/workshop-staff",
+    roles: ["staff"],
+  },
   {
     icon: ClipboardList,
     label: "Workshop List",
     path: "/manager/workshop-list",
+    roles: ["manager"],
   },
-  { icon: Book, label: "Courses", path: "staff/course-management" },
-  { icon: Award, label: "Certificate", path: "/certificate" },
+  {
+    icon: Book,
+    label: "Courses",
+    path: "/staff/course-management",
+    roles: ["staff"],
+  },
+  {
+    icon: Award,
+    label: "Certificate",
+    path: "/certificate",
+    roles: ["staff", "master", "manager"],
+  },
   {
     icon: MessageCircle,
     label: "Consulting Online",
     path: "/master/consulting-online",
+    roles: ["master"],
   },
   {
     icon: MessageCircle,
     label: "Consulting Offline",
     path: "/master/consulting-offline",
+    roles: ["master"],
   },
   {
     icon: FileText,
     label: "Biên bản nghiệm thu",
     path: "/manager/attachment",
+    roles: ["manager"],
   },
   {
     icon: File,
     label: "Hợp đồng",
     path: "/manager/contract",
+    roles: ["manager"],
   },
   {
     icon: File,
     label: "Tạo hợp đồng",
     path: "/staff/contracts",
+    roles: ["staff"],
   },
   {
     icon: Files,
     label: "Hồ sơ",
     path: "/manager/document",
+    roles: ["manager"],
   },
   {
     icon: Fish,
     label: "Koi Fish ",
     path: "/staff/koi-fish-management",
+    roles: ["staff"],
   },
   {
     icon: Droplets,
     label: "Koi Pond ",
     path: "/staff/koi-pond-management",
+    roles: ["staff"],
   },
   {
     icon: User,
     label: "Master Management",
     path: "/staff/master-management",
+    roles: ["staff"],
   },
   {
     icon: User,
     label: "Course Master",
     path: "/master/course-master",
+    roles: ["master"],
   },
   {
     icon: User,
     label: "Workshop Master",
     path: "/master/workshop-master",
+    roles: ["master"],
   },
   {
     icon: ClipboardList,
     label: "Booking Management",
     path: "/manager/booking-management",
+    roles: ["manager"],
   },
 ];
 
 const Sidebar = () => {
   const location = useLocation();
+  const [userRole, setUserRole] = useState(null);
+  const navigate = useNavigate();
+
+  // Lấy role của người dùng từ localStorage hoặc context
+  useEffect(() => {
+    // Sử dụng key "role" thay vì "userRole" để đồng bộ với Login.jsx
+    const role = localStorage.getItem("role");
+    if (role) {
+      setUserRole(role);
+    } else {
+      // Nếu không có role, chuyển hướng về trang login
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
 
   const isActive = (path) => {
     if (path === "/master/consulting-offline") {
@@ -150,6 +217,11 @@ const Sidebar = () => {
     return location.pathname === path;
   };
 
+  // Lọc menu items dựa trên role của người dùng
+  const filteredMenuItems = userRole
+    ? menuItems.filter((item) => item.roles && item.roles.includes(userRole))
+    : [];
+
   return (
     <div className="w-64 bg-[#90B77D] min-h-screen">
       <div className="p-4">
@@ -163,7 +235,7 @@ const Sidebar = () => {
         </div>
 
         <nav className="space-y-2">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
