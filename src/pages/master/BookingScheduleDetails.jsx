@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getBookingScheduleDetail } from "../services/booking.service";
+import { getBookingScheduleDetail } from "../../services/booking.service";
 import { message } from "antd";
 
 const BookingScheduleDetails = () => {
@@ -61,7 +61,7 @@ const BookingScheduleDetails = () => {
   };
 
   const handleReturn = () => {
-    navigate("/schedule");
+    navigate("/master/schedule");
   };
 
   return (

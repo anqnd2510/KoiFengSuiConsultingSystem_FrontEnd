@@ -221,3 +221,56 @@ export const assignStaff = async (
     throw error;
   }
 };
+
+// Get Booking Online Detail APIs
+export const getBookingOnlineDetail = async (id) => {
+  try {
+    const response = await apiClient.get(`${BOOKING_ENDPOINT}/online/${id}`);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching booking detail:", error);
+    throw error;
+  }
+};
+
+// Get Booking Offline Detail APIs
+export const getBookingOfflineDetail = async (id) => {
+  try {
+    const response = await apiClient.get(`${BOOKING_ENDPOINT}/offline/${id}`);
+    console.log("API Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching booking detail:", error);
+    throw error;
+  }
+};
+
+// Hoàn thành buổi tư vấn
+export const completeConsulting = async (bookingId) => {
+  try {
+    const response = await apiClient.put(
+      `${BOOKING_ENDPOINT}/booking-online/${bookingId}/complete`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error completing consulting:", error);
+    throw error;
+  }
+};
+
+// Cập nhật ghi chú sau tư vấn
+export const updateConsultingNote = async (bookingId, note) => {
+  try {
+    const response = await apiClient.put(
+      `${BOOKING_ENDPOINT}/booking-online/${bookingId}/master-note`,
+      {
+        masterNote: note,
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating consulting note:", error);
+    throw error;
+  }
+};

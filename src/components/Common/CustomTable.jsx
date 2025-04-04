@@ -1,7 +1,13 @@
 import React from "react";
 import { Table } from "antd";
 
-const CustomTable = ({ columns, dataSource, loading = false, onRow }) => {
+const CustomTable = ({
+  columns,
+  dataSource,
+  loading = false,
+  onRow,
+  onRowClick,
+}) => {
   return (
     <Table
       columns={columns}
@@ -11,9 +17,16 @@ const CustomTable = ({ columns, dataSource, loading = false, onRow }) => {
       bordered
       loading={loading}
       className="custom-table"
-      onRow={onRow}
+      onRow={
+        onRowClick
+          ? (record) => ({
+              onClick: () => onRowClick(record),
+              style: { cursor: "pointer" },
+            })
+          : null
+      }
     />
   );
 };
 
-export default CustomTable; 
+export default CustomTable;
