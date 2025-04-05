@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Lấy token từ localStorage nếu có
 const getAuthToken = () => {
-  return localStorage.getItem('accessToken');
+  return localStorage.getItem("accessToken");
 };
 
 // Tạo instance axios với cấu hình mặc định
@@ -10,10 +10,10 @@ const apiClient = axios.create({
   baseURL: "http://localhost:5261/api",
   headers: {
     "Content-Type": "application/json",
-    "Accept": "application/json"
+    Accept: "application/json",
   },
   timeout: 10000, // Timeout 10 giây
-  withCredentials: false // Không gửi cookie
+  withCredentials: false, // Không gửi cookie
 });
 
 // Thêm interceptor để xử lý lỗi
@@ -32,7 +32,12 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    console.log("API Request:", config.method.toUpperCase(), config.url, config.data);
+    console.log(
+      "API Request:",
+      config.method.toUpperCase(),
+      config.url,
+      config.data
+    );
     return config;
   },
   (error) => {
