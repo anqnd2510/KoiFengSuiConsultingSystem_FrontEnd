@@ -15,6 +15,7 @@ import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import CustomTable from "../../components/Common/CustomTable";
 import Error from "../../components/Common/Error";
+import BackButton from "../../components/Common/BackButton";
 import {
   getQuizzesByCourseId,
   getQuizById,
@@ -87,11 +88,6 @@ const Quiz = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Hàm quay lại trang quản lý khóa học
-  const handleGoBack = () => {
-    navigate("/master/course-master");
   };
 
   const fetchQuizzes = async () => {
@@ -376,13 +372,7 @@ const Quiz = () => {
       <div className="p-4 md:p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <CustomButton
-              type="default"
-              icon={<FaArrowLeft size={14} />}
-              onClick={handleGoBack}
-            >
-              Quay lại
-            </CustomButton>
+            <BackButton to="/master/course-master" />
             <h2 className="text-xl font-semibold text-gray-800">
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>

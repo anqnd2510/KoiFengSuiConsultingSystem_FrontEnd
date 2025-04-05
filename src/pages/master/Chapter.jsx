@@ -26,6 +26,7 @@ import { Book, Video, FileText } from "lucide-react";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
+import BackButton from "../../components/Common/BackButton";
 import {
   getChaptersByCourseId,
   formatDuration,
@@ -493,11 +494,6 @@ const Chapter = () => {
     });
   };
 
-  // Hàm quay lại trang quản lý khóa học
-  const handleGoBack = () => {
-    navigate("/master/course-master");
-  };
-
   // Hàm hiển thị embed video từ URL
   const renderVideoEmbed = (videoUrl) => {
     if (!videoUrl) return null;
@@ -571,13 +567,7 @@ const Chapter = () => {
       <div className="p-4 md:p-6">
         <div className="mb-6 flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <CustomButton
-              type="default"
-              icon={<FaArrowLeft size={14} />}
-              onClick={handleGoBack}
-            >
-              Quay lại
-            </CustomButton>
+            <BackButton to="/master/course-master" />
             <h2 className="text-xl font-semibold text-gray-800">
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>

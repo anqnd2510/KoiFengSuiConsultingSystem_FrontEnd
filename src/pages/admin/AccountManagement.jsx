@@ -3,6 +3,7 @@ import { Button, Space, Modal, message, Popconfirm } from "antd";
 import AccountList from "../../components/admin/accounts/AccountList";
 import AccountForm from "../../components/admin/accounts/AccountForm";
 import AccountFilters from "../../components/admin/accounts/AccountFilters";
+import Header from "../../components/Common/Header";
 import {
   getAllAccounts,
   deleteAccount,
@@ -216,33 +217,38 @@ const AccountManagement = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Quản lý tài khoản</h1>
-        <Button type="primary" onClick={() => setIsModalVisible(true)}>
-          Thêm tài khoản mới
-        </Button>
-      </div>
-
-      <AccountFilters filters={filters} onFiltersChange={handleFiltersChange} />
-
-      <AccountList
-        data={getFilteredAccounts()} // Truyền data đã được filter
-        loading={loading}
-        columns={columns}
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        title="Quản lý tài khoản" 
+        description="Quản lý thông tin tài khoản người dùng trong hệ thống"
       />
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <Button type="primary" onClick={() => setIsModalVisible(true)}>
+            Thêm tài khoản mới
+          </Button>
+        </div>
 
-      <Modal
-        title="Sửa tài khoản"
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setSelectedAccount(null);
-        }}
-        footer={null}
-      >
-        <AccountForm initialData={selectedAccount} onSubmit={handleSubmit} />
-      </Modal>
+        <AccountFilters filters={filters} onFiltersChange={handleFiltersChange} />
+
+        <AccountList
+          data={getFilteredAccounts()}
+          loading={loading}
+          columns={columns}
+        />
+
+        <Modal
+          title="Sửa tài khoản"
+          open={isModalVisible}
+          onCancel={() => {
+            setIsModalVisible(false);
+            setSelectedAccount(null);
+          }}
+          footer={null}
+        >
+          <AccountForm initialData={selectedAccount} onSubmit={handleSubmit} />
+        </Modal>
+      </div>
     </div>
   );
 };

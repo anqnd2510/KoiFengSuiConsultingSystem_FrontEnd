@@ -36,8 +36,8 @@ export const getWorkshopsByCreatedDate = async () => {
  */
 export const getWorkshopById = async (id) => {
   try {
-    // Thử cách khác: truyền ID trực tiếp trong URL path thay vì query parameter
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/id/${id}`);
+    console.log('Gọi API lấy chi tiết workshop với ID:', id);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/${id}`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response

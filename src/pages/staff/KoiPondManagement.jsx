@@ -30,44 +30,38 @@ const PondCard = ({
   image,
   onUpdate,
   onDelete,
-  size,
-  direction,
-  shapeId,
-  koiPondId,
+  shapeName,
+  element,
+  introduction,
+  description,
+  koiPondId
 }) => {
   return (
     <Card className="h-full">
       <div className="text-center">
         <h3 className="text-base font-medium mb-2">{title}</h3>
-        {/* Tạm thời ẩn phần hiển thị hình ảnh
-        <div className="mb-3">
-          <img
-            src={image}
-            alt={title}
-            className="w-full h-32 object-cover rounded-md"
-            onError={(e) => {
-              e.target.src = "https://via.placeholder.com/150?text=Pond+Type";
-            }}
-          />
-        </div>
-        */}
         <div className="mb-3 text-sm text-left">
-          <p>
-            <span className="font-medium">Kích thước:</span>{" "}
-            {size || "Không có"}
-          </p>
-          <p>
-            <span className="font-medium">Hướng:</span>{" "}
-            {direction || "Không có"}
-          </p>
           <p className="truncate">
             <span className="font-medium">ID Hồ:</span>{" "}
             <span className="text-xs">{koiPondId || "Không có"}</span>
           </p>
-          <p className="truncate">
-            <span className="font-medium">ID Hình dạng:</span>{" "}
-            <span className="text-xs">{shapeId || "Không có"}</span>
+          <p>
+            <span className="font-medium">Hình dạng:</span>{" "}
+            {shapeName || "Không có"}
           </p>
+          <p>
+            <span className="font-medium">Mệnh:</span>{" "}
+            {element || "Không có"}
+          </p>
+          <p>
+            <span className="font-medium">Giới thiệu:</span>{" "}
+            {introduction || "Không có"}
+          </p>
+          <p>
+            <span className="font-medium">Mô tả:</span>{" "}
+            {description || "Không có"}
+          </p>
+          
         </div>
         <div className="border-t pt-2">
           <div className="flex items-center mt-2">
@@ -188,9 +182,9 @@ const KoiPondManagement = () => {
     setSelectedPond(pondType);
     editForm.setFieldsValue({
       pondName: pondType.pondName,
-      size: pondType.size,
-      direction: pondType.direction,
-      shapeId: pondType.shapeId,
+      element: pondType.element,
+      introduction: pondType.introduction,
+      description: pondType.description,
     });
     setIsEditModalVisible(true);
   };
@@ -298,32 +292,14 @@ const KoiPondManagement = () => {
       // Đảm bảo dữ liệu đúng định dạng
       const pondData = {
         pondName: values.pondName,
-        size: values.size,
-        direction: values.direction,
-        shapeId: values.shapeId,
+        element: values.element,
+        introduction: values.introduction,
+        description: values.description,
       };
-
-      // Kiểm tra và chuyển đổi dữ liệu
-      if (typeof pondData.size === "string") {
-        pondData.size = parseInt(pondData.size) || 0;
-      }
-
-      // Đảm bảo shapeId là chuỗi hợp lệ
-      if (!pondData.shapeId || pondData.shapeId.trim() === "") {
-        message.error("Vui lòng nhập ID hình dạng hợp lệ");
-        setLoading(false);
-        return;
-      }
 
       // Kiểm tra các trường bắt buộc khác
       if (!pondData.pondName || pondData.pondName.trim() === "") {
         message.error("Vui lòng nhập tên hồ cá");
-        setLoading(false);
-        return;
-      }
-
-      if (!pondData.direction || pondData.direction.trim() === "") {
-        message.error("Vui lòng chọn hướng cho hồ cá");
         setLoading(false);
         return;
       }
@@ -405,7 +381,7 @@ const KoiPondManagement = () => {
       await fetchPonds();
 
       message.success(
-        `Đã cập nhật hình ảnh cho hồ ${getPondName(selectedPond)}`
+        `Đã cập nhật hình ảnh cho hồ ${selectedPond.pondName}`
       );
       setIsModalVisible(false);
     } catch (err) {
@@ -520,25 +496,24 @@ const KoiPondManagement = () => {
           <Error message={error} />
         ) : (
           <Row gutter={[16, 16]}>
-            {pondTypes.length > 0 ? (
+            {pondTypes && pondTypes.length > 0 ? (
               pondTypes.map((pondType) => (
                 <Col
                   xs={24}
                   sm={12}
                   md={8}
                   lg={6}
-                  key={pondType.id || pondType.koiPondId}
+                  key={pondType.koiPondId}
                 >
                   <PondCard
-                    title={getPondName(pondType)}
-                    image={getPondImage(pondType)}
+                    title={pondType.pondName}
+                    image={pondType.imageUrl}
                     onUpdate={() => handleUpdate(pondType)}
-                    onDelete={() =>
-                      handleDelete(pondType.koiPondId || pondType.id)
-                    }
-                    size={pondType.size}
-                    direction={pondType.direction}
-                    shapeId={pondType.shapeId}
+                    onDelete={() => handleDelete(pondType.koiPondId)}
+                    shapeName={pondType.shapeName}
+                    element={pondType.element}
+                    introduction={pondType.introduction}
+                    description={pondType.description}
                     koiPondId={pondType.koiPondId}
                   />
                 </Col>
@@ -600,66 +575,39 @@ const KoiPondManagement = () => {
             />
           </Form.Item>
           <Form.Item
-            name="size"
-            label={<span className="text-red-500">* Kích thước</span>}
-            rules={[{ required: true, message: "Vui lòng nhập kích thước" }]}
+            name="element"
+            label={<span className="text-red-500">* Mệnh</span>}
+            rules={[{ required: true, message: "Vui lòng nhập mệnh" }]}
           >
-            <input
+            <select className="w-full p-2 border rounded">
+              <option value="">Chọn mệnh</option>
+              <option value="Kim">Kim</option>
+              <option value="Mộc">Mộc</option>
+              <option value="Thủy">Thủy</option>
+              <option value="Hỏa">Hỏa</option>
+              <option value="Thổ">Thổ</option>
+            </select>
+          </Form.Item>
+          <Form.Item
+            name="introduction"
+            label="Giới thiệu"
+          >
+            <textarea
               className="w-full p-2 border rounded"
-              placeholder="Nhập kích thước"
+              placeholder="Nhập giới thiệu"
+              rows={3}
             />
           </Form.Item>
           <Form.Item
-            name="direction"
-            label={<span className="text-red-500">* Hướng</span>}
-            rules={[{ required: true, message: "Vui lòng nhập hướng" }]}
+            name="description"
+            label="Mô tả"
           >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn hướng</option>
-              <option value="North">Bắc</option>
-              <option value="South">Nam</option>
-              <option value="East">Đông</option>
-              <option value="West">Tây</option>
-              <option value="Northeast">Đông Bắc</option>
-              <option value="Northwest">Tây Bắc</option>
-              <option value="Southeast">Đông Nam</option>
-              <option value="Southwest">Tây Nam</option>
-            </select>
+            <textarea
+              className="w-full p-2 border rounded"
+              placeholder="Nhập mô tả"
+              rows={3}
+            />
           </Form.Item>
-          <Form.Item
-            name="shapeId"
-            label={<span className="text-red-500">* Hình dạng</span>}
-            rules={[{ required: true, message: "Vui lòng chọn hình dạng" }]}
-          >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn hình dạng</option>
-              {pondShapes.length > 0 ? (
-                pondShapes.map((shape) => (
-                  <option key={shape.id} value={shape.id}>
-                    {shape.name}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled>
-                  Đang tải danh sách hình dạng...
-                </option>
-              )}
-            </select>
-          </Form.Item>
-          {/* Tạm thời ẩn nút cập nhật hình ảnh
-          <div className="mt-4">
-            <CustomButton
-              type="primary"
-              className="w-full"
-              onClick={() => {
-                handleEditCancel();
-                handleImageUpdate(selectedPond);
-              }}
-            >
-              Cập nhật hình ảnh
-            </CustomButton>
-          </div>
-          */}
         </Form>
       </Modal>
 
@@ -685,51 +633,38 @@ const KoiPondManagement = () => {
             />
           </Form.Item>
           <Form.Item
-            name="size"
-            label={<span className="text-red-500">* Kích thước</span>}
-            rules={[{ required: true, message: "Vui lòng nhập kích thước" }]}
+            name="element"
+            label={<span className="text-red-500">* Mệnh</span>}
+            rules={[{ required: true, message: "Vui lòng nhập mệnh" }]}
           >
-            <input
+            <select className="w-full p-2 border rounded">
+              <option value="">Chọn mệnh</option>
+              <option value="Kim">Kim</option>
+              <option value="Mộc">Mộc</option>
+              <option value="Thủy">Thủy</option>
+              <option value="Hỏa">Hỏa</option>
+              <option value="Thổ">Thổ</option>
+            </select>
+          </Form.Item>
+          <Form.Item
+            name="introduction"
+            label="Giới thiệu"
+          >
+            <textarea
               className="w-full p-2 border rounded"
-              placeholder="Nhập kích thước"
+              placeholder="Nhập giới thiệu"
+              rows={3}
             />
           </Form.Item>
           <Form.Item
-            name="direction"
-            label={<span className="text-red-500">* Hướng</span>}
-            rules={[{ required: true, message: "Vui lòng nhập hướng" }]}
+            name="description"
+            label="Mô tả"
           >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn hướng</option>
-              <option value="North">Bắc</option>
-              <option value="South">Nam</option>
-              <option value="East">Đông</option>
-              <option value="West">Tây</option>
-              <option value="Northeast">Đông Bắc</option>
-              <option value="Northwest">Tây Bắc</option>
-              <option value="Southeast">Đông Nam</option>
-              <option value="Southwest">Tây Nam</option>
-            </select>
-          </Form.Item>
-          <Form.Item
-            name="shapeId"
-            label={<span className="text-red-500">* Hình dạng</span>}
-            rules={[{ required: true, message: "Vui lòng chọn hình dạng" }]}
-          >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn hình dạng</option>
-              {pondShapes.length > 0 ? (
-                pondShapes.map((shape) => (
-                  <option key={shape.id} value={shape.id}>
-                    {shape.name}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled>
-                  Đang tải danh sách hình dạng...
-                </option>
-              )}
-            </select>
+            <textarea
+              className="w-full p-2 border rounded"
+              placeholder="Nhập mô tả"
+              rows={3}
+            />
           </Form.Item>
         </Form>
       </Modal>
