@@ -3,14 +3,21 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout/MainLayout";
 import RoleBasedRedirect from "./components/RoleBasedRedirect";
 import { mainRoutes } from "./routes/mainRoutes";
+import { adminRoutes } from "./routes/adminRoutes";
 import Login from "./pages/Login";
 // Import các component khác nếu cần
 
 function App() {
+  // Kiểm tra xem đã có token chưa
+  const hasToken = localStorage.getItem("accessToken");
+
   return (
     <Routes>
-      {/* Đường dẫn gốc sẽ điều hướng dựa trên role */}
-      <Route path="/" element={<RoleBasedRedirect />} />
+      {/* Đường dẫn gốc sẽ chuyển hướng về login nếu chưa có token */}
+      <Route 
+        path="/" 
+        element={hasToken ? <RoleBasedRedirect /> : <Navigate to="/login" replace />} 
+      />
 
       {/* Đường dẫn đăng nhập */}
       <Route path="/login" element={<Login />} />
@@ -28,10 +35,23 @@ function App() {
             }
           />
         ))}
+        
+        {/* Admin Routes */}
+        {adminRoutes.map((route) => (
+          <Route
+            key={route.path}
+            path={`admin/${route.path}`}
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                {route.element}
+              </ProtectedRoute>
+            }
+          />
+        ))}
       </Route>
 
-      {/* Route mặc định nếu không tìm thấy */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* Route mặc định sẽ chuyển về login nếu chưa có token */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }
@@ -39,12 +59,18 @@ function App() {
 // Component bảo vệ route dựa trên role
 const ProtectedRoute = ({ children, roles }) => {
   const userRole = localStorage.getItem("userRole") || "staff";
+  const hasToken = localStorage.getItem("accessToken");
 
+  // Nếu chưa có token, chuyển về trang login
+  if (!hasToken) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Kiểm tra role
   if (!roles || roles.includes(userRole)) {
     return children;
   }
 
-  // Nếu không có quyền truy cập, điều hướng về trang mặc định theo role
   return <RoleBasedRedirect />;
 };
 

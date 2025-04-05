@@ -5,9 +5,11 @@ export const adminRoutes = [
   {
     path: "accounts",
     element: <AccountManagement />,
+    roles: ["admin"],
   },
   {
     path: "categories",
     element: <CategoryManagement />,
+    roles: ["admin"],
   },
 ];

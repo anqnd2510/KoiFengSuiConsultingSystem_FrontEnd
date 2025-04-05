@@ -166,6 +166,18 @@ const menuItems = [
     path: "/manager/booking-management",
     roles: ["manager"],
   },
+  {
+    icon: User,
+    label: "Quản lý tài khoản",
+    path: "/admin/accounts",
+    roles: ["admin"],
+  },
+  {
+    icon: FileText,
+    label: "Quản lý danh mục",
+    path: "/admin/categories",
+    roles: ["admin"],
+  },
 ];
 
 const Sidebar = () => {
@@ -225,13 +237,12 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-[#90B77D] min-h-screen">
       <div className="p-4">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex justify-center items-center mb-8">
           <img
-            src="https://s3-alpha-sig.figma.com/img/ecfb/7109/593e32c422a65fcfe85b222299384fb2?Expires=1741564800&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=rY8NCrfNmOymGEcakAG42elPBrUzYDk2-dc-3JQoJicbl3Lrse-esdQslnOBnmMyMJ7gQH~ZWVL2Gs8Qg2eGfK00YZ0OySm6FAAgfM8O6ALm8BP9BUSpG~yl8q-mTm~8r9I0MUNXqc8UFtwJS4QUH~Dbscjcmg9ymTn4Fu6WGtaLg37-0LvO3HPJGTY~iknJAvA~XNj4XbzOrXBDF3UGuovMTM5oH1jGCwmLNEi8g3pu~ElgHlUiung8sGdPdrmHNeOxo8jf5o20hj-O57bD1fCYAt3EpVLKGnYocHgPW2EJ70l6tCb3n2EhWvyD8QhoWTxCznmMIqX-zJZoitieDw__"
-            alt="Koi Phong Thủy"
-            className="w-16 h-16"
+            src="https://media.discordapp.net/attachments/1310277686760833046/1352292725193445517/BitKoi.png?ex=67f1eb7e&is=67f099fe&hm=610b389036636220ab97bc3230a94a741e45b83dc02f6dbf6ac47267c1fb14d9&=&format=webp&quality=lossless&width=536&height=230"
+            alt="BitKoi Logo"
+            className="w-48 h-auto"
           />
-          <h1 className="text-xl font-bold text-white">KOI PHONG THỦY</h1>
         </div>
 
         <nav className="space-y-2">

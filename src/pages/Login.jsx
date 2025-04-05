@@ -57,12 +57,16 @@ const Login = () => {
           role = "master";
         } else if (response.email && response.email.includes("staff")) {
           role = "staff";
+        } else if (response.email && response.email.includes("admin")) {
+          role = "admin";
         } else if (formData.email.includes("manager")) {
           role = "manager";
         } else if (formData.email.includes("master")) {
           role = "master";
         } else if (formData.email.includes("staff")) {
           role = "staff";
+        } else if (formData.email.includes("admin")) {
+          role = "admin";
         }
 
         console.log("Determined role:", role);
@@ -82,9 +86,12 @@ const Login = () => {
           } else if (role === "staff") {
             console.log("Navigating to staff booking schedule...");
             navigate("/staff/notifications", { replace: true });
+          } else if (role === "admin") {
+            console.log("Navigating to admin accounts page...");
+            navigate("/admin/accounts", { replace: true });
           } else {
-            console.log("No matching role, using default role: manager");
-            // Sử dụng role mặc định là manager nếu không xác định được
+            console.log("No matching role, using default role: staff");
+            // Sử dụng role mặc định là staff nếu không xác định được
             localStorage.setItem("role", "staff");
             localStorage.setItem("userRole", "staff");
             navigate("/staff/notifications", { replace: true });
@@ -141,10 +148,11 @@ const Login = () => {
           {/* Logo */}
           <div className="absolute top-8 left-8">
             <div className="flex items-center space-x-2">
-              <div className="w-12 h-12 rounded-full border-2 border-[#B69D74] flex items-center justify-center bg-white">
-                <span className="text-[#B69D74] text-xl font-bold">KF</span>
-              </div>
-              <div className="text-[#B69D74] font-semibold">Koi Feng Shui</div>
+              <img 
+                src="https://media.discordapp.net/attachments/1310277686760833046/1352292725193445517/BitKoi.png?ex=67f1eb7e&is=67f099fe&hm=610b389036636220ab97bc3230a94a741e45b83dc02f6dbf6ac47267c1fb14d9&=&format=webp&quality=lossless&width=536&height=230"
+                alt="BitKoi Logo"
+                className="h-12 w-auto"
+              />
             </div>
           </div>
 
