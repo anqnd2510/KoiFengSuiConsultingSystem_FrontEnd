@@ -5,6 +5,84 @@ import apiClient from "./apiClient";
 const AUTH_API_URL = "http://localhost:5261/api/Account";
 
 /**
+ * Hàm đăng ký tài khoản mới
+ * @param {Object} userData - Thông tin người dùng đăng ký
+ * @param {string} userData.fullName - Họ tên
+ * @param {string} userData.email - Email
+ * @param {string} userData.phoneNumber - Số điện thoại
+ * @param {boolean} userData.gender - Giới tính (true: Nam, false: Nữ)
+ * @param {string} userData.dob - Ngày sinh
+ * @param {string} userData.password - Mật khẩu
+ * @param {string} userData.confirmPassword - Xác nhận mật khẩu
+ * @returns {Promise} - Promise chứa kết quả đăng ký
+ */
+export const register = async (userData) => {
+  try {
+    console.log("Calling register API with data:", userData);
+
+    // Định dạng lại ngày sinh thành chuỗi ISO theo đúng yêu cầu của API
+    // API yêu cầu định dạng: "yyyy-MM-ddThh:mm:ss.fffZ"
+    let formattedDob = userData.dob || "1990-01-01";
+    
+    // Loại bỏ phần thời gian nếu có và thêm vào theo định dạng chuẩn
+    if (formattedDob.includes('T')) {
+      // Nếu đã có T, chỉ giữ phần ngày
+      formattedDob = formattedDob.split('T')[0] + "T00:00:00.000Z";
+    } else {
+      // Nếu chưa có T, thêm vào
+      formattedDob = `${formattedDob}T00:00:00.000Z`;
+    }
+
+    // Đảm bảo cách xử lý gender theo API
+    // API mong đợi giá trị Boolean thật, không phải chuỗi "true"/"false"
+    const genderValue = userData.gender === undefined ? true : 
+                       (typeof userData.gender === 'string' ? userData.gender === 'true' : userData.gender);
+
+    // Đảm bảo dữ liệu được gửi đi đúng định dạng API yêu cầu
+    const registerData = {
+      fullName: userData.fullName,
+      email: userData.email,
+      phoneNumber: userData.phoneNumber,
+      gender: genderValue,
+      dob: formattedDob,
+      password: userData.password,
+      ConfirmedPassword: userData.confirmPassword
+    };
+
+    console.log("Formatted data for API:", registerData);
+
+    // Thiết lập timeout dài hơn cho request
+    const response = await axios.post(`${AUTH_API_URL}/register`, registerData, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+      timeout: 10000 // 10 giây timeout
+    });
+
+    console.log("Register API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error in register:", error);
+    
+    // Log chi tiết lỗi
+    if (error.response) {
+      // Server trả về response
+      console.error("Response error data:", error.response.data);
+      console.error("Response error status:", error.response.status);
+      console.error("Response error headers:", error.response.headers);
+    } else if (error.request) {
+      // Request được tạo nhưng không nhận được response
+      console.error("Request was made but no response:", error.request);
+    } else {
+      // Lỗi khi thiết lập request
+      console.error("Error setting up request:", error.message);
+    }
+    
+    throw error;
+  }
+};
+
+/**
  * Hàm đăng nhập người dùng
  * @param {Object} credentials - Thông tin đăng nhập
  * @param {string} credentials.email - Email

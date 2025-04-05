@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { message } from "antd";
-import { login } from "../services/auth.service";
+import { login, register } from "../services/auth.service";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -20,6 +20,8 @@ const Login = () => {
     fullName: "",
     email: "",
     phoneNumber: "",
+    gender: true, // Mặc định là Nam
+    dob: "1990-01-01",
     password: "",
     confirmPassword: "",
   });
@@ -33,22 +35,134 @@ const Login = () => {
   };
 
   const handleRegisterChange = (e) => {
-    const { name, value } = e.target;
-    setRegisterData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, type } = e.target;
+    
+    if (name === "gender") {
+      // Gender cần là giá trị boolean thật, không phải chuỗi "true"/"false"
+      setRegisterData((prev) => ({
+        ...prev,
+        [name]: value === "true" // Chuyển string thành boolean
+      }));
+    } else if (name === "dob") {
+      // Đảm bảo ngày sinh luôn được định dạng đúng
+      setRegisterData((prev) => ({
+        ...prev,
+        [name]: value // Giữ nguyên giá trị ngày không cần thêm T (việc này sẽ xử lý ở auth.service)
+      }));
+    } else {
+      setRegisterData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+    
+    // Kiểm tra mật khẩu và xác nhận mật khẩu
+    if (!registerData.password) {
+      message.error("Vui lòng nhập mật khẩu!");
+      return;
+    }
+    
+    if (!registerData.confirmPassword) {
+      message.error("Vui lòng xác nhận mật khẩu!");
+      return;
+    }
+    
+    // Kiểm tra độ mạnh của mật khẩu
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(registerData.password)) {
+      message.error("Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt!");
+      return;
+    }
+    
     if (registerData.password !== registerData.confirmPassword) {
       message.error("Mật khẩu xác nhận không khớp!");
       return;
     }
     
-    // Thực hiện đăng ký (phát triển sau)
-    message.info("Chức năng đăng ký đang được phát triển");
+    setLoading(true);
+    
+    try {
+      // Chuẩn bị dữ liệu gửi lên API
+      const userData = {
+        fullName: registerData.fullName,
+        email: registerData.email,
+        phoneNumber: registerData.phoneNumber,
+        gender: registerData.gender,
+        dob: registerData.dob,
+        password: registerData.password,
+        confirmPassword: registerData.confirmPassword
+      };
+      
+      console.log("Dữ liệu đăng ký:", userData);
+      
+      const response = await register(userData);
+      console.log("Kết quả đăng ký:", response);
+      
+      if (response) {
+        message.success("Đăng ký tài khoản thành công!");
+        
+        // Chuyển hướng đến trang Pending thay vì tự động đăng nhập
+        setTimeout(() => {
+          navigate("/pending", {
+            replace: true,
+            state: {
+              message: "Tài khoản đã được tạo thành công và đang trong quá trình xác nhận. Vui lòng đăng nhập lại sau."
+            }
+          });
+        }, 1000);
+      } else {
+        // Xử lý lỗi đăng ký
+        message.error("Đăng ký thất bại. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi đăng ký:", error);
+      
+      // Phân tích lỗi từ API
+      if (error.response?.status === 400) {
+        if (error.response?.data?.errors) {
+          // Hiển thị lỗi validation từ API
+          const validationErrors = error.response.data.errors;
+          let hasDisplayedError = false;
+          
+          Object.entries(validationErrors).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+              value.forEach(err => {
+                message.error(err);
+                hasDisplayedError = true;
+              });
+            } else if (typeof value === 'string') {
+              message.error(value);
+              hasDisplayedError = true;
+            }
+          });
+          
+          if (!hasDisplayedError) {
+            message.error("Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại.");
+          }
+        } else if (error.response?.data?.message) {
+          message.error(error.response.data.message);
+        } else if (error.response?.data?.title) {
+          message.error(error.response.data.title);
+        } else {
+          message.error("Thông tin đăng ký không hợp lệ. Vui lòng kiểm tra lại.");
+        }
+      } else if (error.response?.status === 409) {
+        message.error("Email đã được sử dụng. Vui lòng chọn email khác.");
+      } else {
+        // Hiển thị lỗi tổng quát
+        const errorMessage = error.response?.data?.message || 
+                            error.response?.data?.title || 
+                            error.message || 
+                            "Đã xảy ra lỗi khi đăng ký tài khoản";
+        message.error(errorMessage);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -119,11 +233,14 @@ const Login = () => {
             console.log("Navigating to admin accounts page...");
             navigate("/admin/accounts", { replace: true });
           } else {
-            console.log("No matching role, using default role: staff");
-            // Sử dụng role mặc định là staff nếu không xác định được
-            localStorage.setItem("role", "staff");
-            localStorage.setItem("userRole", "staff");
-            navigate("/staff/notifications", { replace: true });
+            console.log("No matching role, navigating to pending page");
+            // Chuyển đến trang Pending khi không xác định được role
+            navigate("/pending", { 
+              replace: true, 
+              state: { 
+                message: "Tài khoản của bạn đang chờ xác nhận hoặc chưa được phân quyền. Vui lòng liên hệ quản trị viên để biết thêm chi tiết." 
+              } 
+            });
           }
         }, 500);
       } else {
@@ -184,122 +301,122 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
                 <h2 className="text-4xl font-bold text-white mb-10">Đăng nhập</h2>
                 
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-white mb-2"
-                  >
-                    Email
-                  </label>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-white mb-2"
+                >
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
+                  placeholder="Nhập địa chỉ email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-white mb-2"
+                >
+                  Mật khẩu
+                </label>
+                <div className="relative">
                   <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={formData.email}
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    value={formData.password}
                     onChange={handleChange}
                     className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
-                    placeholder="Nhập địa chỉ email"
+                    placeholder="Nhập mật khẩu"
                     required
                   />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-white mb-2"
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute inset-y-0 right-0 px-4 flex items-center text-white/70 hover:text-white"
                   >
-                    Mật khẩu
+                    {showPassword ? (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    ) : (
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z"
+                          clipRule="evenodd"
+                        />
+                        <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    name="rememberMe"
+                    checked={formData.rememberMe}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-[#B69D74] focus:ring-[#B69D74] border-2 border-white/30 rounded bg-white/10"
+                  />
+                  <label
+                    htmlFor="rememberMe"
+                    className="ml-3 block text-sm text-white"
+                  >
+                    Ghi nhớ đăng nhập
                   </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
-                      placeholder="Nhập mật khẩu"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute inset-y-0 right-0 px-4 flex items-center text-white/70 hover:text-white"
-                    >
-                      {showPassword ? (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                          <path
-                            fillRule="evenodd"
-                            d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M3.28 2.22a.75.75 0 00-1.06 1.06l14.5 14.5a.75.75 0 101.06-1.06l-1.745-1.745a10.029 10.029 0 003.3-4.38 1.651 1.651 0 000-1.185A10.004 10.004 0 009.999 3a9.956 9.956 0 00-4.744 1.194L3.28 2.22zM7.752 6.69l1.092 1.092a2.5 2.5 0 013.374 3.373l1.091 1.092a4 4 0 00-5.557-5.557z"
-                            clipRule="evenodd"
-                          />
-                          <path d="M10.748 13.93l2.523 2.523a9.987 9.987 0 01-3.27.547c-4.258 0-7.894-2.66-9.337-6.41a1.651 1.651 0 010-1.186A10.007 10.007 0 012.839 6.02L6.07 9.252a4 4 0 004.678 4.678z" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
                 </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="rememberMe"
-                      name="rememberMe"
-                      checked={formData.rememberMe}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-[#B69D74] focus:ring-[#B69D74] border-2 border-white/30 rounded bg-white/10"
-                    />
-                    <label
-                      htmlFor="rememberMe"
-                      className="ml-3 block text-sm text-white"
-                    >
-                      Ghi nhớ đăng nhập
-                    </label>
-                  </div>
-                  <div className="text-sm">
-                    <a
-                      href="#"
-                      className="font-medium text-white hover:text-[#B69D74]"
-                    >
-                      Quên mật khẩu?
-                    </a>
-                  </div>
+                <div className="text-sm">
+                  <a
+                    href="#"
+                    className="font-medium text-white hover:text-[#B69D74]"
+                  >
+                    Quên mật khẩu?
+                  </a>
                 </div>
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-[#90B77D] bg-white hover:bg-[#B69D74] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B69D74] transition-colors duration-200"
-                >
-                  {loading ? "Đang xử lý..." : "Đăng nhập"}
-                </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-[#90B77D] bg-white hover:bg-[#B69D74] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B69D74] transition-colors duration-200"
+              >
+                {loading ? "Đang xử lý..." : "Đăng nhập"}
+              </button>
 
                 <div className="mt-4 text-center">
                   <a href="#" className="text-xs text-white/70 hover:text-white">
                     Điều khoản dịch vụ
                   </a>
                 </div>
-              </form>
+            </form>
             </div>
           </div>
 
@@ -357,6 +474,53 @@ const Login = () => {
                   />
                 </div>
 
+                <div className="flex gap-4">
+                  <div className="mb-0.5 flex-1">
+                    <label htmlFor="dob" className="block text-sm font-medium text-white">
+                      Ngày sinh
+                    </label>
+                    <input
+                      type="date"
+                      id="dob"
+                      name="dob"
+                      value={registerData.dob}
+                      onChange={handleRegisterChange}
+                      className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-0.5 flex-1">
+                    <label className="block text-sm font-medium text-white">
+                      Giới tính
+                    </label>
+                    <div className="flex space-x-4 mt-1.5">
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="true"
+                          checked={registerData.gender === true}
+                          onChange={handleRegisterChange}
+                          className="h-4 w-4 text-[#B69D74] focus:ring-[#B69D74] border-2 border-white/30 bg-white/10 mr-2"
+                        />
+                        <span className="text-sm text-white">Nam</span>
+                      </label>
+                      <label className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gender"
+                          value="false"
+                          checked={registerData.gender === false}
+                          onChange={handleRegisterChange}
+                          className="h-4 w-4 text-[#B69D74] focus:ring-[#B69D74] border-2 border-white/30 bg-white/10 mr-2"
+                        />
+                        <span className="text-sm text-white">Nữ</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mb-0.5">
                   <label htmlFor="registerPassword" className="block text-sm font-medium text-white">
                     Mật khẩu
@@ -411,8 +575,9 @@ const Login = () => {
                 <button
                   type="submit"
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-[#90B77D] bg-white hover:bg-[#B69D74] hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B69D74] transition-colors duration-200 mt-2"
+                  disabled={loading}
                 >
-                  Đăng ký
+                  {loading ? "Đang xử lý..." : "Đăng ký"}
                 </button>
 
                 <div className="text-center">

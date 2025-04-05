@@ -9,7 +9,7 @@ const RoleBasedRedirect = () => {
     console.log("Redirecting based on role:", userRole);
 
     // Điều hướng dựa trên role
-    switch (userRole ? userRole.toLowerCase() : "staff") {
+    switch (userRole ? userRole.toLowerCase() : "") {
       case "manager":
         navigate("/manager/dashboard");
         break;
@@ -23,7 +23,13 @@ const RoleBasedRedirect = () => {
         navigate("/admin/account-management");
         break;
       default:
-        navigate("/staff/notifications");
+        // Chuyển đến trang Pending nếu không có role cụ thể
+        navigate("/pending", { 
+          replace: true, 
+          state: { 
+            message: "Tài khoản của bạn đang chờ xác nhận hoặc chưa được phân quyền. Vui lòng liên hệ quản trị viên để biết thêm chi tiết." 
+          } 
+        });
     }
   }, [navigate]);
 
