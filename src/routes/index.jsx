@@ -6,10 +6,12 @@ import { publicRoutes } from "./publicRoutes";
 import Login from "../pages/Login";
 
 export const AppRoutes = () => {
+  const hasToken = localStorage.getItem("accessToken");
+
   const routes = [
     {
       path: "/",
-      element: <Navigate to="/login" replace />,
+      element: hasToken ? <MainLayout /> : <Navigate to="/login" replace />,
     },
     {
       path: "/",
