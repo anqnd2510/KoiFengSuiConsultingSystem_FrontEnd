@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Tree, Button, Modal, message } from "antd";
 import CategoryForm from "../../components/admin/categories/CategoryForm";
 import CategoryTree from "../../components/admin/categories/CategoryTree";
+import Header from "../../components/Common/Header";
 
 const CategoryManagement = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -27,39 +28,44 @@ const CategoryManagement = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Quản lý danh mục</h1>
-        <Button type="primary" onClick={handleAddCategory}>
-          Thêm danh mục mới
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        title="Quản lý danh mục" 
+        description="Quản lý các danh mục trong hệ thống"
+      />
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <Button type="primary" onClick={handleAddCategory}>
+            Thêm danh mục mới
+          </Button>
+        </div>
 
-      <div className="bg-white p-4 rounded-lg shadow">
-        <CategoryTree
-          onEdit={handleEditCategory}
-          onDelete={handleDeleteCategory}
-        />
-      </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <CategoryTree
+            onEdit={handleEditCategory}
+            onDelete={handleDeleteCategory}
+          />
+        </div>
 
-      <Modal
-        title={selectedCategory ? "Sửa danh mục" : "Thêm danh mục mới"}
-        open={isModalVisible}
-        onCancel={() => {
-          setIsModalVisible(false);
-          setSelectedCategory(null);
-        }}
-        footer={null}
-      >
-        <CategoryForm
-          initialData={selectedCategory}
-          onSubmit={(data) => {
-            // Handle form submission
+        <Modal
+          title={selectedCategory ? "Sửa danh mục" : "Thêm danh mục mới"}
+          open={isModalVisible}
+          onCancel={() => {
             setIsModalVisible(false);
             setSelectedCategory(null);
           }}
-        />
-      </Modal>
+          footer={null}
+        >
+          <CategoryForm
+            initialData={selectedCategory}
+            onSubmit={(data) => {
+              // Handle form submission
+              setIsModalVisible(false);
+              setSelectedCategory(null);
+            }}
+          />
+        </Modal>
+      </div>
     </div>
   );
 };

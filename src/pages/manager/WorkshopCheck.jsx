@@ -7,6 +7,7 @@ import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
 import CustomTable from "../../components/Common/CustomTable";
 import Pagination from "../../components/Common/Pagination";
+import BackButton from "../../components/Common/BackButton";
 import {
   getPendingWorkshops,
   approveWorkshop,
@@ -243,7 +244,8 @@ const WorkshopCheck = () => {
 
       <div className="p-6">
         <div className="bg-white rounded-lg shadow">
-          <div className="flex justify-end p-4">
+          <div className="flex justify-between items-center p-4">
+            <BackButton to="/staff/workshop-staff" />
             <div className="flex items-center gap-4">
               <SearchBar onSearch={handleSearch} />
             </div>

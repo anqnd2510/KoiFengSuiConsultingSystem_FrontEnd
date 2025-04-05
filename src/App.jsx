@@ -5,6 +5,7 @@ import RoleBasedRedirect from "./components/RoleBasedRedirect";
 import { mainRoutes } from "./routes/mainRoutes";
 import { adminRoutes } from "./routes/adminRoutes";
 import Login from "./pages/Login";
+import Pending from "./pages/Pending";
 // Import các component khác nếu cần
 
 function App() {
@@ -21,6 +22,9 @@ function App() {
 
       {/* Đường dẫn đăng nhập */}
       <Route path="/login" element={<Login />} />
+      
+      {/* Đường dẫn trang chờ xác nhận tài khoản */}
+      <Route path="/pending" element={<Pending />} />
 
       {/* Các route chính trong layout */}
       <Route path="/" element={<Layout />}>

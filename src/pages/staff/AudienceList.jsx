@@ -14,7 +14,10 @@ import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import CustomTable from "../../components/Common/CustomTable";
 import Error from "../../components/Common/Error";
+import Header from "../../components/Common/Header";
+import BackButton from "../../components/Common/BackButton";
 import { checkInAudience, getAudiencesByWorkshopId } from "../../services/audience.service";
+import { getWorkshopById } from "../../services/workshopstaff.service";
 
 const { Title } = Typography;
 
@@ -36,7 +39,30 @@ const AudienceList = () => {
   const [checkingIn, setCheckingIn] = useState(false);
   const [workshop, setWorkshop] = useState(defaultWorkshopInfo);
 
-  // Lấy dữ liệu dựa trên workshopId từ API
+  // Lấy thông tin workshop
+  useEffect(() => {
+    const fetchWorkshopInfo = async () => {
+      try {
+        const workshopData = await getWorkshopById(workshopId);
+        if (workshopData) {
+          setWorkshop({
+            name: workshopData.workshopName || "Workshop",
+            master: workshopData.masterName || "Không xác định",
+            location: workshopData.location || "Không xác định",
+            date: workshopData.startDate ? new Date(workshopData.startDate).toLocaleDateString('vi-VN') : "Không xác định",
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi khi lấy thông tin workshop:", err);
+      }
+    };
+
+    if (workshopId) {
+      fetchWorkshopInfo();
+    }
+  }, [workshopId]);
+
+  // Lấy dữ liệu người tham dự
   useEffect(() => {
     const fetchAudiences = async () => {
       setLoading(true);
@@ -45,13 +71,11 @@ const AudienceList = () => {
       try {
         console.log("Đang lấy danh sách người tham dự cho workshop ID:", workshopId);
         
-        // Gọi API để lấy danh sách người tham dự
         const result = await getAudiencesByWorkshopId(workshopId);
         
         if (result.success) {
           console.log("Lấy danh sách người tham dự thành công:", result.data);
           
-          // Định dạng dữ liệu từ API
           const formattedAudiences = result.data.map((audience, index) => ({
             id: index + 1,
             attendId: audience.attendId,
@@ -63,17 +87,6 @@ const AudienceList = () => {
           }));
           
           setAudiences(formattedAudiences);
-          
-          // Nếu có data từ API, cập nhật thông tin workshop
-          if (formattedAudiences.length > 0 && formattedAudiences[0].workshopName) {
-            setWorkshop({
-              name: formattedAudiences[0].workshopName || "Workshop",
-              master: formattedAudiences[0].masterName || "Không xác định",
-              location: formattedAudiences[0].location || "Không xác định",
-              date: formattedAudiences[0].date || "Không xác định",
-            });
-          }
-          
           message.success(`Đã tải ${formattedAudiences.length} người tham dự`);
         } else {
           console.error("Lỗi khi lấy danh sách người tham dự:", result.message);
@@ -263,18 +276,19 @@ const AudienceList = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-[#B89D71] p-4">
-        <h1 className="text-white text-xl font-semibold">Người tham dự</h1>
-        <p className="text-white/80 text-sm">
-          Báo cáo và tất cả khán giả đã tham gia trong hội thảo
-        </p>
-      </div>
+      <Header 
+        title="Người tham dự"
+        description="Báo cáo và tất cả khán giả đã tham gia trong hội thảo"
+      />
 
       {/* Main Content */}
       <div className="p-6">
         {workshop && (
           <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
-            <Title level={4}>{workshop.name}</Title>
+            <div className="flex items-center gap-4 mb-4">
+              <BackButton to="/staff/workshop-staff" />
+              <Title level={4}>{workshop.name}</Title>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <p className="text-gray-500">Người hướng dẫn</p>

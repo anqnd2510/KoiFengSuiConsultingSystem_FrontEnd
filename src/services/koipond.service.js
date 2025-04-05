@@ -75,12 +75,11 @@ const KoiPondService = {
     try {
       console.log('Creating pond with data:', pondData);
       
-      // Thử cấu trúc dữ liệu khác, phù hợp với KoiPondRequest
       const koiPondRequest = {
         pondName: pondData.pondName || '',
-        size: parseInt(pondData.size) || 0,
-        direction: pondData.direction || '',
-        shapeId: pondData.shapeId || ''
+        element: pondData.element || '',
+        introduction: pondData.introduction || '',
+        description: pondData.description || ''
       };
       
       console.log('Formatted request data:', koiPondRequest);
@@ -212,12 +211,11 @@ const KoiPondService = {
   
   updateKoiPond: async (id, pondData) => {
     try {
-      // Đảm bảo dữ liệu đúng định dạng KoiPondRequest
       const koiPondRequest = {
         pondName: pondData.pondName || '',
-        size: parseInt(pondData.size) || 0,
-        direction: pondData.direction || '',
-        shapeId: pondData.shapeId || ''
+        element: pondData.element || '',
+        introduction: pondData.introduction || '',
+        description: pondData.description || ''
       };
       
       const response = await axios.put(`${API_URL}/KoiPond/${id.toString()}`, koiPondRequest, {
