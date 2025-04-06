@@ -12,18 +12,23 @@ const KoiFishService = {
       const response = await apiClient.get(`${KOI_ENDPOINT}/get-all`);
       console.log('API response:', response);
       
-      // Kiểm tra cấu trúc phản hồi và truy cập trường data
+      // Kiểm tra cấu trúc phản hồi từ API BE
       if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
-        // Đảm bảo dữ liệu hợp lệ trước khi trả về
+        // Cấu trúc API mới: { isSuccess: true, responseCode: "Success", statusCode: 200, data: [...] }
         return response.data.data.map(item => ({
           id: item.koiVarietyId || item.id || 'unknown-id',
-          varietyName: item.name || item.varietyName || 'Không có tên',
+          varietyName: item.varietyName || 'Không có tên',
           description: item.description || null,
-          colors: Array.isArray(item.colors) ? item.colors.map(color => ({
-            colorName: color.colorName || 'Không tên',
-            colorCode: color.colorCode || '#000000',
-            percentage: color.percentage || 0
-          })) : []
+          varietyColors: Array.isArray(item.varietyColors) ? item.varietyColors.map(colorItem => {
+            // Xử lý cấu trúc dữ liệu mới với color là một đối tượng con
+            return {
+              percentage: colorItem.percentage || 0,
+              colorName: colorItem.color?.colorName || '',
+              element: colorItem.color?.element || ''
+            };
+          }) : [],
+          totalPercentage: item.totalPercentage || 0,
+          compatibilityScore: item.compatibilityScore || 0
         }));
       }
       
@@ -50,20 +55,25 @@ const KoiFishService = {
       const response = await apiClient.get(`${KOI_ENDPOINT}/${id}`);
       console.log('API response getKoiFishById:', response);
       
-      // Kiểm tra cấu trúc phản hồi và truy cập trường data
+      // Kiểm tra cấu trúc phản hồi từ API BE
       if (response.data && response.data.isSuccess && response.data.data) {
         const item = response.data.data;
         
         // Đảm bảo dữ liệu hợp lệ trước khi trả về
         return {
           id: item.koiVarietyId || item.id || 'unknown-id',
-          varietyName: item.name || item.varietyName || 'Không có tên',
+          varietyName: item.varietyName || 'Không có tên',
           description: item.description || null,
-          colors: Array.isArray(item.colors) ? item.colors.map(color => ({
-            colorName: color.colorName || 'Không tên',
-            colorCode: color.colorCode || '#000000',
-            percentage: color.percentage || 0
-          })) : []
+          varietyColors: Array.isArray(item.varietyColors) ? item.varietyColors.map(colorItem => {
+            // Xử lý cấu trúc dữ liệu mới với color là một đối tượng con
+            return {
+              percentage: colorItem.percentage || 0,
+              colorName: colorItem.color?.colorName || '',
+              element: colorItem.color?.element || ''
+            };
+          }) : [],
+          totalPercentage: item.totalPercentage || 0,
+          compatibilityScore: item.compatibilityScore || 0
         };
       }
       
@@ -176,62 +186,84 @@ const mockData = [
     id: "B976C9EE-A117-402F-9",
     varietyName: "Kohaku",
     description: null,
-    colors: [
+    varietyColors: [
       {
-        colorName: "Red",
-        colorCode: "#FF0000",
-        percentage: 60
+        percentage: 60,
+        color: {
+          colorName: "Đỏ",
+          element: "Hỏa"
+        }
       },
       {
-        colorName: "White",
-        colorCode: "#FFFFFF",
-        percentage: 40
+        percentage: 40,
+        color: {
+          colorName: "Trắng",
+          element: "Kim"
+        }
       }
-    ]
+    ],
+    totalPercentage: 100,
+    compatibilityScore: 0
   },
   {
     id: "C976C9EE-A117-402F-8",
     varietyName: "Showa",
     description: "Showa là một trong những giống cá Koi phổ biến nhất, với màu đen, đỏ và trắng.",
-    colors: [
+    varietyColors: [
       {
-        colorName: "Black",
-        colorCode: "#000000",
-        percentage: 40
+        percentage: 40,
+        color: {
+          colorName: "Đen",
+          element: "Thủy"
+        }
       },
       {
-        colorName: "Red",
-        colorCode: "#FF0000",
-        percentage: 30
+        percentage: 30,
+        color: {
+          colorName: "Đỏ",
+          element: "Hỏa"
+        }
       },
       {
-        colorName: "White",
-        colorCode: "#FFFFFF",
-        percentage: 30
+        percentage: 30,
+        color: {
+          colorName: "Trắng",
+          element: "Kim"
+        }
       }
-    ]
+    ],
+    totalPercentage: 100,
+    compatibilityScore: 0
   },
   {
     id: "D976C9EE-A117-402F-7",
     varietyName: "Sanke",
     description: "Sanke (Taisho Sanshoku) là giống cá Koi có ba màu: trắng, đỏ và đen.",
-    colors: [
+    varietyColors: [
       {
-        colorName: "White",
-        colorCode: "#FFFFFF",
-        percentage: 60
+        percentage: 60,
+        color: {
+          colorName: "Trắng",
+          element: "Kim"
+        }
       },
       {
-        colorName: "Red",
-        colorCode: "#FF0000",
-        percentage: 25
+        percentage: 25,
+        color: {
+          colorName: "Đỏ",
+          element: "Hỏa"
+        }
       },
       {
-        colorName: "Black",
-        colorCode: "#000000",
-        percentage: 15
+        percentage: 15,
+        color: {
+          colorName: "Đen",
+          element: "Thủy"
+        }
       }
-    ]
+    ],
+    totalPercentage: 100,
+    compatibilityScore: 0
   }
 ];
 
