@@ -22,6 +22,7 @@ import Master from "../pages/staff/Master";
 import Customer from "../pages/staff/Customer";
 import Notifications from "../pages/staff/Notifications";
 import ConsultationHistory from "../pages/staff/ConsultationHistory";
+import ConsultationPackage from "../pages/staff/ConsultationPackage";
 import Question from "../pages/master/Question";
 import Profile from "../pages/Profile";
 import Attachment from "../pages/manager/Attachment";
@@ -153,6 +154,11 @@ export const mainRoutes = [
   {
     path: "staff/consultation-history",
     element: <ConsultationHistory />,
+    roles: ["staff"],
+  },
+  {
+    path: "staff/consultation-package",
+    element: <ConsultationPackage />,
     roles: ["staff"],
   },
   {

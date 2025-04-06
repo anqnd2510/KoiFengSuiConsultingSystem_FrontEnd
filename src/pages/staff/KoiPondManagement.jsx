@@ -11,12 +11,14 @@ import {
   Spin,
   Space,
   Popconfirm,
+  Tooltip,
 } from "antd";
 import {
   UploadOutlined,
   PlusOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import axios from "axios";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
@@ -31,15 +33,34 @@ const PondCard = ({
   onUpdate,
   onDelete,
   shapeName,
-  element,
   introduction,
   description,
-  koiPondId
+  koiPondId,
+  imageUrl,
+  onImageUpdate
 }) => {
   return (
     <Card className="h-full">
       <div className="text-center">
         <h3 className="text-base font-medium mb-2">{title}</h3>
+        <div className="mb-3">
+          {imageUrl && (
+            <div className="relative">
+              <img 
+                src={imageUrl} 
+                alt={title} 
+                className="w-full h-32 object-cover mb-3 rounded"
+              />
+              <button 
+                className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                onClick={onImageUpdate}
+                title="Cập nhật hình ảnh"
+              >
+                <UploadOutlined style={{ color: '#52c41a' }} />
+              </button>
+            </div>
+          )}
+        </div>
         <div className="mb-3 text-sm text-left">
           <p className="truncate">
             <span className="font-medium">ID Hồ:</span>{" "}
@@ -49,19 +70,14 @@ const PondCard = ({
             <span className="font-medium">Hình dạng:</span>{" "}
             {shapeName || "Không có"}
           </p>
-          <p>
-            <span className="font-medium">Mệnh:</span>{" "}
-            {element || "Không có"}
-          </p>
-          <p>
+          <p className="truncate">
             <span className="font-medium">Giới thiệu:</span>{" "}
             {introduction || "Không có"}
           </p>
-          <p>
+          <p className="truncate">
             <span className="font-medium">Mô tả:</span>{" "}
             {description || "Không có"}
           </p>
-          
         </div>
         <div className="border-t pt-2">
           <div className="flex items-center mt-2">
@@ -98,14 +114,88 @@ const PondCard = ({
   );
 };
 
+// Component hiển thị khi không có hình dạng hồ
+const NoShapesMessage = () => (
+  <div className="text-center p-6 bg-yellow-50 rounded-lg border border-yellow-200 mt-4">
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      className="h-12 w-12 text-yellow-500 mx-auto mb-3"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+      />
+    </svg>
+    <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+      Không tìm thấy dữ liệu hình dạng hồ
+    </h3>
+    <p className="text-yellow-700 mb-4">
+      Vui lòng kiểm tra kết nối API hoặc thêm dữ liệu hình dạng hồ trước khi tạo hồ mới.
+    </p>
+    <button
+      onClick={fetchPondShapes}
+      className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
+    >
+      Thử lại
+    </button>
+  </div>
+);
+
+// Thêm hàm upload ảnh lên Cloudinary
+const uploadImageToCloudinary = async (file) => {
+  console.log("Bắt đầu upload file lên Cloudinary:", file?.name);
+  
+  if (!file) {
+    console.error("❌ Không có file để upload");
+    return null;
+  }
+  
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", "upload-cloudinary"); // preset cloudinary
+
+  try {
+    console.log("Đang gửi file đến Cloudinary...");
+    
+    const res = await axios.post(
+      "https://api.cloudinary.com/v1_1/dzedpn3us/image/upload",
+      formData
+    );
+    
+    console.log("✅ Upload Cloudinary thành công:", res.status);
+    console.log("URL trả về:", res.data?.secure_url);
+    
+    return res.data.secure_url;
+  } catch (err) {
+    console.error("❌ Lỗi upload Cloudinary:", err);
+    
+    if (err.response) {
+      console.error("Lỗi response từ Cloudinary:", {
+        status: err.response.status,
+        data: err.response.data
+      });
+    } else if (err.request) {
+      console.error("Không nhận được response từ Cloudinary");
+    } else {
+      console.error("Lỗi cấu hình request:", err.message);
+    }
+    
+    return null;
+  }
+};
+
 const KoiPondManagement = () => {
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
   const [selectedPond, setSelectedPond] = useState(null);
-  const [fileList, setFileList] = useState([]);
-  const [previewImage, setPreviewImage] = useState("");
-  const [previewVisible, setPreviewVisible] = useState(false);
+  const [createImageFile, setCreateImageFile] = useState(null);
+  const [createImageUrl, setCreateImageUrl] = useState("");
+  const [editImageFile, setEditImageFile] = useState(null);
   const [form] = Form.useForm();
   const [editForm] = Form.useForm();
   const [createForm] = Form.useForm();
@@ -120,10 +210,17 @@ const KoiPondManagement = () => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
   const [pondToDelete, setPondToDelete] = useState(null);
 
+  // Thêm state cho việc loading hình dạng hồ
+  const [loadingShapes, setLoadingShapes] = useState(true);
+
   // Lấy danh sách hồ cá khi component được mount
   useEffect(() => {
     testApiConnection();
     fetchPonds();
+  }, []);
+
+  // Tách riêng việc tải danh sách hình dạng hồ
+  useEffect(() => {
     fetchPondShapes();
   }, []);
 
@@ -143,10 +240,26 @@ const KoiPondManagement = () => {
 
   const fetchPondShapes = async () => {
     try {
+      setLoadingShapes(true); // Hiển thị trạng thái loading cho hình dạng hồ
+      message.loading({ content: 'Đang tải danh sách hình dạng hồ...', key: 'loadingShapes' });
+      
       const shapes = await KoiPondService.getPondShapes();
-      setPondShapes(shapes);
+      
+      if (shapes && shapes.length > 0) {
+        console.log('Đã tải được', shapes.length, 'hình dạng hồ');
+        setPondShapes(shapes);
+        message.success({ content: `Đã tải ${shapes.length} hình dạng hồ cá`, key: 'loadingShapes', duration: 1 });
+      } else {
+        console.warn('Không có dữ liệu hình dạng hồ');
+        message.warning({ content: 'Không tìm thấy dữ liệu hình dạng hồ cá', key: 'loadingShapes' });
+        setPondShapes([]);
+      }
     } catch (err) {
       console.error("Lỗi khi lấy danh sách hình dạng hồ cá:", err);
+      message.error({ content: 'Không thể tải danh sách hình dạng hồ cá', key: 'loadingShapes' });
+      setPondShapes([]);
+    } finally {
+      setLoadingShapes(false);
     }
   };
 
@@ -182,9 +295,10 @@ const KoiPondManagement = () => {
     setSelectedPond(pondType);
     editForm.setFieldsValue({
       pondName: pondType.pondName,
-      element: pondType.element,
+      shapeId: pondType.shapeId,
       introduction: pondType.introduction,
       description: pondType.description,
+      imageUrl: pondType.imageUrl
     });
     setIsEditModalVisible(true);
   };
@@ -280,6 +394,24 @@ const KoiPondManagement = () => {
   const handleCreateCancel = () => {
     setIsCreateModalVisible(false);
     createForm.resetFields();
+    setCreateImageFile(null);
+    setCreateImageUrl("");
+  };
+
+  const handleCreateImageChange = ({ fileList }) => {
+    console.log('Create image change:', fileList);
+    if (fileList.length > 0) {
+      setCreateImageFile(fileList[0].originFileObj);
+      
+      // Hiển thị preview ảnh
+      if (fileList[0].originFileObj) {
+        const url = URL.createObjectURL(fileList[0].originFileObj);
+        setCreateImageUrl(url);
+      }
+    } else {
+      setCreateImageFile(null);
+      setCreateImageUrl("");
+    }
   };
 
   const handleCreateSubmit = async () => {
@@ -289,33 +421,114 @@ const KoiPondManagement = () => {
 
       setLoading(true);
 
-      // Đảm bảo dữ liệu đúng định dạng
-      const pondData = {
-        pondName: values.pondName,
-        element: values.element,
-        introduction: values.introduction,
-        description: values.description,
-      };
-
-      // Kiểm tra các trường bắt buộc khác
-      if (!pondData.pondName || pondData.pondName.trim() === "") {
+      // Kiểm tra các trường bắt buộc
+      if (!values.pondName || values.pondName.trim() === "") {
         message.error("Vui lòng nhập tên hồ cá");
         setLoading(false);
         return;
       }
 
-      console.log("Sending pond data:", pondData);
+      if (!values.shapeId) {
+        message.error("Vui lòng chọn hình dạng hồ");
+        setLoading(false);
+        return;
+      }
 
-      // Gọi API để tạo hồ cá mới
-      const response = await KoiPondService.createPond(pondData);
-      console.log("Create pond response:", response);
+      // Kiểm tra introduction và description
+      if (!values.introduction || values.introduction.trim() === "") {
+        message.error("Vui lòng nhập thông tin giới thiệu");
+        setLoading(false);
+        return;
+      }
 
-      message.success("Đã tạo hồ cá mới thành công");
-      setIsCreateModalVisible(false);
-      createForm.resetFields();
+      if (!values.description || values.description.trim() === "") {
+        message.error("Vui lòng nhập thông tin mô tả");
+        setLoading(false);
+        return;
+      }
 
-      // Tải lại danh sách hồ cá để cập nhật UI
-      await fetchPonds();
+      let cloudinaryUrl = values.imageUrl;
+      
+      // Nếu có file ảnh mới hoặc imageUrl đã có sẵn, sử dụng nó
+      if (createImageFile) {
+        message.loading({ content: "Đang tải ảnh lên Cloudinary...", key: "uploadImage" });
+        console.log("Bắt đầu upload ảnh lên Cloudinary...");
+        
+        try {
+          cloudinaryUrl = await uploadImageToCloudinary(createImageFile);
+          
+          if (!cloudinaryUrl) {
+            message.error({ content: "Không thể tải ảnh lên Cloudinary", key: "uploadImage" });
+            console.error("Tải ảnh lên Cloudinary thất bại, không nhận được URL");
+            setLoading(false);
+            return;
+          }
+          
+          message.success({ content: "Tải ảnh lên Cloudinary thành công", key: "uploadImage" });
+          console.log("Đã nhận được URL Cloudinary:", cloudinaryUrl);
+        } catch (uploadError) {
+          console.error("Lỗi khi upload Cloudinary:", uploadError);
+          message.error({ content: "Lỗi khi tải ảnh lên: " + (uploadError.message || "Không xác định"), key: "uploadImage" });
+          setLoading(false);
+          return;
+        }
+      } else if (!cloudinaryUrl || cloudinaryUrl.trim() === "") {
+        // Nếu không có file và không có URL, hiển thị lỗi
+        message.error("Vui lòng chọn hình ảnh hoặc nhập URL hình ảnh");
+        setLoading(false);
+        return;
+      }
+
+      // Chuẩn bị dữ liệu
+      const pondData = {
+        pondName: values.pondName,
+        shapeId: values.shapeId,
+        introduction: values.introduction,
+        description: values.description,
+        imageUrl: cloudinaryUrl
+      };
+
+      console.log("Đang gửi dữ liệu hồ cá:", pondData);
+
+      // Gọi API để tạo hồ cá mới với URL ảnh từ Cloudinary
+      try {
+        // Sử dụng phương thức createPond đã được cập nhật để gửi JSON đến API
+        console.log("Gọi API tạo hồ cá mới...");
+        const response = await KoiPondService.createPond(pondData);
+        console.log("Phản hồi tạo hồ cá:", response);
+
+        message.success("Đã tạo hồ cá mới thành công");
+        setIsCreateModalVisible(false);
+        createForm.resetFields();
+        setCreateImageFile(null);
+        setCreateImageUrl("");
+
+        // Tải lại danh sách hồ cá để cập nhật UI
+        await fetchPonds();
+      } catch (error) {
+        console.error("Lỗi khi tạo hồ cá:", error);
+        
+        let errorMsg = "Không thể tạo hồ cá mới. ";
+        if (error.response && error.response.data) {
+          console.error("Chi tiết lỗi API:", error.response.data);
+          
+          if (error.response.data.errors) {
+            // Hiển thị lỗi chi tiết từ API
+            const errors = error.response.data.errors;
+            Object.keys(errors).forEach(key => {
+              errorMsg += `${key}: ${errors[key].join(', ')}. `;
+            });
+          } else if (error.response.data.message) {
+            errorMsg += error.response.data.message;
+          } else if (error.response.data.title) {
+            errorMsg += error.response.data.title;
+          }
+        } else if (error.message) {
+          errorMsg += error.message;
+        }
+        
+        message.error(errorMsg);
+      }
     } catch (err) {
       console.error("Lỗi khi tạo hồ cá mới:", err);
 
@@ -323,12 +536,15 @@ const KoiPondManagement = () => {
 
       if (err.response && err.response.data) {
         console.error("API error response:", err.response.data);
-        if (typeof err.response.data === "object") {
-          errorMessage += JSON.stringify(err.response.data);
+        
+        if (err.response.data.title) {
+          errorMessage += err.response.data.title;
         } else if (err.response.data.message) {
           errorMessage += err.response.data.message;
+        } else if (typeof err.response.data === "string") {
+          errorMessage += err.response.data;
         } else {
-          errorMessage += "Lỗi từ server.";
+          errorMessage += JSON.stringify(err.response.data);
         }
       } else if (err.message) {
         errorMessage += err.message;
@@ -343,91 +559,9 @@ const KoiPondManagement = () => {
   };
 
   const handleCancel = () => {
-    setIsModalVisible(false);
+    setIsEditModalVisible(false);
     setSelectedPond(null);
-    setFileList([]);
-  };
-
-  const handlePreview = (file) => {
-    setPreviewImage(file.url || file.thumbUrl);
-    setPreviewVisible(true);
-  };
-
-  const handlePreviewCancel = () => {
-    setPreviewVisible(false);
-  };
-
-  const handleChange = ({ fileList }) => {
-    setFileList(fileList);
-  };
-
-  const handleSave = async () => {
-    if (fileList.length === 0) {
-      message.error("Vui lòng chọn một hình ảnh mới");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const file = fileList[0].originFileObj;
-
-      // Sử dụng koiPondId thay vì id
-      const pondId = selectedPond.koiPondId || selectedPond.id;
-
-      // Gọi API để cập nhật hình ảnh
-      await KoiPondService.uploadPondImage(pondId, file);
-
-      // Tải lại danh sách hồ cá để cập nhật UI
-      await fetchPonds();
-
-      message.success(
-        `Đã cập nhật hình ảnh cho hồ ${selectedPond.pondName}`
-      );
-      setIsModalVisible(false);
-    } catch (err) {
-      console.error("Lỗi khi cập nhật hình ảnh:", err);
-      message.error("Không thể cập nhật hình ảnh. Vui lòng thử lại sau.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const uploadProps = {
-    onPreview: handlePreview,
-    onChange: handleChange,
-    fileList: fileList,
-    listType: "picture-card",
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        message.error("Bạn chỉ có thể tải lên hình ảnh!");
-      }
-      return isImage || Upload.LIST_IGNORE;
-    },
-    maxCount: 1,
-  };
-
-  const uploadButton = (
-    <div>
-      <PlusOutlined />
-      <div style={{ marginTop: 8 }}>Tải lên</div>
-    </div>
-  );
-
-  // Hàm để lấy tên hiển thị từ đối tượng hồ cá
-  const getPondName = (pond) => {
-    console.log("Pond object:", pond);
-    // Sử dụng trường pondName từ dữ liệu API
-    return pond.pondName || "Hồ không tên";
-  };
-
-  // Hàm để lấy URL hình ảnh từ đối tượng hồ cá
-  const getPondImage = (pond) => {
-    return (
-      pond.imageUrl ||
-      pond.image ||
-      "https://via.placeholder.com/150?text=No+Image"
-    );
+    editForm.resetFields();
   };
 
   const handleEditCancel = () => {
@@ -436,38 +570,275 @@ const KoiPondManagement = () => {
     editForm.resetFields();
   };
 
-  const handleEditSubmit = async () => {
+  const handleImageUpdate = async (pondType) => {
     try {
-      const values = await editForm.validateFields();
-      setLoading(true);
-
-      const pondId = selectedPond.koiPondId || selectedPond.id;
-
-      // Gọi API để cập nhật thông tin hồ cá
-      await KoiPondService.updateKoiPond(pondId, values);
-
-      message.success(`Đã cập nhật thông tin hồ ${getPondName(selectedPond)}`);
-      setIsEditModalVisible(false);
-
-      // Tải lại danh sách hồ cá để cập nhật UI
-      await fetchPonds();
+      // Hiển thị modal để chọn ảnh
+      Modal.info({
+        title: `Cập nhật hình ảnh cho hồ ${pondType.pondName}`,
+        content: (
+          <div className="mt-4">
+            <Upload
+              listType="picture-card"
+              maxCount={1}
+              beforeUpload={(file) => {
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  message.error('Chỉ chấp nhận file hình ảnh!');
+                  return Upload.LIST_IGNORE;
+                }
+                return false; // Ngăn tự động upload
+              }}
+              onChange={({ fileList }) => {
+                if (fileList.length > 0) {
+                  // Lưu file đã chọn vào biến tạm
+                  window.selectedImageFile = fileList[0].originFileObj;
+                }
+              }}
+            >
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>Tải lên</div>
+              </div>
+            </Upload>
+          </div>
+        ),
+        okText: 'Cập nhật',
+        onOk: async () => {
+          const file = window.selectedImageFile;
+          if (!file) {
+            message.error('Vui lòng chọn một hình ảnh');
+            return;
+          }
+          
+          try {
+            setLoading(true);
+            message.loading({ content: 'Đang tải ảnh lên Cloudinary...', key: 'uploadImage' });
+            console.log('Bắt đầu upload ảnh lên Cloudinary:', file.name);
+            
+            // Upload ảnh lên Cloudinary
+            let cloudinaryUrl;
+            try {
+              cloudinaryUrl = await uploadImageToCloudinary(file);
+              
+              if (!cloudinaryUrl) {
+                message.error({ content: 'Không thể tải ảnh lên Cloudinary', key: 'uploadImage' });
+                console.error('Upload Cloudinary thất bại, không nhận được URL');
+                setLoading(false);
+                return;
+              }
+            } catch (cloudinaryError) {
+              console.error('Lỗi khi upload Cloudinary:', cloudinaryError);
+              message.error({ 
+                content: 'Lỗi khi tải ảnh lên Cloudinary: ' + (cloudinaryError.message || 'Không xác định'),
+                key: 'uploadImage'
+              });
+              setLoading(false);
+              return;
+            }
+            
+            message.success({ content: 'Tải ảnh lên Cloudinary thành công', key: 'uploadImage' });
+            console.log('Đã nhận được URL Cloudinary:', cloudinaryUrl);
+            
+            // Chuẩn bị dữ liệu cập nhật
+            const pondId = pondType.koiPondId || pondType.id;
+            const updateData = {
+              shapeId: pondType.shapeId,
+              pondName: pondType.pondName,
+              introduction: pondType.introduction || '',
+              description: pondType.description || '',
+              imageUrl: cloudinaryUrl
+            };
+            
+            console.log('Gửi dữ liệu cập nhật hồ cá:', updateData);
+            
+            // Cập nhật thông tin hồ cá với URL ảnh mới
+            try {
+              const response = await KoiPondService.updateKoiPond(pondId, updateData);
+              console.log('Phản hồi cập nhật hồ cá:', response);
+              
+              message.success(`Đã cập nhật hình ảnh cho hồ ${pondType.pondName}`);
+              
+              // Xóa biến tạm
+              delete window.selectedImageFile;
+              
+              // Tải lại danh sách hồ cá
+              await fetchPonds();
+            } catch (updateError) {
+              console.error('Lỗi khi cập nhật thông tin hồ cá:', updateError);
+              
+              let errorMsg = 'Không thể cập nhật thông tin hồ cá. ';
+              if (updateError.response && updateError.response.data) {
+                if (updateError.response.data.errors) {
+                  const errors = updateError.response.data.errors;
+                  Object.keys(errors).forEach(key => {
+                    errorMsg += `${key}: ${errors[key].join(', ')}. `;
+                  });
+                } else if (updateError.response.data.message) {
+                  errorMsg += updateError.response.data.message;
+                } else if (updateError.response.data.title) {
+                  errorMsg += updateError.response.data.title;
+                }
+              } else if (updateError.message) {
+                errorMsg += updateError.message;
+              }
+              
+              message.error(errorMsg);
+            }
+          } catch (error) {
+            console.error('Lỗi khi cập nhật hình ảnh:', error);
+            message.error('Không thể cập nhật hình ảnh. Vui lòng thử lại sau.');
+          } finally {
+            setLoading(false);
+          }
+        },
+        cancelText: 'Hủy',
+        onCancel: () => {
+          // Xóa biến tạm
+          delete window.selectedImageFile;
+        }
+      });
     } catch (err) {
-      console.error("Lỗi khi cập nhật thông tin hồ cá:", err);
-      message.error(
-        "Không thể cập nhật thông tin hồ cá. Vui lòng thử lại sau."
-      );
-    } finally {
-      setLoading(false);
+      console.error('Lỗi khi cập nhật hình ảnh:', err);
+      message.error('Có lỗi xảy ra. Vui lòng thử lại sau.');
     }
   };
 
-  const handleImageUpdate = (pondType) => {
-    /* Tạm thời ẩn phần cập nhật hình ảnh
-    setSelectedPond(pondType);
-    setFileList([]);
-    setIsModalVisible(true);
-    */
-    message.info("Chức năng cập nhật hình ảnh tạm thời đã bị vô hiệu hóa");
+  const handleEditImageChange = ({ fileList }) => {
+    console.log('Edit image change:', fileList);
+    if (fileList.length > 0) {
+      setEditImageFile(fileList[0].originFileObj);
+      // Hiển thị preview ảnh
+      if (fileList[0].originFileObj) {
+        const url = URL.createObjectURL(fileList[0].originFileObj);
+        // Có thể thêm preview URL nếu cần
+      }
+    } else {
+      setEditImageFile(null);
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      const values = await editForm.validateFields();
+      
+      // Kiểm tra các trường bắt buộc
+      if (!values.pondName || values.pondName.trim() === "") {
+        message.error("Vui lòng nhập tên hồ cá");
+        return;
+      }
+
+      if (!values.shapeId) {
+        message.error("Vui lòng chọn hình dạng hồ");
+        return;
+      }
+      
+      // Kiểm tra introduction và description
+      if (!values.introduction || values.introduction.trim() === "") {
+        message.error("Vui lòng nhập thông tin giới thiệu");
+        return;
+      }
+
+      if (!values.description || values.description.trim() === "") {
+        message.error("Vui lòng nhập thông tin mô tả");
+        return;
+      }
+      
+      setLoading(true);
+
+      const pondId = selectedPond.koiPondId || selectedPond.id;
+      
+      let cloudinaryUrl = values.imageUrl;
+      
+      // Nếu có file ảnh mới, upload lên Cloudinary
+      if (editImageFile) {
+        message.loading({ content: "Đang tải ảnh lên Cloudinary...", key: "uploadEditImage" });
+        cloudinaryUrl = await uploadImageToCloudinary(editImageFile);
+        
+        if (!cloudinaryUrl) {
+          message.error({ content: "Không thể tải ảnh lên Cloudinary", key: "uploadEditImage" });
+          setLoading(false);
+          return;
+        }
+        message.success({ content: "Tải ảnh lên Cloudinary thành công", key: "uploadEditImage" });
+      } else if (values.imageUrl && values.imageUrl.startsWith('blob:')) {
+        // Nếu URL là blob nhưng không có file mới, giữ nguyên URL cũ
+        cloudinaryUrl = selectedPond.imageUrl;
+      } else if (!cloudinaryUrl || cloudinaryUrl.trim() === "") {
+        // Nếu không có URL hình ảnh, hiển thị lỗi
+        message.error("Vui lòng chọn hình ảnh hoặc nhập URL hình ảnh");
+        setLoading(false);
+        return;
+      }
+      
+      // Chuẩn bị dữ liệu để cập nhật
+      const updateData = {
+        shapeId: values.shapeId,
+        pondName: values.pondName,
+        introduction: values.introduction,
+        description: values.description,
+        imageUrl: cloudinaryUrl
+      };
+
+      console.log("Updating pond with data:", updateData);
+
+      try {
+        // Cập nhật thông tin cơ bản (bao gồm cả imageUrl từ Cloudinary)
+        const updateResponse = await KoiPondService.updateKoiPond(pondId, updateData);
+        console.log("Update response:", updateResponse);
+
+        message.success(`Đã cập nhật thông tin hồ ${selectedPond.pondName}`);
+        setIsEditModalVisible(false);
+        setEditImageFile(null);
+
+        // Tải lại danh sách hồ cá để cập nhật UI
+        await fetchPonds();
+      } catch (apiError) {
+        console.error("Error in API calls:", apiError);
+        
+        let errorMsg = "Không thể cập nhật: ";
+        if (apiError.response && apiError.response.data) {
+          if (apiError.response.data.errors) {
+            // Hiển thị lỗi chi tiết từ API
+            const errors = apiError.response.data.errors;
+            Object.keys(errors).forEach(key => {
+              errorMsg += `${key}: ${errors[key].join(', ')}. `;
+            });
+          } else if (apiError.response.data.message) {
+            errorMsg += apiError.response.data.message;
+          }
+        } else {
+          errorMsg += apiError.message || 'Đã xảy ra lỗi';
+        }
+        
+        message.error(errorMsg);
+      } finally {
+        setLoading(false);
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật thông tin hồ cá:", err);
+      
+      let errorMessage = "Không thể cập nhật thông tin hồ cá. ";
+
+      if (err.response && err.response.data) {
+        console.error("API error response:", err.response.data);
+        
+        if (err.response.data.title) {
+          errorMessage += err.response.data.title;
+        } else if (err.response.data.message) {
+          errorMessage += err.response.data.message;
+        } else if (typeof err.response.data === "string") {
+          errorMessage += err.response.data;
+        } else {
+          errorMessage += JSON.stringify(err.response.data);
+        }
+      } else if (err.message) {
+        errorMessage += err.message;
+      } else {
+        errorMessage += "Vui lòng thử lại sau.";
+      }
+      
+      message.error(errorMessage);
+    }
   };
 
   return (
@@ -479,13 +850,27 @@ const KoiPondManagement = () => {
 
       <div className="p-6">
         <div className="mb-4 flex justify-between items-center">
-          <CustomButton
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreatePond}
-          >
-            Tạo hồ mới
-          </CustomButton>
+          {loadingShapes ? (
+            <Spin size="small" /> 
+          ) : pondShapes && pondShapes.length > 0 ? (
+            <CustomButton
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreatePond}
+            >
+              Tạo hồ mới
+            </CustomButton>
+          ) : (
+            <Tooltip title="Cần có dữ liệu hình dạng hồ trước khi tạo hồ mới">
+              <CustomButton 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                disabled
+              >
+                Tạo hồ mới
+              </CustomButton>
+            </Tooltip>
+          )}
         </div>
 
         {loading ? (
@@ -511,10 +896,11 @@ const KoiPondManagement = () => {
                     onUpdate={() => handleUpdate(pondType)}
                     onDelete={() => handleDelete(pondType.koiPondId)}
                     shapeName={pondType.shapeName}
-                    element={pondType.element}
                     introduction={pondType.introduction}
                     description={pondType.description}
                     koiPondId={pondType.koiPondId}
+                    imageUrl={pondType.imageUrl}
+                    onImageUpdate={() => handleImageUpdate(pondType)}
                   />
                 </Col>
               ))
@@ -527,34 +913,17 @@ const KoiPondManagement = () => {
             )}
           </Row>
         )}
-      </div>
 
-      {/* Modal cập nhật hình ảnh */}
-      {/* Tạm thời ẩn modal cập nhật hình ảnh
-      <Modal
-        title={`Cập nhật hình ảnh cho hồ ${
-          selectedPond ? getPondName(selectedPond) : ""
-        }`}
-        open={isModalVisible}
-        onCancel={handleCancel}
-        onOk={handleSave}
-        okText="Lưu thay đổi"
-        cancelText="Hủy"
-        confirmLoading={loading}
-      >
-        <div className="mb-4">
-          <p>Chọn hình ảnh mới cho hồ cá:</p>
-          <Upload {...uploadProps}>
-            {fileList.length >= 1 ? null : uploadButton}
-          </Upload>
-        </div>
-      </Modal>
-      */}
+        {/* Cập nhật phần hiển thị thông báo khi không có hình dạng hồ */}
+        {!loadingShapes && (!pondShapes || pondShapes.length === 0) && (
+          <NoShapesMessage />
+        )}
+      </div>
 
       {/* Modal chỉnh sửa thông tin hồ cá */}
       <Modal
         title={`Chỉnh sửa thông tin hồ ${
-          selectedPond ? getPondName(selectedPond) : ""
+          selectedPond ? selectedPond.pondName : ""
         }`}
         open={isEditModalVisible}
         onCancel={handleEditCancel}
@@ -575,22 +944,29 @@ const KoiPondManagement = () => {
             />
           </Form.Item>
           <Form.Item
-            name="element"
-            label={<span className="text-red-500">* Mệnh</span>}
-            rules={[{ required: true, message: "Vui lòng nhập mệnh" }]}
+            name="shapeId"
+            label={<span className="text-red-500">* Hình dạng hồ</span>}
+            rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn mệnh</option>
-              <option value="Kim">Kim</option>
-              <option value="Mộc">Mộc</option>
-              <option value="Thủy">Thủy</option>
-              <option value="Hỏa">Hỏa</option>
-              <option value="Thổ">Thổ</option>
-            </select>
+            <div className="shape-select">
+              <select className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200">
+                <option value="">-- Chọn hình dạng hồ --</option>
+                {pondShapes && pondShapes.length > 0 ? (
+                  pondShapes.map((shape) => (
+                    <option key={shape.shapeId} value={shape.shapeId}>
+                      {shape.shapeName}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Đang tải danh sách...</option>
+                )}
+              </select>
+            </div>
           </Form.Item>
           <Form.Item
             name="introduction"
-            label="Giới thiệu"
+            label={<span className="text-red-500">* Giới thiệu</span>}
+            rules={[{ required: true, message: "Vui lòng nhập giới thiệu" }]}
           >
             <textarea
               className="w-full p-2 border rounded"
@@ -600,13 +976,58 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="description"
-            label="Mô tả"
+            label={<span className="text-red-500">* Mô tả</span>}
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
             <textarea
               className="w-full p-2 border rounded"
               placeholder="Nhập mô tả"
               rows={3}
             />
+          </Form.Item>
+          <Form.Item
+            name="imageUrl"
+            label={<span className="text-red-500">* Hình ảnh</span>}
+            rules={[{ required: true, message: "Vui lòng cung cấp URL hình ảnh hoặc tải ảnh lên" }]}
+          >
+            <div className="mb-2">
+              <input
+                type="text"
+                className="w-full p-2 border rounded"
+                placeholder="Nhập URL hình ảnh (nếu có)"
+              />
+            </div>
+            <div className="mt-2">
+              <p className="text-gray-600 mb-2 text-sm">Hoặc tải lên từ máy tính:</p>
+              <Upload
+                listType="picture-card"
+                onChange={handleEditImageChange}
+                maxCount={1}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('Chỉ chấp nhận file hình ảnh!');
+                    return Upload.LIST_IGNORE;
+                  }
+                  return false; // Không tự động upload
+                }}
+              >
+                <div>
+                  <PlusOutlined />
+                  <div style={{ marginTop: 8 }}>Tải lên</div>
+                </div>
+              </Upload>
+              {selectedPond && selectedPond.imageUrl && (
+                <div className="mt-2">
+                  <p className="text-gray-600 text-sm">Hình ảnh hiện tại:</p>
+                  <img 
+                    src={selectedPond.imageUrl} 
+                    alt={selectedPond.pondName}
+                    className="mt-1 h-20 object-cover rounded"
+                  />
+                </div>
+              )}
+            </div>
           </Form.Item>
         </Form>
       </Modal>
@@ -633,22 +1054,29 @@ const KoiPondManagement = () => {
             />
           </Form.Item>
           <Form.Item
-            name="element"
-            label={<span className="text-red-500">* Mệnh</span>}
-            rules={[{ required: true, message: "Vui lòng nhập mệnh" }]}
+            name="shapeId"
+            label={<span className="text-red-500">* Hình dạng hồ</span>}
+            rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
-            <select className="w-full p-2 border rounded">
-              <option value="">Chọn mệnh</option>
-              <option value="Kim">Kim</option>
-              <option value="Mộc">Mộc</option>
-              <option value="Thủy">Thủy</option>
-              <option value="Hỏa">Hỏa</option>
-              <option value="Thổ">Thổ</option>
-            </select>
+            <div className="shape-select">
+              <select className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200">
+                <option value="">-- Chọn hình dạng hồ --</option>
+                {pondShapes && pondShapes.length > 0 ? (
+                  pondShapes.map((shape) => (
+                    <option key={shape.shapeId} value={shape.shapeId}>
+                      {shape.shapeName}
+                    </option>
+                  ))
+                ) : (
+                  <option disabled>Đang tải danh sách...</option>
+                )}
+              </select>
+            </div>
           </Form.Item>
           <Form.Item
             name="introduction"
-            label="Giới thiệu"
+            label={<span className="text-red-500">* Giới thiệu</span>}
+            rules={[{ required: true, message: "Vui lòng nhập giới thiệu" }]}
           >
             <textarea
               className="w-full p-2 border rounded"
@@ -658,7 +1086,8 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="description"
-            label="Mô tả"
+            label={<span className="text-red-500">* Mô tả</span>}
+            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
             <textarea
               className="w-full p-2 border rounded"
@@ -666,20 +1095,52 @@ const KoiPondManagement = () => {
               rows={3}
             />
           </Form.Item>
+          <Form.Item
+            name="imageUrl"
+            label={<span className="text-red-500">* Hình ảnh</span>}
+            rules={[{ required: true, message: "Vui lòng cung cấp URL hình ảnh hoặc tải ảnh lên" }]}
+          >
+            <div className="mb-2">
+              <input
+                type="text"
+                className="w-full p-2 border rounded"
+                placeholder="Nhập URL hình ảnh (nếu có)"
+                value={createImageUrl}
+                onChange={(e) => setCreateImageUrl(e.target.value)}
+              />
+            </div>
+            <div className="mt-2">
+              <p className="text-gray-600 mb-2 text-sm">Hoặc tải lên từ máy tính:</p>
+              <Upload
+                listType="picture-card"
+                onChange={handleCreateImageChange}
+                maxCount={1}
+                beforeUpload={(file) => {
+                  const isImage = file.type.startsWith('image/');
+                  if (!isImage) {
+                    message.error('Chỉ chấp nhận file hình ảnh!');
+                    return Upload.LIST_IGNORE;
+                  }
+                  return false; // Không tự động upload
+                }}
+                fileList={createImageFile ? [{
+                  uid: '-1',
+                  name: createImageFile.name,
+                  status: 'done',
+                  url: createImageUrl,
+                }] : []}
+              >
+                {createImageFile ? null : (
+                  <div>
+                    <PlusOutlined />
+                    <div style={{ marginTop: 8 }}>Tải lên</div>
+                  </div>
+                )}
+              </Upload>
+            </div>
+          </Form.Item>
         </Form>
       </Modal>
-
-      {/* Modal xem trước hình ảnh */}
-      {/* Tạm thời ẩn modal xem trước hình ảnh
-      <Modal
-        open={previewVisible}
-        title="Xem trước hình ảnh"
-        footer={null}
-        onCancel={handlePreviewCancel}
-      >
-        <img alt="example" style={{ width: "100%" }} src={previewImage} />
-      </Modal>
-      */}
 
       {/* Thêm style cho modal xác nhận xóa */}
       <style jsx global>{`
@@ -709,6 +1170,33 @@ const KoiPondManagement = () => {
         .delete-confirmation-modal .ant-btn-primary:hover {
           background-color: #ff4d4f;
           border-color: #ff4d4f;
+        }
+        .shape-select {
+          position: relative;
+        }
+        
+        .shape-select select {
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;utf8,<svg fill='%2390B77D' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+          background-repeat: no-repeat;
+          background-position-x: calc(100% - 10px);
+          background-position-y: 50%;
+          padding-right: 30px;
+        }
+        
+        .shape-select select:focus {
+          border-color: #90B77D;
+          box-shadow: 0 0 0 2px rgba(144, 183, 125, 0.2);
+        }
+        
+        .shape-select select option {
+          padding: 10px;
+        }
+        
+        .shape-select select option:hover {
+          background-color: #f5f5f5;
         }
       `}</style>
     </div>

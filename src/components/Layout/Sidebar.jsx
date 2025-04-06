@@ -18,6 +18,7 @@ import {
   FileText,
   File,
   Files,
+  Package,
 } from "lucide-react";
 import { mainRoutes } from "../../routes/mainRoutes";
 
@@ -62,6 +63,12 @@ const menuItems = [
     icon: History,
     label: "Consultation History",
     path: "/staff/consultation-history",
+    roles: ["staff"],
+  },
+  {
+    icon: Package,
+    label: "Quản lý gói tư vấn",
+    path: "/staff/consultation-package",
     roles: ["staff"],
   },
   {

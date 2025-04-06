@@ -66,6 +66,12 @@ const KoiFishManagement = () => {
       const response = await KoiFishService.getAllKoiFish();
       console.log("Nhận dữ liệu từ service:", response);
 
+      // In ra mẫu ID của một vài phần tử để kiểm tra
+      if (Array.isArray(response) && response.length > 0) {
+        console.log("Mẫu ID của cá Koi đầu tiên:", response[0].id);
+        console.log("Dữ liệu gốc của cá Koi đầu tiên:", response[0]);
+      }
+
       // Dữ liệu đã được xử lý bởi service
       setData(response);
       setError(null);
@@ -92,6 +98,13 @@ const KoiFishManagement = () => {
   const handleDelete = async (id) => {
     try {
       console.log("Xóa cá Koi ID:", id);
+      
+      // Kiểm tra ID trước khi gửi request
+      if (!id || id === "unknown-id") {
+        message.error("ID cá Koi không hợp lệ");
+        return;
+      }
+      
       const response = await KoiFishService.deleteKoiFish(id);
       console.log("Phản hồi từ API xóa:", response);
 
@@ -132,13 +145,13 @@ const KoiFishManagement = () => {
 
       setSelectedKoi(koiDetail);
 
-      // Kiểm tra xem có trường colors không, nếu không thì sử dụng mảng rỗng
-      const koiColors = koiDetail.colors || [];
+      // Kiểm tra xem có trường varietyColors không, nếu không thì sử dụng mảng rỗng
+      const koiColors = koiDetail.varietyColors || [];
       setColorFields(
         koiColors.map((color) => ({
-          name: color.colorName,
+          name: color.colorName || '',
           value: color.percentage / 100,
-          colorCode: color.colorCode,
+          element: color.element || ''
         })) || []
       );
 
@@ -176,10 +189,12 @@ const KoiFishManagement = () => {
       const formData = {
         varietyName: values.breed,
         description: values.description,
-        colors: colorFields.map((color) => ({
-          colorName: color.name,
-          colorCode: color.colorCode || "#000000",
+        varietyColors: colorFields.map((color) => ({
           percentage: Math.round(color.value * 100),
+          color: {
+            colorName: color.name || '',
+            element: color.element || ''
+          }
         })),
       };
 
@@ -282,6 +297,13 @@ const KoiFishManagement = () => {
   // Cấu hình các cột cho bảng
   const columns = [
     {
+      title: "Mã cá Koi",
+      dataIndex: "id",
+      key: "id",
+      width: "15%",
+      render: (text) => <span className="text-xs font-mono">{text || "N/A"}</span>,
+    },
+    {
       title: "Giống cá Koi",
       dataIndex: "varietyName",
       key: "varietyName",
@@ -322,18 +344,37 @@ const KoiFishManagement = () => {
       dataIndex: "colors",
       width: "25%",
       render: (_, record) => (
-        <ul className="list-disc pl-5">
-          {Array.isArray(record?.colors) && record.colors.length > 0 ? (
-            record.colors.map((color, index) => (
-              <li key={index} style={{ color: color?.colorCode || "#000000" }}>
-                {color?.colorName || "Không tên"}: {color?.percentage || 0}%
-              </li>
-            ))
+        <ul className="list-none pl-0 space-y-1">
+          {!record.varietyColors || record.varietyColors.length === 0 ? (
+            <li>• Không có dữ liệu màu sắc</li>
           ) : (
-            <li>Không có dữ liệu màu sắc</li>
+            <>
+              {record.varietyColors.map((color, index) => (
+                <li key={index} className="flex items-start">
+                  <span className="mr-1">•</span>
+                  <span>
+                    {color.colorName || "Không tên"}: {color.percentage}% 
+                    <span className="ml-1 text-gray-500">({color.element || 'Không xác định'})</span>
+                  </span>
+                </li>
+              ))}
+              {record.totalPercentage > 0 && (
+                <li className="flex items-start font-semibold">
+                  <span className="mr-1">•</span>
+                  <span>Tổng: {record.totalPercentage}%</span>
+                </li>
+              )}
+            </>
           )}
         </ul>
       ),
+    },
+    {
+      title: "Điểm tương thích",
+      key: "compatibilityScore",
+      dataIndex: "compatibilityScore",
+      width: "10%",
+      render: (score) => <span>{score || 0}</span>,
     },
     {
       title: "Hành động",
@@ -354,9 +395,18 @@ const KoiFishManagement = () => {
             size="small"
             icon={<Trash2 size={16} />}
             onClick={() => {
+              // Log ra ID trước khi xóa để debug
+              console.log("Chuẩn bị xóa cá Koi:", record);
+              
               Modal.confirm({
                 title: "Xác nhận xóa",
-                content: "Bạn có chắc chắn muốn xóa cá Koi này không?",
+                content: (
+                  <div>
+                    <p>Bạn có chắc chắn muốn xóa cá Koi này không?</p>
+                    <p className="text-xs mt-2 font-mono text-gray-500">ID: {record.id}</p>
+                    <p className="text-xs font-mono text-gray-500">Tên: {record.varietyName}</p>
+                  </div>
+                ),
                 okText: "Có",
                 cancelText: "Không",
                 onOk: () => handleDelete(record.id),

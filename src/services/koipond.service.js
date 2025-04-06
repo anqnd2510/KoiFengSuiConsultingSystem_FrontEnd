@@ -1,11 +1,11 @@
-import axios from 'axios';
+import apiClient from './apiClient';
 
-const API_URL = 'http://localhost:5261/api';
+const API_URL = '/KoiPond';
 
 const KoiPondService = {
   testApiConnection: async () => {
     try {
-      const response = await axios.get(`${API_URL}/KoiPond/get-all`);
+      const response = await apiClient.get(`${API_URL}/get-all`);
       console.log('API connection test successful:', response);
       return {
         success: true,
@@ -22,7 +22,7 @@ const KoiPondService = {
 
   getKoiPondById: async (id) => {
     try {
-      const response = await axios.get(`${API_URL}/KoiPond/${id.toString()}`);
+      const response = await apiClient.get(`${API_URL}/${id.toString()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching koi pond by id:', error);
@@ -32,7 +32,7 @@ const KoiPondService = {
   
   getAllKoiPonds: async () => {
     try {
-      const response = await axios.get(`${API_URL}/KoiPond/get-all`);
+      const response = await apiClient.get(`${API_URL}/get-all`);
       console.log('API response structure:', response);
       
       // Đảm bảo trả về đúng cấu trúc dữ liệu
@@ -53,7 +53,7 @@ const KoiPondService = {
   
   getPondShapes: async () => {
     try {
-      const response = await axios.get(`${API_URL}/PondShape/get-all`);
+      const response = await apiClient.get(`${API_URL}/get-all-shape`);
       console.log('Pond shapes response:', response.data);
       
       // Đảm bảo trả về đúng cấu trúc dữ liệu
@@ -75,34 +75,41 @@ const KoiPondService = {
     try {
       console.log('Creating pond with data:', pondData);
       
+      // Chuẩn bị dữ liệu theo cấu trúc API yêu cầu
       const koiPondRequest = {
-        pondName: pondData.pondName || '',
-        element: pondData.element || '',
-        introduction: pondData.introduction || '',
-        description: pondData.description || ''
+        ShapeId: pondData.shapeId || '',
+        PondName: pondData.pondName || '',
+        Introduction: pondData.introduction || '',
+        Description: pondData.description || '',
+        ImageUrl: pondData.imageUrl || ''
       };
       
-      console.log('Formatted request data:', koiPondRequest);
+      console.log('Sending JSON request to API:', koiPondRequest);
       
-      const response = await axios.post(`${API_URL}/KoiPond/create`, koiPondRequest, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      // Gửi request dưới dạng JSON thông thường
+      const response = await apiClient.post(`${API_URL}/create`, koiPondRequest);
+      
       console.log('Create pond response:', response);
       return response.data;
     } catch (error) {
       console.error('Error creating koi pond:', error);
+      console.error('Error details:', error.message);
+      
       if (error.response) {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
         console.error('Response headers:', error.response.headers);
+        
+        if (error.response.data && typeof error.response.data === 'object') {
+          console.error('Error details from API:', JSON.stringify(error.response.data, null, 2));
+        }
       } else if (error.request) {
         console.error('No response received:', error.request);
       } else {
         console.error('Error message:', error.message);
       }
+      console.error('Error config:', error.config);
+      
       throw error;
     }
   },
@@ -117,15 +124,7 @@ const KoiPondService = {
       }
       
       // Sử dụng đúng endpoint theo API backend
-      const response = await axios({
-        method: 'DELETE',
-        url: `${API_URL}/KoiPond/${id.toString()}`,
-        timeout: 15000, // 15 giây
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await apiClient.delete(`${API_URL}/${id.toString()}`);
       
       console.log('Delete pond response:', response);
       
@@ -211,39 +210,64 @@ const KoiPondService = {
   
   updateKoiPond: async (id, pondData) => {
     try {
+      // Chuẩn bị dữ liệu cập nhật theo định dạng API
       const koiPondRequest = {
-        pondName: pondData.pondName || '',
-        element: pondData.element || '',
-        introduction: pondData.introduction || '',
-        description: pondData.description || ''
+        ShapeId: pondData.shapeId || '',
+        PondName: pondData.pondName || '',
+        Introduction: pondData.introduction || '',
+        Description: pondData.description || '',
+        ImageUrl: pondData.imageUrl || ''
       };
       
-      const response = await axios.put(`${API_URL}/KoiPond/${id.toString()}`, koiPondRequest, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      });
+      console.log('Updating pond with ID:', id, 'and data:', koiPondRequest);
+      
+      // Gửi request dưới dạng JSON thông thường
+      const response = await apiClient.put(`${API_URL}/${id.toString()}`, koiPondRequest);
+      
+      console.log('Update response:', response);
       return response.data;
     } catch (error) {
       console.error('Error updating koi pond:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       throw error;
     }
   },
   
   uploadPondImage: async (id, imageFile) => {
     try {
-      const formData = new FormData();
-      formData.append('image', imageFile);
+      console.log('Uploading image for pond ID:', id, 'File:', imageFile);
       
-      const response = await axios.post(`${API_URL}/KoiPond/${id.toString()}/image`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      // Phải có imageFile
+      if (!imageFile) {
+        throw new Error('No image file provided');
+      }
+      
+      // Tải ảnh lên Cloudinary trước (lưu ý: hàm này cần được thực hiện ở frontend)
+      // Ở đây chỉ mô phỏng việc lấy url từ imageFile
+      const uploadedUrl = 'https://res.cloudinary.com/default/image/upload/v1234567890/temp-image.jpg';
+      
+      // Gửi request dưới dạng JSON thông thường
+      const imageUpdateData = {
+        ImageUrl: uploadedUrl
+      };
+      
+      console.log('Sending image update with URL:', imageUpdateData);
+      
+      const response = await apiClient.post(`${API_URL}/${id.toString()}/upload-image`, imageUpdateData);
+      
+      console.log('Upload image response:', response);
+    
+      // Trả về dữ liệu từ API
       return response.data;
     } catch (error) {
       console.error('Error uploading pond image:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
       throw error;
     }
   }
