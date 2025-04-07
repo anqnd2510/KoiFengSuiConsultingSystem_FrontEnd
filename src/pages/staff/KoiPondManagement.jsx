@@ -449,7 +449,7 @@ const KoiPondManagement = () => {
         return;
       }
 
-      // Tạo FormData để gửi file thay vì URL
+      // Tạo FormData để gửi file
       const formData = new FormData();
       formData.append("ShapeId", values.shapeId);
       formData.append("PondName", values.pondName || "");
@@ -457,25 +457,16 @@ const KoiPondManagement = () => {
       formData.append("Description", values.description || "");
       formData.append("ImageUrl", createImageFile); // Gửi file thay vì URL
 
-      console.log("Đang gửi FormData với file:");
-      console.log("- File name:", createImageFile.name);
-      console.log("- File size:", createImageFile.size);
-      console.log("- File type:", createImageFile.type);
+      console.log(
+        "Đang gửi dữ liệu tạo hồ mới với file:",
+        createImageFile.name
+      );
 
       try {
-        // Sử dụng axios để gửi FormData
-        const response = await axios.post(
-          "http://localhost:5261/api/KoiPond/create",
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data", // Quan trọng để gửi file
-            },
-          }
-        );
+        // Sử dụng service thay vì gọi axios trực tiếp
+        const response = await KoiPondService.createPond(formData);
 
         console.log("Create pond response:", response);
-
         message.success("Đã tạo hồ cá mới thành công");
         setIsCreateModalVisible(false);
         createForm.resetFields();
@@ -570,48 +561,27 @@ const KoiPondManagement = () => {
           try {
             setLoading(true);
             message.loading({
-              content: "Đang tải ảnh lên...",
+              content: "Đang cập nhật...",
               key: "uploadImage",
             });
 
-            // Upload ảnh lên Cloudinary
-            const cloudinaryUrl = await uploadImageToCloudinary(file);
+            // Tạo FormData
+            const formData = new FormData();
+            formData.append("ShapeId", pondType.shapeId);
+            formData.append("PondName", pondType.pondName);
+            formData.append("Introduction", pondType.introduction || "");
+            formData.append("Description", pondType.description || "");
+            formData.append("ImageUrl", file);
 
-            if (!cloudinaryUrl) {
-              message.error({
-                content: "Không thể tải ảnh lên",
-                key: "uploadImage",
-              });
-              setLoading(false);
-              return;
-            }
-
-            message.success({
-              content: "Tải ảnh lên thành công",
-              key: "uploadImage",
-            });
-
-            // Chuẩn bị dữ liệu cập nhật với URL ảnh mới
-            // QUAN TRỌNG: Đảm bảo đúng PascalCase trong request
+            // Gọi service thay vì trực tiếp axios
             const pondId = pondType.koiPondId || pondType.id;
-            const updateData = {
-              ShapeId: pondType.shapeId,
-              PondName: pondType.pondName,
-              Introduction: pondType.introduction || "",
-              Description: pondType.description || "",
-              ImageUrl: cloudinaryUrl,
-            };
-
-            console.log("Gửi request cập nhật:", updateData);
-
-            // Gọi API trực tiếp thay vì service để debug
-            const response = await axios.put(
-              `http://localhost:5261/api/KoiPond/${pondId}`,
-              updateData
-            );
+            const response = await KoiPondService.updatePond(pondId, formData);
 
             console.log("Phản hồi API:", response);
-            message.success(`Đã cập nhật hình ảnh cho hồ ${pondType.pondName}`);
+            message.success({
+              content: `Đã cập nhật hình ảnh cho hồ ${pondType.pondName}`,
+              key: "uploadImage",
+            });
             delete window.selectedImageFile;
 
             // Tải lại danh sách
@@ -634,7 +604,7 @@ const KoiPondManagement = () => {
               errorMsg += error.message || "Vui lòng thử lại sau.";
             }
 
-            message.error(errorMsg);
+            message.error({ content: errorMsg, key: "uploadImage" });
           } finally {
             setLoading(false);
           }
@@ -682,7 +652,7 @@ const KoiPondManagement = () => {
       setLoading(true);
       const pondId = selectedPond.koiPondId || selectedPond.id;
 
-      // Bắt buộc phải có file ảnh để update
+      // Kiểm tra xem đã chọn file ảnh chưa
       if (
         !editImageFile &&
         (!selectedPond.imageUrl || selectedPond.imageUrl.trim() === "")
@@ -692,82 +662,72 @@ const KoiPondManagement = () => {
         return;
       }
 
-      try {
-        // Tạo FormData để gửi
-        const formData = new FormData();
-        formData.append("ShapeId", values.shapeId);
-        formData.append("PondName", values.pondName);
-        formData.append("Introduction", values.introduction);
-        formData.append("Description", values.description);
+      // Tạo FormData để gửi file thay vì URL
+      const formData = new FormData();
+      formData.append("ShapeId", values.shapeId);
+      formData.append("PondName", values.pondName);
+      formData.append("Introduction", values.introduction);
+      formData.append("Description", values.description);
 
-        // Nếu có file ảnh mới, đính kèm trực tiếp
-        if (editImageFile) {
-          formData.append("ImageUrl", editImageFile);
-          console.log("Gửi với file mới:", editImageFile.name);
-        }
-        // Nếu không có file mới, tải file từ URL hiện tại và gửi lên
-        else if (selectedPond.imageUrl) {
-          try {
-            console.log("Tải file từ URL hiện tại:", selectedPond.imageUrl);
-            const response = await fetch(selectedPond.imageUrl);
-            const blob = await response.blob();
-            const fileName =
-              selectedPond.imageUrl.split("/").pop() || "image.jpg";
-            const file = new File([blob], fileName, {
-              type: blob.type || "image/jpeg",
-            });
-            formData.append("ImageUrl", file);
-          } catch (error) {
-            console.error("Lỗi khi tải file từ URL:", error);
-            message.error(
-              "Không thể tải file từ URL hiện tại. Vui lòng chọn file mới."
-            );
-            setLoading(false);
-            return;
-          }
-        }
-
-        // For debug, log FormData content
-        for (let pair of formData.entries()) {
-          console.log(
-            pair[0] + ": " + (pair[1] instanceof File ? pair[1].name : pair[1])
+      // Nếu có file ảnh mới, đính kèm trực tiếp
+      if (editImageFile) {
+        formData.append("ImageUrl", editImageFile);
+        console.log("Gửi với file mới:", editImageFile.name);
+      }
+      // Nếu không có file mới, tải file từ URL hiện tại và gửi lên
+      else if (selectedPond.imageUrl) {
+        try {
+          console.log("Tải file từ URL hiện tại:", selectedPond.imageUrl);
+          const response = await fetch(selectedPond.imageUrl);
+          const blob = await response.blob();
+          const fileName =
+            selectedPond.imageUrl.split("/").pop() || "image.jpg";
+          const file = new File([blob], fileName, {
+            type: blob.type || "image/jpeg",
+          });
+          formData.append("ImageUrl", file);
+          console.log("Đã tạo file từ URL:", file.name, file.size, "bytes");
+        } catch (error) {
+          console.error("Lỗi khi tải file từ URL:", error);
+          message.error(
+            "Không thể tải file từ URL hiện tại. Vui lòng chọn file mới."
           );
+          setLoading(false);
+          return;
         }
+      }
 
-        // Gọi API PUT để cập nhật
-        const response = await axios({
-          method: "put",
-          url: `http://localhost:5261/api/KoiPond/${pondId}`,
-          data: formData,
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+      try {
+        // Gọi service thay vì trực tiếp axios
+        const response = await KoiPondService.updatePond(pondId, formData);
 
-        console.log("Update response:", response);
+        console.log("Kết quả cập nhật:", response);
         message.success(`Đã cập nhật thông tin hồ ${values.pondName}`);
+
+        // Đóng modal và reset form
         setIsEditModalVisible(false);
         setEditImageFile(null);
+        editForm.resetFields();
 
-        // Tải lại danh sách hồ
+        // Tải lại danh sách hồ cá
         await fetchPonds();
       } catch (error) {
-        console.error("Error updating pond:", error);
+        console.error("Lỗi khi cập nhật hồ cá:", error);
 
         let errorMsg = "Lỗi cập nhật: ";
         if (error.response) {
+          console.error("Response status:", error.response.status);
           console.error("Response data:", error.response.data);
 
-          if (error.response.status === 415) {
-            errorMsg +=
-              "API không hỗ trợ định dạng dữ liệu. Vui lòng kiểm tra lại request.";
-          } else if (error.response.data.errors) {
+          if (error.response.data?.errors) {
             const errors = error.response.data.errors;
             Object.keys(errors).forEach((key) => {
               errorMsg += `${key}: ${errors[key].join(", ")}. `;
             });
-          } else if (error.response.data.title) {
+          } else if (error.response.data?.title) {
             errorMsg += error.response.data.title;
           } else {
-            errorMsg += JSON.stringify(error.response.data);
+            errorMsg += JSON.stringify(error.response.data || "Không xác định");
           }
         } else {
           errorMsg += error.message || "Không xác định";
@@ -777,7 +737,7 @@ const KoiPondManagement = () => {
       }
     } catch (err) {
       console.error("Form validation error:", err);
-      message.error("Vui lòng kiểm tra lại thông tin");
+      message.error("Vui lòng kiểm tra lại thông tin nhập vào");
     } finally {
       setLoading(false);
     }
@@ -924,26 +884,11 @@ const KoiPondManagement = () => {
             rules={[
               {
                 required: true,
-                message: "Vui lòng cung cấp URL hình ảnh hoặc tải ảnh lên",
+                message: "Vui lòng tải hình ảnh lên",
               },
             ]}
           >
-            <div className="mb-2">
-              <input
-                type="text"
-                className="w-full p-2 border rounded"
-                placeholder="Nhập URL hình ảnh (nếu có)"
-                value={selectedPond?.imageUrl}
-                onChange={(e) => {
-                  const newUrl = e.target.value;
-                  editForm.setFieldsValue({ imageUrl: newUrl });
-                }}
-              />
-            </div>
             <div className="mt-2">
-              <p className="text-gray-600 mb-2 text-sm">
-                Hoặc tải lên từ máy tính:
-              </p>
               <Upload
                 listType="picture-card"
                 onChange={handleEditImageChange}
@@ -962,7 +907,7 @@ const KoiPondManagement = () => {
                   <div style={{ marginTop: 8 }}>Tải lên</div>
                 </div>
               </Upload>
-              {selectedPond && selectedPond.imageUrl && (
+              {selectedPond && selectedPond.imageUrl && !editImageFile && (
                 <div className="mt-2">
                   <p className="text-gray-600 text-sm">Hình ảnh hiện tại:</p>
                   <img

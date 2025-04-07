@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import axios from "axios";
 
 const API_URL = "/KoiPond";
 
@@ -75,64 +76,45 @@ const KoiPondService = {
     }
   },
 
-  createPond: async (pondData) => {
+  createPond: async (formData) => {
     try {
-      console.log("Creating pond with data:", pondData);
+      console.log("Creating pond with FormData");
 
-      // Nếu nhận FormData, chuyển thành JSON
-      let requestData;
-      if (pondData instanceof FormData) {
-        // Chuyển FormData thành object
-        requestData = {
-          ShapeId: pondData.get("ShapeId"),
-          PondName: pondData.get("PondName") || "",
-          Introduction: pondData.get("Introduction") || "",
-          Description: pondData.get("Description") || "",
-        };
-
-        // Xử lý file và upload lên Cloudinary nếu cần
-        const file = pondData.get("ImageUrl");
-        if (file instanceof File) {
-          try {
-            const cloudinaryUrl = await uploadImageToCloudinary(file);
-            if (cloudinaryUrl) {
-              requestData.ImageUrl = cloudinaryUrl;
-            } else {
-              throw new Error("Không thể tải ảnh lên Cloudinary");
-            }
-          } catch (error) {
-            console.error("Lỗi upload Cloudinary:", error);
-            throw error;
-          }
-        }
-      } else {
-        // Nếu đã là object, chỉ cần chuyển tên trường sang PascalCase
-        requestData = {
-          ShapeId: pondData.shapeId,
-          PondName: pondData.pondName || "",
-          Introduction: pondData.introduction || "",
-          Description: pondData.description || "",
-          ImageUrl: pondData.imageUrl,
-        };
+      // Log dữ liệu để debug
+      for (let pair of formData.entries()) {
+        console.log(
+          pair[0] +
+            ": " +
+            (pair[1] instanceof File
+              ? `File ${pair[1].name} (${pair[1].size} bytes)`
+              : pair[1])
+        );
       }
 
-      // Kiểm tra trường bắt buộc
-      if (!requestData.ShapeId) {
+      // Kiểm tra các trường bắt buộc
+      const shapeId = formData.get("ShapeId");
+      const imageFile = formData.get("ImageUrl");
+
+      if (!shapeId) {
         throw new Error("ShapeId không được để trống");
       }
-      if (!requestData.ImageUrl) {
-        throw new Error("ImageUrl không được để trống");
+
+      if (!imageFile || !(imageFile instanceof File)) {
+        throw new Error("File hình ảnh không hợp lệ hoặc bị thiếu");
       }
 
-      console.log("Đang gửi request đến API:", requestData);
+      // Gửi trực tiếp FormData đến API
+      const response = await axios.post(
+        "http://localhost:5261/api/KoiPond/create",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
-      const response = await apiClient.post(`${API_URL}/create`, requestData, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log("Kết quả tạo hồ cá:", response);
+      console.log("Create pond response:", response);
       return response.data;
     } catch (error) {
       console.error("Lỗi tạo hồ cá:", error);
@@ -245,75 +227,34 @@ const KoiPondService = {
     }
   },
 
-  updateKoiPond: async (id, pondData) => {
+  updatePond: async (pondId, formData) => {
     try {
-      console.log("Updating pond with ID:", id);
+      console.log(`Updating pond ${pondId} with FormData`);
 
-      // Đảm bảo các trường viết đúng PascalCase để phù hợp với mô hình backend
-      const koiPondRequest = {
-        ShapeId: pondData.shapeId || "",
-        PondName: pondData.pondName || "",
-        Introduction: pondData.introduction || "",
-        Description: pondData.description || "",
-        ImageUrl: pondData.imageUrl || "",
-      };
+      // Log dữ liệu để debug
+      for (let pair of formData.entries()) {
+        console.log(
+          pair[0] +
+            ": " +
+            (pair[1] instanceof File
+              ? `File ${pair[1].name} (${pair[1].size} bytes)`
+              : pair[1])
+        );
+      }
 
-      console.log("Sending update request with data:", koiPondRequest);
+      const response = await axios({
+        method: "put",
+        url: `http://localhost:5261/api/KoiPond/update/${pondId}`,
+        data: formData,
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
-      // Giả định backend cần JSON với URL chuỗi cho imageUrl
-      const response = await apiClient.put(
-        `${API_URL}/${id.toString()}`,
-        koiPondRequest
-      );
-
-      console.log("Update response:", response);
+      console.log("Update pond response:", response);
       return response.data;
     } catch (error) {
-      console.error("Error updating koi pond:", error);
-      if (error.response) {
-        console.error("Response status:", error.response.status);
-        console.error("Response data:", error.response.data);
-      }
-      throw error;
-    }
-  },
-
-  uploadPondImage: async (id, imageFile) => {
-    try {
-      console.log("Uploading image for pond ID:", id, "File:", imageFile);
-
-      // Phải có imageFile
-      if (!imageFile) {
-        throw new Error("No image file provided");
-      }
-
-      // Tải ảnh lên Cloudinary trước (lưu ý: hàm này cần được thực hiện ở frontend)
-      // Ở đây chỉ mô phỏng việc lấy url từ imageFile
-      const uploadedUrl =
-        "https://res.cloudinary.com/default/image/upload/v1234567890/temp-image.jpg";
-
-      // Gửi request dưới dạng JSON thông thường
-      const imageUpdateData = {
-        ImageUrl: uploadedUrl,
-      };
-
-      console.log("Sending image update with URL:", imageUpdateData);
-
-      const response = await apiClient.post(
-        `${API_URL}/${id.toString()}/upload-image`,
-        imageUpdateData
-      );
-
-      console.log("Upload image response:", response);
-
-      // Trả về dữ liệu từ API
-      return response.data;
-    } catch (error) {
-      console.error("Error uploading pond image:", error);
-      if (error.response) {
-        console.error("Response data:", error.response.data);
-        console.error("Response status:", error.response.status);
-      }
+      console.error("Error updating pond:", error);
       throw error;
     }
   },
