@@ -317,6 +317,18 @@ const Workshop = () => {
             ? values.date.format("YYYY-MM-DD")
             : new Date().toISOString().split("T")[0];
 
+          // Xử lý file hình ảnh từ Upload component
+          let imageFile = null;
+          if (values.image && values.image.length > 0) {
+            imageFile = values.image[0].originFileObj;
+            console.log(
+              "File hình ảnh:",
+              imageFile.name,
+              imageFile.size,
+              "bytes"
+            );
+          }
+
           // Chuẩn bị dữ liệu để gửi lên API
           const workshopData = {
             name: values.name,
@@ -325,6 +337,7 @@ const Workshop = () => {
             ticketPrice: ticketPrice,
             ticketSlots: ticketSlots,
             description: values.description || "",
+            imageFile: imageFile, // Thêm file hình ảnh
           };
 
           console.log("Dữ liệu gửi đi:", workshopData);
@@ -409,7 +422,7 @@ const Workshop = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header 
+      <Header
         title="Quản lý hội thảo"
         description="Báo cáo và tổng quan về các hội thảo của bạn"
       />
