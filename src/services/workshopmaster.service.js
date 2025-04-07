@@ -14,31 +14,37 @@ const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
 export const getAllWorkshops = async () => {
   try {
     // Kiểm tra token
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
-    
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
+
+    const response = await apiClient.get(
+      `${WORKSHOP_ENDPOINT}/sort-createdDate`
+    );
     console.log("API Response:", response.data);
-    
+
     // Kiểm tra cấu trúc response
-    if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
+    if (
+      response.data &&
+      response.data.isSuccess &&
+      Array.isArray(response.data.data)
+    ) {
       return response.data.data; // Trả về mảng data từ response
     } else {
       console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
       return [];
     }
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách workshop:', error);
-    
+    console.error("Lỗi khi lấy danh sách workshop:", error);
+
     // Xử lý lỗi 401
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    
+
     throw error;
   }
 };
@@ -51,15 +57,15 @@ export const getAllWorkshops = async () => {
 export const getWorkshopById = async (id) => {
   try {
     // Kiểm tra token
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
-    
+
     // Thử cách khác: truyền ID trực tiếp trong URL path thay vì query parameter
     const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/id/${id}`);
     console.log("API Response:", response.data);
-    
+
     // Kiểm tra cấu trúc response
     if (response.data && response.data.isSuccess && response.data.data) {
       return response.data.data; // Trả về dữ liệu workshop từ response
@@ -69,14 +75,14 @@ export const getWorkshopById = async (id) => {
     }
   } catch (error) {
     console.error(`Lỗi khi lấy chi tiết workshop ID ${id}:`, error);
-    
+
     // Xử lý lỗi 401
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    
+
     throw error;
   }
 };
@@ -89,78 +95,100 @@ export const getWorkshopById = async (id) => {
 export const createWorkshop = async (workshopData) => {
   try {
     console.log("Dữ liệu trước khi gửi API:", workshopData);
-    
+
     // Kiểm tra token
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
-    
+
     // Lấy tên người dùng từ localStorage
-    let userName = localStorage.getItem('userName');
+    let userName = localStorage.getItem("userName");
     console.log("Tên người dùng từ localStorage:", userName);
-    
+
     // Kiểm tra email từ localStorage nếu có
-    const userEmail = localStorage.getItem('userEmail');
+    const userEmail = localStorage.getItem("userEmail");
     console.log("Email người dùng từ localStorage:", userEmail);
-    
+
     // Hardcode tên cho bob@example.com
     if (userEmail === "bob@example.com" || !userName) {
       userName = "Bob Chen";
       console.log("Sử dụng tên hardcode:", userName);
     }
-    
+
     // Đảm bảo giá trị số là số, không phải chuỗi
-    const price = typeof workshopData.ticketPrice === 'string' 
-      ? parseFloat(workshopData.ticketPrice.replace(/[^\d]/g, '')) 
-      : workshopData.ticketPrice;
-    
-    const capacity = typeof workshopData.ticketSlots === 'string'
-      ? parseInt(workshopData.ticketSlots, 10)
-      : workshopData.ticketSlots;
-    
-    // Đảm bảo ngày có định dạng đúng
-    const startDate = workshopData.date;
-    
-    // Chuẩn bị dữ liệu theo đúng cấu trúc mà API yêu cầu
-    const requestData = {
-      WorkshopName: workshopData.name,
-      StartDate: startDate,
-      Location: workshopData.location,
-      Description: workshopData.description || "",
-      Capacity: capacity,
-      Status: "Pending",
-      Price: price,
-      MasterName: userName || "Unknown Master",
-      MasterAccount: userEmail || "unknown@example.com",
-      Image: null,
-      WorkshopId: 0
-    };
-    
-    console.log("Request data:", JSON.stringify(requestData, null, 2));
-    
-    // Gửi dữ liệu trực tiếp - sử dụng đúng endpoint /create
-    const response = await apiClient.post(`${WORKSHOP_ENDPOINT}/create`, requestData);
-    
-    console.log("API Response:", response.data);
-    
-    if (response.data && response.data.isSuccess && response.data.data) {
-      return response.data.data;
+    const price =
+      typeof workshopData.ticketPrice === "string"
+        ? parseFloat(workshopData.ticketPrice.replace(/[^\d]/g, ""))
+        : workshopData.ticketPrice;
+
+    const capacity =
+      typeof workshopData.ticketSlots === "string"
+        ? parseInt(workshopData.ticketSlots, 10)
+        : workshopData.ticketSlots;
+
+    // Tạo FormData để gửi dữ liệu có file
+    const formData = new FormData();
+    formData.append("WorkshopName", workshopData.name);
+    formData.append("StartDate", workshopData.date);
+    formData.append("Location", workshopData.location);
+    formData.append("Description", workshopData.description || "");
+    formData.append("Capacity", capacity);
+    formData.append("Status", "Pending");
+    formData.append("Price", price);
+    formData.append("MasterName", userName || "Unknown Master");
+    formData.append("MasterAccount", userEmail || "unknown@example.com");
+
+    // Xử lý file hình ảnh nếu có
+    if (workshopData.imageFile && workshopData.imageFile instanceof File) {
+      console.log("Đính kèm file hình ảnh:", workshopData.imageFile.name);
+      formData.append("ImageUrl", workshopData.imageFile);
+    }
+
+    // Log dữ liệu FormData để debug
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+      );
+    }
+
+    // Gửi request với FormData thay vì JSON
+    const response = await fetch(`${WORKSHOP_ENDPOINT}/create`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error:", response.status, errorText);
+      throw new Error(`API Error: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log("API Response:", result);
+
+    if (result && result.isSuccess && result.data) {
+      return result.data;
     } else {
-      console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
+      console.warn("Cấu trúc dữ liệu không như mong đợi:", result);
       return null;
     }
   } catch (error) {
-    console.error('Lỗi khi tạo workshop mới:', error);
-    console.error('Chi tiết lỗi:', error.response?.data || error.message);
-    
+    console.error("Lỗi khi tạo workshop mới:", error);
+    console.error("Chi tiết lỗi:", error.response?.data || error.message);
+
     // Xử lý lỗi 401
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    
+
     throw error;
   }
 };
@@ -173,17 +201,100 @@ export const createWorkshop = async (workshopData) => {
  */
 export const updateWorkshop = async (id, workshopData) => {
   try {
-    const response = await apiClient.put(`${WORKSHOP_ENDPOINT}/${id}`, workshopData);
-    console.log("API Response:", response.data);
-    
-    if (response.data && response.data.isSuccess && response.data.data) {
-      return response.data.data;
+    console.log(`Cập nhật workshop ID ${id} với dữ liệu:`, workshopData);
+
+    // Kiểm tra token
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    // Tạo FormData để gửi dữ liệu và file
+    const formData = new FormData();
+
+    // Đảm bảo giá trị số là số, không phải chuỗi
+    const price =
+      typeof workshopData.ticketPrice === "string"
+        ? parseFloat(workshopData.ticketPrice.replace(/[^\d]/g, ""))
+        : workshopData.ticketPrice;
+
+    const capacity =
+      typeof workshopData.ticketSlots === "string"
+        ? parseInt(workshopData.ticketSlots, 10)
+        : workshopData.ticketSlots;
+
+    // Thêm các trường thông tin vào formData
+    formData.append("WorkshopId", id);
+    formData.append("WorkshopName", workshopData.name || "");
+    formData.append("StartDate", workshopData.date || "");
+    formData.append("Location", workshopData.location || "");
+    formData.append("Description", workshopData.description || "");
+    formData.append("Capacity", capacity || 0);
+    formData.append("Price", price || 0);
+
+    // Thêm các thông tin MasterName và MasterAccount nếu có
+    if (workshopData.masterName) {
+      formData.append("MasterName", workshopData.masterName);
+    }
+
+    if (workshopData.masterAccount) {
+      formData.append("MasterAccount", workshopData.masterAccount);
+    }
+
+    // Giữ nguyên trạng thái nếu có
+    if (workshopData.status) {
+      formData.append("Status", workshopData.status);
+    }
+
+    // Xử lý file ảnh nếu có
+    if (workshopData.imageFile && workshopData.imageFile instanceof File) {
+      console.log("Đính kèm file hình ảnh:", workshopData.imageFile.name);
+      formData.append("ImageUrl", workshopData.imageFile);
+    }
+
+    // Log FormData để debug
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+      );
+    }
+
+    // Gửi request với FormData thay vì JSON
+    const response = await fetch(`${WORKSHOP_ENDPOINT}/update/${id}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error:", response.status, errorText);
+      throw new Error(`API Error: ${response.status} ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log("API Response:", result);
+
+    if (result && result.isSuccess && result.data) {
+      return result.data;
     } else {
-      console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
+      console.warn("Cấu trúc dữ liệu không như mong đợi:", result);
       return null;
     }
   } catch (error) {
     console.error(`Lỗi khi cập nhật workshop ID ${id}:`, error);
+
+    // Xử lý lỗi 401
+    if (error.response && error.response.status === 401) {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    }
+
     throw error;
   }
 };
@@ -197,7 +308,7 @@ export const deleteWorkshop = async (id) => {
   try {
     const response = await apiClient.delete(`${WORKSHOP_ENDPOINT}/${id}`);
     console.log("API Response:", response.data);
-    
+
     return response.data && response.data.isSuccess;
   } catch (error) {
     console.error(`Lỗi khi xóa workshop ID ${id}:`, error);
@@ -212,16 +323,21 @@ export const deleteWorkshop = async (id) => {
  */
 export const mapWorkshopStatus = (apiStatus) => {
   const statusMap = {
-    "Scheduled": "Sắp diễn ra",
+    Scheduled: "Sắp diễn ra",
     "Open Registration": "Đang diễn ra",
-    "Completed": "Đã kết thúc",
-    "Cancelled": "Đã hủy",
-    "Pending": "Chờ duyệt", // Trạng thái chờ duyệt từ API
-    "Approved": "Sắp diễn ra",  // Trạng thái sau khi phê duyệt
-    "Rejected": "Từ chối" // Trạng thái từ chối
+    Completed: "Đã kết thúc",
+    Cancelled: "Đã hủy",
+    Pending: "Chờ duyệt", // Trạng thái chờ duyệt từ API
+    Approved: "Sắp diễn ra", // Trạng thái sau khi phê duyệt
+    Rejected: "Từ chối", // Trạng thái từ chối
   };
-  
-  console.log("Mapping status:", apiStatus, "->", statusMap[apiStatus] || "Không xác định");
+
+  console.log(
+    "Mapping status:",
+    apiStatus,
+    "->",
+    statusMap[apiStatus] || "Không xác định"
+  );
   return statusMap[apiStatus] || "Không xác định";
 };
 
@@ -232,18 +348,36 @@ export const mapWorkshopStatus = (apiStatus) => {
  */
 export const formatWorkshopsData = (workshopsData) => {
   if (!Array.isArray(workshopsData)) return [];
-  
-  return workshopsData.map(workshop => ({
-    id: workshop.workshopId,
-    name: workshop.workshopName,
-    location: workshop.location,
-    date: new Date(workshop.startDate).toLocaleDateString('vi-VN'),
-    image: workshop.image || "https://via.placeholder.com/400x300?text=Workshop+Image",
-    ticketPrice: `${workshop.price.toLocaleString('vi-VN')} VND`,
-    ticketSlots: workshop.capacity,
-    status: mapWorkshopStatus(workshop.status),
-    description: workshop.description || ""
-  }));
+
+  return workshopsData.map((workshop) => {
+    // Xử lý URL hình ảnh
+    let imageUrl = "https://via.placeholder.com/400x300?text=Workshop+Image";
+
+    if (workshop.image) {
+      // Nếu image đã là URL đầy đủ thì giữ nguyên
+      if (workshop.image.startsWith("http")) {
+        imageUrl = workshop.image;
+      } else {
+        // Nếu là đường dẫn tương đối, thêm base URL
+        imageUrl = `http://localhost:5261/${workshop.image.replace(
+          /^\/?/,
+          ""
+        )}`;
+      }
+    }
+
+    return {
+      id: workshop.workshopId,
+      name: workshop.workshopName,
+      location: workshop.location,
+      date: new Date(workshop.startDate).toLocaleDateString("vi-VN"),
+      image: imageUrl,
+      ticketPrice: `${workshop.price.toLocaleString("vi-VN")} VND`,
+      ticketSlots: workshop.capacity,
+      status: mapWorkshopStatus(workshop.status),
+      description: workshop.description || "",
+    };
+  });
 };
 
 /**
@@ -253,19 +387,25 @@ export const formatWorkshopsData = (workshopsData) => {
 export const getPendingWorkshops = async () => {
   try {
     // Kiểm tra token
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
-    
+
     // Sử dụng API getAllWorkshops thay vì pending-workshops
     const response = await apiClient.get(`${WORKSHOP_ENDPOINT}`);
     console.log("API Response:", response.data);
-    
+
     // Kiểm tra cấu trúc response
-    if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
+    if (
+      response.data &&
+      response.data.isSuccess &&
+      Array.isArray(response.data.data)
+    ) {
       // Lọc các workshop có trạng thái "Pending"
-      const pendingWorkshops = response.data.data.filter(workshop => workshop.status === "Pending");
+      const pendingWorkshops = response.data.data.filter(
+        (workshop) => workshop.status === "Pending"
+      );
       console.log("Workshop chờ duyệt:", pendingWorkshops);
       return pendingWorkshops; // Trả về mảng workshop đã lọc
     } else {
@@ -273,15 +413,15 @@ export const getPendingWorkshops = async () => {
       return [];
     }
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách workshop chờ phê duyệt:', error);
-    
+    console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", error);
+
     // Xử lý lỗi 401
     if (error.response && error.response.status === 401) {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
     }
-    
+
     throw error;
   }
-}; 
+};
