@@ -112,30 +112,31 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
         />
       </Form.Item>
 
+      <Form.Item
+        label="Hình ảnh"
+        name="image"
+        valuePropName="fileList"
+        getValueFromEvent={(e) => {
+          if (Array.isArray(e)) {
+            return e;
+          }
+          return e?.fileList;
+        }}
+      >
+        <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
+          <div className="flex flex-col items-center">
+            <UploadCloud className="w-6 h-6 text-gray-400" />
+            <div className="mt-2">Upload</div>
+          </div>
+        </Upload>
+      </Form.Item>
+
       {/* Tạm thời ẩn trường URL Video
       <Form.Item
         label="URL Video"
         name="videoUrl"
       >
         <Input placeholder="Nhập URL video giới thiệu khóa học" />
-      </Form.Item>
-      */}
-
-      {/* Tạm thời ẩn trường Hình ảnh
-      <Form.Item
-        label="Hình ảnh"
-        name="image"
-      >
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={() => false}
-        >
-          <div className="flex flex-col items-center">
-            <UploadCloud className="w-6 h-6 text-gray-400" />
-            <div className="mt-2">Upload</div>
-          </div>
-        </Upload>
       </Form.Item>
       */}
     </Form>
@@ -470,16 +471,30 @@ const CourseMaster = () => {
       const values = await form.validateFields();
       setLoading(true);
 
-      // Chuẩn bị dữ liệu theo đúng format API yêu cầu
-      const courseData = {
-        courseName: values.courseName.trim(),
-        courseCategory: values.courseCategory,
-        description: values.description.trim(),
-        price: Number(values.price),
-      };
+      // Tạo FormData để gửi dữ liệu và file
+      const formData = new FormData();
+      formData.append("CourseName", values.courseName.trim());
+      formData.append("CourseCategory", values.courseCategory);
+      formData.append("Description", values.description.trim());
+      formData.append("Price", Number(values.price));
 
-      console.log("Sending course data:", courseData);
-      const response = await createCourse(courseData);
+      // Xử lý file hình ảnh nếu có
+      if (values.image && values.image.length > 0) {
+        const imageFile = values.image[0].originFileObj;
+        console.log("Đính kèm file hình ảnh:", imageFile.name);
+        formData.append("ImageUrl", imageFile);
+      }
+
+      // Log FormData để debug
+      console.log("Sending course data:");
+      for (let [key, value] of formData.entries()) {
+        console.log(
+          key + ":",
+          value instanceof File ? `File: ${value.name}` : value
+        );
+      }
+
+      const response = await createCourse(formData);
 
       if (response && response.isSuccess) {
         message.success(response.message || "Tạo khóa học thành công!");
