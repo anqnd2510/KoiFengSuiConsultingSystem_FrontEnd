@@ -16,6 +16,7 @@ import {
   InputNumber,
   Row,
   Col,
+  ColorPicker,
 } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -63,6 +64,7 @@ const KoiFishManagement = () => {
   const [viewKoi, setViewKoi] = useState(null);
 
   const [data, setData] = useState([]);
+  const [selectedColor, setSelectedColor] = useState("#000000");
 
   // Fetch danh sách cá Koi từ API
   useEffect(() => {
@@ -358,25 +360,26 @@ const KoiFishManagement = () => {
       const values = await colorForm.validateFields();
       setColorLoading(true);
 
-      const formattedValues = {
-        colorID: values.colorID,
-        elementPoint: Object.entries(values.elementPoints).map(
-          ([elementID, point]) => ({
-            elementID,
-            point: parseFloat(point),
-          })
-        ),
-      };
+      // Gọi API tạo màu mới
+      const response = await KoiFishService.createColor({
+        colorName: values.colorName.trim(),
+        colorCode: values.colorCode.trim(),
+        element: values.element
+      });
 
-      // Giả lập API call
-      setTimeout(() => {
+      if (response && response.isSuccess) {
         message.success("Đã thêm màu mới thành công");
         handleCloseColorModal();
-        setColorLoading(false);
-      }, 1000);
+        // Tải lại danh sách màu nếu cần
+        await fetchColors();
+      } else {
+        throw new Error(response?.message || "Không thể thêm màu mới");
+      }
     } catch (error) {
       console.error("Lỗi khi thêm màu:", error);
-      message.error("Không thể thêm màu mới");
+      message.error(error.message || "Không thể thêm màu mới");
+    } finally {
+      setColorLoading(false);
     }
   };
 
@@ -571,6 +574,68 @@ const KoiFishManagement = () => {
     }
   }, [colorFields]);
 
+  // Hàm chuyển đổi mã màu hex sang tên màu
+  const getColorName = (hexColor) => {
+    const colors = {
+      '#FF0000': 'Đỏ',
+      '#00FF00': 'Xanh lá',
+      '#0000FF': 'Xanh dương',
+      '#FFFF00': 'Vàng',
+      '#FF00FF': 'Hồng',
+      '#00FFFF': 'Xanh ngọc',
+      '#000000': 'Đen',
+      '#FFFFFF': 'Trắng',
+      '#FFA500': 'Cam',
+      '#800080': 'Tím',
+      '#A52A2A': 'Nâu',
+      '#808080': 'Xám'
+    };
+
+    // Tìm màu gần nhất
+    let closestColor = '#000000';
+    let minDistance = Number.MAX_VALUE;
+
+    const hex2rgb = (hex) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return [r, g, b];
+    };
+
+    const colorDistance = (rgb1, rgb2) => {
+      return Math.sqrt(
+        Math.pow(rgb1[0] - rgb2[0], 2) +
+        Math.pow(rgb1[1] - rgb2[1], 2) +
+        Math.pow(rgb1[2] - rgb2[2], 2)
+      );
+    };
+
+    const targetRgb = hex2rgb(hexColor);
+
+    Object.keys(colors).forEach(hex => {
+      const distance = colorDistance(targetRgb, hex2rgb(hex));
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestColor = hex;
+      }
+    });
+
+    return colors[closestColor];
+  };
+
+  // Hàm xử lý khi màu thay đổi
+  const handleColorChange = (color) => {
+    const hexColor = color.toHexString();
+    setSelectedColor(hexColor);
+    
+    // Tự động cập nhật tên màu trong form
+    const colorName = getColorName(hexColor);
+    colorForm.setFieldsValue({
+      colorName: colorName,
+      colorCode: hexColor
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -665,31 +730,76 @@ const KoiFishManagement = () => {
       >
         <div className="p-4">
           <Form form={colorForm} layout="vertical" disabled={colorLoading}>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="colorCode"
+                  label="Chọn màu"
+                  rules={[{ required: true, message: "Vui lòng chọn màu" }]}
+                >
+                  <ColorPicker
+                    value={selectedColor}
+                    onChange={handleColorChange}
+                    presets={[
+                      {
+                        label: 'Màu phổ biến',
+                        colors: [
+                          '#FF0000',
+                          '#00FF00',
+                          '#0000FF',
+                          '#FFFF00',
+                          '#FF00FF',
+                          '#00FFFF',
+                          '#000000',
+                          '#FFFFFF',
+                          '#FFA500',
+                          '#800080',
+                          '#A52A2A',
+                          '#808080',
+                        ],
+                      },
+                    ]}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="colorName"
+                  label="Tên màu"
+                  rules={[{ required: true, message: "Vui lòng nhập tên màu" }]}
+                >
+                  <Input placeholder="Tên màu sẽ tự động cập nhật" />
+                </Form.Item>
+              </Col>
+            </Row>
+
             <Form.Item
-              name="colorID"
-              label="Tên màu"
-              rules={[{ required: true, message: "Vui lòng nhập tên màu" }]}
+              name="element"
+              label="Mệnh"
+              rules={[{ required: true, message: "Vui lòng chọn mệnh" }]}
             >
-              <Input placeholder="Nhập tên màu (ví dụ: Đỏ, Vàng, ...)" />
+              <Select placeholder="Chọn mệnh">
+                <Option value="Hỏa">Hỏa</Option>
+                <Option value="Thủy">Thủy</Option>
+                <Option value="Mộc">Mộc</Option>
+                <Option value="Kim">Kim</Option>
+                <Option value="Thổ">Thổ</Option>
+              </Select>
             </Form.Item>
 
-            <Divider orientation="left">Điểm số cho từng mệnh</Divider>
-
-            {["Hỏa", "Thủy", "Mộc", "Kim", "Thổ"].map((element) => (
-              <Form.Item
-                key={element}
-                name={["elementPoints", element]}
-                label={element}
-                rules={[{ required: true, message: "Vui lòng chọn điểm" }]}
-              >
-                <Select placeholder="Chọn điểm">
-                  <Option value="0.25">0.25</Option>
-                  <Option value="0.5">0.5</Option>
-                  <Option value="0.75">0.75</Option>
-                  <Option value="1">1</Option>
-                </Select>
-              </Form.Item>
-            ))}
+            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-4">
+                <div 
+                  className="w-16 h-16 rounded-lg shadow-inner" 
+                  style={{ backgroundColor: selectedColor }}
+                />
+                <div>
+                  <p className="font-medium">Màu đã chọn:</p>
+                  <p>Mã màu: {selectedColor}</p>
+                  <p>Tên màu: {colorForm.getFieldValue('colorName')}</p>
+                </div>
+              </div>
+            </div>
           </Form>
 
           <div className="flex justify-end gap-3 mt-6">

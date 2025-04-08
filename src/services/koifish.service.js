@@ -368,6 +368,25 @@ const KoiFishService = {
       throw error;
     }
   },
+
+  // Thêm màu sắc mới
+  createColor: async (colorData) => {
+    try {
+      console.log("Đang tạo màu sắc mới với dữ liệu:", colorData);
+      
+      const response = await apiClient.post(`${KOI_ENDPOINT}/create-color`, {
+        colorName: colorData.colorName,
+        colorCode: colorData.colorCode,
+        element: colorData.element
+      });
+
+      console.log("Phản hồi từ API tạo màu:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Lỗi khi tạo màu sắc:", error);
+      throw error;
+    }
+  },
 };
 
 export default KoiFishService;

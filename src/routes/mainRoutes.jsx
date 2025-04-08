@@ -36,6 +36,7 @@ import DocumentList from "../pages/master/DocumentList";
 import AttachmentList from "../pages/master/AttachmentList";
 import BookingManagement from "../pages/manager/BookingManagement";
 import Order from "../pages/manager/Order";
+import Category from "../pages/master/Category";
 
 export const mainRoutes = [
   {
@@ -227,5 +228,10 @@ export const mainRoutes = [
     path: "manager/order",
     element: <Order />,
     roles: ["manager"],
+  },
+  {
+    path: "master/category",
+    element: <Category />,
+    roles: ["master"],
   },
 ];
