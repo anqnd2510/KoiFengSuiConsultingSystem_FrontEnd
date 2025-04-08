@@ -35,6 +35,8 @@ import ConsultingContract from "../pages/staff/ConsultingContract";
 import DocumentList from "../pages/master/DocumentList";
 import AttachmentList from "../pages/master/AttachmentList";
 import BookingManagement from "../pages/manager/BookingManagement";
+import Order from "../pages/manager/Order";
+
 export const mainRoutes = [
   {
     path: "manager/dashboard",
@@ -219,6 +221,11 @@ export const mainRoutes = [
   {
     path: "manager/booking-management",
     element: <BookingManagement />,
+    roles: ["manager"],
+  },
+  {
+    path: "manager/order",
+    element: <Order />,
     roles: ["manager"],
   },
 ];
