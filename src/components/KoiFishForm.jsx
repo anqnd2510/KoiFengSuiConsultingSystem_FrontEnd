@@ -50,13 +50,17 @@ const KoiFishForm = ({
           console.log("Danh sách màu từ API:", response.data);
 
           // Sau khi lấy được danh sách màu, cập nhật tên và element cho các màu đã chọn
-          if (colorFields.length > 0) {
+          if (colorFields && colorFields.length > 0) {
             const updatedFields = colorFields.map((field) => {
+              // Log thông tin trường màu hiện tại
+              console.log(`Trường màu hiện tại:`, field);
+              
               if (field.colorId) {
                 const matchingColor = response.data.find(
                   (c) => c.colorId === field.colorId
                 );
                 if (matchingColor) {
+                  console.log(`Tìm thấy màu phù hợp:`, matchingColor);
                   return {
                     ...field,
                     colorName: matchingColor.colorName || field.colorName,

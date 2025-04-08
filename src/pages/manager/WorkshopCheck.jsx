@@ -282,6 +282,24 @@ const WorkshopCheck = () => {
       >
         {selectedWorkshop && (
           <div className="p-4">
+            <div className="text-center mb-6">
+              {selectedWorkshop.imageUrl ? (
+                <img
+                  src={selectedWorkshop.imageUrl}
+                  alt={selectedWorkshop.name}
+                  className="max-h-[250px] w-full object-cover rounded-lg mx-auto shadow-md"
+                  onError={(e) => {
+                    console.error("Lỗi tải hình ảnh:", e);
+                    e.target.src = "https://placehold.co/600x300?text=Không+có+hình+ảnh";
+                  }}
+                />
+              ) : (
+                <div className="bg-gray-100 h-[180px] rounded-lg flex items-center justify-center text-gray-400">
+                  <span>Không có hình ảnh</span>
+                </div>
+              )}
+            </div>
+
             <div className="space-y-4">
               <div>
                 <p className="text-gray-500 mb-1">Mã hội thảo</p>

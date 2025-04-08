@@ -142,16 +142,23 @@ export const rejectWorkshop = async (id, reason) => {
 export const formatPendingWorkshopsData = (workshopsData) => {
   if (!Array.isArray(workshopsData)) return [];
   
-  return workshopsData.map(workshop => ({
-    id: workshop.workshopId,
-    name: workshop.workshopName,
-    location: workshop.location,
-    date: new Date(workshop.startDate).toLocaleDateString('vi-VN'),
-    image: workshop.image || "https://via.placeholder.com/400x300?text=Workshop+Image",
-    ticketPrice: `${workshop.price?.toLocaleString('vi-VN')} VND`,
-    ticketSlots: workshop.capacity,
-    status: mapWorkshopStatus(workshop.status),
-    description: workshop.description || "",
-    masterName: workshop.masterName || ""
-  }));
+  return workshopsData.map(workshop => {
+    console.log("Workshop data from API:", workshop); // Log để kiểm tra dữ liệu
+    
+    return {
+      id: workshop.workshopId,
+      name: workshop.workshopName,
+      location: workshop.location,
+      date: new Date(workshop.startDate).toLocaleDateString('vi-VN'),
+      image: workshop.image, // Giữ lại để tương thích ngược
+      imageUrl: workshop.imageUrl, // Thêm imageUrl từ API
+      price: workshop.price, // Lưu giá trị nguyên thủy
+      capacity: workshop.capacity, // Lưu giá trị nguyên thủy
+      ticketPrice: workshop.price ? `${workshop.price.toLocaleString('vi-VN')} VND` : "Chưa có thông tin", // Giữ lại để tương thích ngược
+      ticketSlots: workshop.capacity, // Giữ lại để tương thích ngược
+      status: mapWorkshopStatus(workshop.status),
+      description: workshop.description || "",
+      masterName: workshop.masterName || ""
+    };
+  });
 }; 
