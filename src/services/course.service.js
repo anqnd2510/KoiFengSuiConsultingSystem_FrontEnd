@@ -99,6 +99,11 @@ export const createCourse = async (courseData) => {
       courseData = formData;
     }
 
+    // Thêm trường status mặc định là "Active" nếu không được cung cấp
+    if (!courseData.has("Status")) {
+      courseData.append("Status", "Active");
+    }
+
     // Log FormData để debug
     console.log("FormData entries:");
     for (let pair of courseData.entries()) {
@@ -177,16 +182,19 @@ const handleDelete = async (courseId) => {
 };
 
 // Update Course API
-export const updateCourse = async (courseId, formData) => {
+export const updateCourse = async (formData) => {
   try {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
+    const courseId = formData.get("CourseId");
     if (!courseId) {
       throw new Error("ID khóa học không được để trống");
     }
+
+    console.log("Calling API to update course with data:", formData);
 
     // Log FormData để debug
     console.log("FormData entries for update:");
@@ -196,20 +204,6 @@ export const updateCourse = async (courseId, formData) => {
           ": " +
           (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
       );
-    }
-
-    // Kiểm tra xem có ImageUrl trong formData không
-    let hasImage = false;
-    for (let pair of formData.entries()) {
-      if (pair[0] === "ImageUrl" && pair[1] instanceof File) {
-        hasImage = true;
-        break;
-      }
-    }
-
-    // Nếu không có ảnh mới, thêm ảnh cũ vào formData
-    if (!hasImage) {
-      formData.append("ImageUrl", ""); // Gửi chuỗi rỗng nếu không có ảnh mới
     }
 
     try {
@@ -272,6 +266,42 @@ export const getAllCoursesByMaster = async () => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách khóa học theo master:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm mới để cập nhật trạng thái khóa học
+export const updateCourseStatus = async (courseId, status) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!courseId) {
+      throw new Error("ID khóa học không được để trống");
+    }
+
+    console.log("Đang gọi API cập nhật trạng thái khóa học:", {
+      courseId,
+      status
+    });
+
+    const response = await apiClient.put(
+      `${COURSE_ENDPOINT}/update-course-status/${courseId}?status=${status}`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Response từ API cập nhật trạng thái:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái khóa học:", error);
     throw error;
   }
 };

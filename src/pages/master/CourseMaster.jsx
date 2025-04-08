@@ -12,6 +12,7 @@ import {
   Divider,
   Tag,
   Select,
+  Switch,
 } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -35,6 +36,7 @@ import {
   deleteCourse,
   updateCourse,
   getAllCoursesByMaster,
+  updateCourseStatus,
 } from "../../services/course.service";
 import { formatDate, formatPrice } from "../../utils/formatters";
 import {
@@ -56,6 +58,22 @@ const { TextArea } = Input;
 const CourseForm = ({ form, initialData, loading, courseCategories }) => {
   console.log("Rendering CourseForm with initialData:", initialData);
   console.log("Available courseCategories:", courseCategories);
+
+  // Đảm bảo rằng có ít nhất một option trong dropdown
+  const categoryOptions = courseCategories && courseCategories.length > 0 
+    ? courseCategories.map((category) => ({
+        value: category.categoryId,
+        label: category.categoryName,
+      }))
+    : [];
+    
+  console.log("Category dropdown options:", categoryOptions);
+
+  // Tạo options cho trạng thái
+  const statusOptions = [
+    { value: "Active", label: "Hoạt động" },
+    { value: "Inactive", label: "Không hoạt động" }
+  ];
 
   return (
     <Form
@@ -79,13 +97,11 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
       >
         <Select
           placeholder="Chọn loại khóa học"
-          loading={!courseCategories || courseCategories.length === 0}
+          loading={!categoryOptions || categoryOptions.length === 0}
           showSearch
           optionFilterProp="label"
-          options={courseCategories.map((category) => ({
-            value: category.categoryId,
-            label: category.categoryName,
-          }))}
+          options={categoryOptions}
+          notFoundContent={categoryOptions.length === 0 ? "Không có dữ liệu loại khóa học" : null}
         />
       </Form.Item>
 
@@ -98,6 +114,17 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
           placeholder="Nhập giá khóa học"
           min={0}
           style={{ width: "100%" }}
+        />
+      </Form.Item>
+
+      <Form.Item
+        label="Trạng thái"
+        name="status"
+        initialValue="Active"
+      >
+        <Select 
+          placeholder="Chọn trạng thái"
+          options={statusOptions}
         />
       </Form.Item>
 
@@ -263,14 +290,42 @@ const CourseMaster = () => {
       if (response && response.isSuccess && response.data) {
         console.log("Categories data:", response.data);
 
-        // Map dữ liệu để đảm bảo có categoryId
-        const mappedCategories = response.data.map((category) => ({
-          categoryId: category.categoryId, // Lấy categoryId
-          categoryName: category.categoryName,
-        }));
+        // Map dữ liệu để đảm bảo có đúng định dạng (categoryId, categoryName)
+        const mappedCategories = response.data.map((category) => {
+          // Đảm bảo có ID và tên category
+          const categoryId = category.categoryId || category.id;
+          const categoryName = category.categoryName || category.name;
+          
+          console.log("Mapped category:", { categoryId, categoryName });
+          
+          if (!categoryId) {
+            console.warn("Missing categoryId for category:", category);
+          }
+          
+          if (!categoryName) {
+            console.warn("Missing categoryName for category:", category);
+          }
 
-        console.log("Mapped categories:", mappedCategories);
-        setCourseCategories(mappedCategories);
+          return {
+            categoryId: categoryId,
+            categoryName: categoryName,
+          };
+        });
+
+        console.log("Final mapped categories:", mappedCategories);
+        
+        // Lưu categories vào state
+        setCourseCategories(mappedCategories.filter(c => c.categoryId && c.categoryName));
+        
+        // Cập nhật categoryNames object để sử dụng trong các hàm khác
+        const categoryNamesMap = {};
+        mappedCategories.forEach(cat => {
+          if (cat.categoryId && cat.categoryName) {
+            categoryNamesMap[cat.categoryId] = cat.categoryName;
+          }
+        });
+        
+        setCategoryNames(categoryNamesMap);
         return;
       }
 
@@ -297,11 +352,50 @@ const CourseMaster = () => {
         // Lấy mẫu dữ liệu đầu tiên để debug
         if (response.data.length > 0) {
           console.log("Sample course item:", response.data[0]);
+          console.log("Status field in sample:", response.data[0].status);
+          // Kiểm tra các trường có thể chứa status
+          console.log("Possible status fields:", {
+            status: response.data[0].status,
+            Status: response.data[0].Status,
+            is_active: response.data[0].is_active,
+            isActive: response.data[0].isActive,
+            active: response.data[0].active
+          });
         }
 
         // Ánh xạ dữ liệu từ API vào state dựa trên cấu trúc DB thực tế
         const mappedCourses = response.data.map((course) => {
           console.log("Processing course:", course);
+          
+          // Kiểm tra và xử lý trường status
+          let courseStatus = "Inactive"; // Giá trị mặc định
+          
+          // Log để debug
+          console.log("Status fields:", {
+            status: course.status,
+            Status: course.Status,
+            isActive: course.isActive,
+            active: course.active
+          });
+          
+          // Kiểm tra các trường có thể chứa status
+          if (course.status) {
+            courseStatus = course.status;
+          } else if (course.Status) {
+            courseStatus = course.Status;
+          } else if (course.isActive === true || course.active === true) {
+            courseStatus = "Active";
+          }
+          
+          console.log("Final status value:", courseStatus);
+
+          // Debug trường image/imageUrl
+          console.log("Image fields for course:", course.courseName, {
+            image: course.image,
+            imageUrl: course.imageUrl,
+            imagePath: course.imagePath,
+            imageURL: course.imageURL
+          });
 
           // Xác định người tạo từ các trường có thể
           let creator = "N/A";
@@ -330,21 +424,65 @@ const CourseMaster = () => {
             categoryId: course.categoryId,
           });
 
+          // Lấy ID và tên của category từ response API
+          // Từ hình ảnh console, thấy rằng courseCategory chứa tên category, không phải ID
+          const categoryId = course.categoryId || null;
+          
+          // Xác định tên category
+          let categoryName = "Chưa phân loại";
+          if (course.categoryName && course.categoryName !== "undefined") {
+            categoryName = course.categoryName;
+          } else if (course.courseCategory && course.courseCategory !== "undefined") {
+            // Từ console, thấy rằng courseCategory chứa tên category
+            categoryName = course.courseCategory;
+          } else if (categoryId) {
+            // Nếu đã lưu tên category trong state, sử dụng lại
+            if (categoryNames[categoryId]) {
+              categoryName = categoryNames[categoryId];
+            } else {
+              // Không có tên, nhưng sẽ được cập nhật sau khi gọi API
+              fetchCategoryName(categoryId);
+            }
+          }
+
+          // Kiểm tra và xử lý URL hình ảnh
+          let imageUrl = null;
+          if (course.image) {
+            // Nếu image là URL đầy đủ
+            if (course.image.startsWith('http')) {
+              imageUrl = course.image;
+            } 
+            // Nếu image là đường dẫn tương đối
+            else {
+              console.log("Image is not a valid URL:", course.image);
+            }
+          } 
+          
+          // Kiểm tra cả trường imageUrl
+          if (!imageUrl && course.imageUrl) {
+            if (course.imageUrl.startsWith('http')) {
+              console.log("Using imageUrl field:", course.imageUrl);
+              imageUrl = course.imageUrl;
+            } else {
+              console.log("ImageUrl is not a valid URL:", course.imageUrl);
+            }
+          }
+
+          console.log("Final image URL for course:", course.courseName, "->", imageUrl);
+
           return {
             id: course.courseId || course.id || "N/A",
             name: course.courseName || "N/A",
-            categoryName: course.categoryName || "Chưa phân loại",
-            categoryId: course.courseCategory || course.categoryId || null, // Thay đổi từ "N/A" thành null
+            categoryName: categoryName,
+            categoryId: categoryId,
             price: parseFloat(course.price) || 0,
             date: course.createAt || "N/A",
             createdAt: course.createAt || "N/A",
-            status: course.status || "Đang hoạt động",
+            status: courseStatus,
             description: course.description || "N/A",
             learningObjectives: course.learningObjectives || "N/A",
             videoUrl: course.videoUrl || "",
-            image:
-              course.image ||
-              "https://images.unsplash.com/photo-1588345921523-c2dcdb7f1dcd?q=80&w=2070&auto=format&fit=crop",
+            image: imageUrl || "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh",
             creator: creator,
             certificate: course.certificateId ? true : false,
             quizId: course.quizId || "N/A",
@@ -377,12 +515,27 @@ const CourseMaster = () => {
   // Thêm hàm để lấy tên category
   const fetchCategoryName = async (categoryId) => {
     try {
+      if (!categoryId) return;
+      console.log("Fetching category name for id:", categoryId);
+      
       const response = await getCategoryById(categoryId);
-      if (response && response.isSuccess) {
+      console.log("Category API response:", response);
+      
+      if (response && response.isSuccess && response.data) {
+        console.log("Setting category name:", response.data.categoryName, "for id:", categoryId);
         setCategoryNames((prev) => ({
           ...prev,
           [categoryId]: response.data.categoryName,
         }));
+        
+        // Cập nhật courses nếu cần
+        setCourses(prevCourses => 
+          prevCourses.map(course => 
+            course.categoryId === categoryId 
+              ? {...course, categoryName: response.data.categoryName} 
+              : course
+          )
+        );
       }
     } catch (err) {
       console.error("Error fetching category name:", err);
@@ -418,7 +571,64 @@ const CourseMaster = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
+      render: (status, record) => {
+        const isActive = status === "Active";
+        
+        return (
+          <Switch
+            checked={isActive}
+            onChange={(checked) => {
+              // Hiển thị modal xác nhận trước khi thay đổi
+              Modal.confirm({
+                title: "Xác nhận thay đổi",
+                content: "Bạn chắc chắn muốn đổi trạng thái?",
+                okText: "Đồng ý",
+                cancelText: "Hủy",
+                onOk: async () => {
+                  try {
+                    const newStatus = checked ? "Active" : "Inactive";
+                    
+                    // Gọi API cập nhật trạng thái
+                    const response = await updateCourseStatus(record.id, newStatus);
+
+                    if (response && response.isSuccess) {
+                      message.success("Cập nhật trạng thái thành công!");
+                      
+                      // Cập nhật state local
+                      setCourses(prevCourses => 
+                        prevCourses.map(course => 
+                          course.id === record.id 
+                            ? {...course, status: newStatus}
+                            : course
+                        )
+                      );
+                    } else {
+                      message.error(response?.message || "Không thể cập nhật trạng thái");
+                      // Nếu thất bại, đặt lại trạng thái switch
+                      setTimeout(() => {
+                        setCourses(prevCourses => [...prevCourses]);
+                      }, 0);
+                    }
+                  } catch (error) {
+                    console.error("Lỗi khi cập nhật trạng thái:", error);
+                    message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+                    // Nếu có lỗi, đặt lại trạng thái switch
+                    setTimeout(() => {
+                      setCourses(prevCourses => [...prevCourses]);
+                    }, 0);
+                  }
+                },
+                onCancel() {
+                  // Nếu người dùng hủy, đặt lại trạng thái switch
+                  setTimeout(() => {
+                    setCourses(prevCourses => [...prevCourses]);
+                  }, 0);
+                }
+              });
+            }}
+          />
+        );
+      }
     },
     {
       title: "Hành động",
@@ -471,12 +681,42 @@ const CourseMaster = () => {
       const values = await form.validateFields();
       setLoading(true);
 
+      // Kiểm tra các trường bắt buộc
+      if (
+        !values.courseName ||
+        !values.courseCategory ||
+        !values.description ||
+        !values.price
+      ) {
+        message.error("Vui lòng điền đầy đủ thông tin khóa học");
+        setLoading(false);
+        return;
+      }
+
+      // Log giá trị form để kiểm tra
+      console.log("Form values before creating course:", values);
+      console.log("Selected category value:", values.courseCategory);
+      console.log("Available categories:", courseCategories);
+
+      // Kiểm tra xem categoryId có tồn tại trong danh sách không
+      const selectedCategory = courseCategories.find(
+        cat => cat.categoryId === values.courseCategory
+      );
+
+      if (!selectedCategory) {
+        console.warn("Selected category ID not found in categories list:", values.courseCategory);
+        message.warning("Loại khóa học không hợp lệ. Vui lòng chọn lại.");
+        setLoading(false);
+        return;
+      }
+
       // Tạo FormData để gửi dữ liệu và file
       const formData = new FormData();
       formData.append("CourseName", values.courseName.trim());
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
       formData.append("Price", Number(values.price));
+      formData.append("Status", values.status || "Active");
 
       // Xử lý file hình ảnh nếu có
       if (values.image && values.image.length > 0) {
@@ -500,6 +740,14 @@ const CourseMaster = () => {
         message.success(response.message || "Tạo khóa học thành công!");
         setIsCreateModalOpen(false);
         form.resetFields();
+        
+        // Nếu khóa học mới đã được tạo thành công, lấy thông tin category 
+        // để đảm bảo hiển thị đúng tên category cho khóa học mới
+        if (values.courseCategory) {
+          fetchCategoryName(values.courseCategory);
+        }
+        
+        // Làm mới danh sách khóa học
         fetchCourses();
       } else {
         message.error(response?.message || "Có lỗi xảy ra khi tạo khóa học");
@@ -527,7 +775,27 @@ const CourseMaster = () => {
   };
 
   const handleViewCourse = (course) => {
-    setSelectedCourse(course);
+    console.log("Viewing course details:", course);
+    
+    // Tìm dữ liệu gốc từ API response
+    let rawCourseData = null;
+    if (rawData && rawData.data && Array.isArray(rawData.data)) {
+      rawCourseData = rawData.data.find(c => 
+        c.courseId === course.id || c.id === course.id);
+      
+      if (rawCourseData) {
+        console.log("Found raw course data from API:", rawCourseData);
+      }
+    }
+    
+    // Tạo object mới với thông tin từ cả state và API gốc
+    const courseWithFullData = {
+      ...course,
+      imageUrl: rawCourseData?.imageUrl,  // Thêm trường imageUrl
+    };
+    
+    console.log("Setting selected course with:", courseWithFullData);
+    setSelectedCourse(courseWithFullData);
     setIsViewModalOpen(true);
   };
 
@@ -552,84 +820,30 @@ const CourseMaster = () => {
       categoryName: course.categoryName,
     });
 
-    // Kiểm tra nếu categoryId không hợp lệ
-    if (
-      !course.categoryId ||
-      course.categoryId === "N/A" ||
-      course.categoryId === "null" ||
-      course.categoryId === null
-    ) {
-      console.warn(
-        "Invalid categoryId detected. Finding categoryId from categories list"
-      );
-
-      // Tìm categoryId dựa trên categoryName
+    // Tìm category ID dựa trên tên category nếu không có categoryId
+    let categoryIdToUse = course.categoryId;
+    
+    if (!categoryIdToUse && course.categoryName && course.categoryName !== "Chưa phân loại") {
+      console.log("Looking for categoryId by name:", course.categoryName);
+      
       const categoryFound = courseCategories.find(
-        (cat) =>
-          cat.categoryName.toLowerCase() === course.categoryName.toLowerCase()
+        (cat) => cat.categoryName.toLowerCase() === course.categoryName.toLowerCase()
       );
-
+      
       if (categoryFound) {
-        console.log("Found matching category:", categoryFound);
-        console.log(
-          "Setting form value with found categoryId:",
-          categoryFound.categoryId
-        );
-
-        updateForm.setFieldsValue({
-          courseName: course.name,
-          courseCategory: categoryFound.categoryId,
-          price: course.price,
-          description: course.description,
-        });
-      } else {
-        console.warn("No matching category found for:", course.categoryName);
-
-        // Hiển thị message cho người dùng
-        message.warning(
-          "Không tìm thấy thông tin loại khóa học. Vui lòng chọn lại."
-        );
-
-        // Tạm thời focus vào dropdown để người dùng chú ý chọn lại
-        setTimeout(() => {
-          const categorySelect = document.querySelector(
-            '[name="courseCategory"]'
-          );
-          if (categorySelect) categorySelect.focus();
-        }, 500);
-
-        updateForm.setFieldsValue({
-          courseName: course.name,
-          courseCategory: undefined, // để trống để người dùng chọn lại
-          price: course.price,
-          description: course.description,
-        });
+        console.log("Found matching category by name:", categoryFound);
+        categoryIdToUse = categoryFound.categoryId;
       }
-    } else {
-      console.log("Valid categoryId found:", course.categoryId);
-
-      // Kiểm tra xem categoryId có tồn tại trong danh sách không
-      const categoryExists = courseCategories.some(
-        (cat) => cat.categoryId === course.categoryId
-      );
-
-      if (!categoryExists) {
-        console.warn(
-          "Category ID not found in current categories list:",
-          course.categoryId
-        );
-        message.warning(
-          "Loại khóa học của khóa học đã thay đổi. Vui lòng chọn lại loại khóa học."
-        );
-      }
-
-      updateForm.setFieldsValue({
-        courseName: course.name,
-        courseCategory: course.categoryId,
-        price: course.price,
-        description: course.description,
-      });
     }
+
+    // Thiết lập giá trị cho form
+    updateForm.setFieldsValue({
+      courseName: course.name,
+      courseCategory: categoryIdToUse,
+      price: course.price,
+      description: course.description,
+      status: course.status === "Đang hoạt động" || course.status === "Active" ? "Active" : "Inactive"
+    });
 
     setIsUpdateModalOpen(true);
   };
@@ -645,12 +859,43 @@ const CourseMaster = () => {
       const values = await updateForm.validateFields();
       setLoading(true);
 
-      // Tạo FormData để gửi dữ liệu multipart/form-data
+      // Kiểm tra các trường bắt buộc
+      if (
+        !values.courseName ||
+        !values.courseCategory ||
+        !values.description ||
+        !values.price
+      ) {
+        message.error("Vui lòng điền đầy đủ thông tin khóa học");
+        setLoading(false);
+        return;
+      }
+
+      // Log giá trị form để kiểm tra
+      console.log("Form values before sending:", values);
+      console.log("Selected category value:", values.courseCategory);
+      console.log("Available categories:", courseCategories);
+
+      // Kiểm tra xem categoryId có tồn tại trong danh sách không
+      const selectedCategory = courseCategories.find(
+        cat => cat.categoryId === values.courseCategory
+      );
+
+      if (!selectedCategory) {
+        console.warn("Selected category ID not found in categories list:", values.courseCategory);
+        message.warning("Loại khóa học không hợp lệ. Vui lòng chọn lại.");
+        setLoading(false);
+        return;
+      }
+
+      // Tạo FormData để gửi dữ liệu và file
       const formData = new FormData();
+      formData.append("CourseId", selectedCourse.id);
       formData.append("CourseName", values.courseName.trim());
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
-      formData.append("Price", values.price);
+      formData.append("Price", Number(values.price));
+      formData.append("Status", values.status || "Active");
 
       // Xử lý file hình ảnh nếu có
       if (values.image && values.image.length > 0) {
@@ -668,13 +913,37 @@ const CourseMaster = () => {
         );
       }
 
-      const response = await updateCourse(selectedCourse.id, formData);
+      const response = await updateCourse(formData);
 
       if (response && response.isSuccess) {
         message.success("Cập nhật khóa học thành công!");
         setIsUpdateModalOpen(false);
         updateForm.resetFields();
-        fetchCourses(); // Refresh course list
+        
+        // Sau khi cập nhật thành công, lấy tên category mới (nếu cần)
+        if (values.courseCategory) {
+          fetchCategoryName(values.courseCategory);
+        }
+        
+        // Cập nhật local state để hiển thị đúng tên category
+        setCourses(prevCourses => 
+          prevCourses.map(course => 
+            course.id === selectedCourse.id 
+              ? {
+                  ...course,
+                  name: values.courseName,
+                  categoryId: values.courseCategory,
+                  categoryName: selectedCategory.categoryName,
+                  price: values.price,
+                  description: values.description,
+                  status: values.status || "Active"
+                } 
+              : course
+          )
+        );
+        
+        // Làm mới danh sách khóa học
+        fetchCourses();
       } else {
         throw new Error(
           response?.message || "Có lỗi xảy ra khi cập nhật khóa học"
@@ -768,18 +1037,10 @@ const CourseMaster = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "Đang hoạt động":
-      case "Active":
-        return "green";
-      case "Sắp diễn ra":
-      case "Pending":
-        return "blue";
-      case "Đã kết thúc":
-      case "Inactive":
-        return "gray";
-      default:
-        return "default";
+    if (status && typeof status === 'string' && (status.toLowerCase() === "active" || status === "Active" || status === "Đang hoạt động")) {
+      return "green";
+    } else {
+      return "red";
     }
   };
 
@@ -1314,15 +1575,67 @@ const CourseMaster = () => {
             <Row gutter={[24, 24]}>
               <Col xs={24} md={12}>
                 <div className="rounded-lg overflow-hidden h-64 bg-gray-200 mb-4">
-                  <img
-                    src={selectedCourse.image}
-                    alt={selectedCourse.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh";
-                    }}
-                  />
+                  {(() => {
+                    // Lấy URL ảnh cho chi tiết khóa học
+                    console.log("Rendering course details for ID:", selectedCourse.id);
+                    
+                    // Tìm trong raw data nếu có
+                    let imageSource = null;
+                    if (rawData && rawData.data && Array.isArray(rawData.data)) {
+                      const originalCourse = rawData.data.find(c => 
+                        c.courseId === selectedCourse.id || c.id === selectedCourse.id);
+                      
+                      if (originalCourse) {
+                        console.log("Found original image data:", {
+                          image: originalCourse.image,
+                          imageUrl: originalCourse.imageUrl
+                        });
+                        
+                        if (originalCourse.imageUrl && originalCourse.imageUrl.startsWith('http')) {
+                          imageSource = originalCourse.imageUrl;
+                          console.log("Using imageUrl from API data:", imageSource);
+                        } else if (originalCourse.image && originalCourse.image.startsWith('http')) {
+                          imageSource = originalCourse.image;
+                          console.log("Using image from API data:", imageSource);
+                        }
+                      }
+                    }
+                    
+                    // Nếu không tìm thấy trong raw data, sử dụng từ selected course
+                    if (!imageSource) {
+                      if (selectedCourse.image && selectedCourse.image.startsWith('http')) {
+                        imageSource = selectedCourse.image;
+                        console.log("Using image from selected course:", imageSource);
+                      } else if (selectedCourse.imageUrl && selectedCourse.imageUrl.startsWith('http')) {
+                        imageSource = selectedCourse.imageUrl;
+                        console.log("Using imageUrl from selected course:", imageSource);
+                      }
+                    }
+
+                    // Render dựa trên kết quả
+                    if (imageSource) {
+                      return (
+                        <img
+                          src={imageSource}
+                          alt={selectedCourse.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.log("Image failed to load:", e.target.src);
+                            e.target.src = "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh";
+                          }}
+                        />
+                      );
+                    } else {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                          <div className="text-center">
+                            <FileText className="w-16 h-16 text-gray-400 mx-auto" />
+                            <p className="mt-2 text-gray-500">Không có hình ảnh</p>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -1354,12 +1667,6 @@ const CourseMaster = () => {
                         Chứng chỉ: {selectedCourse.certificate ? "Có" : "Không"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FileText className="text-gray-500 w-5 h-5" />
-                      <span className="text-gray-700">
-                        Người tạo: {selectedCourse.creator}
-                      </span>
-                    </div>
                   </div>
                 </div>
               </Col>
@@ -1380,11 +1687,6 @@ const CourseMaster = () => {
                 <Divider orientation="left">Mô tả</Divider>
                 <p className="text-gray-700 mb-6">
                   {selectedCourse.description}
-                </p>
-
-                <Divider orientation="left">Mục tiêu học tập</Divider>
-                <p className="text-gray-700 mb-6">
-                  {selectedCourse.learningObjectives}
                 </p>
 
                 {selectedCourse.videoUrl && (
