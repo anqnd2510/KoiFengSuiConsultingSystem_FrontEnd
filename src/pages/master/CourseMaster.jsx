@@ -898,12 +898,10 @@ const CourseMaster = () => {
         status: values.status || "Active"
       };
 
-      console.log("Sending updated course data:", courseData);
-      // Gọi API cập nhật khóa học
-      const response = await updateCourse(courseData);
+      const response = await updateCourse(selectedCourse.id, formData);
 
       if (response && response.isSuccess) {
-        message.success(response.message || "Cập nhật khóa học thành công!");
+        message.success("Cập nhật khóa học thành công!");
         setIsUpdateModalOpen(false);
         updateForm.resetFields();
         
@@ -930,31 +928,13 @@ const CourseMaster = () => {
           fetchCourses();
         }, 500);
       } else {
-        message.error(
+        throw new Error(
           response?.message || "Có lỗi xảy ra khi cập nhật khóa học"
         );
       }
     } catch (error) {
       console.error("Error updating course:", error);
-      // Log chi tiết lỗi
-      if (error.response) {
-        console.error("API error response:", error.response.data);
-        message.error(
-          "Lỗi từ server: " +
-            (error.response.data?.message || "Vui lòng thử lại")
-        );
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        message.error(
-          "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng."
-        );
-      } else {
-        console.error("Error details:", error.message);
-        message.error(
-          "Có lỗi xảy ra: " +
-            (error.message || "Vui lòng điền đầy đủ thông tin khóa học")
-        );
-      }
+      message.error(error.message || "Có lỗi xảy ra khi cập nhật khóa học");
     } finally {
       setLoading(false);
     }

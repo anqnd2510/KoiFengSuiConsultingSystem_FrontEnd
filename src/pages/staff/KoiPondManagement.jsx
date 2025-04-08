@@ -83,18 +83,10 @@ const PondCard = ({
         <div className="border-t pt-2">
           <div className="flex items-center justify-between mt-2">
             <div className="flex gap-2">
-              <CustomButton
-                type="default"
-                onClick={onView}
-                size="small"
-              >
+              <CustomButton type="default" onClick={onView} size="small">
                 Xem
               </CustomButton>
-              <CustomButton
-                type="primary"
-                onClick={onUpdate}
-                size="small"
-              >
+              <CustomButton type="primary" onClick={onUpdate} size="small">
                 Cập nhật
               </CustomButton>
             </div>
@@ -865,14 +857,14 @@ const KoiPondManagement = () => {
             rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
             <div className="shape-select">
-              <select 
+              <select
                 className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200"
                 defaultValue={selectedPond?.shapeId}
               >
                 {pondShapes && pondShapes.length > 0 ? (
                   pondShapes.map((shape) => (
-                    <option 
-                      key={shape.shapeId} 
+                    <option
+                      key={shape.shapeId}
                       value={shape.shapeId}
                       selected={selectedPond?.shapeId === shape.shapeId}
                     >
@@ -1078,7 +1070,7 @@ const KoiPondManagement = () => {
         footer={[
           <CustomButton key="close" onClick={handleViewCancel}>
             Đóng
-          </CustomButton>
+          </CustomButton>,
         ]}
         width={700}
       >
@@ -1093,34 +1085,50 @@ const KoiPondManagement = () => {
                 />
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">ID Hồ</p>
-                <p className="text-base font-medium text-gray-800">{viewPond.koiPondId}</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  ID Hồ
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {viewPond.koiPondId}
+                </p>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Tên hồ</p>
-                <p className="text-base font-medium text-gray-800">{viewPond.pondName}</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Tên hồ
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {viewPond.pondName}
+                </p>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Hình dạng</p>
-                <p className="text-base font-medium text-gray-800">{viewPond.shapeName}</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Hình dạng
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {viewPond.shapeName}
+                </p>
               </div>
             </div>
 
             <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Giới thiệu</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Giới thiệu
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {viewPond.introduction}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả chi tiết</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Mô tả chi tiết
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {viewPond.description}
                 </p>
