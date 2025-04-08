@@ -182,39 +182,20 @@ const handleDelete = async (courseId) => {
 };
 
 // Update Course API
-export const updateCourse = async (courseId, formData) => {
+export const updateCourse = async (formData) => {
   try {
     const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
+    const courseId = formData.get("CourseId");
     if (!courseId) {
       throw new Error("ID khóa học không được để trống");
     }
 
-    console.log("Calling API to update course with data:", courseData);
+    console.log("Calling API to update course with data:", formData);
 
-    // Đảm bảo dữ liệu gửi đi đúng định dạng
-    const courseRequest = {
-      courseId: courseData.courseId,
-      courseName: courseData.courseName,
-      courseCategory: courseData.courseCategory, // Đây là categoryId
-      price: Number(courseData.price),
-      description: courseData.description || "",
-      videoUrl: courseData.videoUrl || "",
-      image: courseData.image || "",
-      status: courseData.status || "Active" // Thêm trường status
-    };
-
-    // Kiểm tra request không được null
-    if (
-      !courseRequest.courseName ||
-      !courseRequest.courseCategory ||
-      !courseRequest.price
-    ) {
-      throw new Error("Vui lòng điền đầy đủ thông tin khóa học");
-};
     // Log FormData để debug
     console.log("FormData entries for update:");
     for (let pair of formData.entries()) {
@@ -223,20 +204,6 @@ export const updateCourse = async (courseId, formData) => {
           ": " +
           (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
       );
-    }
-
-    // Kiểm tra xem có ImageUrl trong formData không
-    let hasImage = false;
-    for (let pair of formData.entries()) {
-      if (pair[0] === "ImageUrl" && pair[1] instanceof File) {
-        hasImage = true;
-        break;
-      }
-    }
-
-    // Nếu không có ảnh mới, thêm ảnh cũ vào formData
-    if (!hasImage) {
-      formData.append("ImageUrl", ""); // Gửi chuỗi rỗng nếu không có ảnh mới
     }
 
     try {

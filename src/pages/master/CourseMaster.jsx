@@ -888,17 +888,32 @@ const CourseMaster = () => {
         return;
       }
 
-      // Chuẩn bị dữ liệu theo đúng format API yêu cầu
-      const courseData = {
-        courseId: selectedCourse.id,
-        courseName: values.courseName.trim(),
-        courseCategory: values.courseCategory, // Đảm bảo gửi ID category
-        description: values.description.trim(),
-        price: Number(values.price),
-        status: values.status || "Active"
-      };
+      // Tạo FormData để gửi dữ liệu và file
+      const formData = new FormData();
+      formData.append("CourseId", selectedCourse.id);
+      formData.append("CourseName", values.courseName.trim());
+      formData.append("CourseCategory", values.courseCategory);
+      formData.append("Description", values.description.trim());
+      formData.append("Price", Number(values.price));
+      formData.append("Status", values.status || "Active");
 
-      const response = await updateCourse(selectedCourse.id, formData);
+      // Xử lý file hình ảnh nếu có
+      if (values.image && values.image.length > 0) {
+        const imageFile = values.image[0].originFileObj;
+        console.log("Đính kèm file hình ảnh:", imageFile.name);
+        formData.append("ImageUrl", imageFile);
+      }
+
+      // Log FormData để debug
+      console.log("Sending updated course data:");
+      for (let [key, value] of formData.entries()) {
+        console.log(
+          key + ":",
+          value instanceof File ? `File: ${value.name}` : value
+        );
+      }
+
+      const response = await updateCourse(formData);
 
       if (response && response.isSuccess) {
         message.success("Cập nhật khóa học thành công!");
@@ -916,17 +931,19 @@ const CourseMaster = () => {
             course.id === selectedCourse.id 
               ? {
                   ...course,
+                  name: values.courseName,
                   categoryId: values.courseCategory,
-                  categoryName: selectedCategory.categoryName
+                  categoryName: selectedCategory.categoryName,
+                  price: values.price,
+                  description: values.description,
+                  status: values.status || "Active"
                 } 
               : course
           )
         );
         
-        // Đợi thêm chút để đảm bảo server đã cập nhật dữ liệu
-        setTimeout(() => {
-          fetchCourses();
-        }, 500);
+        // Làm mới danh sách khóa học
+        fetchCourses();
       } else {
         throw new Error(
           response?.message || "Có lỗi xảy ra khi cập nhật khóa học"
