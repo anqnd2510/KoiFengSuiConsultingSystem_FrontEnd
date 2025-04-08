@@ -177,51 +177,53 @@ const handleDelete = async (courseId) => {
 };
 
 // Update Course API
-export const updateCourse = async (courseData) => {
+export const updateCourse = async (courseId, formData) => {
   try {
-    // Kiểm tra người dùng đã đăng nhập qua token
     const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    if (!courseData.courseId) {
+    if (!courseId) {
       throw new Error("ID khóa học không được để trống");
     }
 
-    console.log("Calling API to update course with data:", courseData);
-
-    // Đảm bảo dữ liệu gửi đi đúng định dạng
-    const courseRequest = {
-      courseId: courseData.courseId,
-      courseName: courseData.courseName,
-      courseCategory: courseData.courseCategory, // Đây là categoryId
-      price: Number(courseData.price),
-      description: courseData.description || "",
-      videoUrl: courseData.videoUrl || "",
-      image: courseData.image || "",
-    };
-
-    // Kiểm tra request không được null
-    if (
-      !courseRequest.courseName ||
-      !courseRequest.courseCategory ||
-      !courseRequest.price
-    ) {
-      throw new Error("Vui lòng điền đầy đủ thông tin khóa học");
+    // Log FormData để debug
+    console.log("FormData entries for update:");
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+      );
     }
 
-    console.log("Sending course update request:", courseRequest);
+    // Kiểm tra xem có ImageUrl trong formData không
+    let hasImage = false;
+    for (let pair of formData.entries()) {
+      if (pair[0] === "ImageUrl" && pair[1] instanceof File) {
+        hasImage = true;
+        break;
+      }
+    }
+
+    // Nếu không có ảnh mới, thêm ảnh cũ vào formData
+    if (!hasImage) {
+      formData.append("ImageUrl", ""); // Gửi chuỗi rỗng nếu không có ảnh mới
+    }
+
     try {
-      const response = await apiClient.put(
-        `${COURSE_ENDPOINT}/update-course/${courseData.courseId}`,
-        courseRequest,
+      const response = await axios.put(
+        `http://localhost:5261/api/Course/update-course/${courseId}`,
+        formData,
         {
           headers: {
+            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${token}`,
           },
         }
       );
+
       console.log("Update course API response:", response.data);
       return response.data;
     } catch (apiError) {
@@ -229,8 +231,6 @@ export const updateCourse = async (courseData) => {
       if (apiError.response) {
         console.error("Error response status:", apiError.response.status);
         console.error("Error response data:", apiError.response.data);
-
-        // Trả về lỗi có cấu trúc để client xử lý dễ dàng hơn
         throw {
           message:
             apiError.response.data?.message ||
@@ -239,7 +239,7 @@ export const updateCourse = async (courseData) => {
           data: apiError.response.data,
         };
       }
-      throw apiError; // Re-throw lỗi nếu không phải lỗi response
+      throw apiError;
     }
   } catch (error) {
     console.error("Error updating course:", error);

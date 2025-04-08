@@ -645,64 +645,44 @@ const CourseMaster = () => {
       const values = await updateForm.validateFields();
       setLoading(true);
 
-      // Kiểm tra các trường bắt buộc
-      if (
-        !values.courseName ||
-        !values.courseCategory ||
-        !values.description ||
-        !values.price
-      ) {
-        message.error("Vui lòng điền đầy đủ thông tin khóa học");
-        return;
+      // Tạo FormData để gửi dữ liệu multipart/form-data
+      const formData = new FormData();
+      formData.append("CourseName", values.courseName.trim());
+      formData.append("CourseCategory", values.courseCategory);
+      formData.append("Description", values.description.trim());
+      formData.append("Price", values.price);
+
+      // Xử lý file hình ảnh nếu có
+      if (values.image && values.image.length > 0) {
+        const imageFile = values.image[0].originFileObj;
+        console.log("Đính kèm file hình ảnh:", imageFile.name);
+        formData.append("ImageUrl", imageFile);
       }
 
-      // Chuẩn bị dữ liệu theo đúng format API yêu cầu
-      const courseData = {
-        courseId: selectedCourse.id,
-        courseName: values.courseName.trim(),
-        courseCategory: values.courseCategory,
-        description: values.description.trim(),
-        price: Number(values.price),
-      };
+      // Log FormData để debug
+      console.log("Sending updated course data:");
+      for (let [key, value] of formData.entries()) {
+        console.log(
+          key + ":",
+          value instanceof File ? `File: ${value.name}` : value
+        );
+      }
 
-      console.log("Sending updated course data:", courseData);
-      // Gọi API cập nhật khóa học
-      const response = await updateCourse(courseData);
+      const response = await updateCourse(selectedCourse.id, formData);
 
       if (response && response.isSuccess) {
-        message.success(response.message || "Cập nhật khóa học thành công!");
+        message.success("Cập nhật khóa học thành công!");
         setIsUpdateModalOpen(false);
         updateForm.resetFields();
-        // Đợi thêm chút để đảm bảo server đã cập nhật dữ liệu
-        setTimeout(() => {
-          fetchCourses();
-        }, 500);
+        fetchCourses(); // Refresh course list
       } else {
-        message.error(
+        throw new Error(
           response?.message || "Có lỗi xảy ra khi cập nhật khóa học"
         );
       }
     } catch (error) {
       console.error("Error updating course:", error);
-      // Log chi tiết lỗi
-      if (error.response) {
-        console.error("API error response:", error.response.data);
-        message.error(
-          "Lỗi từ server: " +
-            (error.response.data?.message || "Vui lòng thử lại")
-        );
-      } else if (error.request) {
-        console.error("No response received:", error.request);
-        message.error(
-          "Không nhận được phản hồi từ server. Vui lòng kiểm tra kết nối mạng."
-        );
-      } else {
-        console.error("Error details:", error.message);
-        message.error(
-          "Có lỗi xảy ra: " +
-            (error.message || "Vui lòng điền đầy đủ thông tin khóa học")
-        );
-      }
+      message.error(error.message || "Có lỗi xảy ra khi cập nhật khóa học");
     } finally {
       setLoading(false);
     }
