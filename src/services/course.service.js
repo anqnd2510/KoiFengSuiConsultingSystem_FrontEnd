@@ -99,6 +99,11 @@ export const createCourse = async (courseData) => {
       courseData = formData;
     }
 
+    // Thêm trường status mặc định là "Active" nếu không được cung cấp
+    if (!courseData.has("Status")) {
+      courseData.append("Status", "Active");
+    }
+
     // Log FormData để debug
     console.log("FormData entries:");
     for (let pair of courseData.entries()) {
@@ -200,6 +205,7 @@ export const updateCourse = async (courseData) => {
       description: courseData.description || "",
       videoUrl: courseData.videoUrl || "",
       image: courseData.image || "",
+      status: courseData.status || "Active" // Thêm trường status
     };
 
     // Kiểm tra request không được null
@@ -272,6 +278,42 @@ export const getAllCoursesByMaster = async () => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi lấy danh sách khóa học theo master:", error);
+    throw error;
+  }
+};
+
+// Thêm hàm mới để cập nhật trạng thái khóa học
+export const updateCourseStatus = async (courseId, status) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    if (!courseId) {
+      throw new Error("ID khóa học không được để trống");
+    }
+
+    console.log("Đang gọi API cập nhật trạng thái khóa học:", {
+      courseId,
+      status
+    });
+
+    const response = await apiClient.put(
+      `${COURSE_ENDPOINT}/update-course-status/${courseId}?status=${status}`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("Response từ API cập nhật trạng thái:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi cập nhật trạng thái khóa học:", error);
     throw error;
   }
 };
