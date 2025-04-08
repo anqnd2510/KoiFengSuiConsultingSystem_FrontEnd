@@ -43,6 +43,7 @@ const KoiFishManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedKoi, setSelectedKoi] = useState(null);
   const [form] = Form.useForm();
+  const [editForm] = Form.useForm();
   const [modalLoading, setModalLoading] = useState(false);
   const [colorFields, setColorFields] = useState([
     { name: "", value: 0.5, colorCode: "#000000" },
@@ -56,6 +57,10 @@ const KoiFishManagement = () => {
   // Thêm state cho file ảnh
   const [koiImageFile, setKoiImageFile] = useState(null);
   const [koiImageUrl, setKoiImageUrl] = useState("");
+
+  // Thêm state cho modal xem chi tiết
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewKoi, setViewKoi] = useState(null);
 
   const [data, setData] = useState([]);
 
@@ -149,68 +154,41 @@ const KoiFishManagement = () => {
       const koiDetail = await KoiFishService.getKoiFishById(koi.id);
       console.log("Chi tiết cá Koi từ API:", koiDetail);
 
-      setSelectedKoi(koiDetail);
-
-      // Kiểm tra xem có trường varietyColors không, nếu không thì sử dụng mảng rỗng
-      const koiColors = koiDetail.varietyColors || [];
-      console.log("Danh sách màu từ API:", koiColors);
-
-      if (koiColors.length === 0) {
-        console.log("Không có màu sắc, sử dụng màu mặc định");
-        setColorFields([{ colorId: "", value: 0.5 }]);
-      } else {
-        // Đảm bảo dữ liệu màu sắc đúng định dạng cho form
-        const formattedColors = koiColors.map((color) => {
-          // Log chi tiết mỗi màu để debug
-          console.log("Chi tiết màu từ API:", color);
-
-          // Đảm bảo tất cả các trường cần thiết đều có
-          const colorData = {
-            colorId: color.colorId || "",
-            value: parseFloat((color.percentage || 0) / 100),
-            colorName: color.colorName || color.color?.colorName || "",
-            element: color.element || color.color?.element || "",
-          };
-
-          console.log("Dữ liệu màu đã xử lý:", colorData);
-          return colorData;
-        });
-
-        console.log("Màu sắc đã định dạng cho form:", formattedColors);
-        setColorFields(formattedColors);
-      }
-
-      // Reset file và URL ảnh mới
-      setKoiImageFile(null);
-      setKoiImageUrl("");
-
-      // Nếu có URL hình ảnh hiện tại trong dữ liệu, hiển thị log
+      // Đặt URL hình ảnh trước khi hiển thị dữ liệu
       if (koiDetail.imageUrl) {
-        console.log("Ảnh hiện tại:", koiDetail.imageUrl);
+        setKoiImageUrl(koiDetail.imageUrl);
+        console.log("Đã đặt URL hình ảnh:", koiDetail.imageUrl);
       }
 
-      // Đặt các giá trị cho form
-      form.setFieldsValue({
-        breed: koiDetail.varietyName || "",
-        description: koiDetail.description || "",
-        introduction: koiDetail.introduction || koiDetail.description || "",
-      });
+      // Kiểm tra và xử lý dữ liệu màu sắc
+      let colors = [];
+      if (Array.isArray(koiDetail.varietyColors) && koiDetail.varietyColors.length > 0) {
+        colors = koiDetail.varietyColors.map((color) => ({
+          colorId: color.colorId || "",
+          value: parseFloat((color.percentage || 0) / 100),
+          colorName: color.colorName || "",
+          element: color.element || "",
+        }));
+        console.log("Định dạng lại dữ liệu màu sắc:", colors);
+      } else {
+        colors = [{ colorId: "", value: 0.5, colorName: "", element: "" }];
+        console.log("Không có dữ liệu màu sắc, sử dụng mẫu mặc định");
+      }
+      setColorFields(colors);
 
-      console.log("Form đã được cập nhật với dữ liệu:", {
+      // Cập nhật form với thông tin hiện tại
+      editForm.setFieldsValue({
         breed: koiDetail.varietyName,
         description: koiDetail.description,
         introduction: koiDetail.introduction || koiDetail.description,
       });
 
+      // Đặt dữ liệu cá sau khi đã xử lý mọi thứ
+      setSelectedKoi(koiDetail);
       setIsModalOpen(true);
     } catch (err) {
       console.error("Lỗi khi tải thông tin cá Koi:", err);
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Không thể tải thông tin cá Koi";
-      setError(errorMessage);
-      message.error(errorMessage);
+      message.error("Không thể tải thông tin cá Koi");
     } finally {
       setModalLoading(false);
     }
@@ -221,6 +199,7 @@ const KoiFishManagement = () => {
     setIsModalOpen(false);
     setSelectedKoi(null);
     form.resetFields();
+    editForm.resetFields(); // Reset cả editForm
   };
 
   // Thêm hàm xử lý khi chọn file ảnh
@@ -240,15 +219,56 @@ const KoiFishManagement = () => {
     }
   };
 
-  // Sửa lại hàm handleSave
+  // Thêm hàm kiểm tra tổng phần trăm
+  const calculateTotalPercentage = (colors) => {
+    return colors.reduce((sum, color) => sum + (color.value || 0) * 100, 0);
+  };
+
+  // Sửa lại hàm handleSave để thêm validation tổng phần trăm
   const handleSave = async () => {
     try {
-      const values = await form.validateFields();
+      // Sử dụng đúng form tùy vào trạng thái
+      const formToUse = selectedKoi ? editForm : form;
+      const values = await formToUse.validateFields();
+      
       setModalLoading(true);
+
+      // Log giá trị từ form để debug
+      console.log("Giá trị từ form:", values);
 
       // Nếu đang tạo mới thì kiểm tra file ảnh
       if (!selectedKoi && !koiImageFile) {
         message.error("Vui lòng tải lên hình ảnh cá Koi");
+        setModalLoading(false);
+        return;
+      }
+
+      // Kiểm tra các trường màu sắc
+      console.log("Kiểm tra colorFields trước khi lưu:", colorFields);
+      
+      // Lọc chỉ lấy các màu có colorId
+      const validColorFields = colorFields.filter(
+        (color) => color.colorId && color.colorId.trim() !== ""
+      );
+
+      if (validColorFields.length === 0) {
+        message.error("Vui lòng chọn ít nhất một màu sắc");
+        setModalLoading(false);
+        return;
+      }
+
+      // Kiểm tra tổng phần trăm màu sắc
+      const totalPercentage = calculateTotalPercentage(validColorFields);
+      console.log("Tổng phần trăm màu sắc:", totalPercentage);
+      
+      if (totalPercentage > 100) {
+        message.error("Tổng phần trăm màu sắc không được vượt quá 100%");
+        setModalLoading(false);
+        return;
+      }
+
+      if (totalPercentage < 100) {
+        message.error("Tổng phần trăm màu sắc phải đạt 100%");
         setModalLoading(false);
         return;
       }
@@ -258,15 +278,12 @@ const KoiFishManagement = () => {
         varietyName: values.breed,
         description: values.description,
         introduction: values.introduction || values.description,
-        varietyColors: colorFields
-          .filter((color) => color.colorId) // Chỉ lấy những màu đã chọn
-          .map((color) => ({
-            colorId: color.colorId,
-            percentage: Math.round(color.value * 100),
-            colorName: color.colorName || "",
-            element: color.element || "",
-          })),
-        // Thêm file ảnh vào dữ liệu
+        varietyColors: validColorFields.map((color) => ({
+          colorId: color.colorId,
+          percentage: Math.round(color.value * 100),
+          colorName: color.colorName || "",
+          element: color.element || "",
+        })),
         imageFile: koiImageFile,
       };
 
@@ -312,7 +329,10 @@ const KoiFishManagement = () => {
     } catch (err) {
       console.error("Lỗi khi lưu dữ liệu:", err);
       const errorMessage =
-        err.response?.data?.message || err.message || "Đã xảy ra lỗi";
+        err.response?.data?.message || 
+        err.response?.data?.title || 
+        err.message || 
+        "Đã xảy ra lỗi";
       setError(errorMessage);
       message.error(errorMessage);
     } finally {
@@ -358,6 +378,32 @@ const KoiFishManagement = () => {
       console.error("Lỗi khi thêm màu:", error);
       message.error("Không thể thêm màu mới");
     }
+  };
+
+  // Thêm hàm xử lý xem chi tiết
+  const handleView = async (koi) => {
+    try {
+      setLoading(true);
+      console.log("Chuẩn bị lấy thông tin chi tiết cá Koi ID:", koi.id);
+      
+      // Gọi API để lấy thông tin chi tiết
+      const koiDetail = await KoiFishService.getKoiFishById(koi.id);
+      console.log("Chi tiết cá Koi từ API:", koiDetail);
+      
+      // Cập nhật state với dữ liệu chi tiết
+      setViewKoi(koiDetail);
+      setIsViewModalVisible(true);
+    } catch (err) {
+      console.error("Lỗi khi tải thông tin chi tiết cá Koi:", err);
+      message.error("Không thể tải thông tin chi tiết cá Koi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewCancel = () => {
+    setIsViewModalVisible(false);
+    setViewKoi(null);
   };
 
   // Lọc dữ liệu theo tìm kiếm
@@ -447,9 +493,16 @@ const KoiFishManagement = () => {
     {
       title: "Hành động",
       key: "action",
-      width: "10%",
+      width: "15%",
       render: (_, record) => (
         <Space size="middle">
+          <CustomButton
+            type="default"
+            size="small"
+            onClick={() => handleView(record)}
+          >
+            Xem
+          </CustomButton>
           <CustomButton
             type="primary"
             size="small"
@@ -507,6 +560,16 @@ const KoiFishManagement = () => {
       });
     }
   }, [selectedKoi, isModalOpen, form]);
+
+  // Thêm effect để kiểm tra và hiển thị cảnh báo khi thay đổi màu sắc
+  useEffect(() => {
+    if (colorFields.length > 0) {
+      const totalPercentage = calculateTotalPercentage(colorFields);
+      if (totalPercentage > 100) {
+        message.warning("Tổng phần trăm màu sắc đang vượt quá 100%");
+      }
+    }
+  }, [colorFields]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -569,7 +632,7 @@ const KoiFishManagement = () => {
       >
         <div className="p-4">
           <KoiFishForm
-            form={form}
+            form={selectedKoi ? editForm : form}
             initialData={selectedKoi}
             colorFields={colorFields}
             setColorFields={setColorFields}
@@ -582,7 +645,7 @@ const KoiFishManagement = () => {
             <CustomButton onClick={handleCloseModal}>Hủy bỏ</CustomButton>
             <CustomButton
               type="primary"
-              onClick={handleSave}
+              onClick={selectedKoi ? handleSave : handleSave}
               loading={modalLoading}
             >
               {selectedKoi ? "Cập nhật" : "Tạo mới"}
@@ -640,6 +703,91 @@ const KoiFishManagement = () => {
             </CustomButton>
           </div>
         </div>
+      </Modal>
+
+      {/* Thêm Modal xem chi tiết cá Koi */}
+      <Modal
+        title={`Chi tiết cá ${viewKoi?.varietyName || ""}`}
+        open={isViewModalVisible}
+        onCancel={handleViewCancel}
+        footer={[
+          <CustomButton key="close" onClick={handleViewCancel}>
+            Đóng
+          </CustomButton>
+        ]}
+        width={700}
+      >
+        {viewKoi && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              {viewKoi.imageUrl && (
+                <img
+                  src={viewKoi.imageUrl}
+                  alt={viewKoi.varietyName}
+                  className="max-h-[300px] w-full object-cover rounded-lg mx-auto shadow-lg"
+                />
+              )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">ID Cá</p>
+                <p className="text-base font-medium text-gray-800">{viewKoi.id}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Giống cá</p>
+                <p className="text-base font-medium text-gray-800">{viewKoi.varietyName}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Giới thiệu</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {viewKoi.introduction || viewKoi.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả chi tiết</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {viewKoi.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Màu sắc</p>
+                <div className="bg-gray-50 p-4 rounded">
+                  {!viewKoi.varietyColors || viewKoi.varietyColors.length === 0 ? (
+                    <p className="text-gray-700">Không có dữ liệu màu sắc</p>
+                  ) : (
+                    <ul className="space-y-2">
+                      {viewKoi.varietyColors.map((color, index) => (
+                        <li key={index} className="flex items-center text-gray-700">
+                          <span className="mr-2">•</span>
+                          <span>
+                            {color.colorName || color.color?.colorName || "Không tên"}:{" "}
+                            {color.percentage}%
+                            <span className="ml-2 text-gray-500">
+                              ({color.element || color.color?.element || "Không xác định"})
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                      {viewKoi.totalPercentage > 0 && (
+                        <li className="flex items-center font-medium text-gray-800 mt-2 pt-2 border-t">
+                          <span className="mr-2">•</span>
+                          <span>Tổng: {viewKoi.totalPercentage}%</span>
+                        </li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
 
       <style jsx global>{`

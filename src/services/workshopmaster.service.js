@@ -353,29 +353,56 @@ export const formatWorkshopsData = (workshopsData) => {
     // Xử lý URL hình ảnh
     let imageUrl = "https://via.placeholder.com/400x300?text=Workshop+Image";
 
-    if (workshop.image) {
-      // Nếu image đã là URL đầy đủ thì giữ nguyên
-      if (workshop.image.startsWith("http")) {
-        imageUrl = workshop.image;
+    // In ra dữ liệu hình ảnh từ API để debug
+    console.log(`Workshop ${workshop.workshopId} raw image data:`, {
+      imageUrl: workshop.imageUrl,
+      image: workshop.image
+    });
+
+    // Ưu tiên kiểm tra trường imageUrl từ API
+    if (workshop.imageUrl) {
+      // Nếu là URL Cloudinary hoặc URL đầy đủ khác, sử dụng nguyên URL
+      if (workshop.imageUrl.startsWith("http")) {
+        imageUrl = workshop.imageUrl;
+        console.log(`Workshop ${workshop.workshopId}: Sử dụng imageUrl đầy đủ:`, imageUrl);
       } else {
         // Nếu là đường dẫn tương đối, thêm base URL
-        imageUrl = `http://localhost:5261/${workshop.image.replace(
-          /^\/?/,
-          ""
-        )}`;
+        imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(/^\//, "")}`;
+        console.log(`Workshop ${workshop.workshopId}: Chuyển đổi imageUrl tương đối:`, imageUrl);
       }
     }
+    // Sau đó mới kiểm tra trường image
+    else if (workshop.image) {
+      if (workshop.image.startsWith("http")) {
+        imageUrl = workshop.image;
+        console.log(`Workshop ${workshop.workshopId}: Sử dụng image đầy đủ:`, imageUrl);
+      } else {
+        // Nếu là đường dẫn tương đối, thêm base URL
+        imageUrl = `http://localhost:5261/${workshop.image.replace(/^\//, "")}`;
+        console.log(`Workshop ${workshop.workshopId}: Chuyển đổi image tương đối:`, imageUrl);
+      }
+    }
+    
+    console.log(`Workshop ${workshop.workshopId}: Final Image URL = ${imageUrl}`);
 
     return {
       id: workshop.workshopId,
+      workshopId: workshop.workshopId, // Thêm trường workshopId để đảm bảo tương thích
       name: workshop.workshopName,
       location: workshop.location,
       date: new Date(workshop.startDate).toLocaleDateString("vi-VN"),
+      startDate: workshop.startDate, // Giữ nguyên startDate
+      endDate: workshop.endDate, // Giữ nguyên endDate nếu có
       image: imageUrl,
+      imageUrl: imageUrl, // Đảm bảo cả hai trường đều có giá trị
+      price: workshop.price, // Giữ nguyên giá trị số
+      capacity: workshop.capacity, // Giữ nguyên giá trị số
       ticketPrice: `${workshop.price.toLocaleString("vi-VN")} VND`,
       ticketSlots: workshop.capacity,
       status: mapWorkshopStatus(workshop.status),
       description: workshop.description || "",
+      content: workshop.content || "", // Thêm trường content nếu có
+      masterName: workshop.masterName || ""
     };
   });
 };

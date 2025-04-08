@@ -22,7 +22,8 @@ const KoiFishService = {
         // Cấu trúc API mới: { isSuccess: true, responseCode: "Success", statusCode: 200, data: [...] }
         return response.data.data.map((item) => ({
           id: item.koiVarietyId || item.id || "unknown-id",
-          varietyName: item.varietyName || "Không có tên",
+          // Hỗ trợ cả name và varietyName từ API
+          varietyName: item.varietyName || item.name || "Không có tên",
           description: item.description || null,
           introduction: item.introduction || item.description || null,
           imageUrl: item.imageUrl || null,
@@ -63,35 +64,33 @@ const KoiFishService = {
         const item = response.data.data;
         console.log("Dữ liệu gốc từ API:", item);
 
-        // Check varietyColors structure
-        if (item.varietyColors) {
-          console.log("Cấu trúc varietyColors gốc:", item.varietyColors);
+        // Khởi tạo mảng màu sắc mặc định nếu API không trả về
+        let varietyColors = [];
+        
+        // Kiểm tra nếu có dữ liệu màu sắc từ API
+        if (Array.isArray(item.varietyColors) && item.varietyColors.length > 0) {
+          console.log("API trả về dữ liệu màu sắc:", item.varietyColors);
+          varietyColors = item.varietyColors.map((colorItem) => {
+            return {
+              percentage: colorItem.percentage || 0,
+              colorName: colorItem.color?.colorName || colorItem.colorName || "",
+              element: colorItem.color?.element || colorItem.element || "",
+              colorId: colorItem.color?.colorId || colorItem.colorId || "",
+            };
+          });
+        } else {
+          console.log("API không trả về dữ liệu màu sắc, sử dụng mảng trống");
         }
 
         // Đảm bảo dữ liệu hợp lệ trước khi trả về
         const processedData = {
           id: item.koiVarietyId || item.id || "unknown-id",
-          varietyName: item.varietyName || "Không có tên",
+          // Hỗ trợ cả name và varietyName từ API
+          varietyName: item.varietyName || item.name || "Không có tên",
           description: item.description || null,
           introduction: item.introduction || item.description || null,
           imageUrl: item.imageUrl || null,
-          varietyColors: Array.isArray(item.varietyColors)
-            ? item.varietyColors.map((colorItem) => {
-                // Xử lý cấu trúc dữ liệu mới với color là một đối tượng con
-                console.log("Xử lý item màu:", colorItem);
-
-                const colorData = {
-                  percentage: colorItem.percentage || 0,
-                  colorName:
-                    colorItem.color?.colorName || colorItem.colorName || "",
-                  element: colorItem.color?.element || colorItem.element || "",
-                  colorId: colorItem.color?.colorId || colorItem.colorId || "",
-                };
-
-                console.log("Sau khi xử lý:", colorData);
-                return colorData;
-              })
-            : [],
+          varietyColors: varietyColors,
           totalPercentage: item.totalPercentage || 0,
           compatibilityScore: item.compatibilityScore || 0,
         };
@@ -233,26 +232,33 @@ const KoiFishService = {
       }
 
       // Xử lý mảng VarietyColors (nếu có)
-      // Nếu không có màu sắc hoặc mảng trống, gửi một mảng JSON rỗng
       let colorsJson = "[]";
 
-      if (
-        koiFishData.varietyColors &&
-        Array.isArray(koiFishData.varietyColors) &&
-        koiFishData.varietyColors.length > 0
-      ) {
-        // Chuyển đổi dữ liệu màu sắc theo định dạng API yêu cầu
-        const colorsData = koiFishData.varietyColors
-          .filter((color) => color.colorId || color.name) // Chỉ giữ lại những màu có colorId hoặc name
-          .map((color) => ({
-            colorId: color.colorId || "",
-            percentage: color.percentage || Math.round(color.value * 100) || 0,
+      // Kiểm tra dữ liệu màu sắc chi tiết
+      if (koiFishData.varietyColors && Array.isArray(koiFishData.varietyColors)) {
+        console.log("Dữ liệu màu sắc gốc:", koiFishData.varietyColors);
+        
+        // Lọc chỉ các màu có colorId và percentage hợp lệ
+        const validColors = koiFishData.varietyColors.filter(
+          (color) => color.colorId && color.colorId.trim() !== ""
+        );
+        
+        console.log("Màu sắc hợp lệ sau khi lọc:", validColors);
+        
+        if (validColors.length > 0) {
+          // Đơn giản hóa đối tượng màu theo yêu cầu của API
+          const formattedColors = validColors.map((color) => ({
+            colorId: color.colorId,
+            percentage: Math.round(color.percentage || color.value * 100 || 0)
           }));
-
-        // Nếu vẫn có dữ liệu sau khi lọc
-        if (colorsData.length > 0) {
-          colorsJson = JSON.stringify(colorsData);
+          
+          colorsJson = JSON.stringify(formattedColors);
+          console.log("Dữ liệu JSON màu sắc:", colorsJson);
+        } else {
+          console.log("Không có màu sắc hợp lệ sau khi lọc");
         }
+      } else {
+        console.log("Không tìm thấy dữ liệu màu sắc trong form");
       }
 
       // Luôn gửi VarietyColorsJson, ngay cả khi là mảng rỗng
@@ -271,9 +277,13 @@ const KoiFishService = {
         );
       }
 
+      // Xây dựng URL endpoint đúng - quay lại dùng URL cũ
+      const updateUrl = `http://localhost:5261/api/KoiVariety/${id}`;
+      console.log("Gửi request PUT đến:", updateUrl);
+
       // Gửi request với Content-Type là multipart/form-data
       const response = await axios.put(
-        `http://localhost:5261/api/KoiVariety/${id}`,
+        updateUrl,
         formData,
         {
           headers: {
@@ -291,14 +301,24 @@ const KoiFishService = {
         console.error("Server response data:", error.response.data);
         console.error("Server response status:", error.response.status);
         console.error("Server response headers:", error.response.headers);
+        
+        // Hiển thị thông báo lỗi chi tiết nếu có
+        const errorMessage = 
+          error.response.data?.message || 
+          error.response.data?.title || 
+          error.message || 
+          "Lỗi khi cập nhật cá Koi";
+        
+        throw new Error(errorMessage);
       } else if (error.request) {
         // Request đã được tạo nhưng không nhận được response
         console.error("No response received:", error.request);
+        throw new Error("Không nhận được phản hồi từ máy chủ");
       } else {
         // Có lỗi khi thiết lập request
         console.error("Request error:", error.message);
+        throw error;
       }
-      throw error;
     }
   },
 
