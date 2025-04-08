@@ -38,6 +38,7 @@ const PondCard = ({
   koiPondId,
   imageUrl,
   onImageUpdate,
+  onView,
 }) => {
   return (
     <Card className="h-full">
@@ -80,15 +81,23 @@ const PondCard = ({
           </p>
         </div>
         <div className="border-t pt-2">
-          <div className="flex items-center mt-2">
-            <CustomButton
-              type="primary"
-              className="mr-2"
-              onClick={onUpdate}
-              size="small"
-            >
-              Cập nhật
-            </CustomButton>
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex gap-2">
+              <CustomButton
+                type="default"
+                onClick={onView}
+                size="small"
+              >
+                Xem
+              </CustomButton>
+              <CustomButton
+                type="primary"
+                onClick={onUpdate}
+                size="small"
+              >
+                Cập nhật
+              </CustomButton>
+            </div>
             <span className="cursor-pointer" onClick={onDelete}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -213,6 +222,10 @@ const KoiPondManagement = () => {
 
   // Thêm state cho việc loading hình dạng hồ
   const [loadingShapes, setLoadingShapes] = useState(true);
+
+  // Thêm state cho modal xem chi tiết hồ
+  const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewPond, setViewPond] = useState(null);
 
   // Lấy danh sách hồ cá khi component được mount
   useEffect(() => {
@@ -743,6 +756,16 @@ const KoiPondManagement = () => {
     }
   };
 
+  const handleView = (pondType) => {
+    setViewPond(pondType);
+    setIsViewModalVisible(true);
+  };
+
+  const handleViewCancel = () => {
+    setIsViewModalVisible(false);
+    setViewPond(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -793,6 +816,7 @@ const KoiPondManagement = () => {
                     koiPondId={pondType.koiPondId}
                     imageUrl={pondType.imageUrl}
                     onImageUpdate={() => handleImageUpdate(pondType)}
+                    onView={() => handleView(pondType)}
                   />
                 </Col>
               ))
@@ -841,11 +865,17 @@ const KoiPondManagement = () => {
             rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
             <div className="shape-select">
-              <select className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200">
-                <option value="">-- Chọn hình dạng hồ --</option>
+              <select 
+                className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200"
+                defaultValue={selectedPond?.shapeId}
+              >
                 {pondShapes && pondShapes.length > 0 ? (
                   pondShapes.map((shape) => (
-                    <option key={shape.shapeId} value={shape.shapeId}>
+                    <option 
+                      key={shape.shapeId} 
+                      value={shape.shapeId}
+                      selected={selectedPond?.shapeId === shape.shapeId}
+                    >
                       {shape.shapeName}
                     </option>
                   ))
@@ -1038,6 +1068,66 @@ const KoiPondManagement = () => {
             </div>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Modal xem chi tiết hồ cá */}
+      <Modal
+        title={`Chi tiết hồ ${viewPond?.pondName || ""}`}
+        open={isViewModalVisible}
+        onCancel={handleViewCancel}
+        footer={[
+          <CustomButton key="close" onClick={handleViewCancel}>
+            Đóng
+          </CustomButton>
+        ]}
+        width={700}
+      >
+        {viewPond && (
+          <div className="space-y-6">
+            <div className="text-center mb-8">
+              {viewPond.imageUrl && (
+                <img
+                  src={viewPond.imageUrl}
+                  alt={viewPond.pondName}
+                  className="max-h-[300px] w-full object-cover rounded-lg mx-auto shadow-lg"
+                />
+              )}
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">ID Hồ</p>
+                <p className="text-base font-medium text-gray-800">{viewPond.koiPondId}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Tên hồ</p>
+                <p className="text-base font-medium text-gray-800">{viewPond.pondName}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Hình dạng</p>
+                <p className="text-base font-medium text-gray-800">{viewPond.shapeName}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Giới thiệu</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {viewPond.introduction}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả chi tiết</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {viewPond.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Thêm style cho modal xác nhận xóa */}

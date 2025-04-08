@@ -270,26 +270,31 @@ const ConsultationPackage = () => {
       title: "Mã gói",
       dataIndex: "consultationPackageId",
       key: "consultationPackageId",
-      width: 180,
+      width: 160,
+      ellipsis: true,
       render: (text) => <span className="font-mono text-xs">{text}</span>,
     },
     {
       title: "Tên gói",
       dataIndex: "packageName",
       key: "packageName",
-      width: 200,
+      width: 160,
+      ellipsis: true,
     },
     {
       title: "Giá tối thiểu",
       dataIndex: "minPrice",
       key: "minPrice",
-      width: 150,
+      width: 130,
+      align: "left",
       render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
     },
     {
       title: "Giá tối đa",
       dataIndex: "maxPrice",
       key: "maxPrice",
+      width: 130,
+      align: "left",
       render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
     },
     {
@@ -297,51 +302,62 @@ const ConsultationPackage = () => {
       dataIndex: "description",
       key: "description",
       ellipsis: true,
+      width: 300,
+      render: (text) => (
+        <div className="truncate max-w-full" title={text}>
+          {text}
+        </div>
+      ),
     },
     {
       title: "Hành động",
       key: "action",
-      width: 120,
+      width: 220,
+      align: "left",
+      fixed: "right",
       render: (_, record) => (
         <Space size="small">
-          <Tooltip title="Xem chi tiết">
-            <Button
-              icon={<EyeOutlined />}
-              size="small"
-              onClick={() => handleViewDetails(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Chỉnh sửa">
-            <Button
+          <CustomButton
+            type="default"
+            size="small"
+            onClick={() => handleViewDetails(record)}
+          >
+            Xem
+          </CustomButton>
+          <CustomButton
+            type="primary"
+            size="small"
+            onClick={() => handleEdit(record)}
+          >
+            Chỉnh sửa
+          </CustomButton>
+          <Popconfirm
+            title={
+              <div>
+                <p>Bạn có chắc chắn muốn xóa gói tư vấn này?</p>
+                <p className="text-xs mt-2 font-mono text-gray-500">
+                  ID: {record.consultationPackageId}
+                </p>
+                <p className="text-xs font-mono text-gray-500">
+                  Tên: {record.packageName}
+                </p>
+              </div>
+            }
+            onConfirm={() => {
+              console.log("Xác nhận xóa gói tư vấn:", record);
+              handleDelete(record.consultationPackageId);
+            }}
+            okText="Có"
+            cancelText="Không"
+          >
+            <CustomButton
+              danger
               type="primary"
-              icon={<EditOutlined />}
               size="small"
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Xóa">
-            <Popconfirm
-              title={
-                <div>
-                  <p>Bạn có chắc chắn muốn xóa gói tư vấn này?</p>
-                  <p className="text-xs mt-2 font-mono text-gray-500">
-                    ID: {record.consultationPackageId}
-                  </p>
-                  <p className="text-xs font-mono text-gray-500">
-                    Tên: {record.packageName}
-                  </p>
-                </div>
-              }
-              onConfirm={() => {
-                console.log("Xác nhận xóa gói tư vấn:", record);
-                handleDelete(record.consultationPackageId);
-              }}
-              okText="Có"
-              cancelText="Không"
             >
-              <Button danger icon={<DeleteOutlined />} size="small" />
-            </Popconfirm>
-          </Tooltip>
+              Xóa
+            </CustomButton>
+          </Popconfirm>
         </Space>
       ),
     },
@@ -359,10 +375,10 @@ const ConsultationPackage = () => {
         <div className="flex justify-between items-center mb-4">
           <CustomButton
             type="primary"
-            icon={<PlusOutlined />}
             onClick={handleAddNew}
+            className="flex items-center"
           >
-            Thêm gói tư vấn mới
+            <span className="mr-1">+</span> Thêm gói tư vấn mới
           </CustomButton>
 
           <div className="w-75">
@@ -384,27 +400,33 @@ const ConsultationPackage = () => {
               showSizeChanger: true,
               pageSizeOptions: ["10", "20", "50"],
             }}
+            scroll={{ x: 1100 }}
+            bordered
           />
         </Card>
       </div>
 
       {/* Modal for Add/Edit Package */}
       <Modal
-        title={isEditMode ? "Chỉnh sửa gói tư vấn" : "Tạo gói tư vấn mới"}
+        title={
+          <div className="text-xl font-semibold">
+            {isEditMode ? "Chỉnh sửa gói tư vấn" : "Tạo gói tư vấn mới"}
+          </div>
+        }
         open={isModalVisible}
         onCancel={handleCancel}
         footer={[
           <Button key="back" onClick={handleCancel}>
             Hủy
           </Button>,
-          <Button
+          <CustomButton
             key="submit"
             type="primary"
             onClick={handleSubmit}
             loading={modalLoading}
           >
             {isEditMode ? "Cập nhật" : "Tạo mới"}
-          </Button>,
+          </CustomButton>,
         ]}
         width={800}
       >
@@ -580,105 +602,85 @@ const ConsultationPackage = () => {
         </Form>
       </Modal>
 
-      {/* Modal for View Package Details */}
+      {/* View Detail Modal */}
       <Modal
-        title="Chi tiết gói tư vấn"
+        title={
+          <div className="text-xl font-semibold">
+            Chi tiết gói tư vấn: {currentPackage?.packageName}
+          </div>
+        }
         open={isViewModalVisible}
         onCancel={handleViewModalClose}
         footer={[
-          <Button key="back" onClick={handleViewModalClose}>
+          <CustomButton key="close" onClick={handleViewModalClose}>
             Đóng
-          </Button>,
-          <Button
-            key="edit"
-            type="primary"
-            onClick={() => {
-              setIsViewModalVisible(false);
-              handleEdit(currentPackage);
-            }}
-          >
-            Chỉnh sửa
-          </Button>,
+          </CustomButton>,
         ]}
-        width={700}
+        width={800}
       >
         {currentPackage && (
-          <div className="mt-4">
-            <Row gutter={[16, 16]}>
-              <Col span={24}>
-                <div className="bg-blue-50 p-4 rounded-md mb-4">
-                  <Title level={4} className="m-0">
-                    {currentPackage.packageName}
-                  </Title>
-                  <Text type="secondary">
-                    Mã gói: {currentPackage.consultationPackageId}
-                  </Text>
-                </div>
-              </Col>
-
-              <Col span={12}>
-                <Card title="Thông tin giá" className="h-full">
-                  <p>
-                    <Text strong>Giá tối thiểu:</Text>{" "}
-                    {currentPackage.minPrice.toLocaleString("vi-VN")} đ
-                  </p>
-                  <p>
-                    <Text strong>Giá tối đa:</Text>{" "}
-                    {currentPackage.maxPrice.toLocaleString("vi-VN")} đ
-                  </p>
-                  <div className="mt-4">
-                    <Text strong>Chi tiết giá:</Text>
-                    <p className="whitespace-pre-wrap mt-1">
-                      {currentPackage.pricingDetails}
-                    </p>
-                  </div>
-                </Card>
-              </Col>
-
-              <Col span={12}>
-                <Card title="Đối tượng & Yêu cầu" className="h-full">
-                  <div className="mb-4">
-                    <Text strong>Phù hợp với:</Text>
-                    <p className="whitespace-pre-wrap mt-1">
-                      {currentPackage.suitableFor}
-                    </p>
-                  </div>
-                  <div>
-                    <Text strong>Thông tin cần thiết:</Text>
-                    <p className="whitespace-pre-wrap mt-1">
-                      {currentPackage.requiredInfo}
-                    </p>
-                  </div>
-                </Card>
-              </Col>
-
-              <Col span={24}>
-                <Card title="Mô tả chi tiết">
-                  <p className="whitespace-pre-wrap">
-                    {currentPackage.description}
-                  </p>
-                </Card>
-              </Col>
-
+          <div className="space-y-6">
+            <div className="text-center mb-8">
               {currentPackage.imageUrl && (
-                <Col span={24} className="mt-4">
-                  <Card title="Hình ảnh">
-                    <div className="flex justify-center">
-                      <img
-                        src={currentPackage.imageUrl}
-                        alt={currentPackage.packageName}
-                        className="max-w-full h-auto max-h-64 rounded-md"
-                        onError={(e) => {
-                          console.error("Lỗi tải hình ảnh:", e);
-                          e.target.src =
-                            "https://placehold.co/400x300?text=Không+tải+được+ảnh";
-                        }}
-                      />
-                    </div>
-                  </Card>
-                </Col>
+                <img
+                  src={currentPackage.imageUrl}
+                  alt={currentPackage.packageName}
+                  className="max-h-[250px] w-full object-contain rounded-lg mx-auto"
+                />
               )}
-            </Row>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Mã gói</p>
+                <p className="text-base font-medium text-gray-800">{currentPackage.consultationPackageId}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Tên gói</p>
+                <p className="text-base font-medium text-gray-800">{currentPackage.packageName}</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá tối thiểu</p>
+                <p className="text-base font-medium text-gray-800">{currentPackage.minPrice?.toLocaleString('vi-VN')} đ</p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá tối đa</p>
+                <p className="text-base font-medium text-gray-800">{currentPackage.maxPrice?.toLocaleString('vi-VN')} đ</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Phù hợp với</p>
+                <p className="text-base text-gray-700 leading-relaxed bg-gray-50 p-4 rounded">
+                  {currentPackage.suitableFor}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {currentPackage.description}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Thông tin cần thiết</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {currentPackage.requiredInfo}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Chi tiết giá</p>
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                  {currentPackage.pricingDetails}
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </Modal>

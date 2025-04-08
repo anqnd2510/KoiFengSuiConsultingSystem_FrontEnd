@@ -185,7 +185,24 @@ const Workshop = () => {
     try {
       setLoading(true);
       const data = await getAllWorkshops();
+      console.log("Dữ liệu gốc từ getAllWorkshops:", data);
+
+      // In ra thông tin hình ảnh từ dữ liệu gốc
+      if (Array.isArray(data)) {
+        data.forEach(workshop => {
+          console.log(`Workshop ${workshop.workshopId} từ API - image: ${workshop.image}, imageUrl: ${workshop.imageUrl}`);
+        });
+      }
+
       const formattedData = formatWorkshopsData(data);
+      console.log("Dữ liệu đã format từ getAllWorkshops:", formattedData);
+      
+      // In ra thông tin hình ảnh sau khi format
+      if (Array.isArray(formattedData)) {
+        formattedData.forEach(workshop => {
+          console.log(`Workshop ${workshop.id} sau format - image: ${workshop.image}, imageUrl: ${workshop.imageUrl}`);
+        });
+      }
 
       // Lọc các workshop đã bị từ chối
       const rejected = formattedData.filter(
@@ -224,7 +241,15 @@ const Workshop = () => {
     try {
       setLoading(true);
       const data = await getPendingWorkshops();
+      
+      // Log dữ liệu gốc từ API
+      console.log("Dữ liệu gốc từ getPendingWorkshops:", data);
+      
       const formattedData = formatPendingWorkshopsData(data);
+      
+      // Log dữ liệu sau khi format
+      console.log("Dữ liệu sau khi format:", formattedData);
+      
       setPendingWorkshops(formattedData);
       setPendingTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
     } catch (err) {
@@ -260,18 +285,34 @@ const Workshop = () => {
     setIsCreateModalOpen(false);
   };
 
-  const handleViewWorkshop = async (workshop) => {
-    try {
-      setLoading(true);
-      // Không cần gọi API, sử dụng trực tiếp dữ liệu workshop đã có
-      setSelectedWorkshop(workshop);
-      setIsViewModalOpen(true);
-    } catch (err) {
-      console.error("Lỗi khi hiển thị chi tiết workshop:", err);
-      message.error("Không thể hiển thị thông tin chi tiết hội thảo");
-    } finally {
-      setLoading(false);
+  const handleViewWorkshop = (workshop) => {
+    console.log("Workshop data đầy đủ:", workshop);
+    
+    // Kiểm tra và in ra URL hình ảnh
+    let imageUrl = workshop.imageUrl || workshop.image || "";
+    console.log("Image URL gốc:", imageUrl);
+
+    // Nếu URL đã là URL đầy đủ (https://res.cloudinary.com hoặc bất kỳ URL http nào khác), 
+    // giữ nguyên không thay đổi
+    if (imageUrl && !imageUrl.startsWith("http")) {
+      // Chỉ thêm domain nếu đường dẫn là tương đối
+      imageUrl = `http://localhost:5261/${imageUrl.replace(/^\//, "")}`;
+      console.log("Image URL đã được chuyển đổi:", imageUrl);
+    } else {
+      console.log("Sử dụng URL đầy đủ:", imageUrl);
     }
+    
+    // Lưu trữ dữ liệu workshop và thêm imageUrl để hiển thị trong modal
+    const updatedWorkshop = {
+      ...workshop,
+      imageUrl: imageUrl
+    };
+    
+    console.log("Workshop data đã được xử lý:", updatedWorkshop);
+    
+    // Mở modal với dữ liệu workshop đã được cập nhật
+    setSelectedWorkshop(updatedWorkshop);
+    setIsViewModalOpen(true);
   };
 
   const handleCloseViewModal = () => {
@@ -564,7 +605,7 @@ const Workshop = () => {
 
       {/* Modal xem chi tiết workshop */}
       <Modal
-        title={<div className="text-xl font-semibold">Chi tiết hội thảo</div>}
+        title={<div className="text-xl font-semibold">{selectedWorkshop?.name || "Chi tiết hội thảo"}</div>}
         open={isViewModalOpen}
         onCancel={handleCloseViewModal}
         footer={null}
@@ -573,69 +614,97 @@ const Workshop = () => {
       >
         {selectedWorkshop && (
           <div className="p-4">
-            <Row gutter={[24, 24]}>
-              {/* Cột bên trái cho hình ảnh */}
-              <Col xs={24} md={12}>
-                <div className="rounded-lg overflow-hidden h-64 bg-gray-200 mb-4">
-                  <img
-                    src={selectedWorkshop.image}
-                    alt={selectedWorkshop.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://via.placeholder.com/400x300?text=Workshop+Image";
-                    }}
-                  />
+            <div className="text-center mb-8">
+              {selectedWorkshop.imageUrl ? (
+                <img
+                  src={selectedWorkshop.imageUrl}
+                  alt={selectedWorkshop.name}
+                  className="max-h-[300px] w-auto mx-auto object-contain rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.error("Lỗi tải hình ảnh:", e);
+                    console.log("URL hình ảnh bị lỗi:", selectedWorkshop.imageUrl);
+                    e.target.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_15ba800aa21%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AHelvetica%2C%20monospace%3Bfont-size%3A40pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_15ba800aa21%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23E5E5E5%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22277%22%20y%3D%22217.7%22%3EKh%C3%B4ng%20c%C3%B3%20h%C3%ACnh%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E";
+                  }}
+                />
+              ) : (
+                <div className="bg-gray-100 h-[200px] rounded-lg flex items-center justify-center text-gray-400">
+                  <span>Không có hình ảnh</span>
                 </div>
-                <Tag
-                  color={getStatusColor(selectedWorkshop.status)}
-                  className="text-sm px-3 py-1"
-                >
-                  {selectedWorkshop.status}
-                </Tag>
-              </Col>
+              )}
+            </div>
+            
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">{selectedWorkshop.name}</h3>
+              <Tag
+                color={getStatusColor(selectedWorkshop.status)}
+                className="text-sm px-3 py-1"
+              >
+                {selectedWorkshop.status}
+              </Tag>
+            </div>
 
-              {/* Cột bên phải cho thông tin */}
-              <Col xs={24} md={12}>
-                <h3 className="text-xl font-semibold mb-4">
-                  {selectedWorkshop.name}
-                </h3>
+            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg mb-6">
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Ngày tổ chức</p>
+                <p className="text-base font-medium text-gray-800 flex items-center">
+                  <Calendar size={16} className="mr-2 text-gray-500" />
+                  {selectedWorkshop.date}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Địa điểm</p>
+                <p className="text-base font-medium text-gray-800 flex items-center">
+                  <MapPin size={16} className="mr-2 text-gray-500" />
+                  {selectedWorkshop.location}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá vé</p>
+                <p className="text-base font-medium text-gray-800 flex items-center">
+                  <Ticket size={16} className="mr-2 text-gray-500" />
+                  {typeof selectedWorkshop.price === 'number' 
+                    ? selectedWorkshop.price.toLocaleString("vi-VN") + " VND" 
+                    : (selectedWorkshop.ticketPrice || "Chưa có thông tin")}
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Số lượng vé</p>
+                <p className="text-base font-medium text-gray-800 flex items-center">
+                  <Info size={16} className="mr-2 text-gray-500" />
+                  {selectedWorkshop.capacity !== undefined ? selectedWorkshop.capacity : (
+                    selectedWorkshop.ticketSlots || "Chưa có thông tin"
+                  )}
+                </p>
+              </div>
 
-                <div className="mb-3 flex items-center">
-                  <Calendar size={16} className="text-gray-500 mr-2" />
-                  <span>{selectedWorkshop.date}</span>
+              {selectedWorkshop.masterName && (
+                <div className="space-y-2 col-span-2">
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">Master phụ trách</p>
+                  <p className="text-base font-medium text-gray-800">
+                    {selectedWorkshop.masterName}
+                  </p>
                 </div>
-
-                <div className="mb-3 flex items-center">
-                  <MapPin size={16} className="text-gray-500 mr-2" />
-                  <span>{selectedWorkshop.location}</span>
-                </div>
-
-                <div className="mb-3 flex items-center">
-                  <Ticket size={16} className="text-gray-500 mr-2" />
-                  <span>Giá vé: {selectedWorkshop.ticketPrice}</span>
-                </div>
-
-                <div className="mb-3 flex items-center">
-                  <Info size={16} className="text-gray-500 mr-2" />
-                  <span>Số lượng vé: {selectedWorkshop.ticketSlots}</span>
-                </div>
-              </Col>
-            </Row>
-
-            <Divider className="my-4" />
+              )}
+            </div>
 
             {/* Phần mô tả */}
             {selectedWorkshop.description && (
-              <div className="mb-4">
-                <h4 className="text-md font-medium mb-2">Mô tả hội thảo</h4>
-                <p className="text-gray-600">{selectedWorkshop.description}</p>
+              <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
+                <div>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả hội thảo</p>
+                  <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                    {selectedWorkshop.description}
+                  </p>
+                </div>
               </div>
             )}
 
             {/* Hiển thị lý do từ chối nếu workshop bị từ chối */}
             {selectedWorkshop.status === "Từ chối" && (
-              <div className="mb-4">
+              <div className="mt-6 bg-red-50 p-4 rounded-lg border border-red-100">
                 <h4 className="text-md font-medium mb-2 text-red-500">
                   Lý do từ chối
                 </h4>
@@ -648,10 +717,10 @@ const Workshop = () => {
                     if (rejectionInfo && rejectionInfo.reason) {
                       return (
                         <div>
-                          <p className="text-gray-600">
+                          <p className="text-gray-700">
                             {rejectionInfo.reason}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-gray-500 mt-1">
                             Từ chối vào:{" "}
                             {new Date(rejectionInfo.timestamp).toLocaleString(
                               "vi-VN"
