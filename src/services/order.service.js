@@ -137,3 +137,39 @@ export const getOrderById = async (orderId) => {
   }
 };
 
+/**
+ * Lấy danh sách đơn hàng chờ hoàn tiền
+ * @returns {Promise<Object>} Promise chứa danh sách đơn hàng chờ hoàn tiền
+ * @throws {Error} Lỗi khi không thể lấy danh sách đơn hàng
+ */
+export const getWaitingForRefundOrders = async () => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('Vui lòng đăng nhập lại');
+    }
+
+    const config = {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    };
+
+    const response = await apiClient.get(`${ORDER_ENDPOINT}/get-waitingForRefund-order`, config);
+    
+    if (response.data && response.data.isSuccess) {
+      return response.data;
+    } else {
+      throw new Error(response.data?.message || 'Không có dữ liệu trả về');
+    }
+  } catch (error) {
+    console.error("Error in getWaitingForRefundOrders:", error);
+    if (error.response?.status === 401) {
+      throw new Error('Vui lòng đăng nhập lại');
+    }
+    throw new Error(
+      error.response?.data?.message || "Không thể tải danh sách đơn hàng chờ hoàn tiền"
+    );
+  }
+};
+

@@ -245,7 +245,7 @@ const WorkshopCheck = () => {
       <div className="p-6">
         <div className="bg-white rounded-lg shadow">
           <div className="flex justify-between items-center p-4">
-            <BackButton to="/staff/workshop-staff" />
+            <BackButton to="/manager/workshop-list" />
             <div className="flex items-center gap-4">
               <SearchBar onSearch={handleSearch} />
             </div>

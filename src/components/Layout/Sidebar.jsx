@@ -191,6 +191,12 @@ const menuItems = [
     path: "/manager/order",
     roles: ["manager"],
   },
+  {
+    icon: ClipboardList,
+    label: "Quản lý hoàn trả",
+    path: "/manager/refund",
+    roles: ["manager"],
+  },
 ];
 
 const Sidebar = () => {
