@@ -149,33 +149,6 @@ const ConsultationPackage = () => {
     setIsModalVisible(true);
   };
 
-  // Handle delete package
-  const handleDelete = async (id) => {
-    try {
-      console.log("Đang xóa gói tư vấn với ID:", id);
-
-      // Kiểm tra ID trước khi gửi request
-      if (!id) {
-        message.error("ID gói tư vấn không hợp lệ");
-        return;
-      }
-
-      // Gọi API xóa gói tư vấn
-      const response = await ConsultationPackageService.deletePackage(id);
-      console.log("Phản hồi từ API xóa:", response);
-
-      if (response && response.isSuccess) {
-        message.success(response.message || "Xóa gói tư vấn thành công");
-        fetchPackages();
-      } else {
-        throw new Error(response?.message || "Xóa gói tư vấn thất bại");
-      }
-    } catch (err) {
-      console.error("Error deleting package:", err);
-      message.error(err.message || "Đã xảy ra lỗi khi xóa gói tư vấn");
-    }
-  };
-
   // Handle add new package
   const handleAddNew = () => {
     setCurrentPackage(null);
@@ -331,33 +304,6 @@ const ConsultationPackage = () => {
           >
             Chỉnh sửa
           </CustomButton>
-          <Popconfirm
-            title={
-              <div>
-                <p>Bạn có chắc chắn muốn xóa gói tư vấn này?</p>
-                <p className="text-xs mt-2 font-mono text-gray-500">
-                  ID: {record.consultationPackageId}
-                </p>
-                <p className="text-xs font-mono text-gray-500">
-                  Tên: {record.packageName}
-                </p>
-              </div>
-            }
-            onConfirm={() => {
-              console.log("Xác nhận xóa gói tư vấn:", record);
-              handleDelete(record.consultationPackageId);
-            }}
-            okText="Có"
-            cancelText="Không"
-          >
-            <CustomButton
-              danger
-              type="primary"
-              size="small"
-            >
-              Xóa
-            </CustomButton>
-          </Popconfirm>
         </Space>
       ),
     },

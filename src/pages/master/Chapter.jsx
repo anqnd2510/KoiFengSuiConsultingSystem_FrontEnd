@@ -41,7 +41,7 @@ import axios from "axios";
 const { TextArea } = Input;
 
 // Form component cho chương
-const ChapterForm = ({ form, loading }) => {
+const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) => {
   return (
     <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
@@ -75,6 +75,21 @@ const ChapterForm = ({ form, loading }) => {
         />
       </Form.Item>
 
+      {isUpdate && currentVideo && (
+        <div className="mb-4">
+          <div className="text-sm font-medium mb-2">Video hiện tại:</div>
+          <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+            <video
+              src={currentVideo}
+              controls
+              className="w-full h-full object-contain"
+            >
+              Trình duyệt của bạn không hỗ trợ video.
+            </video>
+          </div>
+        </div>
+      )}
+
       <Form.Item
         label="Video"
         name="video"
@@ -85,7 +100,12 @@ const ChapterForm = ({ form, loading }) => {
           }
           return e?.fileList;
         }}
-        rules={[{ required: true, message: "Vui lòng tải lên file video" }]}
+        rules={[
+          {
+            required: !isUpdate,
+            message: "Vui lòng tải lên file video"
+          }
+        ]}
       >
         <Upload
           listType="picture"
@@ -93,15 +113,10 @@ const ChapterForm = ({ form, loading }) => {
           beforeUpload={() => false}
           accept="video/*"
         >
-          <CustomButton icon={<Video size={16} />}>Tải lên video</CustomButton>
+          <CustomButton icon={<Video size={16} />}>
+            {isUpdate ? "Cập nhật video mới" : "Tải lên video"}
+          </CustomButton>
         </Upload>
-      </Form.Item>
-
-      <Form.Item label="Nội dung chi tiết" name="content">
-        <TextArea
-          placeholder="Nhập nội dung chi tiết chương (không bắt buộc)"
-          autoSize={{ minRows: 4, maxRows: 10 }}
-        />
       </Form.Item>
     </Form>
   );
@@ -577,21 +592,17 @@ const Chapter = () => {
       );
     }
 
-    // Xử lý các trường hợp khác hoặc URL không hỗ trợ
+    // Xử lý video trực tiếp
     return (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-lg">
-        <a
-          href={videoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500"
-        >
-          <div className="flex flex-col items-center">
-            <Video size={48} className="mb-2" />
-            <span>Mở video trong tab mới</span>
-          </div>
-        </a>
-      </div>
+      <video
+        className="w-full h-full rounded-lg"
+        controls
+        controlsList="nodownload"
+        src={videoUrl}
+      >
+        <source src={videoUrl} type="video/mp4" />
+        Trình duyệt của bạn không hỗ trợ thẻ video.
+      </video>
     );
   };
 
@@ -836,7 +847,12 @@ const Chapter = () => {
         className="chapter-modal"
       >
         <div className="p-4">
-          <ChapterForm form={updateChapterForm} loading={updatingChapter} />
+          <ChapterForm 
+            form={updateChapterForm} 
+            loading={updatingChapter}
+            isUpdate={true}
+            currentVideo={selectedChapter?.videoUrl}
+          />
 
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseUpdateChapterModal}>
