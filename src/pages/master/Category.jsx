@@ -8,6 +8,7 @@ import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Tag, message, Modal, Descriptions, Spin, Form, Input, Upload } from "antd";
 import { UploadCloud } from "lucide-react";
 import { getAllCategories, createCategory, getCategoryById } from "../../services/category.service";
+import BackButton from "../../components/Common/BackButton";
 
 const Category = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -113,19 +114,6 @@ const Category = () => {
     message.info(`Chức năng đang được phát triển`);
   };
 
-  const handleDelete = (id) => {
-    Modal.confirm({
-      title: 'Xác nhận xóa',
-      content: `Bạn có chắc chắn muốn xóa loại khóa học ${id} không?`,
-      okText: 'Xóa',
-      okType: 'danger',
-      cancelText: 'Hủy',
-      onOk() {
-        message.success(`Đã xóa loại khóa học ${id}`);
-      },
-    });
-  };
-
   const columns = [
     {
       title: "Mã loại khóa học",
@@ -159,14 +147,6 @@ const Category = () => {
           >
             Sửa
           </CustomButton>
-          <CustomButton
-            type="default"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
-          >
-            Xóa
-          </CustomButton>
         </div>
       ),
     },
@@ -196,12 +176,15 @@ const Category = () => {
       
       <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between mb-6">
-          <CustomButton
-            type="primary"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
-            Thêm loại khóa học mới
-          </CustomButton>
+          <div className="flex items-center gap-4">
+            <BackButton />
+            <CustomButton
+              type="primary"
+              onClick={() => setIsCreateModalOpen(true)}
+            >
+              Thêm loại khóa học mới
+            </CustomButton>
+          </div>
           <div className="w-72">
             <SearchBar onSearch={handleSearch} />
           </div>

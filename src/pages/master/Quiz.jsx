@@ -560,7 +560,7 @@ const Quiz = () => {
               <CustomButton
                 type="primary"
                 onClick={() =>
-                  navigate(`/quiz/${selectedQuiz.quizId}/questions`)
+                  navigate(`/master/quiz/${selectedQuiz.quizId}/questions`)
                 }
               >
                 Câu hỏi

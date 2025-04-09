@@ -65,10 +65,33 @@ const KoiFishManagement = () => {
 
   const [data, setData] = useState([]);
   const [selectedColor, setSelectedColor] = useState("#000000");
+  const [colors, setColors] = useState([]);
+
+  // Thêm hàm fetchColors
+  const fetchColors = async () => {
+    try {
+      setColorLoading(true);
+      const response = await KoiFishService.getColors();
+      console.log("Phản hồi API lấy danh sách màu:", response);
+
+      if (response && response.isSuccess && Array.isArray(response.data)) {
+        setColors(response.data);
+      } else {
+        console.warn("Không có dữ liệu màu sắc hoặc dữ liệu không hợp lệ");
+        setColors([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách màu:", error);
+      message.error("Không thể tải danh sách màu sắc");
+    } finally {
+      setColorLoading(false);
+    }
+  };
 
   // Fetch danh sách cá Koi từ API
   useEffect(() => {
     fetchKoiList();
+    fetchColors();
   }, []);
 
   const fetchKoiList = async () => {
@@ -352,6 +375,7 @@ const KoiFishManagement = () => {
   const handleCloseColorModal = () => {
     setIsColorModalOpen(false);
     colorForm.resetFields();
+    setSelectedColor("#000000");
   };
 
   // Hàm xử lý thêm màu mới
@@ -363,14 +387,13 @@ const KoiFishManagement = () => {
       // Gọi API tạo màu mới
       const response = await KoiFishService.createColor({
         colorName: values.colorName.trim(),
-        colorCode: values.colorCode.trim(),
+        colorCode: values.colorCode,
         element: values.element
       });
 
       if (response && response.isSuccess) {
         message.success("Đã thêm màu mới thành công");
         handleCloseColorModal();
-        // Tải lại danh sách màu nếu cần
         await fetchColors();
       } else {
         throw new Error(response?.message || "Không thể thêm màu mới");
