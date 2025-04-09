@@ -37,6 +37,7 @@ import AttachmentList from "../pages/master/AttachmentList";
 import BookingManagement from "../pages/manager/BookingManagement";
 import Order from "../pages/manager/Order";
 import Category from "../pages/master/Category";
+import Refund from "../pages/manager/Refund";
 
 export const mainRoutes = [
   {
@@ -233,5 +234,10 @@ export const mainRoutes = [
     path: "master/category",
     element: <Category />,
     roles: ["master"],
+  },
+  {
+    path: "manager/refund",
+    element: <Refund />,
+    roles: ["manager"],
   },
 ];
