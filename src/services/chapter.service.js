@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import axios from "axios";
 
 // Constants
 const CHAPTER_ENDPOINT = "/Chapter";
@@ -39,10 +40,10 @@ export const getChaptersByCourseId = async (courseId) => {
 
 /**
  * Tạo chương mới cho khóa học
- * @param {Object} chapterData - Dữ liệu của chương mới
+ * @param {FormData} formData - FormData chứa thông tin chương và file video
  * @returns {Promise} - Promise chứa kết quả tạo chương
  */
-export const createChapter = async (chapterData) => {
+export const createChapter = async (formData) => {
   try {
     // Kiểm tra token đăng nhập
     const token = localStorage.getItem("accessToken");
@@ -50,29 +51,22 @@ export const createChapter = async (chapterData) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    if (!chapterData.courseId) {
-      throw new Error("ID khóa học không được để trống");
+    // Log FormData để debug
+    console.log("Sending chapter FormData to API:");
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+      );
     }
 
-    console.log("Dữ liệu trước khi chuyển đổi:", chapterData);
-
-    // Chuyển đổi dữ liệu để phù hợp với định dạng API Swagger
-    const chapterRequest = {
-      title: chapterData.chapterName,
-      description: chapterData.description,
-      duration: formatDurationToString(chapterData.duration), // Chuyển số phút thành chuỗi "HH:MM:SS"
-      video: chapterData.videoUrl || "",
-      courseId: chapterData.courseId,
-      // Các trường khác nếu cần
-    };
-
-    console.log("Gọi API tạo chương mới với dữ liệu:", chapterRequest);
-
-    const response = await apiClient.post(
-      `${CHAPTER_ENDPOINT}/create-chapter`,
-      chapterRequest,
+    const response = await axios.post(
+      "http://localhost:5261/api/Chapter/create-chapter",
+      formData,
       {
         headers: {
+          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       }
@@ -80,22 +74,7 @@ export const createChapter = async (chapterData) => {
 
     console.log("Kết quả API tạo chương:", response.data);
 
-    // Chuyển đổi dữ liệu trả về để phù hợp với cấu trúc dữ liệu trong ứng dụng
-    if (response.data && response.data.isSuccess && response.data.data) {
-      const responseData = response.data;
-      responseData.data = {
-        chapterId: responseData.data.chapterId,
-        chapterName: responseData.data.title,
-        description: responseData.data.description,
-        duration: convertDurationToMinutes(responseData.data.duration),
-        videoUrl: responseData.data.video,
-        order: chapterData.order, // Giữ lại thứ tự từ dữ liệu gửi đi
-        content: chapterData.content || "",
-        resourceUrl: chapterData.resourceUrl || "",
-      };
-      return responseData;
-    }
-
+    // Trả về kết quả API
     return response.data;
   } catch (error) {
     console.error("Lỗi khi tạo chương mới:", error);
@@ -157,10 +136,11 @@ export const formatDuration = (minutes) => {
 
 /**
  * Cập nhật thông tin chương
- * @param {Object} chapterData - Dữ liệu cập nhật của chương
+ * @param {string} chapterId - ID của chương cần cập nhật
+ * @param {FormData} formData - FormData chứa thông tin cập nhật và file video
  * @returns {Promise} - Promise chứa kết quả cập nhật chương
  */
-export const updateChapter = async (chapterData) => {
+export const updateChapter = async (chapterId, formData) => {
   try {
     // Kiểm tra token đăng nhập
     const token = localStorage.getItem("accessToken");
@@ -168,36 +148,30 @@ export const updateChapter = async (chapterData) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    if (!chapterData.chapterId) {
+    if (!chapterId) {
       throw new Error("ID chương không được để trống");
     }
 
-    if (!chapterData.courseId) {
-      throw new Error("ID khóa học không được để trống");
+    // Log FormData để debug
+    console.log(
+      "Sending updated chapter FormData to API for chapterId:",
+      chapterId
+    );
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+      );
     }
 
-    console.log("Dữ liệu chương trước khi chuyển đổi:", chapterData);
-
-    // Chuyển đổi dữ liệu để phù hợp với định dạng API Swagger
-    const chapterRequest = {
-      chapterId: chapterData.chapterId,
-      title: chapterData.chapterName,
-      description: chapterData.description,
-      duration: formatDurationToString(chapterData.duration), // Chuyển số phút thành chuỗi "HH:MM:SS"
-      video: chapterData.videoUrl || "",
-      courseId: chapterData.courseId,
-      // Các trường khác nếu cần
-      order: chapterData.order || 0,
-      content: chapterData.content || "",
-    };
-
-    console.log("Gọi API cập nhật chương với dữ liệu:", chapterRequest);
-
-    const response = await apiClient.put(
-      `${CHAPTER_ENDPOINT}/update-chapter/${chapterData.chapterId}`,
-      chapterRequest,
+    // Gọi API cập nhật chương
+    const response = await axios.put(
+      `http://localhost:5261/api/Chapter/update-chapter/${chapterId}`,
+      formData,
       {
         headers: {
+          "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
         },
       }
@@ -205,22 +179,7 @@ export const updateChapter = async (chapterData) => {
 
     console.log("Kết quả API cập nhật chương:", response.data);
 
-    // Chuyển đổi dữ liệu trả về để phù hợp với cấu trúc dữ liệu trong ứng dụng
-    if (response.data && response.data.isSuccess && response.data.data) {
-      const responseData = response.data;
-      responseData.data = {
-        id: responseData.data.chapterId,
-        title: responseData.data.title,
-        description: responseData.data.description,
-        duration: convertDurationToMinutes(responseData.data.duration),
-        videoUrl: responseData.data.video,
-        order: chapterData.order,
-        content: responseData.data.content || chapterData.content || "",
-        resourceUrl: chapterData.resourceUrl || "",
-      };
-      return responseData;
-    }
-
+    // Trả về kết quả API
     return response.data;
   } catch (error) {
     console.error("Lỗi khi cập nhật chương:", error);
