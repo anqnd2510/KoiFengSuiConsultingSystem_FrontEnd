@@ -157,15 +157,18 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
           </div>
         </Upload>
       </Form.Item>
-
-      {/* Tạm thời ẩn trường URL Video
-      <Form.Item
-        label="URL Video"
-        name="videoUrl"
-      >
-        <Input placeholder="Nhập URL video giới thiệu khóa học" />
-      </Form.Item>
-      */}
+      
+      {/* Hiển thị hình ảnh hiện tại nếu có */}
+      {initialData && initialData.image && (
+        <div className="mt-2">
+          <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
+          <img
+            src={initialData.image}
+            alt="Hình ảnh khóa học"
+            className="max-h-[200px] object-cover rounded"
+          />
+        </div>
+      )}
     </Form>
   );
 };
@@ -272,9 +275,6 @@ const CourseMaster = () => {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [quizForm] = Form.useForm();
   const [categoryNames, setCategoryNames] = useState({});
-  const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] =
-    useState(false);
-  const [categoryForm] = Form.useForm();
 
   useEffect(() => {
     fetchCourses();
@@ -836,13 +836,21 @@ const CourseMaster = () => {
       }
     }
 
-    // Thiết lập giá trị cho form
+    // Thiết lập giá trị cho form với hình ảnh hiện tại
     updateForm.setFieldsValue({
       courseName: course.name,
       courseCategory: categoryIdToUse,
       price: course.price,
       description: course.description,
-      status: course.status === "Đang hoạt động" || course.status === "Active" ? "Active" : "Inactive"
+      status: course.status === "Đang hoạt động" || course.status === "Active" ? "Active" : "Inactive",
+      image: course.image ? [
+        {
+          uid: '-1',
+          name: 'current-image.jpg',
+          status: 'done',
+          url: course.image
+        }
+      ] : []
     });
 
     setIsUpdateModalOpen(true);
@@ -1391,62 +1399,6 @@ const CourseMaster = () => {
     setSelectedQuiz(null);
   };
 
-  const handleOpenCreateCategoryModal = () => {
-    setIsCreateCategoryModalOpen(true);
-  };
-
-  const handleCloseCreateCategoryModal = () => {
-    setIsCreateCategoryModalOpen(false);
-    categoryForm.resetFields();
-  };
-
-  const handleCreateCategory = async () => {
-    try {
-      setLoading(true);
-
-      const values = await categoryForm.validateFields();
-      const categoryData = {
-        categoryName: values.categoryName.trim(),
-      };
-
-      // Xử lý hình ảnh nếu có
-      if (values.image && values.image.length > 0) {
-        const file = values.image[0].originFileObj;
-        const reader = new FileReader();
-
-        const imageBase64 = await new Promise((resolve, reject) => {
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (error) => reject(error);
-          reader.readAsDataURL(file);
-        });
-
-        categoryData.image = imageBase64;
-      }
-
-      console.log("Category data:", categoryData);
-
-      const response = await createCategory(categoryData);
-      if (response.isSuccess) {
-        message.success("Tạo loại khóa học mới thành công!");
-        handleCloseCreateCategoryModal();
-        fetchCourseCategories();
-      } else {
-        message.error(
-          response.message || "Có lỗi xảy ra khi tạo loại khóa học"
-        );
-      }
-    } catch (error) {
-      if (error.errorFields) {
-        message.error("Vui lòng điền đầy đủ thông tin");
-      } else {
-        message.error("Có lỗi xảy ra khi tạo loại khóa học");
-        console.error("Error creating category:", error);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -1467,9 +1419,9 @@ const CourseMaster = () => {
             <CustomButton
               type="default"
               icon={<FaPlus />}
-              onClick={handleOpenCreateCategoryModal}
+              onClick={() => navigate('/master/category')}
             >
-              Thêm loại khóa học
+              Loại khóa học
             </CustomButton>
             <CustomButton
               onClick={fetchCourses}
@@ -2127,76 +2079,6 @@ const CourseMaster = () => {
             </div>
           </div>
         )}
-      </Modal>
-
-      {/* Modal tạo loại khóa học mới */}
-      <Modal
-        title={
-          <div className="text-xl font-semibold">Tạo loại khóa học mới</div>
-        }
-        open={isCreateCategoryModalOpen}
-        onCancel={handleCloseCreateCategoryModal}
-        footer={null}
-        width={500}
-      >
-        <div className="p-4">
-          <Form form={categoryForm} layout="vertical">
-            <Form.Item
-              label="Tên loại khóa học"
-              name="categoryName"
-              rules={[
-                { required: true, message: "Vui lòng nhập tên loại khóa học" },
-                {
-                  whitespace: true,
-                  message: "Tên loại khóa học không được chỉ chứa khoảng trắng",
-                },
-                {
-                  min: 2,
-                  message: "Tên loại khóa học phải có ít nhất 2 ký tự",
-                },
-              ]}
-            >
-              <Input placeholder="Nhập tên loại khóa học" maxLength={100} />
-            </Form.Item>
-
-            <Form.Item
-              label="Hình ảnh"
-              name="image"
-              valuePropName="fileList"
-              getValueFromEvent={(e) => {
-                if (Array.isArray(e)) {
-                  return e;
-                }
-                return e?.fileList;
-              }}
-            >
-              <Upload
-                listType="picture-card"
-                maxCount={1}
-                beforeUpload={() => false}
-                accept="image/*"
-              >
-                <div className="flex flex-col items-center">
-                  <UploadCloud className="w-6 h-6 text-gray-400" />
-                  <div className="mt-2">Tải lên</div>
-                </div>
-              </Upload>
-            </Form.Item>
-          </Form>
-
-          <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={handleCloseCreateCategoryModal}>
-              Hủy bỏ
-            </CustomButton>
-            <CustomButton
-              type="primary"
-              onClick={handleCreateCategory}
-              loading={loading}
-            >
-              Tạo mới
-            </CustomButton>
-          </div>
-        </div>
       </Modal>
 
       <style jsx global>{`

@@ -185,6 +185,12 @@ const menuItems = [
     path: "/admin/categories",
     roles: ["admin"],
   },
+  {
+    icon: ClipboardList,
+    label: "Quản lý giao dịch",
+    path: "/manager/order",
+    roles: ["manager"],
+  },
 ];
 
 const Sidebar = () => {
