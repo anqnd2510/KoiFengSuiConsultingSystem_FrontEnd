@@ -11,6 +11,7 @@ import {
   Row,
   Col,
   Tooltip,
+  Upload,
 } from "antd";
 import {
   FaPlus,
@@ -35,6 +36,7 @@ import {
   deleteChapter,
 } from "../../services/chapter.service";
 import { getAllCourses } from "../../services/course.service";
+import axios from "axios";
 
 const { TextArea } = Input;
 
@@ -62,18 +64,6 @@ const ChapterForm = ({ form, loading }) => {
       </Form.Item>
 
       <Form.Item
-        label="Thời lượng (phút)"
-        name="duration"
-        rules={[{ required: true, message: "Vui lòng nhập thời lượng" }]}
-      >
-        <InputNumber
-          placeholder="Nhập thời lượng (phút)"
-          min={1}
-          style={{ width: "100%" }}
-        />
-      </Form.Item>
-
-      <Form.Item
         label="Thứ tự hiển thị"
         name="order"
         rules={[{ required: true, message: "Vui lòng nhập thứ tự hiển thị" }]}
@@ -86,11 +76,25 @@ const ChapterForm = ({ form, loading }) => {
       </Form.Item>
 
       <Form.Item
-        label="URL Video"
-        name="videoUrl"
-        rules={[{ required: false, message: "Vui lòng nhập URL video" }]}
+        label="Video"
+        name="video"
+        valuePropName="fileList"
+        getValueFromEvent={(e) => {
+          if (Array.isArray(e)) {
+            return e;
+          }
+          return e?.fileList;
+        }}
+        rules={[{ required: true, message: "Vui lòng tải lên file video" }]}
       >
-        <Input placeholder="Nhập URL video bài giảng (YouTube, Vimeo...)" />
+        <Upload
+          listType="picture"
+          maxCount={1}
+          beforeUpload={() => false}
+          accept="video/*"
+        >
+          <CustomButton icon={<Video size={16} />}>Tải lên video</CustomButton>
+        </Upload>
       </Form.Item>
 
       <Form.Item label="Nội dung chi tiết" name="content">
@@ -98,10 +102,6 @@ const ChapterForm = ({ form, loading }) => {
           placeholder="Nhập nội dung chi tiết chương (không bắt buộc)"
           autoSize={{ minRows: 4, maxRows: 10 }}
         />
-      </Form.Item>
-
-      <Form.Item label="Đường dẫn tài nguyên" name="resourceUrl">
-        <Input placeholder="Nhập đường dẫn đến tài liệu (không bắt buộc)" />
       </Form.Item>
     </Form>
   );
@@ -275,22 +275,38 @@ const Chapter = () => {
       const values = await chapterForm.validateFields();
       setCreatingChapter(true);
 
-      // Chuẩn bị dữ liệu gửi lên API
-      const chapterData = {
-        courseId: courseId,
-        chapterName: values.chapterName.trim(),
-        description: values.description.trim(),
-        duration: Number(values.duration),
-        order: Number(values.order),
-        videoUrl: values.videoUrl ? values.videoUrl.trim() : "",
-        content: values.content ? values.content.trim() : "",
-        resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
-      };
+      // Tạo FormData để gửi dữ liệu và file
+      const formData = new FormData();
+      formData.append("CourseId", courseId);
+      formData.append("Title", values.chapterName.trim());
+      formData.append("Description", values.description.trim());
+      formData.append("Order", Number(values.order));
 
-      console.log("Đang tạo chương mới với dữ liệu:", chapterData);
+      // Xử lý file video
+      if (values.video && values.video.length > 0) {
+        const videoFile = values.video[0].originFileObj;
+        console.log("Đính kèm file video:", videoFile.name);
+        formData.append("Video", videoFile);
+      }
+
+      if (values.content) {
+        formData.append("Content", values.content.trim());
+      }
+
+      // Log FormData để debug
+      console.log("FormData entries for chapter creation:");
+      for (let pair of formData.entries()) {
+        console.log(
+          pair[0] +
+            ": " +
+            (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+        );
+      }
+
+      console.log("Đang tạo chương mới...");
 
       // Gọi API tạo chương
-      const response = await createChapter(chapterData);
+      const response = await createChapter(formData);
 
       if (response && response.isSuccess) {
         message.success(response.message || "Tạo mới chương thành công!");
@@ -298,13 +314,14 @@ const Chapter = () => {
         // Cập nhật lại danh sách chương
         const newChapter = {
           id: response.data.chapterId || response.data.id,
-          title: response.data.chapterName || response.data.title,
-          description: response.data.description,
-          duration: response.data.duration,
-          order: response.data.order,
-          videoUrl: response.data.videoUrl || response.data.video,
-          content: response.data.content,
-          resourceUrl: response.data.resourceUrl,
+          title:
+            response.data.chapterName ||
+            response.data.title ||
+            values.chapterName,
+          description: response.data.description || values.description,
+          order: response.data.order || values.order,
+          content: response.data.content || values.content || "",
+          videoUrl: response.data.videoUrl || response.data.video || "",
         };
 
         // Thêm chương mới vào danh sách và sắp xếp lại theo thứ tự
@@ -337,11 +354,8 @@ const Chapter = () => {
     updateChapterForm.setFieldsValue({
       chapterName: chapter.title,
       description: chapter.description,
-      duration: chapter.duration,
       order: chapter.order,
-      videoUrl: chapter.videoUrl,
       content: chapter.content,
-      resourceUrl: chapter.resourceUrl,
     });
 
     setIsUpdateChapterModalOpen(true);
@@ -360,75 +374,99 @@ const Chapter = () => {
       const values = await updateChapterForm.validateFields();
       setUpdatingChapter(true);
 
-      // Chuẩn bị dữ liệu cập nhật
-      const chapterData = {
-        chapterId: selectedChapter.id,
-        courseId: courseId,
-        chapterName: values.chapterName.trim(),
-        description: values.description.trim(),
-        duration: Number(values.duration),
-        order: Number(values.order),
-        videoUrl: values.videoUrl ? values.videoUrl.trim() : "",
-        content: values.content ? values.content.trim() : "",
-        resourceUrl: values.resourceUrl ? values.resourceUrl.trim() : "",
-      };
+      // Tạo FormData để gửi dữ liệu và file
+      const formData = new FormData();
+      formData.append("Title", values.chapterName.trim());
+      formData.append("Description", values.description.trim());
+      formData.append("CourseId", courseId);
 
-      console.log("Đang cập nhật chương với dữ liệu:", chapterData);
-
-      // Gọi API cập nhật chương
-      const response = await updateChapter(chapterData);
-
-      if (response && response.isSuccess) {
-        message.success(response.message || "Cập nhật chương thành công!");
-
-        // Cập nhật lại danh sách chương
-        const updatedChapters = courseChapters.map((chapter) =>
-          chapter.id === selectedChapter.id
-            ? {
-                ...chapter,
-                title: chapterData.chapterName,
-                description: chapterData.description,
-                duration: chapterData.duration,
-                order: chapterData.order,
-                videoUrl: chapterData.videoUrl,
-                content: chapterData.content,
-                resourceUrl: chapterData.resourceUrl,
-                isActive: chapter.isActive, // Giữ trạng thái active
-              }
-            : chapter
-        );
-
-        // Sắp xếp lại theo thứ tự
-        updatedChapters.sort((a, b) => a.order - b.order);
-        setCourseChapters(updatedChapters);
-
-        // Nếu đang cập nhật chương được chọn để xem video, cũng cập nhật nó
-        if (
-          selectedVideoChapter &&
-          selectedVideoChapter.id === selectedChapter.id
-        ) {
-          setSelectedVideoChapter({
-            ...selectedVideoChapter,
-            title: chapterData.chapterName,
-            description: chapterData.description,
-            duration: chapterData.duration,
-            order: chapterData.order,
-            videoUrl: chapterData.videoUrl,
-            content: chapterData.content,
-            resourceUrl: chapterData.resourceUrl,
-          });
-        }
-
-        // Đóng modal và reset form
-        setIsUpdateChapterModalOpen(false);
-        updateChapterForm.resetFields();
-      } else {
-        message.error(response?.message || "Không thể cập nhật chương");
+      // Chỉ gửi Video khi có chọn file mới
+      if (values.video && values.video.length > 0) {
+        const videoFile = values.video[0].originFileObj;
+        console.log("Đính kèm file video:", videoFile.name);
+        formData.append("Video", videoFile);
       }
-    } catch (error) {
-      console.error("Lỗi khi cập nhật chương:", error);
+
+      // Chỉ gửi Content khi có nội dung
+      if (values.content) {
+        formData.append("Content", values.content.trim());
+      }
+
+      formData.append("Order", Number(values.order));
+
+      // Log FormData để debug
+      console.log("FormData entries for chapter update:");
+      for (let pair of formData.entries()) {
+        console.log(
+          pair[0] +
+            ": " +
+            (pair[1] instanceof File ? `File: ${pair[1].name}` : pair[1])
+        );
+      }
+
+      console.log("Đang cập nhật chương với ID:", selectedChapter.id);
+
+      try {
+        // Gọi API cập nhật chương, truyền riêng ID và formData
+        const response = await updateChapter(selectedChapter.id, formData);
+        console.log("Kết quả cập nhật:", response);
+
+        if (response && response.isSuccess) {
+          message.success(response.message || "Cập nhật chương thành công!");
+
+          // Cập nhật lại danh sách chương
+          const updatedChapters = courseChapters.map((chapter) =>
+            chapter.id === selectedChapter.id
+              ? {
+                  ...chapter,
+                  title: values.chapterName.trim(),
+                  description: values.description.trim(),
+                  order: Number(values.order),
+                  videoUrl: response.data?.video || chapter.videoUrl,
+                  content: values.content ? values.content.trim() : "",
+                  isActive: chapter.isActive, // Giữ trạng thái active
+                }
+              : chapter
+          );
+
+          // Sắp xếp lại theo thứ tự
+          updatedChapters.sort((a, b) => a.order - b.order);
+          setCourseChapters(updatedChapters);
+
+          // Nếu đang cập nhật chương được chọn để xem video, cũng cập nhật nó
+          if (
+            selectedVideoChapter &&
+            selectedVideoChapter.id === selectedChapter.id
+          ) {
+            setSelectedVideoChapter({
+              ...selectedVideoChapter,
+              title: values.chapterName.trim(),
+              description: values.description.trim(),
+              order: Number(values.order),
+              videoUrl: response.data?.video || selectedVideoChapter.videoUrl,
+              content: values.content ? values.content.trim() : "",
+            });
+          }
+
+          // Đóng modal và reset form
+          setIsUpdateChapterModalOpen(false);
+          updateChapterForm.resetFields();
+
+          // Refresh lại danh sách
+          fetchCourseChapters();
+        } else {
+          message.error(response?.message || "Không thể cập nhật chương");
+        }
+      } catch (apiError) {
+        console.error("Lỗi khi gọi API cập nhật chương:", apiError);
+        message.error("Lỗi kết nối khi cập nhật: " + apiError.message);
+      } finally {
+        // Đảm bảo luôn tắt trạng thái loading sau khi gọi API
+        setUpdatingChapter(false);
+      }
+    } catch (formError) {
+      console.error("Lỗi validate form:", formError);
       message.error("Vui lòng điền đầy đủ thông tin chương");
-    } finally {
       setUpdatingChapter(false);
     }
   };
@@ -644,12 +682,6 @@ const Chapter = () => {
                           {selectedVideoChapter.title}
                         </h3>
                         <div className="flex items-center text-gray-500 text-sm mb-4">
-                          <div className="flex items-center mr-4">
-                            <FaClock className="mr-1" size={14} />
-                            <span>
-                              {formatDuration(selectedVideoChapter.duration)}
-                            </span>
-                          </div>
                           <div className="flex items-center">
                             <FileText className="mr-1" size={14} />
                             <span>Chương {selectedVideoChapter.order}</span>
@@ -658,21 +690,6 @@ const Chapter = () => {
                         <p className="text-gray-600 text-sm">
                           {selectedVideoChapter.description}
                         </p>
-
-                        {/* Liên kết tài nguyên */}
-                        {selectedVideoChapter.resourceUrl && (
-                          <div className="mt-4 pt-4 border-t border-gray-100">
-                            <a
-                              href={selectedVideoChapter.resourceUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 flex items-center hover:underline"
-                            >
-                              <FileText size={16} className="mr-2" />
-                              Tài liệu bổ sung
-                            </a>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
@@ -687,14 +704,6 @@ const Chapter = () => {
                         <h3 className="font-medium text-gray-800">
                           Danh sách chương ({courseChapters.length})
                         </h3>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDuration(
-                          courseChapters.reduce(
-                            (total, chapter) => total + (chapter.duration || 0),
-                            0
-                          )
-                        )}
                       </div>
                     </div>
 
@@ -736,12 +745,9 @@ const Chapter = () => {
                               {chapter.title}
                             </h4>
                             <div className="flex items-center mt-1 text-xs text-gray-500">
-                              <span className="mr-2">
-                                {formatDuration(chapter.duration)}
-                              </span>
                               {chapter.order && (
                                 <span className="mr-2">
-                                  • Thứ tự: {chapter.order}
+                                  Thứ tự: {chapter.order}
                                 </span>
                               )}
                             </div>
