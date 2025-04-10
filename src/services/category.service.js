@@ -1,5 +1,5 @@
-import apiClient from './apiClient';
-
+import apiClient from "./apiClient";
+import axios from "axios";
 // URL cơ sở của API
 const CATEGORY_ENDPOINT = "/Category";
 
@@ -9,18 +9,18 @@ export const getCategoryById = async (categoryId) => {
     const response = await apiClient.get(`${CATEGORY_ENDPOINT}/${categoryId}`);
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi lấy thông tin category:', error);
+    console.error("Lỗi khi lấy thông tin category:", error);
     throw error;
   }
 };
 
-// Lấy tất cả categories 
+// Lấy tất cả categories
 export const getAllCategories = async () => {
   try {
     const response = await apiClient.get(`${CATEGORY_ENDPOINT}/get-all`);
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách categories:', error);
+    console.error("Lỗi khi lấy danh sách categories:", error);
     throw error;
   }
 };
@@ -29,20 +29,53 @@ export const getAllCategories = async () => {
 export const createCategory = async (categoryData) => {
   try {
     // Kiểm tra token đăng nhập
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    console.log("Sending category data:", categoryData);
-    const response = await apiClient.post(`${CATEGORY_ENDPOINT}/create`, categoryData, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    // Tạo FormData để gửi dữ liệu và file
+    const formData = new FormData();
+    formData.append("CategoryName", categoryData.categoryName);
+
+    // Xử lý hình ảnh nếu có - gửi dưới dạng file
+    if (categoryData.imageFile && categoryData.imageFile instanceof File) {
+      formData.append("ImageUrl", categoryData.imageFile);
+    }
+
+    // Log dữ liệu để debug
+    console.log("FormData entries:");
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File
+            ? `File ${pair[1].name} (${pair[1].size} bytes)`
+            : pair[1])
+      );
+    }
+
+    // Sử dụng axios thay vì apiClient để tùy chỉnh headers và content-type
+    const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
+
+    const response = await axios.post(
+      `${baseUrl}${CATEGORY_ENDPOINT}/create`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Không cần set Content-Type với FormData, axios sẽ tự thêm đúng Content-Type và boundary
+        },
       }
-    });
+    );
+
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi tạo category:', error);
+    console.error("Lỗi khi tạo category:", error);
+    if (error.response) {
+      console.error("Server response:", error.response.data);
+      console.error("Status code:", error.response.status);
+    }
     throw error;
   }
 };
@@ -51,19 +84,89 @@ export const createCategory = async (categoryData) => {
 export const updateCategoryStatus = async (categoryId, status) => {
   try {
     // Kiểm tra token đăng nhập
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    const response = await apiClient.put(`${CATEGORY_ENDPOINT}/update-category-status/${categoryId}?status=${status}`, {}, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const response = await apiClient.put(
+      `${CATEGORY_ENDPOINT}/update-category-status/${categoryId}?status=${status}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    });
+    );
     return response.data;
   } catch (error) {
-    console.error('Lỗi khi cập nhật trạng thái category:', error);
+    console.error("Lỗi khi cập nhật trạng thái category:", error);
+    throw error;
+  }
+};
+
+// Cập nhật category
+export const updateCategory = async (categoryId, categoryData) => {
+  try {
+    // Kiểm tra ID hợp lệ
+    if (!categoryId) {
+      throw new Error(
+        "Thiếu ID danh mục. Vui lòng cung cấp ID danh mục cần cập nhật."
+      );
+    }
+
+    console.log("Cập nhật danh mục với ID:", categoryId);
+
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    // Tạo FormData để gửi dữ liệu và file
+    const formData = new FormData();
+    formData.append("CategoryName", categoryData.categoryName);
+
+    // Xử lý hình ảnh nếu có - gửi dưới dạng file
+    if (categoryData.imageFile && categoryData.imageFile instanceof File) {
+      formData.append("ImageUrl", categoryData.imageFile);
+    }
+
+    // Log dữ liệu để debug
+    console.log("FormData entries for update:");
+    for (let pair of formData.entries()) {
+      console.log(
+        pair[0] +
+          ": " +
+          (pair[1] instanceof File
+            ? `File ${pair[1].name} (${pair[1].size} bytes)`
+            : pair[1])
+      );
+    }
+
+    // Sử dụng axios thay vì apiClient để tùy chỉnh headers và content-type
+    const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
+
+    // Sử dụng đúng endpoint API
+    const apiUrl = `${baseUrl}/Category/${categoryId}`;
+    console.log("Gửi request đến URL:", apiUrl);
+
+    const response = await axios.put(apiUrl, formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Không cần set Content-Type với FormData, axios sẽ tự thêm đúng Content-Type và boundary
+      },
+    });
+
+    console.log("Kết quả cập nhật danh mục:", response.data);
+
+    return response.data;
+  } catch (error) {
+    console.error(`Lỗi khi cập nhật category ID ${categoryId}:`, error);
+    if (error.response) {
+      console.error("Server response:", error.response.data);
+      console.error("Status code:", error.response.status);
+    }
     throw error;
   }
 };
