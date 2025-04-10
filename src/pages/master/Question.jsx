@@ -839,24 +839,8 @@ const Question = () => {
             </Form.List>
 
             <div className="flex justify-between items-center mt-8">
-              <div className="flex items-center gap-4">
-                <Form.Item name="point" label="Điểm" className="mb-0">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    style={{ width: "100px" }}
-                  />
-                </Form.Item>
-
-                <Form.Item name="questionType" className="mb-0">
-                  <Radio.Group buttonStyle="solid">
-                    <Radio.Button value="Multiple Choice">
-                      Trắc nghiệm
-                    </Radio.Button>
-                    <Radio.Button value="True/False">Đúng/Sai</Radio.Button>
-                  </Radio.Group>
-                </Form.Item>
+              <div>
+                {/* Đã xóa phần điểm và loại câu hỏi */}
               </div>
 
               <div className="flex gap-3">
