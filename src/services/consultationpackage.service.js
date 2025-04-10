@@ -69,7 +69,7 @@ const ConsultationPackageService = {
       // Tạo FormData để gửi dữ liệu và file
       const formData = new FormData();
 
-      // Thêm các trường thông tin vào formData
+      // Thêm các trường thông tin vào formData - chú ý tên trường phải đúng cú pháp Pascal Case
       formData.append("PackageName", packageData.packageName || "");
       formData.append("MinPrice", packageData.minPrice || 0);
       formData.append("MaxPrice", packageData.maxPrice || 0);
@@ -78,7 +78,7 @@ const ConsultationPackageService = {
       formData.append("RequiredInfo", packageData.requiredInfo || "");
       formData.append("PricingDetails", packageData.pricingDetails || "");
 
-      // Xử lý file ảnh nếu có
+      // Xử lý file ảnh nếu có - thực hiện nhiều phương án khác nhau để thử
       if (packageData.imageFile && packageData.imageFile instanceof File) {
         console.log(
           "Đính kèm file ảnh:",
@@ -86,6 +86,9 @@ const ConsultationPackageService = {
           packageData.imageFile.size,
           "bytes"
         );
+        // Thử thêm tất cả các tên trường có thể
+        formData.append("Image", packageData.imageFile);
+        formData.append("ImageFile", packageData.imageFile);
         formData.append("ImageUrl", packageData.imageFile);
       }
 
@@ -101,16 +104,33 @@ const ConsultationPackageService = {
         );
       }
 
-      // Sử dụng URL hoàn chỉnh với API endpoint đúng
-      const apiUrl = "http://localhost:5261/api/ConsultationPackage/create";
-      console.log("Gửi request đến URL:", apiUrl);
+      // Sử dụng URL hoàn chỉnh với API endpoint đúng - thử thêm /api phía trước
+      // Gửi cả hai URL cho chắc chắn
+      let response;
+      try {
+        // URL 1: với /api ở đầu
+        const apiUrl1 = "http://localhost:5261/api/ConsultationPackage/create";
+        console.log("Thử gửi request đến URL 1:", apiUrl1);
 
-      // Gửi request với Content-Type là multipart/form-data
-      const response = await axios.post(apiUrl, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        // Gửi request với Content-Type là multipart/form-data
+        response = await axios.post(apiUrl1, formData, {
+          headers: {
+            // Không cần thiết lập Content-Type với FormData, axios sẽ tự động thêm boundary
+          },
+        });
+      } catch (error) {
+        console.log("URL 1 thất bại, thử URL 2");
+        // URL 2: không có /api ở đầu
+        const apiUrl2 = "http://localhost:5261/ConsultationPackage/create";
+        console.log("Thử gửi request đến URL 2:", apiUrl2);
+
+        // Gửi request với URL thay thế
+        response = await axios.post(apiUrl2, formData, {
+          headers: {
+            // Không cần thiết lập Content-Type với FormData, axios sẽ tự động thêm boundary
+          },
+        });
+      }
 
       console.log("Create package response:", response);
       return response.data;
@@ -141,7 +161,7 @@ const ConsultationPackageService = {
       // Tạo FormData để gửi dữ liệu và file
       const formData = new FormData();
 
-      // Thêm các trường thông tin vào formData
+      // Thêm các trường thông tin vào formData - đảm bảo đúng Pascal Case
       formData.append("PackageName", packageData.packageName || "");
       formData.append("MinPrice", packageData.minPrice || 0);
       formData.append("MaxPrice", packageData.maxPrice || 0);
@@ -150,29 +170,21 @@ const ConsultationPackageService = {
       formData.append("RequiredInfo", packageData.requiredInfo || "");
       formData.append("PricingDetails", packageData.pricingDetails || "");
 
-      // Xử lý file ảnh nếu có
+      // Xử lý file ảnh nếu có - thử nhiều tên trường khác nhau
       if (packageData.imageFile && packageData.imageFile instanceof File) {
         console.log(
-          "Đính kèm file ảnh:",
+          "Đính kèm file ảnh mới:",
           packageData.imageFile.name,
           packageData.imageFile.size,
           "bytes"
         );
+        // Thử thêm tất cả các tên trường có thể
+        formData.append("Image", packageData.imageFile);
+        formData.append("ImageFile", packageData.imageFile);
         formData.append("ImageUrl", packageData.imageFile);
       } else if (packageData.imageUrl) {
-        // Nếu không có file mới nhưng có URL cũ, giữ nguyên URL cũ
+        // Chỉ lưu ý đường dẫn cũ, không cần gửi trong formData vì backend sẽ giữ nguyên nếu không có file mới
         console.log("Giữ nguyên URL ảnh cũ:", packageData.imageUrl);
-
-        // Kiểm tra nếu imageUrl là đường dẫn đầy đủ thì chuyển về tương đối
-        if (packageData.imageUrl.startsWith("http://localhost:5261")) {
-          const relativePath = packageData.imageUrl.replace(
-            "http://localhost:5261",
-            ""
-          );
-          formData.append("ImagePath", relativePath);
-        } else {
-          formData.append("ImagePath", packageData.imageUrl);
-        }
       }
 
       // Log dữ liệu để debug
@@ -187,16 +199,32 @@ const ConsultationPackageService = {
         );
       }
 
-      // Sử dụng URL hoàn chỉnh với API endpoint đúng
-      const apiUrl = `${BASE_URL}/update/${id}`;
-      console.log("Gửi request đến URL:", apiUrl);
+      // Thử cả hai endpoint với và không có /api
+      let response;
+      try {
+        // URL 1: với /api ở đầu
+        const apiUrl1 = `http://localhost:5261/api/ConsultationPackage/update/${id}`;
+        console.log("Thử gửi request đến URL 1:", apiUrl1);
 
-      // Gửi request với Content-Type là multipart/form-data
-      const response = await axios.put(apiUrl, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        // Gửi request với Content-Type là multipart/form-data
+        response = await axios.put(apiUrl1, formData, {
+          headers: {
+            // Không cần thiết lập Content-Type với FormData, axios sẽ tự động thêm boundary
+          },
+        });
+      } catch (error) {
+        console.log("URL 1 thất bại, thử URL 2");
+        // URL 2: không có /api ở đầu
+        const apiUrl2 = `http://localhost:5261/ConsultationPackage/update/${id}`;
+        console.log("Thử gửi request đến URL 2:", apiUrl2);
+
+        // Gửi request với URL thay thế
+        response = await axios.put(apiUrl2, formData, {
+          headers: {
+            // Không cần thiết lập Content-Type với FormData, axios sẽ tự động thêm boundary
+          },
+        });
+      }
 
       console.log(`Update package response for ID ${id}:`, response);
       return response.data;
@@ -253,30 +281,39 @@ const ConsultationPackageService = {
   // Cập nhật trạng thái gói tư vấn
   updatePackageStatus: async (packageId, status) => {
     try {
-      console.log(`Cập nhật trạng thái gói tư vấn ID ${packageId} thành ${status}`);
-      
+      console.log(
+        `Cập nhật trạng thái gói tư vấn ID ${packageId} thành ${status}`
+      );
+
       // Sử dụng token nếu có
-      const token = localStorage.getItem('accessToken');
-      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
-      
+      const token = localStorage.getItem("accessToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const apiUrl = `${BASE_URL}/update-package-status/${packageId}?status=${status}`;
       console.log("Gửi request đến URL:", apiUrl);
-      
-      const response = await axios.put(apiUrl, {}, {
-        headers
-      });
-      
+
+      const response = await axios.put(
+        apiUrl,
+        {},
+        {
+          headers,
+        }
+      );
+
       console.log("Update status response:", response);
       return response.data;
     } catch (error) {
-      console.error(`Error updating consultation package status for ID ${packageId}:`, error);
+      console.error(
+        `Error updating consultation package status for ID ${packageId}:`,
+        error
+      );
       if (error.response) {
         console.error("Server response data:", error.response.data);
         console.error("Server response status:", error.response.status);
       }
       throw error;
     }
-  }
+  },
 };
 
 export default ConsultationPackageService;
