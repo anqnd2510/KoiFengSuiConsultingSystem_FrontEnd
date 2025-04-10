@@ -249,6 +249,34 @@ const ConsultationPackageService = {
       return { success: false, error };
     }
   },
+
+  // Cập nhật trạng thái gói tư vấn
+  updatePackageStatus: async (packageId, status) => {
+    try {
+      console.log(`Cập nhật trạng thái gói tư vấn ID ${packageId} thành ${status}`);
+      
+      // Sử dụng token nếu có
+      const token = localStorage.getItem('accessToken');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+      
+      const apiUrl = `${BASE_URL}/update-package-status/${packageId}?status=${status}`;
+      console.log("Gửi request đến URL:", apiUrl);
+      
+      const response = await axios.put(apiUrl, {}, {
+        headers
+      });
+      
+      console.log("Update status response:", response);
+      return response.data;
+    } catch (error) {
+      console.error(`Error updating consultation package status for ID ${packageId}:`, error);
+      if (error.response) {
+        console.error("Server response data:", error.response.data);
+        console.error("Server response status:", error.response.status);
+      }
+      throw error;
+    }
+  }
 };
 
 export default ConsultationPackageService;

@@ -46,3 +46,24 @@ export const createCategory = async (categoryData) => {
     throw error;
   }
 };
+
+// Cập nhật trạng thái category
+export const updateCategoryStatus = async (categoryId, status) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    const response = await apiClient.put(`${CATEGORY_ENDPOINT}/update-category-status/${categoryId}?status=${status}`, {}, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Lỗi khi cập nhật trạng thái category:', error);
+    throw error;
+  }
+};

@@ -170,11 +170,6 @@ const Quiz = () => {
         throw new Error("Tiêu đề không được để trống");
       }
 
-      const score = Number(values.score);
-      if (isNaN(score) || score < 0 || score > 100) {
-        throw new Error("Điểm số phải từ 0-100");
-      }
-
       if (!courseId) {
         throw new Error("Không tìm thấy mã khóa học");
       }
@@ -182,7 +177,7 @@ const Quiz = () => {
       // Tạo request object
       const quizRequest = {
         title: values.title.trim(),
-        score: score,
+        score: 0, // Mặc định là 0
       };
 
       console.log("Sending quiz request:", quizRequest);
@@ -594,7 +589,6 @@ const Quiz = () => {
           }}
           initialValues={{
             title: "",
-            score: 0,
           }}
         >
           <div className="p-4">
@@ -604,34 +598,6 @@ const Quiz = () => {
               rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
             >
               <Input placeholder="Nhập tiêu đề bài kiểm tra" />
-            </Form.Item>
-
-            <Form.Item
-              name="score"
-              label="Điểm số"
-              rules={[
-                { required: true, message: "Vui lòng nhập điểm số" },
-                {
-                  type: "number",
-                  transform: (value) => Number(value),
-                  min: 0,
-                  max: 100,
-                  message: "Điểm phải từ 0-100",
-                },
-              ]}
-            >
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                placeholder="Nhập điểm số (0-100)"
-                onChange={(e) => {
-                  const value = Number(e.target.value);
-                  if (!isNaN(value)) {
-                    createForm.setFieldsValue({ score: value });
-                  }
-                }}
-              />
             </Form.Item>
 
             <div className="flex justify-end gap-3 mt-6">
