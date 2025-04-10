@@ -284,7 +284,7 @@ const Login = () => {
       {/* Background image */}
       <div className="fixed inset-0">
         <img
-          src="https://i.pinimg.com/736x/5c/ef/2f/5cef2f066dbb4f1b9b5f0a54c3e67710.jpg"
+          src="/KoiBase.png"
           alt=""
           className="w-full h-full object-cover"
         />
@@ -598,7 +598,7 @@ const Login = () => {
               <div className="p-6 px-10 h-full flex flex-col">
                 <div className="flex justify-start">
                   <img 
-                    src="https://media.discordapp.net/attachments/1310277686760833046/1352292725193445517/BitKoi.png?ex=67f1eb7e&is=67f099fe&hm=610b389036636220ab97bc3230a94a741e45b83dc02f6dbf6ac47267c1fb14d9&=&format=webp&quality=lossless&width=536&height=230"
+                    src="/BitKoi.png"
                     alt="BitKoi Logo"
                     className="h-12 w-auto"
                   />
@@ -628,7 +628,7 @@ const Login = () => {
               <div className="p-6 px-10 h-full flex flex-col">
                 <div className="flex justify-end">
                   <img 
-                    src="https://media.discordapp.net/attachments/1310277686760833046/1352292725193445517/BitKoi.png?ex=67f1eb7e&is=67f099fe&hm=610b389036636220ab97bc3230a94a741e45b83dc02f6dbf6ac47267c1fb14d9&=&format=webp&quality=lossless&width=536&height=230"
+                    src="/BitKoi.png"
                     alt="BitKoi Logo"
                     className="h-12 w-auto"
                   />
@@ -639,7 +639,7 @@ const Login = () => {
                     <div className="absolute inset-0 bg-[#90B77D]/10 rounded-full filter blur-3xl transform scale-150"></div>
                     <div className="relative z-10">
                       <img
-                        src="https://i.pinimg.com/736x/5c/ef/2f/5cef2f066dbb4f1b9b5f0a54c3e67710.jpg"
+                        src="/KoiBase.png"
                         alt="Koi Fish"
                         className="w-full h-auto rounded-2xl shadow-lg"
                       />

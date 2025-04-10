@@ -15,6 +15,8 @@ import {
   Popconfirm,
   Tooltip,
   Upload,
+  Switch,
+  Tag
 } from "antd";
 import {
   EditOutlined,
@@ -69,7 +71,13 @@ const ConsultationPackage = () => {
           );
         }
 
-        setPackages(response.data);
+        // Đảm bảo các gói tư vấn có trạng thái
+        const mappedPackages = response.data.map(pkg => ({
+          ...pkg,
+          status: pkg.status || "Active" // Mặc định là Active nếu không có
+        }));
+
+        setPackages(mappedPackages);
         setError(null);
       } else {
         console.error("API response structure is not as expected:", response);
@@ -99,6 +107,57 @@ const ConsultationPackage = () => {
         .includes(searchTerm.toLowerCase()) ||
       pkg.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Xử lý thay đổi trạng thái gói tư vấn
+  const handleStatusChange = (packageId, checked) => {
+    // Hiển thị modal xác nhận trước khi thay đổi
+    Modal.confirm({
+      title: "Xác nhận thay đổi",
+      content: "Bạn chắc chắn muốn đổi trạng thái gói tư vấn này?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const newStatus = checked ? "Active" : "Inactive";
+          
+          // Gọi API cập nhật trạng thái
+          const response = await ConsultationPackageService.updatePackageStatus(packageId, newStatus);
+
+          if (response && response.isSuccess) {
+            message.success("Cập nhật trạng thái thành công!");
+            
+            // Cập nhật state local
+            setPackages(prevPackages => 
+              prevPackages.map(pkg => 
+                pkg.consultationPackageId === packageId 
+                  ? {...pkg, status: newStatus}
+                  : pkg
+              )
+            );
+          } else {
+            message.error(response?.message || "Không thể cập nhật trạng thái");
+            // Nếu thất bại, đặt lại trạng thái switch
+            setTimeout(() => {
+              setPackages(prevPackages => [...prevPackages]);
+            }, 0);
+          }
+        } catch (error) {
+          console.error("Lỗi khi cập nhật trạng thái:", error);
+          message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+          // Nếu có lỗi, đặt lại trạng thái switch
+          setTimeout(() => {
+            setPackages(prevPackages => [...prevPackages]);
+          }, 0);
+        }
+      },
+      onCancel() {
+        // Nếu người dùng hủy, đặt lại trạng thái switch
+        setTimeout(() => {
+          setPackages(prevPackages => [...prevPackages]);
+        }, 0);
+      }
+    });
+  };
 
   // Handle view package details
   const handleViewDetails = (record) => {
@@ -243,7 +302,7 @@ const ConsultationPackage = () => {
       title: "Mã gói",
       dataIndex: "consultationPackageId",
       key: "consultationPackageId",
-      width: 160,
+      width: 150,
       ellipsis: true,
       render: (text) => <span className="font-mono text-xs">{text}</span>,
     },
@@ -251,14 +310,14 @@ const ConsultationPackage = () => {
       title: "Tên gói",
       dataIndex: "packageName",
       key: "packageName",
-      width: 160,
+      width: 150,
       ellipsis: true,
     },
     {
       title: "Giá tối thiểu",
       dataIndex: "minPrice",
       key: "minPrice",
-      width: 130,
+      width: 120,
       align: "left",
       render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
     },
@@ -266,16 +325,32 @@ const ConsultationPackage = () => {
       title: "Giá tối đa",
       dataIndex: "maxPrice",
       key: "maxPrice",
-      width: 130,
+      width: 120,
       align: "left",
       render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: 100,
+      align: "center",
+      render: (status, record) => {
+        const isActive = status === "Active";
+        return (
+          <Switch
+            checked={isActive}
+            onChange={(checked) => handleStatusChange(record.consultationPackageId, checked)}
+          />
+        );
+      }
     },
     {
       title: "Mô tả",
       dataIndex: "description",
       key: "description",
       ellipsis: true,
-      width: 300,
+      width: 200,
       render: (text) => (
         <div className="truncate max-w-full" title={text}>
           {text}
@@ -285,7 +360,7 @@ const ConsultationPackage = () => {
     {
       title: "Hành động",
       key: "action",
-      width: 220,
+      width: 160,
       align: "left",
       fixed: "right",
       render: (_, record) => (
@@ -595,6 +670,13 @@ const ConsultationPackage = () => {
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 uppercase tracking-wider">Giá tối đa</p>
                 <p className="text-base font-medium text-gray-800">{currentPackage.maxPrice?.toLocaleString('vi-VN')} đ</p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Trạng thái</p>
+                <Tag color={currentPackage.status === "Active" ? "green" : "red"}>
+                  {currentPackage.status === "Active" ? "Hoạt động" : "Không hoạt động"}
+                </Tag>
               </div>
             </div>
 

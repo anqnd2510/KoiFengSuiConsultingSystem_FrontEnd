@@ -5,9 +5,9 @@ import CustomTable from "../../components/Common/CustomTable";
 import CustomButton from "../../components/Common/CustomButton";
 import Pagination from "../../components/Common/Pagination";
 import { EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import { Tag, message, Modal, Descriptions, Spin, Form, Input, Upload } from "antd";
+import { Tag, message, Modal, Descriptions, Spin, Form, Input, Upload, Switch } from "antd";
 import { UploadCloud } from "lucide-react";
-import { getAllCategories, createCategory, getCategoryById } from "../../services/category.service";
+import { getAllCategories, createCategory, getCategoryById, updateCategoryStatus } from "../../services/category.service";
 import BackButton from "../../components/Common/BackButton";
 
 const Category = () => {
@@ -36,7 +36,8 @@ const Category = () => {
           key: category.categoryId,
           id: category.categoryId,
           name: category.categoryName,
-          image: category.image || null
+          image: category.image || null,
+          status: category.status || "Active" // Mặc định là Active nếu không có trạng thái
         }));
         setCategories(mappedCategories);
       } else {
@@ -114,18 +115,85 @@ const Category = () => {
     message.info(`Chức năng đang được phát triển`);
   };
 
+  // Hàm xử lý thay đổi trạng thái category
+  const handleStatusChange = (categoryId, checked) => {
+    // Hiển thị modal xác nhận trước khi thay đổi
+    Modal.confirm({
+      title: "Xác nhận thay đổi",
+      content: "Bạn chắc chắn muốn đổi trạng thái?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const newStatus = checked ? "Active" : "Inactive";
+          
+          // Gọi API cập nhật trạng thái
+          const response = await updateCategoryStatus(categoryId, newStatus);
+
+          if (response && response.isSuccess) {
+            message.success("Cập nhật trạng thái thành công!");
+            
+            // Cập nhật state local
+            setCategories(prevCategories => 
+              prevCategories.map(category => 
+                category.id === categoryId 
+                  ? {...category, status: newStatus}
+                  : category
+              )
+            );
+          } else {
+            message.error(response?.message || "Không thể cập nhật trạng thái");
+            // Nếu thất bại, đặt lại trạng thái switch
+            setTimeout(() => {
+              setCategories(prevCategories => [...prevCategories]);
+            }, 0);
+          }
+        } catch (error) {
+          console.error("Lỗi khi cập nhật trạng thái:", error);
+          message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+          // Nếu có lỗi, đặt lại trạng thái switch
+          setTimeout(() => {
+            setCategories(prevCategories => [...prevCategories]);
+          }, 0);
+        }
+      },
+      onCancel() {
+        // Nếu người dùng hủy, đặt lại trạng thái switch
+        setTimeout(() => {
+          setCategories(prevCategories => [...prevCategories]);
+        }, 0);
+      }
+    });
+  };
+
   const columns = [
     {
       title: "Mã loại khóa học",
       dataIndex: "id",
       key: "id",
-      width: '30%',
+      width: '25%',
     },
     {
       title: "Tên loại khóa học",
       dataIndex: "name",
       key: "name",
-      width: '50%',
+      width: '35%',
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: '20%',
+      render: (status, record) => {
+        const isActive = status === "Active";
+        
+        return (
+          <Switch
+            checked={isActive}
+            onChange={(checked) => handleStatusChange(record.id, checked)}
+          />
+        );
+      }
     },
     {
       title: "Hành động",
@@ -301,6 +369,11 @@ const Category = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Tên loại khóa học">
               {selectedCategory.categoryName}
+            </Descriptions.Item>
+            <Descriptions.Item label="Trạng thái">
+              <Tag color={selectedCategory.status === "Active" ? "green" : "red"}>
+                {selectedCategory.status === "Active" ? "Hoạt động" : "Không hoạt động"}
+              </Tag>
             </Descriptions.Item>
             {selectedCategory.image && (
               <Descriptions.Item label="Hình ảnh">

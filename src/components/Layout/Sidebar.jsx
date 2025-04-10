@@ -258,7 +258,7 @@ const Sidebar = () => {
       <div className="p-4">
         <div className="flex justify-center items-center mb-8">
           <img
-            src="https://media.discordapp.net/attachments/1310277686760833046/1352292725193445517/BitKoi.png?ex=67f1eb7e&is=67f099fe&hm=610b389036636220ab97bc3230a94a741e45b83dc02f6dbf6ac47267c1fb14d9&=&format=webp&quality=lossless&width=536&height=230"
+            src="/BitKoi.png"
             alt="BitKoi Logo"
             className="w-48 h-auto"
           />
