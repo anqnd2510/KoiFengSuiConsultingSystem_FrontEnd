@@ -29,7 +29,7 @@ import Header from "../../components/Common/Header";
 import SearchBar from "../../components/Common/SearchBar";
 import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
-import ConsultationPackageService from "../../services/consultationPackage.service";
+import ConsultationPackageService from "../../services/consultationpackage.service";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
