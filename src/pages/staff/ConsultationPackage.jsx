@@ -16,7 +16,7 @@ import {
   Tooltip,
   Upload,
   Switch,
-  Tag
+  Tag,
 } from "antd";
 import {
   EditOutlined,
@@ -72,9 +72,9 @@ const ConsultationPackage = () => {
         }
 
         // Đảm bảo các gói tư vấn có trạng thái
-        const mappedPackages = response.data.map(pkg => ({
+        const mappedPackages = response.data.map((pkg) => ({
           ...pkg,
-          status: pkg.status || "Active" // Mặc định là Active nếu không có
+          status: pkg.status || "Active", // Mặc định là Active nếu không có
         }));
 
         setPackages(mappedPackages);
@@ -119,18 +119,21 @@ const ConsultationPackage = () => {
       onOk: async () => {
         try {
           const newStatus = checked ? "Active" : "Inactive";
-          
+
           // Gọi API cập nhật trạng thái
-          const response = await ConsultationPackageService.updatePackageStatus(packageId, newStatus);
+          const response = await ConsultationPackageService.updatePackageStatus(
+            packageId,
+            newStatus
+          );
 
           if (response && response.isSuccess) {
             message.success("Cập nhật trạng thái thành công!");
-            
+
             // Cập nhật state local
-            setPackages(prevPackages => 
-              prevPackages.map(pkg => 
-                pkg.consultationPackageId === packageId 
-                  ? {...pkg, status: newStatus}
+            setPackages((prevPackages) =>
+              prevPackages.map((pkg) =>
+                pkg.consultationPackageId === packageId
+                  ? { ...pkg, status: newStatus }
                   : pkg
               )
             );
@@ -138,7 +141,7 @@ const ConsultationPackage = () => {
             message.error(response?.message || "Không thể cập nhật trạng thái");
             // Nếu thất bại, đặt lại trạng thái switch
             setTimeout(() => {
-              setPackages(prevPackages => [...prevPackages]);
+              setPackages((prevPackages) => [...prevPackages]);
             }, 0);
           }
         } catch (error) {
@@ -146,16 +149,16 @@ const ConsultationPackage = () => {
           message.error("Có lỗi xảy ra khi cập nhật trạng thái");
           // Nếu có lỗi, đặt lại trạng thái switch
           setTimeout(() => {
-            setPackages(prevPackages => [...prevPackages]);
+            setPackages((prevPackages) => [...prevPackages]);
           }, 0);
         }
       },
       onCancel() {
         // Nếu người dùng hủy, đặt lại trạng thái switch
         setTimeout(() => {
-          setPackages(prevPackages => [...prevPackages]);
+          setPackages((prevPackages) => [...prevPackages]);
         }, 0);
-      }
+      },
     });
   };
 
@@ -239,13 +242,13 @@ const ConsultationPackage = () => {
       // Thêm file ảnh vào values
       const submitData = {
         ...values,
-        imageFile: imageFile,
+        imageFile: imageFile, // File ảnh sẽ được xử lý bởi service
       };
 
-      // Nếu đang trong mode chỉnh sửa và không có file ảnh mới, thêm imageUrl hiện tại
+      // Nếu đang trong mode chỉnh sửa và không có file ảnh mới, lưu ý URL hiện tại
       if (isEditMode && currentPackage && !imageFile && imageUrl) {
         submitData.imageUrl = imageUrl;
-        console.log("Sử dụng imageUrl hiện tại:", imageUrl);
+        console.log("Giữ nguyên URL ảnh hiện tại:", imageUrl);
       }
 
       if (isEditMode && currentPackage) {
@@ -340,10 +343,12 @@ const ConsultationPackage = () => {
         return (
           <Switch
             checked={isActive}
-            onChange={(checked) => handleStatusChange(record.consultationPackageId, checked)}
+            onChange={(checked) =>
+              handleStatusChange(record.consultationPackageId, checked)
+            }
           />
         );
-      }
+      },
     },
     {
       title: "Mô tả",
@@ -650,60 +655,90 @@ const ConsultationPackage = () => {
                 />
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Mã gói</p>
-                <p className="text-base font-medium text-gray-800">{currentPackage.consultationPackageId}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Tên gói</p>
-                <p className="text-base font-medium text-gray-800">{currentPackage.packageName}</p>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá tối thiểu</p>
-                <p className="text-base font-medium text-gray-800">{currentPackage.minPrice?.toLocaleString('vi-VN')} đ</p>
-              </div>
-              
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá tối đa</p>
-                <p className="text-base font-medium text-gray-800">{currentPackage.maxPrice?.toLocaleString('vi-VN')} đ</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Mã gói
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {currentPackage.consultationPackageId}
+                </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Trạng thái</p>
-                <Tag color={currentPackage.status === "Active" ? "green" : "red"}>
-                  {currentPackage.status === "Active" ? "Hoạt động" : "Không hoạt động"}
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Tên gói
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {currentPackage.packageName}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Giá tối thiểu
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {currentPackage.minPrice?.toLocaleString("vi-VN")} đ
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Giá tối đa
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {currentPackage.maxPrice?.toLocaleString("vi-VN")} đ
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Trạng thái
+                </p>
+                <Tag
+                  color={currentPackage.status === "Active" ? "green" : "red"}
+                >
+                  {currentPackage.status === "Active"
+                    ? "Hoạt động"
+                    : "Không hoạt động"}
                 </Tag>
               </div>
             </div>
 
             <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Phù hợp với</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Phù hợp với
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed bg-gray-50 p-4 rounded">
                   {currentPackage.suitableFor}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Mô tả
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {currentPackage.description}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Thông tin cần thiết</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Thông tin cần thiết
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {currentPackage.requiredInfo}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Chi tiết giá</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Chi tiết giá
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {currentPackage.pricingDetails}
                 </p>
