@@ -135,7 +135,7 @@ export const getAllDocumentsByMaster = async (params = {}) => {
 // Thêm hàm phê duyệt tài liệu
 export const approveDocument = async (id) => {
   try {
-    const response = await apiClient.put(
+    const response = await apiClient.patch(
       `/FengShuiDocument/${id}/confirm-by-manager`
     );
     return response.data;
@@ -148,7 +148,7 @@ export const approveDocument = async (id) => {
 // Thêm hàm từ chối hợp đồng
 export const rejectDocument = async (id) => {
   try {
-    const response = await apiClient.put(
+    const response = await apiClient.patch(
       `/FengShuiDocument/${id}/cancel-by-manager`
     );
     return response.data;
