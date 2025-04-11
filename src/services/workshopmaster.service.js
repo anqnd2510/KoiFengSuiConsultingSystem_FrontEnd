@@ -20,7 +20,7 @@ export const getAllWorkshops = async () => {
     }
 
     const response = await apiClient.get(
-      `${WORKSHOP_ENDPOINT}/sort-createdDate`
+      `${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`
     );
     console.log("API Response:", response.data);
 
@@ -420,7 +420,7 @@ export const getPendingWorkshops = async () => {
     }
 
     // Sử dụng API getAllWorkshops thay vì pending-workshops
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`);
     console.log("API Response:", response.data);
 
     // Kiểm tra cấu trúc response
@@ -452,3 +452,4 @@ export const getPendingWorkshops = async () => {
     throw error;
   }
 };
+  

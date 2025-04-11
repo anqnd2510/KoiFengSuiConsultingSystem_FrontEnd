@@ -13,7 +13,7 @@ const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
  */
 export const getWorkshopsByCreatedDate = async () => {
   try {
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
