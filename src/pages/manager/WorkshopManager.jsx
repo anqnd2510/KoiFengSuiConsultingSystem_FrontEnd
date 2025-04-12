@@ -213,16 +213,6 @@ const WorkshopManager = () => {
           >
             Xem
           </Button>
-          <Button
-            type="default"
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate(`/staff/audience/${record.workshopId || record.id}`);
-            }}
-          >
-            Người tham dự
-          </Button>
         </div>
       ),
     },
@@ -236,7 +226,7 @@ const WorkshopManager = () => {
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
             <div className="flex items-center gap-4">
-              <BackButton to="/manager/dashboard" />
+              <BackButton to="/manager/workshop-list" />
               <SearchBar
                 placeholder="Tìm workshop..."
                 onSearch={handleSearch}
@@ -287,10 +277,9 @@ const WorkshopManager = () => {
 
                   <div className="mt-4 flex justify-end">
                     <Pagination
-                      current={currentPage}
-                      total={sortedWorkshops.length}
-                      pageSize={10}
-                      onChange={handlePageChange}
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(sortedWorkshops.length / 10)}
+                      onPageChange={handlePageChange}
                     />
                   </div>
                 </>
@@ -336,6 +325,13 @@ const WorkshopManager = () => {
                 <p>{selectedWorkshop.date}</p>
               </div>
               <div>
+                <p className="font-semibold">Thời gian:</p>
+                <div>
+                  <p>Bắt đầu: {selectedWorkshop.startTime || "Chưa có thông tin"}</p>
+                  <p>Kết thúc: {selectedWorkshop.endTime || "Chưa có thông tin"}</p>
+                </div>
+              </div>
+              <div>
                 <p className="font-semibold">Giá:</p>
                 <p>
                   {selectedWorkshop.price
@@ -359,13 +355,6 @@ const WorkshopManager = () => {
               <div className="mt-4">
                 <p className="font-semibold">Mô tả:</p>
                 <p>{selectedWorkshop.description}</p>
-              </div>
-            )}
-
-            {selectedWorkshop.attendees && (
-              <div className="mt-4">
-                <p className="font-semibold">Số người tham dự:</p>
-                <p>{selectedWorkshop.attendees.length}</p>
               </div>
             )}
           </div>

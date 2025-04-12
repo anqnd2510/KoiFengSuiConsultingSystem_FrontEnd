@@ -130,12 +130,14 @@ export const createWorkshop = async (workshopData) => {
     // Tạo FormData để gửi dữ liệu có file
     const formData = new FormData();
     formData.append("WorkshopName", workshopData.name);
+    formData.append("LocationId", workshopData.locationId);
     formData.append("StartDate", workshopData.date);
-    formData.append("Location", workshopData.location);
-    formData.append("Description", workshopData.description || "");
-    formData.append("Capacity", capacity);
-    formData.append("Status", "Pending");
+    formData.append("StartTime", workshopData.startTime);
+    formData.append("EndTime", workshopData.endTime);
     formData.append("Price", price);
+    formData.append("Capacity", capacity);
+    formData.append("Description", workshopData.description || "");
+    formData.append("Status", "Pending");
     formData.append("MasterName", userName || "Unknown Master");
     formData.append("MasterAccount", userEmail || "unknown@example.com");
 
@@ -350,6 +352,9 @@ export const formatWorkshopsData = (workshopsData) => {
   if (!Array.isArray(workshopsData)) return [];
 
   return workshopsData.map((workshop) => {
+    // Log dữ liệu workshop để debug
+    console.log("Workshop data đã được xử lý:", workshop);
+
     // Xử lý URL hình ảnh
     let imageUrl = "https://via.placeholder.com/400x300?text=Workshop+Image";
 
@@ -387,21 +392,23 @@ export const formatWorkshopsData = (workshopsData) => {
 
     return {
       id: workshop.workshopId,
-      workshopId: workshop.workshopId, // Thêm trường workshopId để đảm bảo tương thích
+      workshopId: workshop.workshopId,
       name: workshop.workshopName,
       location: workshop.location,
       date: new Date(workshop.startDate).toLocaleDateString("vi-VN"),
-      startDate: workshop.startDate, // Giữ nguyên startDate
-      endDate: workshop.endDate, // Giữ nguyên endDate nếu có
+      startDate: workshop.startDate,
+      endDate: workshop.endDate,
+      startTime: workshop.startTime ? workshop.startTime.substring(0, 5) : "Chưa có thông tin",
+      endTime: workshop.endTime ? workshop.endTime.substring(0, 5) : "Chưa có thông tin",
       image: imageUrl,
-      imageUrl: imageUrl, // Đảm bảo cả hai trường đều có giá trị
-      price: workshop.price, // Giữ nguyên giá trị số
-      capacity: workshop.capacity, // Giữ nguyên giá trị số
+      imageUrl: imageUrl,
+      price: workshop.price,
+      capacity: workshop.capacity,
       ticketPrice: `${workshop.price.toLocaleString("vi-VN")} VND`,
       ticketSlots: workshop.capacity,
       status: mapWorkshopStatus(workshop.status),
       description: workshop.description || "",
-      content: workshop.content || "", // Thêm trường content nếu có
+      content: workshop.content || "",
       masterName: workshop.masterName || ""
     };
   });

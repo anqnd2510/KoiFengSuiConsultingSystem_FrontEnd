@@ -27,6 +27,8 @@ const defaultWorkshopInfo = {
   master: "Không xác định",
   location: "Không xác định",
   date: "Không xác định",
+  startTime: "Chưa có thông tin",
+  endTime: "Chưa có thông tin"
 };
 
 const AudienceList = () => {
@@ -45,11 +47,36 @@ const AudienceList = () => {
       try {
         const workshopData = await getWorkshopById(workshopId);
         if (workshopData) {
+          // Xử lý thời gian
+          let startTime = "Chưa có thông tin";
+          let endTime = "Chưa có thông tin";
+
+          // Thử các trường khác nhau có thể chứa thông tin thời gian
+          if (workshopData.timeStart) startTime = workshopData.timeStart;
+          else if (workshopData.startTime) startTime = workshopData.startTime;
+          else if (workshopData.start_time) startTime = workshopData.start_time;
+          else if (workshopData.time_start) startTime = workshopData.time_start;
+
+          if (workshopData.timeEnd) endTime = workshopData.timeEnd;
+          else if (workshopData.endTime) endTime = workshopData.endTime;
+          else if (workshopData.end_time) endTime = workshopData.end_time;
+          else if (workshopData.time_end) endTime = workshopData.time_end;
+
+          // Format thời gian nếu có
+          if (startTime !== "Chưa có thông tin" && startTime.length > 5) {
+            startTime = startTime.substring(0, 5);
+          }
+          if (endTime !== "Chưa có thông tin" && endTime.length > 5) {
+            endTime = endTime.substring(0, 5);
+          }
+
           setWorkshop({
             name: workshopData.workshopName || "Workshop",
             master: workshopData.masterName || "Không xác định",
             location: workshopData.location || "Không xác định",
             date: workshopData.startDate ? new Date(workshopData.startDate).toLocaleDateString('vi-VN') : "Không xác định",
+            startTime: startTime,
+            endTime: endTime
           });
         }
       } catch (err) {
@@ -87,16 +114,11 @@ const AudienceList = () => {
           }));
           
           setAudiences(formattedAudiences);
-          message.success(`Đã tải ${formattedAudiences.length} người tham dự`);
         } else {
-          console.error("Lỗi khi lấy danh sách người tham dự:", result.message);
-          setError(result.message || "Không thể lấy danh sách người tham dự");
           setAudiences([]);
         }
       } catch (err) {
         console.error("Lỗi khi tải dữ liệu người tham dự:", err);
-        setError(`Không thể tải dữ liệu người tham dự: ${err.message}`);
-        message.error("Không thể tải dữ liệu người tham dự");
         setAudiences([]);
       } finally {
         setLoading(false);
@@ -106,7 +128,6 @@ const AudienceList = () => {
     if (workshopId) {
       fetchAudiences();
     } else {
-      setError("Không tìm thấy workshop ID");
       setLoading(false);
     }
   }, [workshopId]);
@@ -289,7 +310,7 @@ const AudienceList = () => {
               <BackButton to="/staff/workshop-staff" />
               <Title level={4}>{workshop.name}</Title>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <p className="text-gray-500">Người hướng dẫn</p>
                 <p className="font-medium">{workshop.master}</p>
@@ -302,6 +323,13 @@ const AudienceList = () => {
                 <p className="text-gray-500">Ngày</p>
                 <p className="font-medium">{workshop.date}</p>
               </div>
+              <div>
+                <p className="text-gray-500">Thời gian</p>
+                <div className="font-medium">
+                  <p>Bắt đầu: {workshop.startTime}</p>
+                  <p>Kết thúc: {workshop.endTime}</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -313,8 +341,6 @@ const AudienceList = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && <Error message={error} />}
-
         {loading ? (
           <div className="flex justify-center items-center py-10">
             <Spin size="large" tip="Đang tải dữ liệu..." />
@@ -322,12 +348,9 @@ const AudienceList = () => {
         ) : (
           <>
             {audiences.length === 0 ? (
-              <Alert
-                message="Không có dữ liệu"
-                description="Không tìm thấy người tham dự cho workshop này. Vui lòng kiểm tra lại ID workshop hoặc thử lại sau."
-                type="info"
-                showIcon
-              />
+              <div className="text-center py-10">
+                <p className="text-gray-500">Không tìm thấy người tham dự cho workshop này</p>
+              </div>
             ) : (
               <>
                 <CustomTable

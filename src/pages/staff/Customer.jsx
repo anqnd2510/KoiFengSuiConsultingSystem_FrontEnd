@@ -615,14 +615,8 @@ const Customer = () => {
           loading={loading}
           pagination={{
             current: currentPage,
-            total: filteredData.length,
-            pageSize: pageSize,
-            showSizeChanger: true,
-            showTotal: (total) => `Tổng số ${total} khách hàng`,
-            onChange: (page, pageSize) => {
-              setCurrentPage(page);
-              setPageSize(pageSize);
-            },
+            totalPages: Math.ceil(filteredData.length / pageSize),
+            onPageChange: handlePageChange
           }}
         />
       </div>

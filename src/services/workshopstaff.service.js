@@ -14,7 +14,9 @@ const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
 export const getWorkshopsByCreatedDate = async () => {
   try {
     const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`);
-    console.log("API Response:", response.data);
+    console.log("API Response raw:", response);
+    console.log("API Response data:", response.data);
+    console.log("Workshop data structure:", response.data?.data?.[0]);
     
     // Kiểm tra cấu trúc response
     if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
@@ -59,35 +61,33 @@ export const getWorkshopById = async (id) => {
  * @returns {string} Trạng thái hiển thị trong UI
  */
 export const mapWorkshopStatus = (apiStatus) => {
-  // Kiểm tra nếu apiStatus là chuỗi
+  const statusMap = {
+    Scheduled: "Sắp diễn ra",
+    "Open Registration": "Đang diễn ra",
+    Completed: "Đã kết thúc",
+    Cancelled: "Đã hủy",
+    Pending: "Chờ duyệt",
+    Approved: "Sắp diễn ra",
+    Rejected: "Từ chối",
+  };
+
+  // Nếu apiStatus là string, chuyển về đúng format
   if (typeof apiStatus === 'string') {
-    switch (apiStatus.toLowerCase()) {
-      case 'open registration':
-        return "Đang diễn ra";
-      case 'scheduled':
-        return "Sắp diễn ra";
-      case 'cancelled':
-        return "Cancel";
-      case 'completed':
-        return "Đã xong";
-      default:
-        return "Sắp diễn ra";
+    // Chuyển đổi "open registration" thành "Open Registration"
+    apiStatus = apiStatus.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+  }
+  // Nếu apiStatus là số, chuyển đổi sang trạng thái tương ứng
+  else if (typeof apiStatus === 'number') {
+    switch (apiStatus) {
+      case 1: return "Đã check-in";
+      case 2: return "Đang kiểm tra";
+      case 3: return "Từ chối";
+      case 0: return "Đã hủy";
+      default: return "Đang kiểm tra";
     }
   }
-  
-  // Nếu apiStatus là số
-  switch (apiStatus) {
-    case 1:
-      return "Checked in";
-    case 2:
-      return "Checking";
-    case 3:
-      return "Reject";
-    case 0:
-      return "Cancel";
-    default:
-      return "Checking";
-  }
+
+  return statusMap[apiStatus] || "Không xác định";
 };
 
 /**
@@ -105,6 +105,9 @@ export const formatWorkshopsData = (workshopsData) => {
   
   return workshopsData.map(workshop => {
     try {
+      // Log để debug
+      console.log('Workshop raw data:', workshop);
+      
       // Kiểm tra dữ liệu đầu vào
       if (!workshop) {
         console.warn('Workshop không hợp lệ:', workshop);
@@ -121,6 +124,29 @@ export const formatWorkshopsData = (workshopsData) => {
       if (userEmail === "bob@example.com" && masterName === "Sensei Tanaka") {
         masterName = "Bob Chen";
       }
+
+      // Xử lý thời gian
+      let startTime = "Chưa có thông tin";
+      let endTime = "Chưa có thông tin";
+
+      // Thử các trường khác nhau có thể chứa thông tin thời gian
+      if (workshop.timeStart) startTime = workshop.timeStart;
+      else if (workshop.startTime) startTime = workshop.startTime;
+      else if (workshop.start_time) startTime = workshop.start_time;
+      else if (workshop.time_start) startTime = workshop.time_start;
+
+      if (workshop.timeEnd) endTime = workshop.timeEnd;
+      else if (workshop.endTime) endTime = workshop.endTime;
+      else if (workshop.end_time) endTime = workshop.end_time;
+      else if (workshop.time_end) endTime = workshop.time_end;
+
+      // Format thời gian nếu có
+      if (startTime !== "Chưa có thông tin" && startTime.length > 5) {
+        startTime = startTime.substring(0, 5);
+      }
+      if (endTime !== "Chưa có thông tin" && endTime.length > 5) {
+        endTime = endTime.substring(0, 5);
+      }
       
       // Tạo đối tượng workshop đã định dạng
       const formattedWorkshop = {
@@ -130,11 +156,15 @@ export const formatWorkshopsData = (workshopsData) => {
         master: masterName,
         location: workshop.location || "Không có địa điểm",
         date: workshop.startDate ? new Date(workshop.startDate).toLocaleDateString('vi-VN') : "Không có ngày",
+        startTime: startTime,
+        endTime: endTime,
         status: mapWorkshopStatus(workshop.status),
         price: workshop.price,
         capacity: workshop.capacity,
         description: workshop.description
       };
+
+      console.log('Formatted workshop:', formattedWorkshop);
       
       return formattedWorkshop;
     } catch (error) {
