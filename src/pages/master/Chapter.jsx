@@ -41,7 +41,12 @@ import axios from "axios";
 const { TextArea } = Input;
 
 // Form component cho chương
-const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) => {
+const ChapterForm = ({
+  form,
+  loading,
+  isUpdate = false,
+  currentVideo = null,
+}) => {
   return (
     <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
@@ -103,8 +108,8 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
         rules={[
           {
             required: !isUpdate,
-            message: "Vui lòng tải lên file video"
-          }
+            message: "Vui lòng tải lên file video",
+          },
         ]}
       >
         <Upload
@@ -290,6 +295,32 @@ const Chapter = () => {
       const values = await chapterForm.validateFields();
       setCreatingChapter(true);
 
+      // Kiểm tra kích thước video
+      if (values.video && values.video.length > 0) {
+        const videoFile = values.video[0].originFileObj;
+        const fileSizeMB = videoFile.size / (1024 * 1024);
+        console.log(`Kích thước file video: ${fileSizeMB.toFixed(2)} MB`);
+
+        // Hiển thị thông báo nếu file lớn
+        if (fileSizeMB > 50) {
+          message.warning(
+            `File video của bạn khá lớn (${fileSizeMB.toFixed(2)} MB). 
+            Quá trình tải lên có thể mất nhiều thời gian. Vui lòng đợi...`,
+            8
+          );
+        }
+
+        // Từ chối file quá lớn
+        if (fileSizeMB > 100) {
+          message.error(
+            "File video quá lớn (>100MB). Vui lòng nén file hoặc chọn file nhỏ hơn.",
+            5
+          );
+          setCreatingChapter(false);
+          return;
+        }
+      }
+
       // Tạo FormData để gửi dữ liệu và file
       const formData = new FormData();
       formData.append("CourseId", courseId);
@@ -302,6 +333,13 @@ const Chapter = () => {
         const videoFile = values.video[0].originFileObj;
         console.log("Đính kèm file video:", videoFile.name);
         formData.append("Video", videoFile);
+
+        // Hiển thị thông báo upload đang tiến hành
+        message.loading({
+          content: "Đang tải video lên server...",
+          key: "uploadProgress",
+          duration: 0,
+        });
       }
 
       if (values.content) {
@@ -320,37 +358,68 @@ const Chapter = () => {
 
       console.log("Đang tạo chương mới...");
 
-      // Gọi API tạo chương
-      const response = await createChapter(formData);
+      try {
+        // Gọi API tạo chương
+        const response = await createChapter(formData);
 
-      if (response && response.isSuccess) {
-        message.success(response.message || "Tạo mới chương thành công!");
+        // Đóng thông báo loading nếu còn
+        message.destroy("uploadProgress");
 
-        // Cập nhật lại danh sách chương
-        const newChapter = {
-          id: response.data.chapterId || response.data.id,
-          title:
-            response.data.chapterName ||
-            response.data.title ||
-            values.chapterName,
-          description: response.data.description || values.description,
-          order: response.data.order || values.order,
-          content: response.data.content || values.content || "",
-          videoUrl: response.data.videoUrl || response.data.video || "",
-        };
+        if (response && response.isSuccess) {
+          message.success(response.message || "Tạo mới chương thành công!");
 
-        // Thêm chương mới vào danh sách và sắp xếp lại theo thứ tự
-        const updatedChapters = [...courseChapters, newChapter].sort(
-          (a, b) => a.order - b.order
-        );
+          // Cập nhật lại danh sách chương
+          const newChapter = {
+            id: response.data.chapterId || response.data.id,
+            title:
+              response.data.chapterName ||
+              response.data.title ||
+              values.chapterName,
+            description: response.data.description || values.description,
+            order: response.data.order || values.order,
+            content: response.data.content || values.content || "",
+            videoUrl: response.data.videoUrl || response.data.video || "",
+          };
 
-        setCourseChapters(updatedChapters);
+          // Thêm chương mới vào danh sách và sắp xếp lại theo thứ tự
+          const updatedChapters = [...courseChapters, newChapter].sort(
+            (a, b) => a.order - b.order
+          );
 
-        // Đóng modal và reset form
-        setIsCreateChapterModalOpen(false);
-        chapterForm.resetFields();
-      } else {
-        message.error(response?.message || "Không thể tạo chương mới");
+          setCourseChapters(updatedChapters);
+
+          // Đóng modal và reset form
+          setIsCreateChapterModalOpen(false);
+          chapterForm.resetFields();
+        } else {
+          message.error(response?.message || "Không thể tạo chương mới");
+        }
+      } catch (error) {
+        // Đóng thông báo loading
+        message.destroy("uploadProgress");
+
+        console.error("Lỗi khi gọi API tạo chương:", error);
+
+        // Thông báo lỗi cụ thể
+        if (
+          error.message.includes("timeout") ||
+          error.message.includes("quá lớn")
+        ) {
+          message.error(
+            "File video quá lớn hoặc kết nối chậm. Vui lòng nén file hoặc chọn file nhỏ hơn.",
+            5
+          );
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("kết nối")
+        ) {
+          message.error(
+            "Lỗi kết nối đến server. Vui lòng kiểm tra kết nối internet và thử lại.",
+            5
+          );
+        } else {
+          message.error("Không thể tạo chương: " + error.message);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi tạo chương mới:", error);
@@ -847,8 +916,8 @@ const Chapter = () => {
         className="chapter-modal"
       >
         <div className="p-4">
-          <ChapterForm 
-            form={updateChapterForm} 
+          <ChapterForm
+            form={updateChapterForm}
             loading={updatingChapter}
             isUpdate={true}
             currentVideo={selectedChapter?.videoUrl}
