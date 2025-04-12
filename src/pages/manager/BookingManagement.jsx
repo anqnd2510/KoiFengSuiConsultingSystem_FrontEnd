@@ -23,6 +23,8 @@ const BookingManagement = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -89,6 +91,7 @@ const BookingManagement = () => {
   };
 
   const handlePageChange = (page) => {
+    setCurrentPage(page);
     console.log("Chuyển đến trang:", page);
   };
 
@@ -183,8 +186,8 @@ const BookingManagement = () => {
         )}
 
         <Pagination
-          currentPage={1}
-          totalPages={5}
+          currentPage={currentPage}
+          totalPages={Math.max(1, Math.ceil(bookings.length / pageSize))}
           onPageChange={handlePageChange}
         />
 

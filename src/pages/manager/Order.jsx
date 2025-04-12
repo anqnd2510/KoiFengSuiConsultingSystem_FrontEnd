@@ -15,6 +15,7 @@ const Order = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const pageSize = 10;
   const navigate = useNavigate();
 
   // State cho modal
@@ -199,6 +200,12 @@ const Order = () => {
       order.serviceType.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Phân trang dữ liệu
+  const paginatedOrders = filteredOrders.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <div className="p-0">
       <Header
@@ -221,13 +228,13 @@ const Order = () => {
 
         <CustomTable
           columns={columns}
-          dataSource={filteredOrders}
+          dataSource={paginatedOrders}
           loading={loading}
         />
 
         <Pagination
           currentPage={currentPage}
-          totalPages={Math.ceil(filteredOrders.length / 10)}
+          totalPages={Math.ceil(filteredOrders.length / pageSize)}
           onPageChange={handlePageChange}
         />
       </div>

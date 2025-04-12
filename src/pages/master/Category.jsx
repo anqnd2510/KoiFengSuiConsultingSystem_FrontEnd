@@ -443,43 +443,54 @@ const Category = () => {
             }}
           >
             Đóng
-          </CustomButton>,
+          </CustomButton>
         ]}
+        width={800}
       >
         {selectedCategory && (
-          <Descriptions column={1}>
-            <Descriptions.Item label="Mã loại khóa học">
-              {selectedCategory.categoryId}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tên loại khóa học">
-              {selectedCategory.categoryName}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag
-                color={selectedCategory.status === "Active" ? "green" : "red"}
-              >
-                {selectedCategory.status === "Active"
-                  ? "Hoạt động"
-                  : "Không hoạt động"}
-              </Tag>
-            </Descriptions.Item>
-            {selectedCategory.image && (
-              <Descriptions.Item label="Hình ảnh">
+          <div className="space-y-6">
+            {/* Thêm phần hiển thị hình ảnh */}
+            <div className="rounded-lg overflow-hidden h-64 bg-gray-100 mb-4">
+              {selectedCategory.imageUrl ? (
                 <img
-                  src={selectedCategory.image}
+                  src={selectedCategory.imageUrl}
                   alt={selectedCategory.categoryName}
-                  className="max-w-full h-auto rounded"
-                  style={{ maxHeight: "200px" }}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    console.error("Lỗi tải hình ảnh:", e);
+                    e.target.src = "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh";
+                  }}
                 />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <UploadCloud className="w-16 h-16 text-gray-400 mx-auto" />
+                    <p className="mt-2 text-gray-500">Không có hình ảnh</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Descriptions column={1}>
+              <Descriptions.Item label="Mã loại khóa học">
+                {selectedCategory.categoryId}
               </Descriptions.Item>
-            )}
-          </Descriptions>
+              <Descriptions.Item label="Tên loại khóa học">
+                {selectedCategory.categoryName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag color={selectedCategory.status === "Active" ? "green" : "red"}>
+                  {selectedCategory.status === "Active" ? "Hoạt động" : "Không hoạt động"}
+                </Tag>
+              </Descriptions.Item>
+            </Descriptions>
+          </div>
         )}
       </Modal>
 
-      {/* Modal chỉnh sửa loại khóa học */}
+      {/* Modal cập nhật loại khóa học */}
       <Modal
-        title="Chỉnh sửa loại khóa học"
+        title="Cập nhật loại khóa học"
         open={isEditModalOpen}
         onCancel={() => {
           setIsEditModalOpen(false);
@@ -502,7 +513,7 @@ const Category = () => {
             onClick={handleEditCategory}
           >
             Cập nhật
-          </CustomButton>,
+          </CustomButton>
         ]}
       >
         <Form form={form} layout="vertical">
@@ -511,11 +522,8 @@ const Category = () => {
             label="Tên loại khóa học"
             rules={[
               { required: true, message: "Vui lòng nhập tên loại khóa học" },
-              {
-                whitespace: true,
-                message: "Tên không được chỉ chứa khoảng trắng",
-              },
-              { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+              { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
+              { min: 2, message: "Tên phải có ít nhất 2 ký tự" }
             ]}
           >
             <Input placeholder="Nhập tên loại khóa học" />
@@ -523,37 +531,56 @@ const Category = () => {
 
           <Form.Item
             name="image"
-            label="Hình ảnh mới (không bắt buộc)"
+            label="Hình ảnh"
             valuePropName="fileList"
             getValueFromEvent={(e) => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
           >
-            <Upload
-              listType="picture-card"
-              maxCount={1}
-              beforeUpload={() => false}
-              accept="image/*"
-            >
-              <div className="flex flex-col items-center">
-                <UploadCloud className="w-6 h-6 text-gray-400" />
-                <div className="mt-2">Tải lên</div>
-              </div>
-            </Upload>
-          </Form.Item>
+            <div className="mt-2">
+              <Upload
+                listType="picture-card"
+                maxCount={1}
+                beforeUpload={() => false}
+                accept="image/*"
+                onChange={(info) => {
+                  console.log("File changed:", info.fileList);
+                  if (info.fileList.length > 0) {
+                    form.setFieldsValue({
+                      image: info.fileList,
+                    });
+                  } else {
+                    form.setFieldsValue({
+                      image: [],
+                    });
+                  }
+                }}
+              >
+                <div className="flex flex-col items-center">
+                  <UploadCloud className="w-6 h-6 text-gray-400" />
+                  <div className="mt-2">Tải lên</div>
+                </div>
+              </Upload>
 
-          {selectedCategory && selectedCategory.image && (
-            <div className="mt-4">
-              <p className="text-sm text-gray-500 mb-2">Hình ảnh hiện tại:</p>
-              <img
-                src={selectedCategory.image}
-                alt={selectedCategory.categoryName}
-                className="max-w-full h-auto rounded"
-                style={{ maxHeight: "100px" }}
-              />
+              {/* Hiển thị hình ảnh hiện tại nếu có */}
+              {selectedCategory && selectedCategory.imageUrl && !form.getFieldValue('image')?.length && (
+                <div className="mt-4">
+                  <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
+                  <img
+                    src={selectedCategory.imageUrl}
+                    alt={selectedCategory.categoryName}
+                    className="max-h-[200px] object-contain rounded border p-2"
+                    onError={(e) => {
+                      console.error("Lỗi tải hình ảnh:", e);
+                      e.target.src = "https://via.placeholder.com/200x200?text=Không+tải+được+ảnh";
+                      message.warning("Không thể hiển thị hình ảnh, nhưng bạn vẫn có thể tải lên hình mới");
+                    }}
+                  />
+                </div>
+              )}
             </div>
-          )}
+          </Form.Item>
         </Form>
       </Modal>
     </div>

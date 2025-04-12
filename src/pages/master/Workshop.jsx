@@ -14,6 +14,7 @@ import {
   Tag,
   Divider,
   Tabs,
+  TimePicker,
 } from "antd";
 import {
   UploadCloud,
@@ -23,6 +24,7 @@ import {
   Ticket,
   Info,
   Eye,
+  Clock,
 } from "lucide-react";
 import WorkshopTable from "../../components/Workshop/WorkshopTable";
 import SearchBar from "../../components/Common/SearchBar";
@@ -43,13 +45,15 @@ import {
   formatPendingWorkshopsData,
 } from "../../services/approve.service";
 import { isAuthenticated } from "../../services/auth.service";
+import { getAllLocations } from "../../services/location.service";
+import dayjs from "dayjs";
 
 const { TextArea } = Input;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
 // Component form cho workshop
-const WorkshopForm = ({ form, loading }) => {
+const WorkshopForm = ({ form, loading, locations }) => {
   return (
     <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
@@ -62,43 +66,79 @@ const WorkshopForm = ({ form, loading }) => {
 
       <Form.Item
         label="Địa điểm"
-        name="location"
-        rules={[{ required: true, message: "Vui lòng nhập địa điểm" }]}
+        name="locationId"
+        rules={[{ required: true, message: "Vui lòng chọn địa điểm!" }]}
       >
-        <Input placeholder="Nhập địa điểm tổ chức hội thảo" />
-      </Form.Item>
-
-      <Form.Item
-        label="Ngày tổ chức"
-        name="date"
-        rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
-      >
-        <DatePicker
-          format="DD/MM/YYYY"
-          style={{ width: "100%" }}
-          placeholder="Chọn ngày tổ chức"
+        <Select
+          placeholder="Chọn địa điểm"
+          options={locations.map((location) => ({
+            value: location.id,
+            label: location.name
+          }))}
         />
       </Form.Item>
 
-      <Form.Item
-        label="Giá vé"
-        name="ticketPrice"
-        rules={[{ required: true, message: "Vui lòng nhập giá vé" }]}
-      >
-        <Input placeholder="Nhập giá vé (VD: 300.000 VND)" />
-      </Form.Item>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item
+            label="Ngày tổ chức"
+            name="date"
+            rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
+          >
+            <DatePicker
+              format="DD/MM/YYYY"
+              style={{ width: "100%" }}
+              placeholder="Chọn ngày tổ chức"
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            label="Giờ bắt đầu"
+            name="startTime"
+            rules={[{ required: true, message: "Vui lòng chọn giờ bắt đầu" }]}
+          >
+            <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ bắt đầu" />
+          </Form.Item>
+        </Col>
+      </Row>
 
-      <Form.Item
-        label="Số lượng vé"
-        name="ticketSlots"
-        rules={[{ required: true, message: "Vui lòng nhập số lượng vé" }]}
-      >
-        <InputNumber
-          min={1}
-          placeholder="Nhập số lượng vé"
-          style={{ width: "100%" }}
-        />
-      </Form.Item>
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item
+            label="Giờ kết thúc"
+            name="endTime"
+            rules={[{ required: true, message: "Vui lòng chọn giờ kết thúc" }]}
+          >
+            <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ kết thúc" />
+          </Form.Item>
+        </Col>
+      </Row>
+
+      <Row gutter={16}>
+        <Col span={12}>
+          <Form.Item
+            label="Giá vé"
+            name="ticketPrice"
+            rules={[{ required: true, message: "Vui lòng nhập giá vé" }]}
+          >
+            <Input placeholder="Nhập giá vé (VD: 300.000 VND)" />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item
+            label="Số lượng vé"
+            name="ticketSlots"
+            rules={[{ required: true, message: "Vui lòng nhập số lượng vé" }]}
+          >
+            <InputNumber
+              min={1}
+              placeholder="Nhập số lượng vé"
+              style={{ width: "100%" }}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
 
       <Form.Item
         label="Hình ảnh"
@@ -138,6 +178,7 @@ const Workshop = () => {
   const [workshops, setWorkshops] = useState([]);
   const [pendingWorkshops, setPendingWorkshops] = useState([]);
   const [rejectedWorkshops, setRejectedWorkshops] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
@@ -162,6 +203,7 @@ const Workshop = () => {
     }
     fetchWorkshops();
     fetchPendingWorkshops();
+    fetchLocations();
   }, [navigate]);
 
   // Thêm useEffect để refresh danh sách workshop khi quay lại từ trang WorkshopCheck
@@ -270,6 +312,32 @@ const Workshop = () => {
     }
   };
 
+  // Thêm hàm fetchLocations
+  const fetchLocations = async () => {
+    try {
+      setLoading(true);
+        const data = await getAllLocations();
+      console.log("Response từ API locations:", data);
+
+      if (Array.isArray(data)) {
+        console.log("Đã tải được", data.length, "địa điểm");
+        const formattedLocations = data.map(location => ({
+          id: location.locationId,
+          name: location.locationName
+        }));
+        setLocations(formattedLocations);
+      } else {
+        console.warn("Không có dữ liệu địa điểm hoặc dữ liệu không đúng định dạng");
+        setLocations([]);
+      }
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách địa điểm:", err);
+      setLocations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSearch = (searchTerm) => {
     // Xử lý tìm kiếm ở đây
     console.log("Searching for:", searchTerm);
@@ -326,6 +394,41 @@ const Workshop = () => {
     await fetchPendingWorkshops();
   };
 
+  // Thêm hàm kiểm tra trùng lịch
+  const checkTimeConflict = (workshops, newWorkshop) => {
+    return workshops.some(workshop => {
+      // Chỉ kiểm tra các workshop cùng địa điểm
+      if (workshop.locationId !== newWorkshop.locationId) {
+        return false;
+      }
+
+      // Kiểm tra ngày
+      const workshopDate = new Date(workshop.date).toDateString();
+      const newDate = new Date(newWorkshop.date).toDateString();
+      if (workshopDate !== newDate) {
+        return false;
+      }
+
+      // Chuyển đổi thời gian sang phút để dễ so sánh
+      const getMinutes = (timeStr) => {
+        const [hours, minutes] = timeStr.split(':').map(Number);
+        return hours * 60 + minutes;
+      };
+
+      const workshopStart = getMinutes(workshop.startTime);
+      const workshopEnd = getMinutes(workshop.endTime);
+      const newStart = getMinutes(newWorkshop.startTime);
+      const newEnd = getMinutes(newWorkshop.endTime);
+
+      // Kiểm tra xem có trùng thời gian không
+      return (
+        (newStart >= workshopStart && newStart < workshopEnd) || // Thời gian bắt đầu nằm trong khoảng
+        (newEnd > workshopStart && newEnd <= workshopEnd) || // Thời gian kết thúc nằm trong khoảng
+        (newStart <= workshopStart && newEnd >= workshopEnd) // Bao trọn workshop cũ
+      );
+    });
+  };
+
   const handleSaveWorkshop = () => {
     // Kiểm tra xác thực trước khi tạo workshop
     if (!isAuthenticated()) {
@@ -343,7 +446,6 @@ const Workshop = () => {
           // Xử lý giá vé
           let ticketPrice = 0;
           if (values.ticketPrice) {
-            // Loại bỏ tất cả các ký tự không phải số
             const numericValue = values.ticketPrice.replace(/[^\d]/g, "");
             ticketPrice = numericValue ? parseFloat(numericValue) : 0;
           }
@@ -353,44 +455,98 @@ const Workshop = () => {
             ? parseInt(values.ticketSlots, 10)
             : 0;
 
-          // Đảm bảo ngày có định dạng đúng (YYYY-MM-DD)
+          // Format ngày thành YYYY-MM-DD
           const formattedDate = values.date
             ? values.date.format("YYYY-MM-DD")
             : new Date().toISOString().split("T")[0];
+
+          // Format giờ thành HH:mm
+          const startTime = values.startTime ? values.startTime.format("HH:mm") : "";
+          const endTime = values.endTime ? values.endTime.format("HH:mm") : "";
+
+          // Kiểm tra thời gian kết thúc phải sau thời gian bắt đầu
+          const startDateTime = dayjs(`${formattedDate} ${startTime}`);
+          const endDateTime = dayjs(`${formattedDate} ${endTime}`);
+          
+          if (endDateTime.isBefore(startDateTime)) {
+            message.error("Thời gian kết thúc phải sau thời gian bắt đầu");
+            setLoading(false);
+            return;
+          }
+
+          // Kiểm tra ngày phải từ ngày hiện tại trở đi
+          const today = dayjs().startOf('day');
+          const selectedDate = dayjs(formattedDate).startOf('day');
+          if (selectedDate.isBefore(today)) {
+            message.error("Ngày tổ chức phải từ ngày hiện tại trở đi");
+            setLoading(false);
+            return;
+          }
+
+          // Tạo object workshop mới để kiểm tra trùng lịch
+          const newWorkshop = {
+            locationId: values.locationId,
+            date: formattedDate,
+            startTime: startTime,
+            endTime: endTime
+          };
+
+          // Kiểm tra trùng lịch
+          const hasConflict = checkTimeConflict([...workshops, ...pendingWorkshops], newWorkshop);
+          if (hasConflict) {
+            message.error("Đã có workshop khác diễn ra tại địa điểm này trong khoảng thời gian đã chọn");
+            setLoading(false);
+            return;
+          }
 
           // Xử lý file hình ảnh từ Upload component
           let imageFile = null;
           if (values.image && values.image.length > 0) {
             imageFile = values.image[0].originFileObj;
-            console.log(
-              "File hình ảnh:",
-              imageFile.name,
-              imageFile.size,
-              "bytes"
-            );
           }
 
           // Chuẩn bị dữ liệu để gửi lên API
-          const workshopData = {
-            name: values.name,
-            location: values.location,
-            date: formattedDate,
-            ticketPrice: ticketPrice,
-            ticketSlots: ticketSlots,
-            description: values.description || "",
-            imageFile: imageFile, // Thêm file hình ảnh
-          };
+          const formData = new FormData();
+          formData.append("WorkshopName", values.name);
+          formData.append("LocationId", values.locationId);
+          formData.append("StartDate", formattedDate);
+          formData.append("StartTime", startTime);
+          formData.append("EndTime", endTime);
+          formData.append("Price", ticketPrice);
+          formData.append("Capacity", ticketSlots);
+          formData.append("Description", values.description || "");
+          formData.append("Status", "Pending");
 
-          console.log("Dữ liệu gửi đi:", workshopData);
+          // Lấy thông tin người dùng từ localStorage
+          const userName = localStorage.getItem("userName");
+          const userEmail = localStorage.getItem("userEmail");
+          formData.append("MasterName", userName || "Unknown Master");
+          formData.append("MasterAccount", userEmail || "unknown@example.com");
+
+          if (imageFile) {
+            formData.append("ImageUrl", imageFile);
+          }
+
+          console.log("Dữ liệu gửi đi:", {
+            name: values.name,
+            locationId: values.locationId,
+            date: formattedDate,
+            startTime: startTime,
+            endTime: endTime,
+            price: ticketPrice,
+            capacity: ticketSlots,
+            description: values.description,
+            hasImage: !!imageFile
+          });
 
           try {
             // Gọi API để tạo workshop mới
-            const result = await createWorkshop(workshopData);
+            const result = await createWorkshop(formData);
             console.log("Kết quả từ API:", result);
 
             if (result) {
               message.success("Đã tạo mới hội thảo thành công");
-              refreshData(); // Refresh cả hai danh sách
+              refreshData();
               setIsCreateModalOpen(false);
             } else {
               message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
@@ -459,6 +615,82 @@ const Workshop = () => {
         return "default";
     }
   };
+
+  // Update the columns definition
+  const columns = [
+    {
+      title: "Tên hội thảo",
+      dataIndex: "name",
+      key: "name",
+      width: "20%",
+    },
+    {
+      title: "Địa điểm",
+      dataIndex: "location",
+      key: "location",
+      width: "15%",
+      render: (location) => (
+        <div className="flex items-center">
+          <MapPin size={16} className="mr-2 text-gray-500" />
+          {location}
+        </div>
+      ),
+    },
+    {
+      title: "Thời gian",
+      key: "time",
+      width: "20%",
+      render: (_, record) => (
+        <div>
+          <div className="flex items-center mb-1">
+            <Calendar size={16} className="mr-2 text-gray-500" />
+            {record.date}
+          </div>
+          <div className="text-sm text-gray-500">
+            {record.startTime} - {record.endTime}
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Giá vé",
+      dataIndex: "ticketPrice",
+      key: "ticketPrice",
+      width: "15%",
+      render: (price) => (
+        <div className="flex items-center">
+          <Ticket size={16} className="mr-2 text-gray-500" />
+          {typeof price === 'number' ? price.toLocaleString("vi-VN") + " VND" : price}
+        </div>
+      ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      width: "15%",
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>{status}</Tag>
+      ),
+    },
+    {
+      title: "Hành động",
+      key: "action",
+      width: "15%",
+      render: (_, record) => (
+        <div className="flex gap-2">
+          <CustomButton
+            type="primary"
+            size="small"
+            onClick={() => handleViewWorkshop(record)}
+            icon={<Eye size={14} />}
+          >
+            Xem
+          </CustomButton>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -588,7 +820,7 @@ const Workshop = () => {
         className="workshop-modal"
       >
         <div className="p-4">
-          <WorkshopForm form={form} loading={loading} />
+          <WorkshopForm form={form} loading={loading} locations={locations} />
 
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseCreateModal}>Hủy bỏ</CustomButton>
@@ -658,6 +890,20 @@ const Workshop = () => {
                   <MapPin size={16} className="mr-2 text-gray-500" />
                   {selectedWorkshop.location}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider">Thời gian</p>
+                <div>
+                  <p className="text-base font-medium text-gray-800 flex items-center mb-1">
+                    <Clock size={16} className="mr-2 text-gray-500" />
+                    Bắt đầu: {selectedWorkshop.startTime ? selectedWorkshop.startTime.substring(0, 5) : "Chưa có thông tin"}
+                  </p>
+                  <p className="text-base font-medium text-gray-800 flex items-center">
+                    <Clock size={16} className="mr-2 text-gray-500" />
+                    Kết thúc: {selectedWorkshop.endTime ? selectedWorkshop.endTime.substring(0, 5) : "Chưa có thông tin"}
+                  </p>
+                </div>
               </div>
               
               <div className="space-y-2">
