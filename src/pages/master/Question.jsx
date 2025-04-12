@@ -12,6 +12,7 @@ import {
   createQuestion,
   updateQuestion,
   deleteQuestion,
+  getQuestionById,
 } from "../../services/question.service";
 import { getAnswerById } from "../../services/answer.service";
 
@@ -142,46 +143,42 @@ const Question = () => {
     try {
       setLoading(true);
 
-      // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
-      const response = await getQuestionsByQuizId(quizId);
-      let questionToEdit = question;
+      // Sử dụng API getQuestionById để lấy thông tin mới nhất
+      const questionData = await getQuestionById(question.questionId);
+      console.log("Question details for edit:", questionData);
 
-      if (response?.data?.data) {
-        // Tìm câu hỏi cụ thể trong danh sách mới
-        const updatedQuestion = response.data.data.find(
-          (q) => q.questionId === question.questionId
-        );
-        if (updatedQuestion) {
-          // Sử dụng trực tiếp thông tin đáp án từ câu hỏi mà không cần fetch chi tiết
-          questionToEdit = {
-            ...updatedQuestion,
-            answers: updatedQuestion.answers.map(answer => ({
-              ...answer,
-              optionText: answer.optionText || "",
-              isCorrect: answer.isCorrect || false
-            }))
-          };
-        }
+      if (questionData) {
+        // Format lại dữ liệu câu hỏi và đáp án
+        const formattedQuestion = {
+          ...questionData,
+          answers: questionData.answers.map(answer => ({
+            ...answer,
+            optionText: answer.optionText || "",
+            isCorrect: answer.isCorrect || false
+          }))
+        };
+
+        setSelectedQuestion(formattedQuestion);
+
+        // Set giá trị form với dữ liệu mới nhất
+        editForm.setFieldsValue({
+          questionText: formattedQuestion.questionText,
+          questionType: formattedQuestion.questionType,
+          point: formattedQuestion.point,
+          answerUpdateRequests: formattedQuestion.answers.map(answer => ({
+            ...answer,
+            optionText: answer.optionText || "",
+            isCorrect: answer.isCorrect || false
+          }))
+        });
+
+        setIsEditModalOpen(true);
+      } else {
+        message.error("Không thể tải thông tin chi tiết câu hỏi");
       }
-
-      setSelectedQuestion(questionToEdit);
-
-      // Set giá trị form với dữ liệu hiện có
-      editForm.setFieldsValue({
-        questionText: questionToEdit.questionText,
-        questionType: questionToEdit.questionType,
-        point: questionToEdit.point,
-        answerUpdateRequests: questionToEdit.answers.map(answer => ({
-          ...answer,
-          optionText: answer.optionText || "",
-          isCorrect: answer.isCorrect || false
-        }))
-      });
-
-      setIsEditModalOpen(true);
     } catch (error) {
       console.error("Lỗi khi cập nhật câu hỏi:", error);
-      message.error("Không thể cập nhật câu hỏi");
+      message.error("Không thể tải thông tin chi tiết câu hỏi");
     } finally {
       setLoading(false);
     }
@@ -273,36 +270,30 @@ const Question = () => {
   const handleViewQuestion = async (question) => {
     try {
       setLoading(true);
-      // Fetch lại toàn bộ danh sách câu hỏi để lấy dữ liệu mới nhất
-      const response = await getQuestionsByQuizId(quizId);
+      
+      // Sử dụng API getQuestionById để lấy chi tiết câu hỏi
+      const questionData = await getQuestionById(question.questionId);
+      console.log("Question details:", questionData);
 
-      if (response?.data?.data) {
-        // Tìm câu hỏi cụ thể trong danh sách mới
-        const updatedQuestion = response.data.data.find(
-          (q) => q.questionId === question.questionId
-        );
-
-        if (updatedQuestion) {
-          // Sử dụng trực tiếp thông tin đáp án từ câu hỏi
-          setSelectedQuestion({
-            ...updatedQuestion,
-            answers: updatedQuestion.answers.map(answer => ({
-              ...answer,
-              optionText: answer.optionText || "",
-              isCorrect: answer.isCorrect || false
-            }))
-          });
-        } else {
-          setSelectedQuestion(question);
-        }
+      if (questionData) {
+        // Format lại dữ liệu câu hỏi và đáp án
+        const formattedQuestion = {
+          ...questionData,
+          answers: questionData.answers.map(answer => ({
+            ...answer,
+            optionText: answer.optionText || "",
+            isCorrect: answer.isCorrect || false
+          }))
+        };
+        
+        setSelectedQuestion(formattedQuestion);
+        setIsViewModalOpen(true);
       } else {
-        setSelectedQuestion(question);
+        message.error("Không thể tải thông tin chi tiết câu hỏi");
       }
-      setIsViewModalOpen(true);
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu:", error);
-      setSelectedQuestion(question);
-      setIsViewModalOpen(true);
+      message.error("Không thể tải thông tin chi tiết câu hỏi");
     } finally {
       setLoading(false);
     }
@@ -318,25 +309,19 @@ const Question = () => {
       title: "Mã câu hỏi",
       dataIndex: "questionId",
       key: "questionId",
-      width: "15%",
+      width: "20%",
     },
     {
       title: "Nội dung câu hỏi",
       dataIndex: "questionText",
       key: "questionText",
-      width: "35%",
-    },
-    {
-      title: "Loại câu hỏi",
-      dataIndex: "questionType",
-      key: "questionType",
-      width: "15%",
+      width: "45%",
     },
     {
       title: "Điểm",
       dataIndex: "point",
       key: "point",
-      width: "10%",
+      width: "15%",
       render: (point) => <Tag color="blue">{point}</Tag>,
     },
     {
@@ -678,16 +663,10 @@ const Question = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-4 mb-6">
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-500 text-sm mb-1">Mã câu hỏi</div>
                 <div className="font-medium">{selectedQuestion.questionId}</div>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-gray-500 text-sm mb-1">Loại câu hỏi</div>
-                <div className="font-medium">
-                  {selectedQuestion.questionType}
-                </div>
               </div>
               <div className="p-3 bg-gray-50 rounded-lg">
                 <div className="text-gray-500 text-sm mb-1">Điểm số</div>
