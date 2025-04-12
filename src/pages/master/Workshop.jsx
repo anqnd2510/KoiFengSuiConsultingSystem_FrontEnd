@@ -256,7 +256,6 @@ const Workshop = () => {
       );
       setWorkshops(approved);
       setTotalPages(Math.ceil(approved.length / 10));
-
       setError(null);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
@@ -267,8 +266,9 @@ const Workshop = () => {
         navigate("/login");
         return;
       }
-
-      setError("Không thể tải danh sách hội thảo. Vui lòng thử lại sau.");
+      
+      // Không set error nữa, chỉ set workshops là mảng rỗng
+      setWorkshops([]);
     } finally {
       setLoading(false);
     }
@@ -711,36 +711,47 @@ const Workshop = () => {
           <SearchBar onSearch={handleSearch} />
         </div>
 
-        {error && <Error message={error} />}
-
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <Tabs defaultActiveKey="1" onChange={handleTabChange}>
             <TabPane tab="Hội thảo đã duyệt" key="1">
-              <WorkshopTable
-                workshops={workshops}
-                onViewWorkshop={handleViewWorkshop}
-                loading={loading}
-                pagination={{
-                  current: currentPage,
-                  total: workshops.length,
-                  pageSize: pageSize,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng số ${total} hội thảo`,
-                  onChange: (page, pageSize) => {
-                    setCurrentPage(page);
-                    setPageSize(pageSize);
-                  },
-                }}
-              />
-              <div className="p-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(workshops.length / pageSize)}
-                  onPageChange={(page) => {
-                    setCurrentPage(page);
-                  }}
-                />
-              </div>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="mt-2 text-gray-500">Đang tải dữ liệu...</p>
+                </div>
+              ) : workshops.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Không có hội thảo nào</p>
+                </div>
+              ) : (
+                <>
+                  <WorkshopTable
+                    workshops={workshops}
+                    onViewWorkshop={handleViewWorkshop}
+                    loading={loading}
+                    pagination={{
+                      current: currentPage,
+                      total: workshops.length,
+                      pageSize: pageSize,
+                      showSizeChanger: true,
+                      showTotal: (total) => `Tổng số ${total} hội thảo`,
+                      onChange: (page, pageSize) => {
+                        setCurrentPage(page);
+                        setPageSize(pageSize);
+                      },
+                    }}
+                  />
+                  <div className="p-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(workshops.length / pageSize)}
+                      onPageChange={(page) => {
+                        setCurrentPage(page);
+                      }}
+                    />
+                  </div>
+                </>
+              )}
             </TabPane>
             <TabPane
               tab={`Hội thảo chờ duyệt (${pendingWorkshops.length})`}

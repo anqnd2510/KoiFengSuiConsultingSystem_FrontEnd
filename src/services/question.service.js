@@ -17,6 +17,36 @@ export const getQuestionsByQuizId = async (quizId) => {
   });
 };
 
+export const getQuestionById = async (questionId) => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    console.log('Fetching question:', questionId);
+
+    const response = await questionApiClient.get(`${API_URL}/Question/${questionId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('API Response:', response);
+
+    if (response.data.isSuccess) {
+      return response.data.data;
+    }
+
+    throw new Error(response.data.message || "Không thể lấy thông tin câu hỏi");
+  } catch (error) {
+    console.error('Error in getQuestionById:', error);
+    throw new Error(error.message || "Có lỗi xảy ra khi lấy thông tin câu hỏi");
+  }
+};
+
 export const createQuestion = async (quizId, questionData) => {
   try {
     const token = localStorage.getItem('accessToken');
