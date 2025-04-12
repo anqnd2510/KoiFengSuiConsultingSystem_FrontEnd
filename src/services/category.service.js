@@ -108,57 +108,35 @@ export const updateCategoryStatus = async (categoryId, status) => {
 // Cập nhật category
 export const updateCategory = async (categoryId, categoryData) => {
   try {
-    // Kiểm tra ID hợp lệ
     if (!categoryId) {
-      throw new Error(
-        "Thiếu ID danh mục. Vui lòng cung cấp ID danh mục cần cập nhật."
-      );
+      throw new Error("Thiếu ID danh mục. Vui lòng cung cấp ID danh mục cần cập nhật.");
     }
 
-    console.log("Cập nhật danh mục với ID:", categoryId);
-
-    // Kiểm tra token đăng nhập
     const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    // Tạo FormData để gửi dữ liệu và file
     const formData = new FormData();
     formData.append("CategoryName", categoryData.categoryName);
 
-    // Xử lý hình ảnh nếu có - gửi dưới dạng file
+    // Nếu có hình ảnh mới, gửi file mới
     if (categoryData.imageFile && categoryData.imageFile instanceof File) {
       formData.append("ImageUrl", categoryData.imageFile);
+    } 
+    // Nếu không có hình ảnh mới và có đường dẫn hình ảnh cũ, gửi đường dẫn cũ
+    else if (categoryData.currentImageUrl) {
+      formData.append("CurrentImageUrl", categoryData.currentImageUrl);
     }
 
-    // Log dữ liệu để debug
-    console.log("FormData entries for update:");
-    for (let pair of formData.entries()) {
-      console.log(
-        pair[0] +
-          ": " +
-          (pair[1] instanceof File
-            ? `File ${pair[1].name} (${pair[1].size} bytes)`
-            : pair[1])
-      );
-    }
-
-    // Sử dụng axios thay vì apiClient để tùy chỉnh headers và content-type
     const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
-
-    // Sử dụng đúng endpoint API
     const apiUrl = `${baseUrl}/Category/${categoryId}`;
-    console.log("Gửi request đến URL:", apiUrl);
 
     const response = await axios.put(apiUrl, formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        // Không cần set Content-Type với FormData, axios sẽ tự thêm đúng Content-Type và boundary
       },
     });
-
-    console.log("Kết quả cập nhật danh mục:", response.data);
 
     return response.data;
   } catch (error) {
