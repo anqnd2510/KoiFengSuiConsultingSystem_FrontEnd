@@ -86,6 +86,10 @@ const WorkshopManager = () => {
         return "green";
       case "Đã xong":
         return "gray";
+      case "Từ chối":
+        return "red";
+      case "Chờ duyệt":
+        return "orange";
       default:
         return "default";
     }

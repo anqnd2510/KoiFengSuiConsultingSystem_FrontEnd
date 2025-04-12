@@ -425,157 +425,50 @@ const Workshop = () => {
     });
   };
 
-  const handleSaveWorkshop = () => {
-    // Kiểm tra xác thực trước khi tạo workshop
-    if (!isAuthenticated()) {
-      message.error("Bạn cần đăng nhập để tạo hội thảo");
-      navigate("/login");
-      return;
+  const handleSaveWorkshop = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+
+      // Validate dữ liệu đầu vào
+      if (!values.name || !values.locationId || !values.description || !values.ticketPrice || !values.ticketSlots) {
+        message.error("Vui lòng điền đầy đủ thông tin hội thảo");
+        setLoading(false);
+        return;
+      }
+
+      // Format dữ liệu gửi lên API
+      const workshopData = {
+        name: values.name.trim(),
+        locationId: values.locationId,
+        date: values.date.format("YYYY-MM-DD"),
+        startTime: values.startTime.format("HH:mm"),
+        endTime: values.endTime.format("HH:mm"),
+        description: values.description.trim(),
+        ticketPrice: Number(values.ticketPrice),
+        ticketSlots: Number(values.ticketSlots),
+        image: values.image
+      };
+
+      // Gọi API tạo workshop
+      const response = await createWorkshop(workshopData);
+
+      if (response && response.isSuccess) {
+        message.success("Tạo mới hội thảo thành công!");
+        handleCloseCreateModal();
+        form.resetFields();
+        // Tải lại danh sách
+        await fetchWorkshops();
+        await fetchPendingWorkshops();
+      } else {
+        throw new Error(response?.message || "Có lỗi xảy ra khi tạo hội thảo");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo hội thảo:", error);
+      message.error(error.message || "Có lỗi xảy ra khi tạo hội thảo");
+    } finally {
+      setLoading(false);
     }
-
-    form
-      .validateFields()
-      .then(async (values) => {
-        try {
-          setLoading(true);
-
-          // Xử lý giá vé
-          let ticketPrice = 0;
-          if (values.ticketPrice) {
-            const numericValue = values.ticketPrice.replace(/[^\d]/g, "");
-            ticketPrice = numericValue ? parseFloat(numericValue) : 0;
-          }
-
-          // Đảm bảo số lượng vé là số nguyên
-          const ticketSlots = values.ticketSlots
-            ? parseInt(values.ticketSlots, 10)
-            : 0;
-
-          // Format ngày thành YYYY-MM-DD
-          const formattedDate = values.date
-            ? values.date.format("YYYY-MM-DD")
-            : new Date().toISOString().split("T")[0];
-
-          // Format giờ thành HH:mm
-          const startTime = values.startTime ? values.startTime.format("HH:mm") : "";
-          const endTime = values.endTime ? values.endTime.format("HH:mm") : "";
-
-          // Kiểm tra thời gian kết thúc phải sau thời gian bắt đầu
-          const startDateTime = dayjs(`${formattedDate} ${startTime}`);
-          const endDateTime = dayjs(`${formattedDate} ${endTime}`);
-          
-          if (endDateTime.isBefore(startDateTime)) {
-            message.error("Thời gian kết thúc phải sau thời gian bắt đầu");
-            setLoading(false);
-            return;
-          }
-
-          // Kiểm tra ngày phải từ ngày hiện tại trở đi
-          const today = dayjs().startOf('day');
-          const selectedDate = dayjs(formattedDate).startOf('day');
-          if (selectedDate.isBefore(today)) {
-            message.error("Ngày tổ chức phải từ ngày hiện tại trở đi");
-            setLoading(false);
-            return;
-          }
-
-          // Tạo object workshop mới để kiểm tra trùng lịch
-          const newWorkshop = {
-            locationId: values.locationId,
-            date: formattedDate,
-            startTime: startTime,
-            endTime: endTime
-          };
-
-          // Kiểm tra trùng lịch
-          const hasConflict = checkTimeConflict([...workshops, ...pendingWorkshops], newWorkshop);
-          if (hasConflict) {
-            message.error("Đã có workshop khác diễn ra tại địa điểm này trong khoảng thời gian đã chọn");
-            setLoading(false);
-            return;
-          }
-
-          // Xử lý file hình ảnh từ Upload component
-          let imageFile = null;
-          if (values.image && values.image.length > 0) {
-            imageFile = values.image[0].originFileObj;
-          }
-
-          // Chuẩn bị dữ liệu để gửi lên API
-          const formData = new FormData();
-          formData.append("WorkshopName", values.name);
-          formData.append("LocationId", values.locationId);
-          formData.append("StartDate", formattedDate);
-          formData.append("StartTime", startTime);
-          formData.append("EndTime", endTime);
-          formData.append("Price", ticketPrice);
-          formData.append("Capacity", ticketSlots);
-          formData.append("Description", values.description || "");
-          formData.append("Status", "Pending");
-
-          // Lấy thông tin người dùng từ localStorage
-          const userName = localStorage.getItem("userName");
-          const userEmail = localStorage.getItem("userEmail");
-          formData.append("MasterName", userName || "Unknown Master");
-          formData.append("MasterAccount", userEmail || "unknown@example.com");
-
-          if (imageFile) {
-            formData.append("ImageUrl", imageFile);
-          }
-
-          console.log("Dữ liệu gửi đi:", {
-            name: values.name,
-            locationId: values.locationId,
-            date: formattedDate,
-            startTime: startTime,
-            endTime: endTime,
-            price: ticketPrice,
-            capacity: ticketSlots,
-            description: values.description,
-            hasImage: !!imageFile
-          });
-
-          try {
-            // Gọi API để tạo workshop mới
-            const result = await createWorkshop(formData);
-            console.log("Kết quả từ API:", result);
-
-            if (result) {
-              message.success("Đã tạo mới hội thảo thành công");
-              refreshData();
-              setIsCreateModalOpen(false);
-            } else {
-              message.error("Không thể tạo hội thảo. Vui lòng thử lại.");
-            }
-          } catch (apiError) {
-            console.error("Lỗi API:", apiError);
-
-            // Xử lý lỗi 401
-            if (apiError.message.includes("đăng nhập")) {
-              message.error(apiError.message);
-              navigate("/login");
-              return;
-            }
-
-            const errorMessage =
-              apiError.response?.data?.message ||
-              apiError.message ||
-              "Lỗi không xác định";
-            message.error("Lỗi API: " + errorMessage);
-          }
-        } catch (err) {
-          console.error("Lỗi khi tạo workshop:", err);
-          message.error(
-            "Đã xảy ra lỗi khi tạo hội thảo: " +
-              (err.message || "Lỗi không xác định")
-          );
-        } finally {
-          setLoading(false);
-        }
-      })
-      .catch((err) => {
-        console.log("Validation failed:", err);
-      });
   };
 
   const handlePageChange = (page) => {
@@ -618,13 +511,13 @@ const Workshop = () => {
       title: "Tên hội thảo",
       dataIndex: "name",
       key: "name",
-      width: "20%",
+      width: "25%",
     },
     {
       title: "Địa điểm",
       dataIndex: "location",
       key: "location",
-      width: "15%",
+      width: "20%",
       render: (location) => (
         <div className="flex items-center">
           <MapPin size={16} className="mr-2 text-gray-500" />
@@ -650,13 +543,24 @@ const Workshop = () => {
     },
     {
       title: "Giá vé",
-      dataIndex: "ticketPrice",
-      key: "ticketPrice",
+      dataIndex: "price",
+      key: "price",
       width: "15%",
       render: (price) => (
         <div className="flex items-center">
           <Ticket size={16} className="mr-2 text-gray-500" />
-          {typeof price === 'number' ? price.toLocaleString("vi-VN") + " VND" : price}
+          {price ? `${price.toLocaleString("vi-VN")} VND` : "Miễn phí"}
+        </div>
+      ),
+    },
+    {
+      title: "Số lượng vé",
+      dataIndex: "capacity",
+      key: "capacity",
+      width: "10%",
+      render: (capacity) => (
+        <div className="text-center">
+          {capacity}
         </div>
       ),
     },
@@ -672,7 +576,7 @@ const Workshop = () => {
     {
       title: "Hành động",
       key: "action",
-      width: "15%",
+      width: "10%",
       render: (_, record) => (
         <div className="flex gap-2">
           <CustomButton
@@ -758,7 +662,12 @@ const Workshop = () => {
               key="2"
             >
               <WorkshopTable
-                workshops={pendingWorkshops}
+                workshops={pendingWorkshops.map(workshop => ({
+                  ...workshop,
+                  price: typeof workshop.price === 'string' 
+                    ? parseFloat(workshop.price.replace(/[^\d]/g, ""))
+                    : workshop.price
+                }))}
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
                 pagination={{
@@ -917,9 +826,9 @@ const Workshop = () => {
                 <p className="text-sm text-gray-500 uppercase tracking-wider">Giá vé</p>
                 <p className="text-base font-medium text-gray-800 flex items-center">
                   <Ticket size={16} className="mr-2 text-gray-500" />
-                  {typeof selectedWorkshop.price === 'number' 
-                    ? selectedWorkshop.price.toLocaleString("vi-VN") + " VND" 
-                    : (selectedWorkshop.ticketPrice || "Chưa có thông tin")}
+                  {selectedWorkshop.price === 0
+                    ? "Miễn phí"
+                    : `${selectedWorkshop.price.toLocaleString("vi-VN")} VND`}
                 </p>
               </div>
               

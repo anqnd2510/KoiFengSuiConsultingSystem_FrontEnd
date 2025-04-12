@@ -336,7 +336,7 @@ const AudienceList = () => {
 
         <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-medium">Danh sách người tham dự (ID: {workshopId})</h2>
+            <h2 className="text-lg font-medium">Danh sách người tham dự</h2>
           </div>
           <SearchBar onSearch={handleSearch} />
         </div>

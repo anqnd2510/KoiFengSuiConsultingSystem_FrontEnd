@@ -331,7 +331,11 @@ const WorkshopCheck = () => {
 
               <div>
                 <p className="text-gray-500 mb-1">Giá vé</p>
-                <p className="font-medium">{selectedWorkshop.ticketPrice}</p>
+                <p className="font-medium">
+                  {selectedWorkshop.ticketPrice === 0
+                    ? "Miễn phí"
+                    : `${selectedWorkshop.ticketPrice.toLocaleString("vi-VN")} VND`}
+                </p>
               </div>
 
               <div>
