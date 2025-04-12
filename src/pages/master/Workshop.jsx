@@ -78,20 +78,19 @@ const WorkshopForm = ({ form, loading, locations }) => {
         />
       </Form.Item>
 
+      <Form.Item
+        label="Ngày tổ chức"
+        name="date"
+        rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
+      >
+        <DatePicker
+          format="DD/MM/YYYY"
+          style={{ width: "100%" }}
+          placeholder="Chọn ngày tổ chức"
+        />
+      </Form.Item>
+
       <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            label="Ngày tổ chức"
-            name="date"
-            rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
-          >
-            <DatePicker
-              format="DD/MM/YYYY"
-              style={{ width: "100%" }}
-              placeholder="Chọn ngày tổ chức"
-            />
-          </Form.Item>
-        </Col>
         <Col span={12}>
           <Form.Item
             label="Giờ bắt đầu"
@@ -101,9 +100,6 @@ const WorkshopForm = ({ form, loading, locations }) => {
             <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ bắt đầu" />
           </Form.Item>
         </Col>
-      </Row>
-
-      <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             label="Giờ kết thúc"

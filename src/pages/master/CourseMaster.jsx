@@ -74,10 +74,6 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
   console.log("Category dropdown options:", categoryOptions);
   console.log("Selected category value:", initialData?.courseCategory);
 
-  // Kiểm tra xem category có tồn tại trong options không
-  const selectedCategory = categoryOptions.find(opt => opt.value === initialData?.courseCategory);
-  console.log("Found selected category:", selectedCategory);
-
   return (
     <Form
       form={form}
@@ -85,7 +81,7 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       disabled={loading}
       initialValues={{
         ...initialData,
-        courseCategory: selectedCategory ? initialData.courseCategory : undefined
+        courseCategory: initialData?.categoryId // Sử dụng categoryId từ initialData
       }}
     >
       <Form.Item
@@ -104,11 +100,8 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
         <div className="shape-select">
           <select 
             className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200"
-            defaultValue=""
           >
-            <option value="" disabled>
-            {initialData?.categoryName ? `${initialData.categoryName}` : '-- Chọn loại khóa học --'}
-          </option>
+            <option value="">{initialData?.categoryName ? `${initialData.categoryName}` : '-- Chọn loại khóa học --'}</option>
             {categoryOptions && categoryOptions.length > 0 ? (
               categoryOptions.map((category) => (
                 <option 
@@ -851,7 +844,7 @@ const CourseMaster = () => {
     // Thiết lập giá trị cho form
     updateForm.setFieldsValue({
       courseName: record.name,
-      courseCategory: record.categoryId,  // Sử dụng categoryId
+      courseCategory: record.categoryId,  // Set giá trị categoryId cũ
       price: record.price,
       description: record.description,
       image: record.image ? [
@@ -893,6 +886,7 @@ const CourseMaster = () => {
       );
 
       if (!selectedCategory) {
+        console.error("Invalid category:", values.courseCategory, "Available categories:", courseCategories);
         message.warning("Loại khóa học không hợp lệ. Vui lòng chọn lại.");
         setLoading(false);
         return;
@@ -910,7 +904,7 @@ const CourseMaster = () => {
       if (values.image && values.image[0]?.originFileObj) {
         // Nếu có file ảnh mới được chọn
         formData.append("ImageUrl", values.image[0].originFileObj);
-      } else if (selectedCourse.image) {
+      
         // Nếu không có file ảnh mới và có ảnh cũ, gửi URL ảnh cũ
         const imageUrl = selectedCourse.image;
         // Tạo một Blob từ URL ảnh cũ
@@ -944,7 +938,7 @@ const CourseMaster = () => {
               ? {
                   ...course,
                   name: values.courseName,
-                  categoryId: values.courseCategory,
+                  categoryId: categoryId,
                   categoryName: selectedCategory.categoryName,
                   price: values.price,
                   description: values.description,

@@ -25,6 +25,7 @@ const Schedule = () => {
         const formattedBookings = response.data.flatMap((dateSchedule) => {
           return dateSchedule.schedules.map((schedule) => {
             const formatTime = (timeStr) => {
+              if (!timeStr) return "";
               const time = timeStr.split(":");
               return `${time[0]}:${time[1]}`;
             };
