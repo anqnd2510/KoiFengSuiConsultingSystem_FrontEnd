@@ -151,47 +151,29 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
           }
           return e?.fileList;
         }}
+        
       >
-        <div className="mt-2">
-          <Upload
-            listType="picture-card"
-            maxCount={1}
-            beforeUpload={() => false}
-            accept="image/*"
-            fileList={
-              isEdit && initialData?.image && !form.getFieldValue('image')?.length
-                ? [{
-                    uid: '-1',
-                    name: 'current-image.jpg',
-                    status: 'done',
-                    url: initialData.image,
-                  }]
-                : form.getFieldValue('image') || []
-            }
-          >
-            <div className="flex flex-col items-center">
-              <UploadCloud className="w-6 h-6 text-gray-400" />
-              <div className="mt-2">Upload</div>
-            </div>
-          </Upload>
-
-          {/* Hiển thị hình ảnh hiện tại nếu đang ở chế độ chỉnh sửa và có ảnh cũ */}
-          {isEdit && initialData?.image && !form.getFieldValue('image')?.length && (
-            <div className="mt-4">
-              <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
-              <img
-                src={initialData.image}
-                alt="Hình ảnh khóa học"
-                className="max-h-[200px] object-contain rounded border p-2"
-                onError={(e) => {
-                  console.error("Lỗi tải hình ảnh:", e);
-                  e.target.src = "https://via.placeholder.com/200x200?text=Không+tải+được+ảnh";
-                  message.warning("Không thể hiển thị hình ảnh, nhưng bạn vẫn có thể tải lên hình mới");
-                }}
-              />
-            </div>
-          )}
-        </div>
+        <Upload
+          listType="picture-card"
+          maxCount={1}
+          beforeUpload={() => false}
+          accept="image/*"
+          fileList={
+            isEdit && initialData?.image && !form.getFieldValue('image')?.length
+              ? [{
+                  uid: '-1',
+                  name: 'current-image.jpg',
+                  status: 'done',
+                  url: initialData.image,
+                }]
+              : form.getFieldValue('image') || []
+          }
+        >
+          <div className="flex flex-col items-center">
+            <UploadCloud className="w-6 h-6 text-gray-400" />
+            <div className="mt-2">Upload</div>
+          </div>
+        </Upload>
       </Form.Item>
     </Form>
   );
@@ -763,20 +745,22 @@ const CourseMaster = () => {
       const response = await createCourse(formData);
 
       if (response && response.isSuccess) {
-        message.success(response.message || "Tạo khóa học thành công!");
-        setIsCreateModalOpen(false);
-        form.resetFields();
-        
-        // Nếu khóa học mới đã được tạo thành công, lấy thông tin category 
-        // để đảm bảo hiển thị đúng tên category cho khóa học mới
-        if (values.courseCategory) {
-          fetchCategoryName(values.courseCategory);
+        try {
+          // Tải lại danh sách khóa học trước
+          await fetchCourses();
+          
+          // Sau đó mới đóng modal và reset form
+          message.success(response.message || "Tạo khóa học thành công!");
+          setIsCreateModalOpen(false);
+          form.resetFields();
+          setLoading(false);
+        } catch (error) {
+          console.error("Error refreshing courses:", error);
+          message.error("Đã tạo khóa học nhưng không thể tải lại danh sách. Vui lòng làm mới trang.");
         }
-        
-        // Làm mới danh sách khóa học
-        fetchCourses();
       } else {
         message.error(response?.message || "Có lỗi xảy ra khi tạo khóa học");
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error saving course:", error);
@@ -785,7 +769,6 @@ const CourseMaster = () => {
       } else {
         message.error("Có lỗi xảy ra: " + error.message);
       }
-    } finally {
       setLoading(false);
     }
   };
@@ -863,15 +846,13 @@ const CourseMaster = () => {
   const handleCloseUpdateModal = () => {
     setIsUpdateModalOpen(false);
     setSelectedCourse(null);
-    updateForm.resetFields();
+    
   };
 
   const handleSaveUpdateCourse = async () => {
     try {
       const values = await updateForm.validateFields();
       setLoading(true);
-
-      console.log("Form values before sending:", values);
 
       // Kiểm tra các trường bắt buộc
       if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
@@ -902,56 +883,22 @@ const CourseMaster = () => {
 
       // Xử lý hình ảnh
       if (values.image && values.image[0]?.originFileObj) {
-        // Nếu có file ảnh mới được chọn
         formData.append("ImageUrl", values.image[0].originFileObj);
-      
-        // Nếu không có file ảnh mới và có ảnh cũ, gửi URL ảnh cũ
-        const imageUrl = selectedCourse.image;
-        // Tạo một Blob từ URL ảnh cũ
-        try {
-          const response = await fetch(imageUrl);
-          const blob = await response.blob();
-          formData.append("ImageUrl", blob, "existing-image.jpg");
-        } catch (error) {
-          console.error("Error converting image URL to blob:", error);
-          // Nếu không thể tạo blob, gửi URL trực tiếp
-          formData.append("ImagePath", imageUrl);
-        }
-      }
-
-      // Log dữ liệu trước khi gửi
-      for (let [key, value] of formData.entries()) {
-        console.log(`${key}:`, value instanceof Blob ? 'Blob/File' : value);
+      } else if (selectedCourse.image) {
+        formData.append("ImagePath", selectedCourse.image);
       }
 
       const response = await updateCourse(formData);
 
       if (response && response.isSuccess) {
+        // Tải lại danh sách trước
+        await fetchCourses();
+        
+        // Hiển thị thông báo thành công
         message.success("Cập nhật khóa học thành công!");
-        setIsUpdateModalOpen(false);
-        updateForm.resetFields();
         
-        // Cập nhật state local
-        setCourses(prevCourses => 
-          prevCourses.map(course => 
-            course.id === selectedCourse.id 
-              ? {
-                  ...course,
-                  name: values.courseName,
-                  categoryId: categoryId,
-                  categoryName: selectedCategory.categoryName,
-                  price: values.price,
-                  description: values.description,
-                  image: values.image && values.image[0]?.originFileObj 
-                    ? URL.createObjectURL(values.image[0].originFileObj)
-                    : course.image
-                } 
-              : course
-          )
-        );
-        
-        // Làm mới danh sách khóa học
-        fetchCourses();
+        // Sau đó mới đóng modal và reset form
+        handleCloseUpdateModal();
       } else {
         throw new Error(response?.message || "Có lỗi xảy ra khi cập nhật khóa học");
       }
