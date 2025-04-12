@@ -322,6 +322,14 @@ const WorkshopCheck = () => {
               </div>
 
               <div>
+                <p className="text-gray-500 mb-1">Thời gian</p>
+                <div className="font-medium">
+                  <p>Bắt đầu: {selectedWorkshop.startTime}</p>
+                  <p>Kết thúc: {selectedWorkshop.endTime}</p>
+                </div>
+              </div>
+
+              <div>
                 <p className="text-gray-500 mb-1">Giá vé</p>
                 <p className="font-medium">{selectedWorkshop.ticketPrice}</p>
               </div>
@@ -357,7 +365,7 @@ const WorkshopCheck = () => {
                 Từ chối
               </CustomButton>
               <CustomButton
-                className="!bg-green-500 hover:!bg-green-600 text-white"
+                className="!bg-transparent hover:!bg-green-50 !text-green-500 !border !border-green-500"
                 onClick={() => handleApproveWorkshop(selectedWorkshop.id)}
                 loading={loading}
               >

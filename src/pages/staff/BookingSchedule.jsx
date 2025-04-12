@@ -24,6 +24,7 @@ const BookingSchedule = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [form] = Form.useForm();
   const [masterList, setMasterList] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const fetchBookings = useCallback(async () => {
     try {
@@ -64,6 +65,7 @@ const BookingSchedule = () => {
 
   const handlePageChange = (page) => {
     console.log("Chuyển đến trang:", page);
+    setCurrentPage(page);
   };
 
   const handleOpenModal = () => {
@@ -125,8 +127,8 @@ const BookingSchedule = () => {
         )}
 
         <Pagination
-          currentPage={1}
-          totalPages={5}
+          currentPage={currentPage}
+          totalPages={Math.ceil(bookings.length / 10)}
           onPageChange={handlePageChange}
         />
 

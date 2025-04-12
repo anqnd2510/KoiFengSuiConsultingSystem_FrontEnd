@@ -275,27 +275,19 @@ const Quiz = () => {
       title: "Mã bài kiểm tra",
       dataIndex: "quizId",
       key: "quizId",
-      width: "15%",
+      width: "20%",
     },
     {
       title: "Tiêu đề",
       dataIndex: "title",
       key: "title",
-      width: "30%",
+      width: "35%",
     },
     {
       title: "Master phụ trách",
       dataIndex: "masterName",
       key: "masterName",
       width: "20%",
-    },
-    {
-      title: "Ngày tạo",
-      dataIndex: "createdDate",
-      key: "createdDate",
-      width: "15%",
-      render: (date) =>
-        date ? new Date(date).toLocaleDateString("vi-VN") : "",
     },
     {
       title: "Điểm số",
@@ -381,21 +373,6 @@ const Quiz = () => {
           </CustomButton>
         </div>
 
-        {error && (
-          <Error
-            message={error}
-            action={
-              <CustomButton
-                type="primary"
-                onClick={fetchQuizzes}
-                loading={loading}
-              >
-                Thử lại
-              </CustomButton>
-            }
-          />
-        )}
-
         {loading ? (
           <div className="bg-white p-8 rounded-lg shadow text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
@@ -406,17 +383,10 @@ const Quiz = () => {
         ) : (
           <>
             {quizzes.length === 0 ? (
-              <div className="bg-white p-8 rounded-lg shadow text-center">
+              <div className="text-center p-8">
                 <p className="text-gray-500 mb-4">
                   Khóa học này chưa có bài kiểm tra nào
                 </p>
-                <CustomButton
-                  type="primary"
-                  icon={<FaPlus size={14} />}
-                  onClick={handleOpenCreateModal}
-                >
-                  Tạo bài kiểm tra đầu tiên
-                </CustomButton>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow">
@@ -429,10 +399,9 @@ const Quiz = () => {
                 />
                 <div className="p-4">
                   <Pagination
-                    current={currentPage}
-                    total={filteredQuizzes.length}
-                    pageSize={pageSize}
-                    onChange={handlePageChange}
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(filteredQuizzes.length / pageSize)}
+                    onPageChange={handlePageChange}
                   />
                 </div>
               </div>
@@ -503,23 +472,6 @@ const Quiz = () => {
                         Thông tin chi tiết
                       </h3>
                       <div className="space-y-4">
-                        <div>
-                          <label className="text-gray-600 block mb-1">
-                            Ngày tạo
-                          </label>
-                          <input
-                            type="text"
-                            value={
-                              selectedQuiz.createdDate
-                                ? new Date(
-                                    selectedQuiz.createdDate
-                                  ).toLocaleDateString("vi-VN")
-                                : ""
-                            }
-                            readOnly
-                            className="w-full p-2 bg-white border rounded-md"
-                          />
-                        </div>
                         <div>
                           <label className="text-gray-600 block mb-1">
                             Điểm số

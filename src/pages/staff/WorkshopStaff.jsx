@@ -52,18 +52,20 @@ const WorkshopStaff = () => {
       console.log("Dữ liệu workshop gốc:", data);
 
       if (!data || data.length === 0) {
-        message.info("Không có dữ liệu workshop");
         setWorkshops([]);
       } else {
         const formattedData = formatWorkshopsData(data);
         console.log("Dữ liệu workshop đã định dạng:", formattedData);
-        setWorkshops(formattedData);
-        message.success(`Đã tải ${formattedData.length} workshop`);
+        // Lọc chỉ lấy workshop có trạng thái "Sắp diễn ra"
+        const upcomingWorkshops = formattedData.filter(
+          (workshop) => workshop.status === "Sắp diễn ra"
+        );
+        console.log("Workshop sắp diễn ra:", upcomingWorkshops);
+        setWorkshops(upcomingWorkshops);
       }
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu workshop:", err);
-      setError(`Không thể tải dữ liệu workshop: ${err.message}`);
-      message.error("Không thể tải dữ liệu workshop");
+      setWorkshops([]);
     } finally {
       setLoading(false);
     }
@@ -108,14 +110,10 @@ const WorkshopStaff = () => {
     console.log("Changing to page:", page);
   };
 
-  // Tùy chọn trạng thái cho bộ lọc
-  const statusOptions = [
-    { value: "Sắp diễn ra", label: "Sắp diễn ra" },
-    { value: "Đang diễn ra", label: "Đang diễn ra" },
-    { value: "Đã xong", label: "Đã xong" },
-  ];
+  // Tùy chọn trạng thái cho bộ lọc - bỏ đi vì chỉ hiển thị "Sắp diễn ra"
+  const statusOptions = [];
 
-  // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
+  // Lọc dữ liệu chỉ theo từ khóa tìm kiếm
   const filteredWorkshops = workshops.filter((workshop) => {
     const matchesSearch =
       (workshop.name &&
@@ -127,10 +125,7 @@ const WorkshopStaff = () => {
       (workshop.workshopId &&
         workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesStatus =
-      statusFilter === "all" || workshop.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
 
   // Sắp xếp dữ liệu theo ngày tạo mới nhất (mặc định)
@@ -232,19 +227,7 @@ const WorkshopStaff = () => {
                 onSearch={handleSearch}
               />
             </div>
-
-            <div className="flex items-center space-x-2">
-              <FilterBar
-                statusOptions={statusOptions}
-                onStatusChange={handleStatusFilterChange}
-                defaultValue="all"
-                placeholder="Trạng thái"
-                width="170px"
-              />
-            </div>
           </div>
-
-          {error && <Error message={error} />}
 
           {loading ? (
             <div className="flex justify-center items-center py-10">
@@ -255,7 +238,7 @@ const WorkshopStaff = () => {
               {workshops.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500 mb-4">
-                    Không có dữ liệu workshop. Vui lòng thử lại sau.
+                    Không có workshop nào sắp diễn ra
                   </p>
                   <Button
                     type="primary"
@@ -277,10 +260,9 @@ const WorkshopStaff = () => {
 
                   <div className="mt-4 flex justify-end">
                     <Pagination
-                      current={currentPage}
-                      total={sortedWorkshops.length}
-                      pageSize={10}
-                      onChange={handlePageChange}
+                      currentPage={currentPage}
+                      totalPages={Math.ceil(sortedWorkshops.length / 10)}
+                      onPageChange={handlePageChange}
                     />
                   </div>
                 </>

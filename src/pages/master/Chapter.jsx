@@ -699,21 +699,6 @@ const Chapter = () => {
           </CustomButton>
         </div>
 
-        {error && (
-          <Error
-            message={error}
-            action={
-              <CustomButton
-                type="primary"
-                onClick={fetchCourseChapters}
-                loading={loadingChapters}
-              >
-                Thử lại
-              </CustomButton>
-            }
-          />
-        )}
-
         {loadingChapters ? (
           <div className="bg-white p-8 rounded-lg shadow text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
@@ -722,17 +707,8 @@ const Chapter = () => {
         ) : (
           <>
             {courseChapters.length === 0 ? (
-              <div className="bg-white p-8 rounded-lg shadow text-center">
-                <p className="text-gray-500 mb-4">
-                  Khóa học này chưa có chương nào
-                </p>
-                <CustomButton
-                  type="primary"
-                  icon={<FaPlus size={14} />}
-                  onClick={handleOpenCreateChapterModal}
-                >
-                  Tạo chương đầu tiên
-                </CustomButton>
+              <div className="text-center p-8">
+                <p className="text-gray-500 mb-4">Khóa học này chưa có chương nào</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

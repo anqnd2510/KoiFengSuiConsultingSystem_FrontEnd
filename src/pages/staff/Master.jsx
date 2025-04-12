@@ -581,17 +581,17 @@ const Master = () => {
               <CustomTable
                 columns={columns}
                 dataSource={paginatedData}
-                loading={isLoading}
-                pagination={{
-                  current: currentPage,
-                  total: filteredData.length,
-                  pageSize: pageSize,
-                  showSizeChanger: true,
-                  showTotal: (total) => `Tổng số ${total} bậc thầy`,
-                  onChange: handlePageChange,
-                }}
+                loading={loading}
+                pagination={false}
                 scroll={{ x: 1200 }}
               />
+              <div className="p-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={Math.ceil(filteredData.length / pageSize)}
+                  onPageChange={handlePageChange}
+                />
+              </div>
             </div>
           </div>
         </div>

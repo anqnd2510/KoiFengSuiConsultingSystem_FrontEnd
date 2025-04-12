@@ -152,53 +152,30 @@ const Question = () => {
           (q) => q.questionId === question.questionId
         );
         if (updatedQuestion) {
-          // Fetch chi tiết từng câu trả lời
-          const updatedAnswers = await Promise.all(
-            updatedQuestion.answers.map(async (answer) => {
-              try {
-                if (answer.answerId) {
-                  const answerDetail = await getAnswerById(answer.answerId);
-                  return {
-                    ...answer,
-                    ...answerDetail,
-                  };
-                }
-                return answer;
-              } catch (error) {
-                console.error(
-                  `Lỗi khi tải chi tiết đáp án ${answer.answerId}:`,
-                  error
-                );
-                return answer;
-              }
-            })
-          );
-
+          // Sử dụng trực tiếp thông tin đáp án từ câu hỏi mà không cần fetch chi tiết
           questionToEdit = {
             ...updatedQuestion,
-            answers: updatedAnswers,
+            answers: updatedQuestion.answers.map(answer => ({
+              ...answer,
+              optionText: answer.optionText || "",
+              isCorrect: answer.isCorrect || false
+            }))
           };
         }
       }
 
       setSelectedQuestion(questionToEdit);
 
-      // Tìm index của đáp án đúng từ dữ liệu mới nhất
-      const correctAnswerIndex = questionToEdit.answers.findIndex(
-        (answer) => answer.isCorrect === true
-      );
-
-      // Set giá trị form với dữ liệu mới nhất
+      // Set giá trị form với dữ liệu hiện có
       editForm.setFieldsValue({
         questionText: questionToEdit.questionText,
         questionType: questionToEdit.questionType,
         point: questionToEdit.point,
-        correctAnswer: correctAnswerIndex >= 0 ? correctAnswerIndex : 0,
-        answerUpdateRequests: questionToEdit.answers.map((answer) => ({
+        answerUpdateRequests: questionToEdit.answers.map(answer => ({
           ...answer,
           optionText: answer.optionText || "",
-          isCorrect: answer.isCorrect,
-        })),
+          isCorrect: answer.isCorrect || false
+        }))
       });
 
       setIsEditModalOpen(true);
@@ -228,19 +205,17 @@ const Question = () => {
       // Cập nhật câu hỏi với answerUpdateRequests
       const questionRequest = {
         questionText: values.questionText.trim(),
-        questionType: values.questionType,
-        point: Number(values.point) || 0,
         answerUpdateRequests: values.answerUpdateRequests.map(
           (answer, index) => ({
             answerId: selectedQuestion.answers[index].answerId,
             optionText: answer.optionText.trim(),
             optionType: "Text",
-            isCorrect: answer.isCorrect, // Lấy trực tiếp từ form data
+            isCorrect: answer.isCorrect,
           })
         ),
       };
 
-      console.log("Update request:", questionRequest); // Thêm log để kiểm tra
+      console.log("Update request:", questionRequest);
 
       await updateQuestion(selectedQuestion.questionId, questionRequest);
 
@@ -308,31 +283,14 @@ const Question = () => {
         );
 
         if (updatedQuestion) {
-          // Fetch chi tiết từng câu trả lời
-          const updatedAnswers = await Promise.all(
-            updatedQuestion.answers.map(async (answer) => {
-              try {
-                if (answer.answerId) {
-                  const answerDetail = await getAnswerById(answer.answerId);
-                  return {
-                    ...answer,
-                    ...answerDetail,
-                  };
-                }
-                return answer;
-              } catch (error) {
-                console.error(
-                  `Lỗi khi tải chi tiết đáp án ${answer.answerId}:`,
-                  error
-                );
-                return answer;
-              }
-            })
-          );
-
+          // Sử dụng trực tiếp thông tin đáp án từ câu hỏi
           setSelectedQuestion({
             ...updatedQuestion,
-            answers: updatedAnswers,
+            answers: updatedQuestion.answers.map(answer => ({
+              ...answer,
+              optionText: answer.optionText || "",
+              isCorrect: answer.isCorrect || false
+            }))
           });
         } else {
           setSelectedQuestion(question);
@@ -471,39 +429,41 @@ const Question = () => {
           </CustomButton>
         </div>
 
-        {error && (
-          <Error
-            message={error}
-            action={
-              <CustomButton
-                type="primary"
-                onClick={fetchQuestions}
-                loading={loading}
-              >
-                Thử lại
-              </CustomButton>
-            }
-          />
-        )}
-
-        <div className="bg-white rounded-lg shadow">
-          <CustomTable
-            columns={columns}
-            dataSource={paginatedQuestions}
-            loading={loading}
-            pagination={false}
-            rowKey="questionId"
-          />
-          <div className="p-4">
-            <Pagination
-              current={currentPage}
-              total={questions.length}
-              pageSize={pageSize}
-              onChange={handlePageChange}
-              onShowSizeChange={handlePageChange}
-            />
+        {loading ? (
+          <div className="bg-white p-8 rounded-lg shadow text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">
+              Đang tải danh sách câu hỏi...
+            </p>
           </div>
-        </div>
+        ) : (
+          <>
+            {questions.length === 0 ? (
+              <div className="text-center p-8">
+                <p className="text-gray-500 mb-4">
+                  Khóa học này chưa có câu hỏi nào
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow">
+                <CustomTable
+                  columns={columns}
+                  dataSource={paginatedQuestions}
+                  loading={loading}
+                  pagination={false}
+                  rowKey="questionId"
+                />
+                <div className="p-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(questions.length / pageSize)}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Modal tạo câu hỏi mới */}
@@ -839,24 +799,8 @@ const Question = () => {
             </Form.List>
 
             <div className="flex justify-between items-center mt-8">
-              <div className="flex items-center gap-4">
-                <Form.Item name="point" label="Điểm" className="mb-0">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={100}
-                    style={{ width: "100px" }}
-                  />
-                </Form.Item>
-
-                <Form.Item name="questionType" className="mb-0">
-                  <Radio.Group buttonStyle="solid">
-                    <Radio.Button value="Multiple Choice">
-                      Trắc nghiệm
-                    </Radio.Button>
-                    <Radio.Button value="True/False">Đúng/Sai</Radio.Button>
-                  </Radio.Group>
-                </Form.Item>
+              <div>
+                {/* Đã xóa phần điểm và loại câu hỏi */}
               </div>
 
               <div className="flex gap-3">

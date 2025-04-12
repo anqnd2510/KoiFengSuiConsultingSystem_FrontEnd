@@ -17,6 +17,7 @@ import {
   Row,
   Col,
   ColorPicker,
+  Tooltip,
 } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -179,6 +180,27 @@ const KoiFishManagement = () => {
       const koiDetail = await KoiFishService.getKoiFishById(koi.id);
       console.log("Chi tiết cá Koi từ API:", koiDetail);
 
+      // Validate dữ liệu trả về
+      if (!koiDetail) {
+        message.error("Không thể tải thông tin cá Koi");
+        setModalLoading(false);
+        return;
+      }
+
+      // Validate tên giống cá
+      if (!koiDetail.varietyName || koiDetail.varietyName.trim() === "") {
+        message.error("Dữ liệu tên giống cá không hợp lệ");
+        setModalLoading(false);
+        return;
+      }
+
+      // Validate mô tả
+      if (!koiDetail.description || koiDetail.description.trim() === "") {
+        message.error("Dữ liệu mô tả không hợp lệ");
+        setModalLoading(false);
+        return;
+      }
+
       // Đặt URL hình ảnh trước khi hiển thị dữ liệu
       if (koiDetail.imageUrl) {
         setKoiImageUrl(koiDetail.imageUrl);
@@ -195,6 +217,12 @@ const KoiFishManagement = () => {
           element: color.element || "",
         }));
         console.log("Định dạng lại dữ liệu màu sắc:", colors);
+
+        // Validate tổng phần trăm màu sắc
+        const totalPercentage = colors.reduce((sum, color) => sum + (color.value || 0) * 100, 0);
+        if (totalPercentage !== 100) {
+          message.warning("Tổng phần trăm màu sắc không đạt 100%");
+        }
       } else {
         colors = [{ colorId: "", value: 0.5, colorName: "", element: "" }];
         console.log("Không có dữ liệu màu sắc, sử dụng mẫu mặc định");
@@ -203,9 +231,9 @@ const KoiFishManagement = () => {
 
       // Cập nhật form với thông tin hiện tại
       editForm.setFieldsValue({
-        breed: koiDetail.varietyName,
-        description: koiDetail.description,
-        introduction: koiDetail.introduction || koiDetail.description,
+        breed: koiDetail.varietyName.trim(),
+        description: koiDetail.description.trim(),
+        introduction: (koiDetail.introduction || koiDetail.description).trim(),
       });
 
       // Đặt dữ liệu cá sau khi đã xử lý mọi thứ
@@ -261,11 +289,75 @@ const KoiFishManagement = () => {
       // Log giá trị từ form để debug
       console.log("Giá trị từ form:", values);
 
+      // Validate tên giống cá
+      if (!values.breed || values.breed.trim() === "") {
+        message.error("Vui lòng nhập tên giống cá");
+        setModalLoading(false);
+        return;
+      }
+
+      // Validate độ dài tên giống cá
+      if (values.breed.trim().length < 3) {
+        message.error("Tên giống cá phải có ít nhất 3 ký tự");
+        setModalLoading(false);
+        return;
+      }
+
+      if (values.breed.trim().length > 100) {
+        message.error("Tên giống cá không được vượt quá 100 ký tự");
+        setModalLoading(false);
+        return;
+      }
+
+      // Validate mô tả
+      if (!values.description || values.description.trim() === "") {
+        message.error("Vui lòng nhập mô tả");
+        setModalLoading(false);
+        return;
+      }
+
+      if (values.description.trim().length < 10) {
+        message.error("Mô tả phải có ít nhất 10 ký tự");
+        setModalLoading(false);
+        return;
+      }
+
+      // Validate giới thiệu
+      if (!values.introduction || values.introduction.trim() === "") {
+        message.error("Vui lòng nhập giới thiệu");
+        setModalLoading(false);
+        return;
+      }
+
+      if (values.introduction.trim().length < 10) {
+        message.error("Giới thiệu phải có ít nhất 10 ký tự");
+        setModalLoading(false);
+        return;
+      }
+
       // Nếu đang tạo mới thì kiểm tra file ảnh
       if (!selectedKoi && !koiImageFile) {
         message.error("Vui lòng tải lên hình ảnh cá Koi");
         setModalLoading(false);
         return;
+      }
+
+      // Validate file ảnh nếu có
+      if (koiImageFile) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (koiImageFile.size > maxSize) {
+          message.error("Kích thước ảnh không được vượt quá 5MB");
+          setModalLoading(false);
+          return;
+        }
+
+        if (!allowedTypes.includes(koiImageFile.type)) {
+          message.error("Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF");
+          setModalLoading(false);
+          return;
+        }
       }
 
       // Kiểm tra các trường màu sắc
@@ -298,11 +390,25 @@ const KoiFishManagement = () => {
         return;
       }
 
+      // Validate từng màu sắc
+      for (const color of validColorFields) {
+        if (!color.colorId) {
+          message.error("Vui lòng chọn đầy đủ màu sắc");
+          setModalLoading(false);
+          return;
+        }
+        if (color.value <= 0 || color.value > 1) {
+          message.error("Tỷ lệ màu sắc phải nằm trong khoảng 0-100%");
+          setModalLoading(false);
+          return;
+        }
+      }
+
       // Kết hợp giá trị từ form với danh sách màu sắc
       const formData = {
-        varietyName: values.breed,
-        description: values.description,
-        introduction: values.introduction || values.description,
+        varietyName: values.breed.trim(),
+        description: values.description.trim(),
+        introduction: values.introduction.trim() || values.description.trim(),
         varietyColors: validColorFields.map((color) => ({
           colorId: color.colorId,
           percentage: Math.round(color.value * 100),
@@ -587,15 +693,8 @@ const KoiFishManagement = () => {
     }
   }, [selectedKoi, isModalOpen, form]);
 
-  // Thêm effect để kiểm tra và hiển thị cảnh báo khi thay đổi màu sắc
-  useEffect(() => {
-    if (colorFields.length > 0) {
-      const totalPercentage = calculateTotalPercentage(colorFields);
-      if (totalPercentage > 100) {
-        message.warning("Tổng phần trăm màu sắc đang vượt quá 100%");
-      }
-    }
-  }, [colorFields]);
+  // Thêm nội dung tooltip
+  const colorTooltipContent = "Tổng phần trăm màu sắc phải đạt 100%";
 
   // Hàm chuyển đổi mã màu hex sang tên màu
   const getColorName = (hexColor) => {
@@ -719,15 +818,17 @@ const KoiFishManagement = () => {
         className="koi-fish-modal"
       >
         <div className="p-4">
-          <KoiFishForm
-            form={selectedKoi ? editForm : form}
-            initialData={selectedKoi}
-            colorFields={colorFields}
-            setColorFields={setColorFields}
-            loading={modalLoading}
-            imageUrl={koiImageUrl}
-            onImageChange={handleImageChange}
-          />
+          <Tooltip title={colorTooltipContent}>
+            <KoiFishForm
+              form={selectedKoi ? editForm : form}
+              initialData={selectedKoi}
+              colorFields={colorFields}
+              setColorFields={setColorFields}
+              loading={modalLoading}
+              imageUrl={koiImageUrl}
+              onImageChange={handleImageChange}
+            />
+          </Tooltip>
 
           <div className="flex justify-end gap-3 mt-6">
             <CustomButton onClick={handleCloseModal}>Hủy bỏ</CustomButton>

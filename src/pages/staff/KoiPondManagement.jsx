@@ -441,8 +441,51 @@ const KoiPondManagement = () => {
       setLoading(true);
 
       // Kiểm tra các trường bắt buộc
+      if (!values.pondName || values.pondName.trim() === "") {
+        message.error("Vui lòng nhập tên hồ cá");
+        setLoading(false);
+        return;
+      }
+
       if (!values.shapeId) {
         message.error("Vui lòng chọn hình dạng hồ");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.introduction || values.introduction.trim() === "") {
+        message.error("Vui lòng nhập giới thiệu");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.description || values.description.trim() === "") {
+        message.error("Vui lòng nhập mô tả");
+        setLoading(false);
+        return;
+      }
+
+      // Kiểm tra độ dài tối thiểu và tối đa
+      if (values.pondName.trim().length < 3) {
+        message.error("Tên hồ cá phải có ít nhất 3 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.pondName.trim().length > 100) {
+        message.error("Tên hồ cá không được vượt quá 100 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.introduction.trim().length < 10) {
+        message.error("Giới thiệu phải có ít nhất 10 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.description.trim().length < 10) {
+        message.error("Mô tả phải có ít nhất 10 ký tự");
         setLoading(false);
         return;
       }
@@ -454,13 +497,29 @@ const KoiPondManagement = () => {
         return;
       }
 
+      // Kiểm tra kích thước và định dạng file ảnh
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+      if (createImageFile.size > maxSize) {
+        message.error("Kích thước ảnh không được vượt quá 5MB");
+        setLoading(false);
+        return;
+      }
+
+      if (!allowedTypes.includes(createImageFile.type)) {
+        message.error("Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF");
+        setLoading(false);
+        return;
+      }
+
       // Tạo FormData để gửi file
       const formData = new FormData();
       formData.append("ShapeId", values.shapeId);
-      formData.append("PondName", values.pondName || "");
-      formData.append("Introduction", values.introduction || "");
-      formData.append("Description", values.description || "");
-      formData.append("ImageUrl", createImageFile); // Gửi file thay vì URL
+      formData.append("PondName", values.pondName.trim());
+      formData.append("Introduction", values.introduction.trim());
+      formData.append("Description", values.description.trim());
+      formData.append("ImageUrl", createImageFile);
 
       console.log(
         "Đang gửi dữ liệu tạo hồ mới với file:",
@@ -644,13 +703,52 @@ const KoiPondManagement = () => {
       const values = await editForm.validateFields();
 
       // Kiểm tra các trường bắt buộc
-      if (
-        !values.pondName ||
-        !values.shapeId ||
-        !values.introduction ||
-        !values.description
-      ) {
-        message.error("Vui lòng điền đầy đủ thông tin");
+      if (!values.pondName || values.pondName.trim() === "") {
+        message.error("Vui lòng nhập tên hồ cá");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.shapeId) {
+        message.error("Vui lòng chọn hình dạng hồ");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.introduction || values.introduction.trim() === "") {
+        message.error("Vui lòng nhập giới thiệu");
+        setLoading(false);
+        return;
+      }
+
+      if (!values.description || values.description.trim() === "") {
+        message.error("Vui lòng nhập mô tả");
+        setLoading(false);
+        return;
+      }
+
+      // Kiểm tra độ dài tối thiểu và tối đa
+      if (values.pondName.trim().length < 3) {
+        message.error("Tên hồ cá phải có ít nhất 3 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.pondName.trim().length > 100) {
+        message.error("Tên hồ cá không được vượt quá 100 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.introduction.trim().length < 10) {
+        message.error("Giới thiệu phải có ít nhất 10 ký tự");
+        setLoading(false);
+        return;
+      }
+
+      if (values.description.trim().length < 10) {
+        message.error("Mô tả phải có ít nhất 10 ký tự");
+        setLoading(false);
         return;
       }
 
@@ -667,12 +765,30 @@ const KoiPondManagement = () => {
         return;
       }
 
+      // Kiểm tra kích thước và định dạng file ảnh nếu có file mới
+      if (editImageFile) {
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+
+        if (editImageFile.size > maxSize) {
+          message.error("Kích thước ảnh không được vượt quá 5MB");
+          setLoading(false);
+          return;
+        }
+
+        if (!allowedTypes.includes(editImageFile.type)) {
+          message.error("Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF");
+          setLoading(false);
+          return;
+        }
+      }
+
       // Tạo FormData để gửi file thay vì URL
       const formData = new FormData();
       formData.append("ShapeId", values.shapeId);
-      formData.append("PondName", values.pondName);
-      formData.append("Introduction", values.introduction);
-      formData.append("Description", values.description);
+      formData.append("PondName", values.pondName.trim());
+      formData.append("Introduction", values.introduction.trim());
+      formData.append("Description", values.description.trim());
 
       // Nếu có file ảnh mới, đính kèm trực tiếp
       if (editImageFile) {

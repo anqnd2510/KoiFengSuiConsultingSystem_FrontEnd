@@ -25,7 +25,7 @@ export const getPendingWorkshops = async () => {
     // Sử dụng API getAllWorkshops thay vì pending-workshops
     console.log("Gọi API:", `${WORKSHOP_ENDPOINT}`);
     
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate`);
+    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`);
     console.log("API Response:", response.data);
     
     // Kiểm tra cấu trúc response
@@ -135,30 +135,66 @@ export const rejectWorkshop = async (id, reason) => {
 };
 
 /**
- * Format dữ liệu workshop từ API để hiển thị
+ * Format dữ liệu workshop chờ duyệt từ API để hiển thị
  * @param {Array} workshopsData - Dữ liệu workshop từ API
  * @returns {Array} Dữ liệu đã được format
  */
 export const formatPendingWorkshopsData = (workshopsData) => {
-  if (!Array.isArray(workshopsData)) return [];
+  if (!Array.isArray(workshopsData)) {
+    console.error('Dữ liệu không phải là mảng:', workshopsData);
+    return [];
+  }
+  
+  console.log('Định dạng dữ liệu workshop chờ duyệt, số lượng:', workshopsData.length);
   
   return workshopsData.map(workshop => {
-    console.log("Workshop data from API:", workshop); // Log để kiểm tra dữ liệu
-    
-    return {
-      id: workshop.workshopId,
-      name: workshop.workshopName,
-      location: workshop.location,
-      date: new Date(workshop.startDate).toLocaleDateString('vi-VN'),
-      image: workshop.image, // Giữ lại để tương thích ngược
-      imageUrl: workshop.imageUrl, // Thêm imageUrl từ API
-      price: workshop.price, // Lưu giá trị nguyên thủy
-      capacity: workshop.capacity, // Lưu giá trị nguyên thủy
-      ticketPrice: workshop.price ? `${workshop.price.toLocaleString('vi-VN')} VND` : "Chưa có thông tin", // Giữ lại để tương thích ngược
-      ticketSlots: workshop.capacity, // Giữ lại để tương thích ngược
-      status: mapWorkshopStatus(workshop.status),
-      description: workshop.description || "",
-      masterName: workshop.masterName || ""
-    };
-  });
+    try {
+      // Kiểm tra dữ liệu đầu vào
+      if (!workshop) {
+        console.warn('Workshop không hợp lệ:', workshop);
+        return null;
+      }
+
+      // Xử lý URL hình ảnh
+      let imageUrl = "https://via.placeholder.com/400x300?text=Workshop+Image";
+      if (workshop.imageUrl) {
+        if (workshop.imageUrl.startsWith("http")) {
+          imageUrl = workshop.imageUrl;
+        } else {
+          imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(/^\//, "")}`;
+        }
+      } else if (workshop.image) {
+        if (workshop.image.startsWith("http")) {
+          imageUrl = workshop.image;
+        } else {
+          imageUrl = `http://localhost:5261/${workshop.image.replace(/^\//, "")}`;
+        }
+      }
+
+      return {
+        id: workshop.workshopId,
+        workshopId: workshop.workshopId,
+        name: workshop.workshopName,
+        location: workshop.location,
+        date: new Date(workshop.startDate).toLocaleDateString("vi-VN"),
+        startDate: workshop.startDate,
+        endDate: workshop.endDate,
+        startTime: workshop.startTime ? workshop.startTime.substring(0, 5) : "Chưa có thông tin",
+        endTime: workshop.endTime ? workshop.endTime.substring(0, 5) : "Chưa có thông tin",
+        image: imageUrl,
+        imageUrl: imageUrl,
+        price: workshop.price,
+        capacity: workshop.capacity,
+        ticketPrice: `${workshop.price.toLocaleString("vi-VN")} VND`,
+        ticketSlots: workshop.capacity,
+        status: "Chờ duyệt",
+        description: workshop.description || "",
+        content: workshop.content || "",
+        masterName: workshop.masterName || ""
+      };
+    } catch (error) {
+      console.error('Lỗi khi định dạng workshop:', workshop, error);
+      return null;
+    }
+  }).filter(item => item !== null);
 }; 

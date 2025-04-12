@@ -55,32 +55,34 @@ import Chapter from "./Chapter";
 const { TextArea } = Input;
 
 // Component form cho khóa học
-const CourseForm = ({ form, initialData, loading, courseCategories }) => {
+const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = false }) => {
   console.log("Rendering CourseForm with initialData:", initialData);
   console.log("Available courseCategories:", courseCategories);
+  console.log("Is Edit Mode:", isEdit);
 
   // Đảm bảo rằng có ít nhất một option trong dropdown
   const categoryOptions = courseCategories && courseCategories.length > 0 
-    ? courseCategories.map((category) => ({
-        value: category.categoryId,
-        label: category.categoryName,
-      }))
+    ? courseCategories.map((category) => {
+        console.log("Mapping category:", category);
+        return {
+          value: category.categoryId,
+          label: category.categoryName,
+        };
+      })
     : [];
     
   console.log("Category dropdown options:", categoryOptions);
-
-  // Tạo options cho trạng thái
-  const statusOptions = [
-    { value: "Active", label: "Hoạt động" },
-    { value: "Inactive", label: "Không hoạt động" }
-  ];
+  console.log("Selected category value:", initialData?.courseCategory);
 
   return (
     <Form
       form={form}
       layout="vertical"
       disabled={loading}
-      initialValues={initialData}
+      initialValues={{
+        ...initialData,
+        courseCategory: initialData?.categoryId // Sử dụng categoryId từ initialData
+      }}
     >
       <Form.Item
         label="Tên khóa học"
@@ -91,18 +93,29 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
       </Form.Item>
 
       <Form.Item
-        label="Loại khóa học"
+        label={<span className="text-red-500">* Loại khóa học</span>}
         name="courseCategory"
         rules={[{ required: true, message: "Vui lòng chọn loại khóa học" }]}
       >
-        <Select
-          placeholder="Chọn loại khóa học"
-          loading={!categoryOptions || categoryOptions.length === 0}
-          showSearch
-          optionFilterProp="label"
-          options={categoryOptions}
-          notFoundContent={categoryOptions.length === 0 ? "Không có dữ liệu loại khóa học" : null}
-        />
+        <div className="shape-select">
+          <select 
+            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200"
+          >
+            <option value="">{initialData?.categoryName ? `${initialData.categoryName}` : '-- Chọn loại khóa học --'}</option>
+            {categoryOptions && categoryOptions.length > 0 ? (
+              categoryOptions.map((category) => (
+                <option 
+                  key={category.value} 
+                  value={category.value}
+                >
+                  {category.label}
+                </option>
+              ))
+            ) : (
+              <option disabled>Đang tải danh sách...</option>
+            )}
+          </select>
+        </div>
       </Form.Item>
 
       <Form.Item
@@ -114,17 +127,6 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
           placeholder="Nhập giá khóa học"
           min={0}
           style={{ width: "100%" }}
-        />
-      </Form.Item>
-
-      <Form.Item
-        label="Trạng thái"
-        name="status"
-        initialValue="Active"
-      >
-        <Select 
-          placeholder="Chọn trạng thái"
-          options={statusOptions}
         />
       </Form.Item>
 
@@ -150,25 +152,47 @@ const CourseForm = ({ form, initialData, loading, courseCategories }) => {
           return e?.fileList;
         }}
       >
-        <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
-          <div className="flex flex-col items-center">
-            <UploadCloud className="w-6 h-6 text-gray-400" />
-            <div className="mt-2">Upload</div>
-          </div>
-        </Upload>
-      </Form.Item>
-      
-      {/* Hiển thị hình ảnh hiện tại nếu có */}
-      {initialData && initialData.image && (
         <div className="mt-2">
-          <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
-          <img
-            src={initialData.image}
-            alt="Hình ảnh khóa học"
-            className="max-h-[200px] object-cover rounded"
-          />
+          <Upload
+            listType="picture-card"
+            maxCount={1}
+            beforeUpload={() => false}
+            accept="image/*"
+            fileList={
+              isEdit && initialData?.image && !form.getFieldValue('image')?.length
+                ? [{
+                    uid: '-1',
+                    name: 'current-image.jpg',
+                    status: 'done',
+                    url: initialData.image,
+                  }]
+                : form.getFieldValue('image') || []
+            }
+          >
+            <div className="flex flex-col items-center">
+              <UploadCloud className="w-6 h-6 text-gray-400" />
+              <div className="mt-2">Upload</div>
+            </div>
+          </Upload>
+
+          {/* Hiển thị hình ảnh hiện tại nếu đang ở chế độ chỉnh sửa và có ảnh cũ */}
+          {isEdit && initialData?.image && !form.getFieldValue('image')?.length && (
+            <div className="mt-4">
+              <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
+              <img
+                src={initialData.image}
+                alt="Hình ảnh khóa học"
+                className="max-h-[200px] object-contain rounded border p-2"
+                onError={(e) => {
+                  console.error("Lỗi tải hình ảnh:", e);
+                  e.target.src = "https://via.placeholder.com/200x200?text=Không+tải+được+ảnh";
+                  message.warning("Không thể hiển thị hình ảnh, nhưng bạn vẫn có thể tải lên hình mới");
+                }}
+              />
+            </div>
+          )}
         </div>
-      )}
+      </Form.Item>
     </Form>
   );
 };
@@ -275,6 +299,9 @@ const CourseMaster = () => {
   const [selectedQuiz, setSelectedQuiz] = useState(null);
   const [quizForm] = Form.useForm();
   const [categoryNames, setCategoryNames] = useState({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     fetchCourses();
@@ -716,7 +743,6 @@ const CourseMaster = () => {
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
       formData.append("Price", Number(values.price));
-      formData.append("Status", values.status || "Active");
 
       // Xử lý file hình ảnh nếu có
       if (values.image && values.image.length > 0) {
@@ -804,51 +830,29 @@ const CourseMaster = () => {
     setSelectedCourse(null);
   };
 
-  const handleUpdateCourse = async (course) => {
-    console.log("Updating course:", course);
-    setSelectedCourse(course);
+  const handleUpdateCourse = (record) => {
+    console.log("Updating course:", record);
+    setSelectedCourse(record);
+    setIsEditMode(true);
 
-    // Đảm bảo danh sách category đã được tải
-    if (courseCategories.length === 0) {
-      message.info("Đang tải danh sách loại khóa học...");
-      await fetchCourseCategories();
-    }
-
-    // Log chi tiết để kiểm tra
-    console.log("Course category values:", {
-      categoryId: course.categoryId,
-      categoryName: course.categoryName,
+    // Log để debug
+    console.log("Course category data for update:", {
+      categoryId: record.categoryId,
+      categoryName: record.categoryName
     });
 
-    // Tìm category ID dựa trên tên category nếu không có categoryId
-    let categoryIdToUse = course.categoryId;
-    
-    if (!categoryIdToUse && course.categoryName && course.categoryName !== "Chưa phân loại") {
-      console.log("Looking for categoryId by name:", course.categoryName);
-      
-      const categoryFound = courseCategories.find(
-        (cat) => cat.categoryName.toLowerCase() === course.categoryName.toLowerCase()
-      );
-      
-      if (categoryFound) {
-        console.log("Found matching category by name:", categoryFound);
-        categoryIdToUse = categoryFound.categoryId;
-      }
-    }
-
-    // Thiết lập giá trị cho form với hình ảnh hiện tại
+    // Thiết lập giá trị cho form
     updateForm.setFieldsValue({
-      courseName: course.name,
-      courseCategory: categoryIdToUse,
-      price: course.price,
-      description: course.description,
-      status: course.status === "Đang hoạt động" || course.status === "Active" ? "Active" : "Inactive",
-      image: course.image ? [
+      courseName: record.name,
+      courseCategory: record.categoryId,  // Set giá trị categoryId cũ
+      price: record.price,
+      description: record.description,
+      image: record.image ? [
         {
           uid: '-1',
           name: 'current-image.jpg',
           status: 'done',
-          url: course.image
+          url: record.image
         }
       ] : []
     });
@@ -867,22 +871,14 @@ const CourseMaster = () => {
       const values = await updateForm.validateFields();
       setLoading(true);
 
+      console.log("Form values before sending:", values);
+
       // Kiểm tra các trường bắt buộc
-      if (
-        !values.courseName ||
-        !values.courseCategory ||
-        !values.description ||
-        !values.price
-      ) {
+      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
         message.error("Vui lòng điền đầy đủ thông tin khóa học");
         setLoading(false);
         return;
       }
-
-      // Log giá trị form để kiểm tra
-      console.log("Form values before sending:", values);
-      console.log("Selected category value:", values.courseCategory);
-      console.log("Available categories:", courseCategories);
 
       // Kiểm tra xem categoryId có tồn tại trong danh sách không
       const selectedCategory = courseCategories.find(
@@ -890,35 +886,42 @@ const CourseMaster = () => {
       );
 
       if (!selectedCategory) {
-        console.warn("Selected category ID not found in categories list:", values.courseCategory);
+        console.error("Invalid category:", values.courseCategory, "Available categories:", courseCategories);
         message.warning("Loại khóa học không hợp lệ. Vui lòng chọn lại.");
         setLoading(false);
         return;
       }
 
-      // Tạo FormData để gửi dữ liệu và file
+      // Tạo FormData để gửi dữ liệu
       const formData = new FormData();
       formData.append("CourseId", selectedCourse.id);
       formData.append("CourseName", values.courseName.trim());
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
       formData.append("Price", Number(values.price));
-      formData.append("Status", values.status || "Active");
 
-      // Xử lý file hình ảnh nếu có
-      if (values.image && values.image.length > 0) {
-        const imageFile = values.image[0].originFileObj;
-        console.log("Đính kèm file hình ảnh:", imageFile.name);
-        formData.append("ImageUrl", imageFile);
+      // Xử lý hình ảnh
+      if (values.image && values.image[0]?.originFileObj) {
+        // Nếu có file ảnh mới được chọn
+        formData.append("ImageUrl", values.image[0].originFileObj);
+      
+        // Nếu không có file ảnh mới và có ảnh cũ, gửi URL ảnh cũ
+        const imageUrl = selectedCourse.image;
+        // Tạo một Blob từ URL ảnh cũ
+        try {
+          const response = await fetch(imageUrl);
+          const blob = await response.blob();
+          formData.append("ImageUrl", blob, "existing-image.jpg");
+        } catch (error) {
+          console.error("Error converting image URL to blob:", error);
+          // Nếu không thể tạo blob, gửi URL trực tiếp
+          formData.append("ImagePath", imageUrl);
+        }
       }
 
-      // Log FormData để debug
-      console.log("Sending updated course data:");
+      // Log dữ liệu trước khi gửi
       for (let [key, value] of formData.entries()) {
-        console.log(
-          key + ":",
-          value instanceof File ? `File: ${value.name}` : value
-        );
+        console.log(`${key}:`, value instanceof Blob ? 'Blob/File' : value);
       }
 
       const response = await updateCourse(formData);
@@ -928,23 +931,20 @@ const CourseMaster = () => {
         setIsUpdateModalOpen(false);
         updateForm.resetFields();
         
-        // Sau khi cập nhật thành công, lấy tên category mới (nếu cần)
-        if (values.courseCategory) {
-          fetchCategoryName(values.courseCategory);
-        }
-        
-        // Cập nhật local state để hiển thị đúng tên category
+        // Cập nhật state local
         setCourses(prevCourses => 
           prevCourses.map(course => 
             course.id === selectedCourse.id 
               ? {
                   ...course,
                   name: values.courseName,
-                  categoryId: values.courseCategory,
+                  categoryId: categoryId,
                   categoryName: selectedCategory.categoryName,
                   price: values.price,
                   description: values.description,
-                  status: values.status || "Active"
+                  image: values.image && values.image[0]?.originFileObj 
+                    ? URL.createObjectURL(values.image[0].originFileObj)
+                    : course.image
                 } 
               : course
           )
@@ -953,9 +953,7 @@ const CourseMaster = () => {
         // Làm mới danh sách khóa học
         fetchCourses();
       } else {
-        throw new Error(
-          response?.message || "Có lỗi xảy ra khi cập nhật khóa học"
-        );
+        throw new Error(response?.message || "Có lỗi xảy ra khi cập nhật khóa học");
       }
     } catch (error) {
       console.error("Error updating course:", error);
@@ -1496,6 +1494,7 @@ const CourseMaster = () => {
         <div className="p-4">
           <CourseForm
             form={form}
+            initialData={{}}
             loading={loading}
             courseCategories={courseCategories}
           />
@@ -1526,68 +1525,25 @@ const CourseMaster = () => {
           <div className="p-4">
             <Row gutter={[24, 24]}>
               <Col xs={24} md={12}>
-                <div className="rounded-lg overflow-hidden h-64 bg-gray-200 mb-4">
-                  {(() => {
-                    // Lấy URL ảnh cho chi tiết khóa học
-                    console.log("Rendering course details for ID:", selectedCourse.id);
-                    
-                    // Tìm trong raw data nếu có
-                    let imageSource = null;
-                    if (rawData && rawData.data && Array.isArray(rawData.data)) {
-                      const originalCourse = rawData.data.find(c => 
-                        c.courseId === selectedCourse.id || c.id === selectedCourse.id);
-                      
-                      if (originalCourse) {
-                        console.log("Found original image data:", {
-                          image: originalCourse.image,
-                          imageUrl: originalCourse.imageUrl
-                        });
-                        
-                        if (originalCourse.imageUrl && originalCourse.imageUrl.startsWith('http')) {
-                          imageSource = originalCourse.imageUrl;
-                          console.log("Using imageUrl from API data:", imageSource);
-                        } else if (originalCourse.image && originalCourse.image.startsWith('http')) {
-                          imageSource = originalCourse.image;
-                          console.log("Using image from API data:", imageSource);
-                        }
-                      }
-                    }
-                    
-                    // Nếu không tìm thấy trong raw data, sử dụng từ selected course
-                    if (!imageSource) {
-                      if (selectedCourse.image && selectedCourse.image.startsWith('http')) {
-                        imageSource = selectedCourse.image;
-                        console.log("Using image from selected course:", imageSource);
-                      } else if (selectedCourse.imageUrl && selectedCourse.imageUrl.startsWith('http')) {
-                        imageSource = selectedCourse.imageUrl;
-                        console.log("Using imageUrl from selected course:", imageSource);
-                      }
-                    }
-
-                    // Render dựa trên kết quả
-                    if (imageSource) {
-                      return (
-                        <img
-                          src={imageSource}
-                          alt={selectedCourse.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.log("Image failed to load:", e.target.src);
-                            e.target.src = "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh";
-                          }}
-                        />
-                      );
-                    } else {
-                      return (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                          <div className="text-center">
-                            <FileText className="w-16 h-16 text-gray-400 mx-auto" />
-                            <p className="mt-2 text-gray-500">Không có hình ảnh</p>
-                          </div>
-                        </div>
-                      );
-                    }
-                  })()}
+                <div className="rounded-lg overflow-hidden h-64 bg-gray-100 mb-4">
+                  {selectedCourse.image ? (
+                    <img
+                      src={selectedCourse.image}
+                      alt={selectedCourse.name}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        console.error("Lỗi tải hình ảnh:", e);
+                        e.target.src = "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh";
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-center">
+                        <FileText className="w-16 h-16 text-gray-400 mx-auto" />
+                        <p className="mt-2 text-gray-500">Không có hình ảnh</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -1700,9 +1656,10 @@ const CourseMaster = () => {
         <div className="p-4">
           <CourseForm
             form={updateForm}
-            initialData={{}}
+            initialData={selectedCourse}
             loading={loading}
             courseCategories={courseCategories}
+            isEdit={true}
           />
 
           <div className="flex justify-end gap-3 mt-6">
@@ -2095,6 +2052,66 @@ const CourseMaster = () => {
         }
         .course-modal .ant-modal-footer {
           border-top: 1px solid #f0f0f0;
+        }
+      
+        .delete-confirmation-modal .ant-modal-content {
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .delete-confirmation-modal .ant-modal-body {
+          padding: 24px;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-title {
+          font-size: 18px;
+          font-weight: 600;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-content {
+          margin-top: 8px;
+          margin-bottom: 24px;
+          font-size: 14px;
+        }
+        .delete-confirmation-modal .ant-modal-confirm-btns {
+          margin-top: 24px;
+        }
+        .delete-confirmation-modal .ant-btn-primary {
+          background-color: #f5222d;
+          border-color: #f5222d;
+        }
+        .delete-confirmation-modal .ant-btn-primary:hover {
+          background-color: #ff4d4f;
+          border-color: #ff4d4f;
+        }
+
+        /* CSS cho select box */
+        select {
+          appearance: none;
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          background-image: url("data:image/svg+xml;utf8,<svg fill='%2390B77D' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+          background-repeat: no-repeat;
+          background-position-x: calc(100% - 10px);
+          background-position-y: 50%;
+          padding-right: 30px;
+          transition: all 0.2s ease;
+          border: 1px solid #d9d9d9;
+        }
+
+        select:hover {
+          border-color: #90b77d;
+        }
+
+        select:focus {
+          outline: none;
+          border-color: #90b77d;
+          box-shadow: 0 0 0 2px rgba(144, 183, 125, 0.2);
+        }
+
+        select option {
+          padding: 8px;
+        }
+
+        select option:hover {
+          background-color: #f5f5f5;
         }
       `}</style>
     </div>

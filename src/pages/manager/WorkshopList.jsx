@@ -9,7 +9,7 @@ const WorkshopList = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5); // Giả sử có 5 trang
+  const [workshops, setWorkshops] = useState([]);
 
   const handleSearch = (searchTerm) => {
     // Xử lý tìm kiếm ở đây
@@ -19,9 +19,6 @@ const WorkshopList = () => {
   // Xử lý chuyển trang
   const handlePageChange = (page) => {
     try {
-      if (page < 1 || page > totalPages) {
-        throw new Error("Trang không hợp lệ");
-      }
       setCurrentPage(page);
       console.log("Changing to page:", page);
     } catch (err) {
@@ -103,7 +100,7 @@ const WorkshopList = () => {
 
         <Pagination
           currentPage={currentPage}
-          totalPages={totalPages}
+          totalPages={Math.ceil(workshops.length / 10)}
           onPageChange={handlePageChange}
         />
       </div>
