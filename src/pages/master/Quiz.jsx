@@ -107,7 +107,6 @@ const Quiz = () => {
     } catch (error) {
       console.error("Error fetching quizzes:", error);
       setError(error.toString());
-      message.error(error.toString());
       setQuizzes([]);
     } finally {
       setLoading(false);
@@ -378,10 +377,12 @@ const Quiz = () => {
         ) : (
           <>
             {quizzes.length === 0 ? (
-              <div className="text-center p-8">
-                <p className="text-gray-500 mb-4">
-                  Khóa học này chưa có bài kiểm tra nào
-                </p>
+              <div className="bg-white rounded-lg shadow">
+                <div className="text-center p-8">
+                  <p className="text-gray-500">
+                    Khóa học này chưa có bài kiểm tra nào
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow">
@@ -542,9 +543,25 @@ const Quiz = () => {
             <Form.Item
               name="title"
               label="Tiêu đề bài kiểm tra"
-              rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tiêu đề bài kiểm tra" },
+                { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng" },
+                { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
+                { max: 200, message: "Tiêu đề không được vượt quá 200 ký tự" },
+                {
+                  validator: async (_, value) => {
+                    if (value) {
+                      const trimmedValue = value.trim();
+                      if (/^\d+$/.test(trimmedValue)) {
+                        return Promise.reject('Tiêu đề không được chỉ chứa số');
+                      }
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
             >
-              <Input placeholder="Nhập tiêu đề bài kiểm tra" />
+              <Input placeholder="Nhập tiêu đề bài kiểm tra" maxLength={200} />
             </Form.Item>
 
             <div className="flex justify-end gap-3 mt-6">

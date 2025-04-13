@@ -33,7 +33,7 @@ const Refund = () => {
           console.log("Customer ID from API:", order.customerId, order.CustomerId);
           return {
             id: order.orderId,
-            customerId: order.customerId || order.CustomerId, // Thử cả hai trường hợp
+            customerId: order.customerId || order.CustomerId,
             customerName: order.customerName,
             serviceType: order.serviceType,
             amount: order.amount,
@@ -48,9 +48,14 @@ const Refund = () => {
         console.log("Formatted data:", formattedData);
         setRefundData(formattedData);
         setTotalPages(Math.ceil(formattedData.length / 10));
+      } else {
+        setRefundData([]);
+        setTotalPages(1);
       }
     } catch (error) {
-      message.error(error.message || "Có lỗi xảy ra khi tải dữ liệu");
+      console.error("Error fetching refund orders:", error);
+      setRefundData([]);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -186,20 +191,35 @@ const Refund = () => {
               </div>
             </div>
 
-            <CustomTable
-              columns={columns}
-              dataSource={paginatedData}
-              loading={loading}
-              pagination={false}
-            />
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+              </div>
+            ) : refundData.length === 0 ? (
+              <div className="bg-white rounded-lg">
+                <div className="text-center py-8">
+                  <p className="text-gray-500">Không có đơn hàng đang chờ hoàn tiền</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <CustomTable
+                  columns={columns}
+                  dataSource={paginatedData}
+                  loading={loading}
+                  pagination={false}
+                />
 
-            <div className="mt-4">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

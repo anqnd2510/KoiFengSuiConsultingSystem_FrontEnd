@@ -81,13 +81,18 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       disabled={loading}
       initialValues={{
         ...initialData,
-        courseCategory: initialData?.categoryId // Sử dụng categoryId từ initialData
+        courseCategory: initialData?.categoryId
       }}
     >
       <Form.Item
         label="Tên khóa học"
         name="courseName"
-        rules={[{ required: true, message: "Vui lòng nhập tên khóa học" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập tên khóa học" },
+          { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
+          { min: 5, message: "Tên phải có ít nhất 5 ký tự" },
+          { max: 200, message: "Tên không được vượt quá 200 ký tự" }
+        ]}
       >
         <Input placeholder="Nhập tên khóa học" />
       </Form.Item>
@@ -95,7 +100,9 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       <Form.Item
         label={<span className="text-red-500">* Loại khóa học</span>}
         name="courseCategory"
-        rules={[{ required: true, message: "Vui lòng chọn loại khóa học" }]}
+        rules={[
+          { required: true, message: "Vui lòng chọn loại khóa học" }
+        ]}
       >
         <div className="shape-select">
           <select 
@@ -121,19 +128,41 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       <Form.Item
         label="Giá"
         name="price"
-        rules={[{ required: true, message: "Vui lòng nhập giá khóa học" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập giá khóa học" },
+          {
+            validator: (_, value) => {
+              if (!value) return Promise.resolve();
+              if (value <= 0) {
+                return Promise.reject('Giá phải lớn hơn 0');
+              }
+              if (value > 100000000) {
+                return Promise.reject('Giá không được vượt quá 100.000.000');
+              }
+              return Promise.resolve();
+            }
+          }
+        ]}
       >
         <InputNumber
           placeholder="Nhập giá khóa học"
           min={0}
+          max={100000000}
           style={{ width: "100%" }}
+          formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+          parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
         />
       </Form.Item>
 
       <Form.Item
         label="Mô tả"
         name="description"
-        rules={[{ required: true, message: "Vui lòng nhập mô tả khóa học" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập mô tả khóa học" },
+          { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
+          { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
+          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
+        ]}
       >
         <TextArea
           placeholder="Nhập mô tả khóa học"
@@ -151,7 +180,23 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
           }
           return e?.fileList;
         }}
-        
+        rules={[
+          { required: true, message: "Vui lòng chọn hình ảnh" },
+          {
+            validator: (_, fileList) => {
+              if (fileList && fileList.length > 0) {
+                const file = fileList[0].originFileObj;
+                if (file && file.size > 2 * 1024 * 1024) {
+                  return Promise.reject('Kích thước ảnh không được vượt quá 2MB');
+                }
+                if (file && !file.type.startsWith('image/')) {
+                  return Promise.reject('Chỉ chấp nhận file ảnh');
+                }
+              }
+              return Promise.resolve();
+            }
+          }
+        ]}
       >
         <Upload
           listType="picture-card"
@@ -172,6 +217,7 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
           <div className="flex flex-col items-center">
             <UploadCloud className="w-6 h-6 text-gray-400" />
             <div className="mt-2">Upload</div>
+            <div className="text-xs text-gray-400 mt-1">Tối đa 2MB</div>
           </div>
         </Upload>
       </Form.Item>

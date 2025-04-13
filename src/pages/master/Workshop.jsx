@@ -59,7 +59,12 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Tên hội thảo"
         name="name"
-        rules={[{ required: true, message: "Vui lòng nhập tên hội thảo" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập tên hội thảo" },
+          { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
+          { min: 5, message: "Tên phải có ít nhất 5 ký tự" },
+          { max: 100, message: "Tên không được vượt quá 100 ký tự" }
+        ]}
       >
         <Input placeholder="Nhập tên hội thảo" />
       </Form.Item>
@@ -67,7 +72,9 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Địa điểm"
         name="locationId"
-        rules={[{ required: true, message: "Vui lòng chọn địa điểm!" }]}
+        rules={[
+          { required: true, message: "Vui lòng chọn địa điểm!" }
+        ]}
       >
         <Select
           placeholder="Chọn địa điểm"
@@ -81,7 +88,16 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Ngày tổ chức"
         name="date"
-        rules={[{ required: true, message: "Vui lòng chọn ngày tổ chức" }]}
+        rules={[
+          { required: true, message: "Vui lòng chọn ngày tổ chức" },
+          {
+            validator: async (_, value) => {
+              if (value && value.isBefore(dayjs(), 'day')) {
+                return Promise.reject('Ngày tổ chức không được là ngày trong quá khứ');
+              }
+            }
+          }
+        ]}
       >
         <DatePicker
           format="DD/MM/YYYY"
@@ -95,7 +111,9 @@ const WorkshopForm = ({ form, loading, locations }) => {
           <Form.Item
             label="Giờ bắt đầu"
             name="startTime"
-            rules={[{ required: true, message: "Vui lòng chọn giờ bắt đầu" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn giờ bắt đầu" }
+            ]}
           >
             <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ bắt đầu" />
           </Form.Item>
@@ -104,7 +122,22 @@ const WorkshopForm = ({ form, loading, locations }) => {
           <Form.Item
             label="Giờ kết thúc"
             name="endTime"
-            rules={[{ required: true, message: "Vui lòng chọn giờ kết thúc" }]}
+            dependencies={['startTime']}
+            rules={[
+              { required: true, message: "Vui lòng chọn giờ kết thúc" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const startTime = getFieldValue('startTime');
+                  if (!startTime || !value) {
+                    return Promise.resolve();
+                  }
+                  if (value.isBefore(startTime)) {
+                    return Promise.reject('Giờ kết thúc phải sau giờ bắt đầu');
+                  }
+                  return Promise.resolve();
+                }
+              })
+            ]}
           >
             <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ kết thúc" />
           </Form.Item>
@@ -116,7 +149,20 @@ const WorkshopForm = ({ form, loading, locations }) => {
           <Form.Item
             label="Giá vé"
             name="ticketPrice"
-            rules={[{ required: true, message: "Vui lòng nhập giá vé" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập giá vé" },
+              {
+                pattern: /^[0-9]+$/,
+                message: "Giá vé chỉ được chứa số"
+              },
+              {
+                validator: async (_, value) => {
+                  if (value && value <= 0) {
+                    return Promise.reject('Giá vé phải lớn hơn 0');
+                  }
+                }
+              }
+            ]}
           >
             <Input placeholder="Nhập giá vé (VD: 300.000 VND)" />
           </Form.Item>
@@ -125,10 +171,28 @@ const WorkshopForm = ({ form, loading, locations }) => {
           <Form.Item
             label="Số lượng vé"
             name="ticketSlots"
-            rules={[{ required: true, message: "Vui lòng nhập số lượng vé" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập số lượng vé" },
+              { type: 'number', message: "Số lượng vé phải là số" },
+              {
+                validator: async (_, value) => {
+                  if (value === null || value === undefined) {
+                    return Promise.resolve();
+                  }
+                  if (value <= 0) {
+                    return Promise.reject('Số lượng vé phải lớn hơn 0');
+                  }
+                  if (value > 1000) {
+                    return Promise.reject('Số lượng vé không được vượt quá 1000');
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
           >
             <InputNumber
               min={1}
+              max={1000}
               placeholder="Nhập số lượng vé"
               style={{ width: "100%" }}
             />
@@ -146,11 +210,29 @@ const WorkshopForm = ({ form, loading, locations }) => {
           }
           return e?.fileList;
         }}
+        rules={[
+          { required: true, message: "Vui lòng tải lên hình ảnh" },
+          {
+            validator: async (_, fileList) => {
+              if (fileList && fileList.length > 0) {
+                const file = fileList[0].originFileObj;
+                if (file.size > 2 * 1024 * 1024) {
+                  return Promise.reject('Kích thước ảnh không được vượt quá 2MB');
+                }
+                const isImage = file.type.startsWith('image/');
+                if (!isImage) {
+                  return Promise.reject('Chỉ chấp nhận file ảnh');
+                }
+              }
+            }
+          }
+        ]}
       >
         <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
           <div className="flex flex-col items-center">
             <UploadCloud className="w-6 h-6 text-gray-400" />
             <div className="mt-2">Upload</div>
+            <div className="text-xs text-gray-400 mt-1">Tối đa 2MB</div>
           </div>
         </Upload>
       </Form.Item>
@@ -158,7 +240,12 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Mô tả hội thảo"
         name="description"
-        rules={[{ required: true, message: "Vui lòng nhập mô tả hội thảo" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập mô tả hội thảo" },
+          { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
+          { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
+          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
+        ]}
       >
         <TextArea
           placeholder="Nhập mô tả về hội thảo"
@@ -461,11 +548,29 @@ const Workshop = () => {
         await fetchWorkshops();
         await fetchPendingWorkshops();
       } else {
-        throw new Error(response?.message || "Có lỗi xảy ra khi tạo hội thảo");
+        // Kiểm tra nếu là lỗi thời gian biểu đã tồn tại
+        if (response?.statusCode === 409) {
+          if (response?.message?.includes("địa điểm khác")) {
+            message.error("Bạn đã có một hội thảo với cùng ngày bắt đầu ở địa điểm khác");
+          } else {
+            message.error("Thời gian biểu đã tồn tại");
+          }
+        } else {
+          message.error(response?.message || "Có lỗi xảy ra khi tạo hội thảo");
+        }
       }
     } catch (error) {
       console.error("Lỗi khi tạo hội thảo:", error);
-      message.error(error.message || "Có lỗi xảy ra khi tạo hội thảo");
+      // Kiểm tra nếu là lỗi thời gian biểu đã tồn tại
+      if (error.response?.status === 409) {
+        if (error.response?.data?.message?.includes("địa điểm khác")) {
+          message.error("Bạn đã có một hội thảo với cùng ngày bắt đầu ở địa điểm khác");
+        } else {
+          message.error("Thời gian biểu đã tồn tại");
+        }
+      } else {
+        message.error("Có lỗi xảy ra khi tạo hội thảo");
+      }
     } finally {
       setLoading(false);
     }

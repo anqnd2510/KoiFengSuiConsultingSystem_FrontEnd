@@ -47,7 +47,12 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
       <Form.Item
         label="Tiêu đề chương"
         name="chapterName"
-        rules={[{ required: true, message: "Vui lòng nhập tiêu đề chương" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập tiêu đề chương" },
+          { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng" },
+          { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
+          { max: 200, message: "Tiêu đề không được vượt quá 200 ký tự" }
+        ]}
       >
         <Input placeholder="Nhập tiêu đề chương" />
       </Form.Item>
@@ -55,7 +60,12 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
       <Form.Item
         label="Mô tả"
         name="description"
-        rules={[{ required: true, message: "Vui lòng nhập mô tả chương" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập mô tả chương" },
+          { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
+          { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
+          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
+        ]}
       >
         <TextArea
           placeholder="Nhập mô tả nội dung chương"
@@ -66,7 +76,22 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
       <Form.Item
         label="Thứ tự hiển thị"
         name="order"
-        rules={[{ required: true, message: "Vui lòng nhập thứ tự hiển thị" }]}
+        rules={[
+          { required: true, message: "Vui lòng nhập thứ tự hiển thị" },
+          {
+            type: 'number',
+            min: 1,
+            message: "Thứ tự phải lớn hơn 0"
+          },
+          {
+            validator: (_, value) => {
+              if (value && !Number.isInteger(value)) {
+                return Promise.reject('Thứ tự phải là số nguyên');
+              }
+              return Promise.resolve();
+            }
+          }
+        ]}
       >
         <InputNumber
           placeholder="Nhập thứ tự hiển thị"
@@ -101,9 +126,25 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
           return e?.fileList;
         }}
         rules={[
+          { required: !isUpdate, message: "Vui lòng chọn video" },
           {
-            required: !isUpdate,
-            message: "Vui lòng tải lên file video"
+            validator: (_, fileList) => {
+              if (fileList && fileList.length > 0) {
+                const file = fileList[0].originFileObj;
+                if (file) {
+                  // Kiểm tra kích thước file (giới hạn 500MB)
+                  if (file.size > 500 * 1024 * 1024) {
+                    return Promise.reject('Kích thước video không được vượt quá 500MB');
+                  }
+                  // Kiểm tra định dạng file
+                  const validTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+                  if (!validTypes.includes(file.type)) {
+                    return Promise.reject('Chỉ chấp nhận file video định dạng MP4, WebM hoặc Ogg');
+                  }
+                }
+              }
+              return Promise.resolve();
+            }
           }
         ]}
       >
@@ -116,6 +157,7 @@ const ChapterForm = ({ form, loading, isUpdate = false, currentVideo = null }) =
           <CustomButton icon={<Video size={16} />}>
             {isUpdate ? "Cập nhật video mới" : "Tải lên video"}
           </CustomButton>
+          <div className="text-xs text-gray-400 mt-1">Tối đa 500MB (MP4, WebM, Ogg)</div>
         </Upload>
       </Form.Item>
     </Form>
@@ -669,10 +711,7 @@ const Chapter = () => {
                           {selectedVideoChapter.title}
                         </h3>
                         <div className="flex items-center text-gray-500 text-sm mb-4">
-                          <div className="flex items-center">
-                            <FileText className="mr-1" size={14} />
-                            <span>Chương {selectedVideoChapter.order}</span>
-                          </div>
+                            
                         </div>
                         <p className="text-gray-600 text-sm">
                           {selectedVideoChapter.description}
@@ -713,11 +752,11 @@ const Chapter = () => {
                                   className="text-blue-600 mx-auto"
                                 />
                               ) : (
-                                index + 1
+                                chapter.order
                               )
                             ) : (
                               <Tooltip title="Chương này không có video">
-                                <span className="opacity-50">{index + 1}</span>
+                                <span className="opacity-50">{chapter.order}</span>
                               </Tooltip>
                             )}
                           </div>
@@ -734,7 +773,7 @@ const Chapter = () => {
                             <div className="flex items-center mt-1 text-xs text-gray-500">
                               {chapter.order && (
                                 <span className="mr-2">
-                                  Thứ tự: {chapter.order}
+                                  Chương {chapter.order}
                                 </span>
                               )}
                             </div>
