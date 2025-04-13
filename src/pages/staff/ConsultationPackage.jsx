@@ -464,6 +464,9 @@ const ConsultationPackage = () => {
                 label="Tên gói"
                 rules={[
                   { required: true, message: "Vui lòng nhập tên gói tư vấn" },
+                  { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
+                  { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+                  { max: 100, message: "Tên không được vượt quá 100 ký tự" }
                 ]}
               >
                 <Input placeholder="Nhập tên gói tư vấn" />
@@ -474,10 +477,10 @@ const ConsultationPackage = () => {
                 name="suitableFor"
                 label="Phù hợp với"
                 rules={[
-                  {
-                    required: true,
-                    message: "Vui lòng nhập đối tượng phù hợp",
-                  },
+                  { required: true, message: "Vui lòng nhập đối tượng phù hợp" },
+                  { whitespace: true, message: "Nội dung không được chỉ chứa khoảng trắng" },
+                  { min: 10, message: "Nội dung phải có ít nhất 10 ký tự" },
+                  { max: 500, message: "Nội dung không được vượt quá 500 ký tự" }
                 ]}
               >
                 <Input placeholder="Nhập đối tượng phù hợp với gói tư vấn" />
@@ -492,14 +495,20 @@ const ConsultationPackage = () => {
                 label="Giá tối thiểu"
                 rules={[
                   { required: true, message: "Vui lòng nhập giá tối thiểu" },
+                  {
+                    validator: async (_, value) => {
+                      if (value <= 0) {
+                        throw new Error('Giá phải lớn hơn 0');
+                      }
+                    }
+                  }
                 ]}
               >
                 <InputNumber
                   placeholder="Nhập giá tối thiểu"
                   style={{ width: "100%" }}
-                  formatter={(value) =>
-                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
+                  min={1}
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }
                   parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
                 />
               </Form.Item>
@@ -508,16 +517,28 @@ const ConsultationPackage = () => {
               <Form.Item
                 name="maxPrice"
                 label="Giá tối đa"
+                dependencies={['minPrice']}
                 rules={[
                   { required: true, message: "Vui lòng nhập giá tối đa" },
+                  ({ getFieldValue }) => ({
+                    validator(_, value) {
+                      if (!value || value <= 0) {
+                        return Promise.reject('Giá phải lớn hơn 0');
+                      }
+                      const minPrice = getFieldValue('minPrice');
+                      if (minPrice && value <= minPrice) {
+                        return Promise.reject('Giá tối đa phải lớn hơn giá tối thiểu');
+                      }
+                      return Promise.resolve();
+                    },
+                  }),
                 ]}
               >
                 <InputNumber
                   placeholder="Nhập giá tối đa"
                   style={{ width: "100%" }}
-                  formatter={(value) =>
-                    `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  }
+                  min={1}
+                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }
                   parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
                 />
               </Form.Item>
@@ -529,6 +550,9 @@ const ConsultationPackage = () => {
             label="Mô tả"
             rules={[
               { required: true, message: "Vui lòng nhập mô tả gói tư vấn" },
+              { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
+              { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
+              { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
             ]}
           >
             <TextArea
@@ -542,6 +566,9 @@ const ConsultationPackage = () => {
             label="Thông tin cần thiết"
             rules={[
               { required: true, message: "Vui lòng nhập thông tin cần thiết" },
+              { whitespace: true, message: "Thông tin không được chỉ chứa khoảng trắng" },
+              { min: 20, message: "Thông tin phải có ít nhất 20 ký tự" },
+              { max: 1000, message: "Thông tin không được vượt quá 1000 ký tự" }
             ]}
           >
             <TextArea
@@ -553,7 +580,12 @@ const ConsultationPackage = () => {
           <Form.Item
             name="pricingDetails"
             label="Chi tiết giá"
-            rules={[{ required: true, message: "Vui lòng nhập chi tiết giá" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập chi tiết giá" },
+              { whitespace: true, message: "Chi tiết giá không được chỉ chứa khoảng trắng" },
+              { min: 20, message: "Chi tiết giá phải có ít nhất 20 ký tự" },
+              { max: 1000, message: "Chi tiết giá không được vượt quá 1000 ký tự" }
+            ]}
           >
             <TextArea
               placeholder="Nhập chi tiết về cách tính giá của gói tư vấn"
@@ -565,10 +597,17 @@ const ConsultationPackage = () => {
             name="imageUrl"
             label="Hình ảnh"
             rules={[
+              { required: !isEditMode && !imageFile, message: "Vui lòng tải lên hình ảnh cho gói tư vấn" },
               {
-                required: !isEditMode && !imageFile,
-                message: "Vui lòng tải lên hình ảnh cho gói tư vấn",
-              },
+                validator: async (_, fileList) => {
+                  if (fileList && fileList.length > 0) {
+                    const file = fileList[0].originFileObj;
+                    if (file && file.size > 2 * 1024 * 1024) {
+                      throw new Error('Kích thước ảnh không được vượt quá 2MB');
+                    }
+                  }
+                }
+              }
             ]}
           >
             <div className="mt-2">

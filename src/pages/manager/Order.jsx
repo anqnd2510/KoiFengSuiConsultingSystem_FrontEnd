@@ -44,7 +44,6 @@ const Order = () => {
         setOrders(formattedOrders);
       } else {
         setOrders([]);
-        message.info("Không có đơn hàng nào chờ xác nhận");
       }
     } catch (err) {
       console.error("Error fetching orders:", err);
@@ -55,8 +54,7 @@ const Order = () => {
         navigate("/login");
         return;
       }
-      setError(err.message);
-      message.error(err.message);
+      setOrders([]);
     } finally {
       setLoading(false);
     }
@@ -220,17 +218,30 @@ const Order = () => {
           </div>
         </div>
 
-        <CustomTable
-          columns={columns}
-          dataSource={paginatedOrders}
-          loading={loading}
-        />
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Đang tải dữ liệu...</p>
+          </div>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">Không có đơn hàng đang chờ xác nhận</p>
+          </div>
+        ) : (
+          <>
+            <CustomTable
+              columns={columns}
+              dataSource={paginatedOrders}
+              loading={loading}
+            />
 
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(filteredOrders.length / pageSize)}
-          onPageChange={handlePageChange}
-        />
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(filteredOrders.length / pageSize)}
+              onPageChange={handlePageChange}
+            />
+          </>
+        )}
       </div>
 
       <Modal

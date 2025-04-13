@@ -482,6 +482,21 @@ const Question = () => {
                 name="questionText"
                 rules={[
                   { required: true, message: "Vui lòng nhập nội dung câu hỏi" },
+                  { whitespace: true, message: "Nội dung không được chỉ chứa khoảng trắng" },
+                  { min: 10, message: "Nội dung phải có ít nhất 10 ký tự" },
+                  { max: 1000, message: "Nội dung không được vượt quá 1000 ký tự" },
+                  {
+                    validator: async (_, value) => {
+                      if (value) {
+                        const trimmedValue = value.trim();
+                        
+                        if (/^\d+$/.test(trimmedValue)) {
+                          return Promise.reject('Nội dung không được chỉ chứa số');
+                        }
+                      }
+                      return Promise.resolve();
+                    }
+                  }
                 ]}
               >
                 <Input.TextArea
@@ -489,6 +504,7 @@ const Question = () => {
                   placeholder="Nhập câu hỏi của bạn ở đây..."
                   className="text-lg"
                   style={{ fontSize: "1.2rem", padding: "15px" }}
+                  maxLength={1000}
                 />
               </Form.Item>
             </div>
@@ -549,6 +565,20 @@ const Question = () => {
                           name={[field.name, "optionText"]}
                           rules={[
                             { required: true, message: "Vui lòng nhập đáp án" },
+                            { whitespace: true, message: "Đáp án không được chỉ chứa khoảng trắng" },
+                            { min: 1, message: "Đáp án phải có ít nhất 1 ký tự" },
+                            { max: 500, message: "Đáp án không được vượt quá 500 ký tự" },
+                            {
+                              validator: async (_, value) => {
+                                if (value) {
+                                  const trimmedValue = value.trim();
+                                  if (trimmedValue.length < 1) {
+                                    return Promise.reject('Đáp án không được để trống');
+                                  }
+                                }
+                                return Promise.resolve();
+                              }
+                            }
                           ]}
                         >
                           <Input.TextArea
@@ -565,6 +595,7 @@ const Question = () => {
                                   ? "#e8f5e9"
                                   : "#ffffff",
                             }}
+                            maxLength={500}
                           />
                         </Form.Item>
                       </div>
@@ -699,6 +730,21 @@ const Question = () => {
                 name="questionText"
                 rules={[
                   { required: true, message: "Vui lòng nhập nội dung câu hỏi" },
+                  { whitespace: true, message: "Nội dung không được chỉ chứa khoảng trắng" },
+                  { min: 10, message: "Nội dung phải có ít nhất 10 ký tự" },
+                  { max: 1000, message: "Nội dung không được vượt quá 1000 ký tự" },
+                  {
+                    validator: async (_, value) => {
+                      if (value) {
+                        const trimmedValue = value.trim();
+                     
+                        if (/^\d+$/.test(trimmedValue)) {
+                          return Promise.reject('Nội dung không được chỉ chứa số');
+                        }
+                      }
+                      return Promise.resolve();
+                    }
+                  }
                 ]}
               >
                 <Input.TextArea
@@ -706,6 +752,7 @@ const Question = () => {
                   placeholder="Nhập câu hỏi của bạn ở đây..."
                   className="text-lg"
                   style={{ fontSize: "1.2rem", padding: "15px" }}
+                  maxLength={1000}
                 />
               </Form.Item>
             </div>
@@ -751,24 +798,31 @@ const Question = () => {
                         name={[field.name, "optionText"]}
                         rules={[
                           { required: true, message: "Vui lòng nhập đáp án" },
+                          { whitespace: true, message: "Đáp án không được chỉ chứa khoảng trắng" },
+                          { min: 1, message: "Đáp án phải có ít nhất 1 ký tự" },
+                          { max: 500, message: "Đáp án không được vượt quá 500 ký tự" },
+                          {
+                            validator: async (_, value) => {
+                              if (value) {
+                                const trimmedValue = value.trim();
+                                if (trimmedValue.length < 1) {
+                                  return Promise.reject('Đáp án không được để trống');
+                                }
+                              }
+                              return Promise.resolve();
+                            }
+                          }
                         ]}
                       >
                         <Input.TextArea
                           rows={2}
-                          placeholder={`Đáp án ${String.fromCharCode(
-                            65 + index
-                          )}`}
+                          placeholder={`Đáp án ${String.fromCharCode(65 + index)}`}
                           className="answer-input"
                           style={{
                             resize: "none",
-                            backgroundColor: editForm.getFieldValue([
-                              "answerUpdateRequests",
-                              index,
-                              "isCorrect",
-                            ])
-                              ? "#e8f5e9"
-                              : "#f5f5f5",
+                            backgroundColor: editForm.getFieldValue(["answerUpdateRequests", index, "isCorrect"]) ? "#e8f5e9" : "#f5f5f5",
                           }}
+                          maxLength={500}
                         />
                       </Form.Item>
                     </div>
