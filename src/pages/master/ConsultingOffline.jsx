@@ -69,31 +69,45 @@ const ConsultingOffline = () => {
       setError(null);
       const response = await getOfflineConsultingBookings();
 
-      const formattedData = response.data.map((booking, index) => ({
-        id: booking.bookingOfflineId || index,
-        customerName: booking.customerName || "Không có tên",
-        customerEmail: booking.customerEmail || "Không có email",
-        service: booking.type || "Tư vấn trực tiếp",
-        date:
-          booking.bookingDate || dayjs(booking.createdAt).format("DD-MM-YYYY"),
-        status: mapStatusFromApi(booking.status),
-        description: booking.description || "",
-        location: booking.location || "",
-        masterName: booking.masterName || "",
-        masterNote: booking.masterNote || "",
-        rawData: booking,
-        key: booking.bookingOfflineId || `booking-${index}`,
-      }));
+      // Nếu response có data và là mảng
+      if (response && response.data && Array.isArray(response.data)) {
+        const formattedData = response.data.map((booking, index) => ({
+          id: booking.bookingOfflineId || index,
+          customerName: booking.customerName || "Không có tên",
+          customerEmail: booking.customerEmail || "Không có email",
+          service: booking.type || "Tư vấn trực tiếp",
+          date:
+            booking.bookingDate ||
+            dayjs(booking.createdAt).format("DD-MM-YYYY"),
+          status: mapStatusFromApi(booking.status),
+          description: booking.description || "",
+          location: booking.location || "",
+          masterName: booking.masterName || "",
+          masterNote: booking.masterNote || "",
+          rawData: booking,
+          key: booking.bookingOfflineId || `booking-${index}`,
+        }));
 
-      setBookings(formattedData);
+        setBookings(formattedData);
 
-      if (response.pagination) {
-        setTotalPages(response.pagination.totalPages || 1);
+        if (response.pagination) {
+          setTotalPages(response.pagination.totalPages || 1);
+        }
+      } else {
+        // Nếu không có dữ liệu, đặt mảng rỗng mà không hiển thị lỗi
+        setBookings([]);
+        setTotalPages(1);
       }
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu tư vấn trực tiếp:", err);
-      setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
-      message.error("Không thể tải dữ liệu tư vấn trực tiếp");
+      // Chỉ hiển thị lỗi khi có vấn đề thực sự với API (không phải do không có dữ liệu)
+      if (err.response && err.response.status !== 404) {
+        setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
+        message.error("Không thể tải dữ liệu tư vấn trực tiếp");
+      } else {
+        // Nếu là lỗi 404 (không tìm thấy dữ liệu), đặt mảng rỗng
+        setBookings([]);
+      }
     } finally {
       setLoading(false);
     }
@@ -514,6 +528,7 @@ const ConsultingOffline = () => {
             </div>
 
             <div className="p-4 md:p-6">
+              {/* Chỉ hiển thị thông báo lỗi khi có lỗi nghiêm trọng */}
               {error && <Error message={error} />}
 
               <div className="overflow-x-auto rounded-lg border border-gray-100">
@@ -528,6 +543,23 @@ const ConsultingOffline = () => {
                   onRow={(record) => ({
                     onClick: () => handleViewDetail(record),
                   })}
+                  locale={{
+                    emptyText: (
+                      <div className="py-5 flex flex-col items-center">
+                        <img
+                          src="/assets/images/no-data.png"
+                          alt="No data"
+                          className="w-16 h-16 mb-2 opacity-40"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src =
+                              "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTMyIDJDMTUuNDMxIDIgMiAxNS40MzEgMiAzMmMwIDE2LjU2OSAxMy40MzEgMzAgMzAgMzAgMTYuNTY5IDAgMzAtMTMuNDMxIDMwLTMwQzYyIDE1LjQzMSA0OC41NjkgMiAzMiAyem0wIDQwYy0xLjEwNCAwLTIgLjg5NS0yIDJzLjg5NiAyIDIgMiAyLS44OTUgMi0yLS44OTYtMi0yLTJ6bTItMzBjMC0xLjEwNC0uODk2LTItMi0ycy0yIC44OTYtMiAydjIwYzAgMS4xMDUuODk2IDIgMiAyczItLjg5NSAyLTJWMTJ6IiBmaWxsPSIjRDhEOEQ4Ii8+PC9zdmc+";
+                          }}
+                        />
+                        <span className="text-gray-500">Không có dữ liệu</span>
+                      </div>
+                    ),
+                  }}
                 />
               </div>
 

@@ -209,7 +209,10 @@ const KoiFishManagement = () => {
 
       // Kiểm tra và xử lý dữ liệu màu sắc
       let colors = [];
-      if (Array.isArray(koiDetail.varietyColors) && koiDetail.varietyColors.length > 0) {
+      if (
+        Array.isArray(koiDetail.varietyColors) &&
+        koiDetail.varietyColors.length > 0
+      ) {
         colors = koiDetail.varietyColors.map((color) => ({
           colorId: color.colorId || "",
           value: parseFloat((color.percentage || 0) / 100),
@@ -219,7 +222,10 @@ const KoiFishManagement = () => {
         console.log("Định dạng lại dữ liệu màu sắc:", colors);
 
         // Validate tổng phần trăm màu sắc
-        const totalPercentage = colors.reduce((sum, color) => sum + (color.value || 0) * 100, 0);
+        const totalPercentage = colors.reduce(
+          (sum, color) => sum + (color.value || 0) * 100,
+          0
+        );
         if (totalPercentage !== 100) {
           message.warning("Tổng phần trăm màu sắc không đạt 100%");
         }
@@ -283,7 +289,7 @@ const KoiFishManagement = () => {
       // Sử dụng đúng form tùy vào trạng thái
       const formToUse = selectedKoi ? editForm : form;
       const values = await formToUse.validateFields();
-      
+
       setModalLoading(true);
 
       // Log giá trị từ form để debug
@@ -345,7 +351,7 @@ const KoiFishManagement = () => {
       // Validate file ảnh nếu có
       if (koiImageFile) {
         const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
 
         if (koiImageFile.size > maxSize) {
           message.error("Kích thước ảnh không được vượt quá 5MB");
@@ -362,7 +368,7 @@ const KoiFishManagement = () => {
 
       // Kiểm tra các trường màu sắc
       console.log("Kiểm tra colorFields trước khi lưu:", colorFields);
-      
+
       // Lọc chỉ lấy các màu có colorId
       const validColorFields = colorFields.filter(
         (color) => color.colorId && color.colorId.trim() !== ""
@@ -377,7 +383,7 @@ const KoiFishManagement = () => {
       // Kiểm tra tổng phần trăm màu sắc
       const totalPercentage = calculateTotalPercentage(validColorFields);
       console.log("Tổng phần trăm màu sắc:", totalPercentage);
-      
+
       if (totalPercentage > 100) {
         message.error("Tổng phần trăm màu sắc không được vượt quá 100%");
         setModalLoading(false);
@@ -460,9 +466,9 @@ const KoiFishManagement = () => {
     } catch (err) {
       console.error("Lỗi khi lưu dữ liệu:", err);
       const errorMessage =
-        err.response?.data?.message || 
-        err.response?.data?.title || 
-        err.message || 
+        err.response?.data?.message ||
+        err.response?.data?.title ||
+        err.message ||
         "Đã xảy ra lỗi";
       setError(errorMessage);
       message.error(errorMessage);
@@ -494,7 +500,9 @@ const KoiFishManagement = () => {
       const response = await KoiFishService.createColor({
         colorName: values.colorName.trim(),
         colorCode: values.colorCode,
-        element: values.element
+        element: Array.isArray(values.element)
+          ? values.element.join(", ")
+          : values.element,
       });
 
       if (response && response.isSuccess) {
@@ -517,11 +525,11 @@ const KoiFishManagement = () => {
     try {
       setLoading(true);
       console.log("Chuẩn bị lấy thông tin chi tiết cá Koi ID:", koi.id);
-      
+
       // Gọi API để lấy thông tin chi tiết
       const koiDetail = await KoiFishService.getKoiFishById(koi.id);
       console.log("Chi tiết cá Koi từ API:", koiDetail);
-      
+
       // Cập nhật state với dữ liệu chi tiết
       setViewKoi(koiDetail);
       setIsViewModalVisible(true);
@@ -699,22 +707,22 @@ const KoiFishManagement = () => {
   // Hàm chuyển đổi mã màu hex sang tên màu
   const getColorName = (hexColor) => {
     const colors = {
-      '#FF0000': 'Đỏ',
-      '#00FF00': 'Xanh lá',
-      '#0000FF': 'Xanh dương',
-      '#FFFF00': 'Vàng',
-      '#FF00FF': 'Hồng',
-      '#00FFFF': 'Xanh ngọc',
-      '#000000': 'Đen',
-      '#FFFFFF': 'Trắng',
-      '#FFA500': 'Cam',
-      '#800080': 'Tím',
-      '#A52A2A': 'Nâu',
-      '#808080': 'Xám'
+      "#FF0000": "Đỏ",
+      "#00FF00": "Xanh lá",
+      "#0000FF": "Xanh dương",
+      "#FFFF00": "Vàng",
+      "#FF00FF": "Hồng",
+      "#00FFFF": "Xanh ngọc",
+      "#000000": "Đen",
+      "#FFFFFF": "Trắng",
+      "#FFA500": "Cam",
+      "#800080": "Tím",
+      "#A52A2A": "Nâu",
+      "#808080": "Xám",
     };
 
     // Tìm màu gần nhất
-    let closestColor = '#000000';
+    let closestColor = "#000000";
     let minDistance = Number.MAX_VALUE;
 
     const hex2rgb = (hex) => {
@@ -727,14 +735,14 @@ const KoiFishManagement = () => {
     const colorDistance = (rgb1, rgb2) => {
       return Math.sqrt(
         Math.pow(rgb1[0] - rgb2[0], 2) +
-        Math.pow(rgb1[1] - rgb2[1], 2) +
-        Math.pow(rgb1[2] - rgb2[2], 2)
+          Math.pow(rgb1[1] - rgb2[1], 2) +
+          Math.pow(rgb1[2] - rgb2[2], 2)
       );
     };
 
     const targetRgb = hex2rgb(hexColor);
 
-    Object.keys(colors).forEach(hex => {
+    Object.keys(colors).forEach((hex) => {
       const distance = colorDistance(targetRgb, hex2rgb(hex));
       if (distance < minDistance) {
         minDistance = distance;
@@ -749,12 +757,12 @@ const KoiFishManagement = () => {
   const handleColorChange = (color) => {
     const hexColor = color.toHexString();
     setSelectedColor(hexColor);
-    
+
     // Tự động cập nhật tên màu trong form
     const colorName = getColorName(hexColor);
     colorForm.setFieldsValue({
       colorName: colorName,
-      colorCode: hexColor
+      colorCode: hexColor,
     });
   };
 
@@ -866,20 +874,20 @@ const KoiFishManagement = () => {
                     onChange={handleColorChange}
                     presets={[
                       {
-                        label: 'Màu phổ biến',
+                        label: "Màu phổ biến",
                         colors: [
-                          '#FF0000',
-                          '#00FF00',
-                          '#0000FF',
-                          '#FFFF00',
-                          '#FF00FF',
-                          '#00FFFF',
-                          '#000000',
-                          '#FFFFFF',
-                          '#FFA500',
-                          '#800080',
-                          '#A52A2A',
-                          '#808080',
+                          "#FF0000",
+                          "#00FF00",
+                          "#0000FF",
+                          "#FFFF00",
+                          "#FF00FF",
+                          "#00FFFF",
+                          "#000000",
+                          "#FFFFFF",
+                          "#FFA500",
+                          "#800080",
+                          "#A52A2A",
+                          "#808080",
                         ],
                       },
                     ]}
@@ -902,7 +910,7 @@ const KoiFishManagement = () => {
               label="Mệnh"
               rules={[{ required: true, message: "Vui lòng chọn mệnh" }]}
             >
-              <Select placeholder="Chọn mệnh">
+              <Select placeholder="Chọn mệnh" mode="multiple" allowClear>
                 <Option value="Hỏa">Hỏa</Option>
                 <Option value="Thủy">Thủy</Option>
                 <Option value="Mộc">Mộc</Option>
@@ -913,14 +921,20 @@ const KoiFishManagement = () => {
 
             <div className="mt-4 p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-4">
-                <div 
-                  className="w-16 h-16 rounded-lg shadow-inner" 
+                <div
+                  className="w-16 h-16 rounded-lg shadow-inner"
                   style={{ backgroundColor: selectedColor }}
                 />
                 <div>
                   <p className="font-medium">Màu đã chọn:</p>
                   <p>Mã màu: {selectedColor}</p>
-                  <p>Tên màu: {colorForm.getFieldValue('colorName')}</p>
+                  <p>Tên màu: {colorForm.getFieldValue("colorName")}</p>
+                  <p>
+                    Mệnh:{" "}
+                    {Array.isArray(colorForm.getFieldValue("element"))
+                      ? colorForm.getFieldValue("element").join(", ")
+                      : colorForm.getFieldValue("element") || "Chưa chọn"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -947,7 +961,7 @@ const KoiFishManagement = () => {
         footer={[
           <CustomButton key="close" onClick={handleViewCancel}>
             Đóng
-          </CustomButton>
+          </CustomButton>,
         ]}
         width={700}
       >
@@ -962,49 +976,73 @@ const KoiFishManagement = () => {
                 />
               )}
             </div>
-            
+
             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">ID Cá</p>
-                <p className="text-base font-medium text-gray-800">{viewKoi.id}</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  ID Cá
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {viewKoi.id}
+                </p>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Giống cá</p>
-                <p className="text-base font-medium text-gray-800">{viewKoi.varietyName}</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Giống cá
+                </p>
+                <p className="text-base font-medium text-gray-800">
+                  {viewKoi.varietyName}
+                </p>
               </div>
             </div>
 
             <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Giới thiệu</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Giới thiệu
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {viewKoi.introduction || viewKoi.description}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả chi tiết</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Mô tả chi tiết
+                </p>
                 <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                   {viewKoi.description}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Màu sắc</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                  Màu sắc
+                </p>
                 <div className="bg-gray-50 p-4 rounded">
-                  {!viewKoi.varietyColors || viewKoi.varietyColors.length === 0 ? (
+                  {!viewKoi.varietyColors ||
+                  viewKoi.varietyColors.length === 0 ? (
                     <p className="text-gray-700">Không có dữ liệu màu sắc</p>
                   ) : (
                     <ul className="space-y-2">
                       {viewKoi.varietyColors.map((color, index) => (
-                        <li key={index} className="flex items-center text-gray-700">
+                        <li
+                          key={index}
+                          className="flex items-center text-gray-700"
+                        >
                           <span className="mr-2">•</span>
                           <span>
-                            {color.colorName || color.color?.colorName || "Không tên"}:{" "}
-                            {color.percentage}%
+                            {color.colorName ||
+                              color.color?.colorName ||
+                              "Không tên"}
+                            : {color.percentage}%
                             <span className="ml-2 text-gray-500">
-                              ({color.element || color.color?.element || "Không xác định"})
+                              (
+                              {color.element ||
+                                color.color?.element ||
+                                "Không xác định"}
+                              )
                             </span>
                           </span>
                         </li>

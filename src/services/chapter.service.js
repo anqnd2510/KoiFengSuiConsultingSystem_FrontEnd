@@ -51,6 +51,22 @@ export const createChapter = async (formData) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
+    // Kiểm tra kích thước video trước khi gửi
+    const videoFile = formData.get("Video");
+    if (videoFile instanceof File) {
+      console.log(
+        `Kích thước file video: ${(videoFile.size / (1024 * 1024)).toFixed(
+          2
+        )} MB`
+      );
+      if (videoFile.size > 100 * 1024 * 1024) {
+        // > 100MB
+        throw new Error(
+          "File video quá lớn. Vui lòng chọn file nhỏ hơn 100MB hoặc nén file trước khi tải lên."
+        );
+      }
+    }
+
     // Log FormData để debug
     console.log("Sending chapter FormData to API:");
     for (let pair of formData.entries()) {
@@ -61,16 +77,53 @@ export const createChapter = async (formData) => {
       );
     }
 
-    const response = await axios.post(
-      "http://localhost:5261/api/Chapter/create-chapter",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+    // Thử nhiều endpoint khác nhau nếu một endpoint không hoạt động
+    let response;
+    let errors = [];
+
+    // Tăng timeout lên để xử lý file lớn
+    const axiosConfig = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+      timeout: 120000, // 2 phút
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Tiến trình upload: ${percentCompleted}%`);
+      },
+    };
+
+    // Thử endpoint chính
+    try {
+      console.log("Đang gửi request đến endpoint chính...");
+      response = await axios.post(
+        "http://localhost:5261/api/Chapter/create-chapter",
+        formData,
+        axiosConfig
+      );
+    } catch (error) {
+      console.error("Lỗi khi gọi endpoint chính:", error.message);
+      errors.push(error);
+
+      // Thử endpoint thay thế
+      try {
+        console.log("Đang thử endpoint thay thế...");
+        response = await axios.post(
+          "http://localhost:5261/api/Chapter",
+          formData,
+          axiosConfig
+        );
+      } catch (backupError) {
+        console.error("Lỗi khi gọi endpoint thay thế:", backupError.message);
+        errors.push(backupError);
+        throw new Error(
+          "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc thử lại sau."
+        );
       }
-    );
+    }
 
     console.log("Kết quả API tạo chương:", response.data);
 
@@ -78,6 +131,14 @@ export const createChapter = async (formData) => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi tạo chương mới:", error);
+
+    // Thông báo chi tiết về lỗi
+    if (error.message.includes("timeout")) {
+      throw new Error(
+        "Quá thời gian tải file. File video quá lớn hoặc kết nối chậm. Vui lòng thử file nhỏ hơn."
+      );
+    }
+
     throw error;
   }
 };
