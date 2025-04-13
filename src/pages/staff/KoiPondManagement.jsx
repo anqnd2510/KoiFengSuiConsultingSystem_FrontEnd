@@ -257,11 +257,7 @@ const KoiPondManagement = () => {
       if (shapes && shapes.length > 0) {
         console.log("Đã tải được", shapes.length, "hình dạng hồ");
         setPondShapes(shapes);
-        message.success({
-          content: `Đã tải ${shapes.length} hình dạng hồ cá`,
-          key: "loadingShapes",
-          duration: 1,
-        });
+        message.destroy("loadingShapes"); // Chỉ hủy thông báo loading, không hiển thị thông báo thành công
       } else {
         console.warn("Không có dữ liệu hình dạng hồ");
         message.warning({
@@ -499,7 +495,7 @@ const KoiPondManagement = () => {
 
       // Kiểm tra kích thước và định dạng file ảnh
       const maxSize = 5 * 1024 * 1024; // 5MB
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
 
       if (createImageFile.size > maxSize) {
         message.error("Kích thước ảnh không được vượt quá 5MB");
@@ -768,7 +764,7 @@ const KoiPondManagement = () => {
       // Kiểm tra kích thước và định dạng file ảnh nếu có file mới
       if (editImageFile) {
         const maxSize = 5 * 1024 * 1024; // 5MB
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
 
         if (editImageFile.size > maxSize) {
           message.error("Kích thước ảnh không được vượt quá 5MB");

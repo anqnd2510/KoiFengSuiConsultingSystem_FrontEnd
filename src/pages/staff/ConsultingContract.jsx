@@ -18,7 +18,6 @@ import { FaEye, FaDownload } from "react-icons/fa";
 import Header from "../../components/Common/Header";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
-import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
 import { getAllBookingOffline } from "../../services/booking.service";
 // Giả định service cho hợp đồng
@@ -95,10 +94,13 @@ const ConsultingContract = () => {
         console.error("Invalid booking data format:", response);
         setBookings([]); // Đặt mảng rỗng thay vì hiển thị lỗi
         setTotalPages(1);
+        setError(null); // Đảm bảo không hiển thị lỗi khi chỉ là không có dữ liệu
       }
     } catch (err) {
       console.error("Error fetching bookings:", err);
-      setError("Có lỗi xảy ra khi tải dữ liệu đặt lịch. Vui lòng thử lại sau.");
+      setBookings([]); // Đặt mảng rỗng khi có lỗi
+      setTotalPages(1);
+      setError(null); // Không hiển thị lỗi trong UI, chỉ log lỗi ra console
     } finally {
       setBookingsLoading(false);
     }
@@ -143,7 +145,8 @@ const ConsultingContract = () => {
       }
     } catch (err) {
       console.error("Error fetching contracts:", err);
-      setError("Có lỗi xảy ra khi tải dữ liệu hợp đồng. Vui lòng thử lại sau.");
+      setContracts([]); // Đặt mảng rỗng khi có lỗi
+      setError(null); // Không hiển thị lỗi trong UI, chỉ log lỗi ra console
     } finally {
       setLoading(false);
     }
@@ -563,8 +566,6 @@ const ConsultingContract = () => {
                 />
               </div>
             </div>
-
-            {error && <Error message={error} />}
 
             {bookingsLoading ? (
               <div className="text-center py-4">
