@@ -201,33 +201,30 @@ const Category = () => {
 
   const handleEditCategory = async () => {
     try {
-      const values = await form.validateFields();
+      const values = await form.validateFields().catch(errorInfo => {
+        errorInfo.errorFields.forEach(error => {
+          message.error(error.errors[0]);
+        });
+        throw errorInfo;
+      });
+
       setLoading(true);
 
-      // Lấy ID từ selectedCategory
       if (!selectedCategory || !selectedCategory.categoryId) {
-        throw new Error(
-          "Thiếu ID danh mục. Vui lòng tải lại trang và thử lại."
-        );
+        throw new Error("Thiếu ID danh mục. Vui lòng tải lại trang và thử lại.");
       }
-
-      console.log("Cập nhật danh mục với ID:", selectedCategory.categoryId);
 
       const categoryData = {
         categoryName: values.categoryName.trim(),
+        currentImageUrl: selectedCategory.imageUrl // Thêm đường dẫn hình ảnh hiện tại
       };
 
-      // Xử lý hình ảnh nếu có - chuyển sang gửi file thay vì base64
       if (values.image && values.image.length > 0) {
         const imageFile = values.image[0].originFileObj;
-        categoryData.imageFile = imageFile; // Lưu trực tiếp file để gửi FormData
+        categoryData.imageFile = imageFile;
       }
 
-      // Dùng selectedCategory.categoryId thay vì selectedCategory.id
-      const response = await updateCategory(
-        selectedCategory.categoryId,
-        categoryData
-      );
+      const response = await updateCategory(selectedCategory.categoryId, categoryData);
 
       if (response && response.isSuccess) {
         message.success("Cập nhật loại khóa học thành công!");
@@ -235,15 +232,13 @@ const Category = () => {
         form.resetFields();
         fetchCategories();
       } else {
-        throw new Error(
-          response?.message || "Không thể cập nhật loại khóa học"
-        );
+        throw new Error(response?.message || "Không thể cập nhật loại khóa học");
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật loại khóa học:", error);
-      message.error(
-        error.message || "Có lỗi xảy ra khi cập nhật loại khóa học"
-      );
+      if (!error.errorFields) {
+        console.error("Lỗi khi cập nhật loại khóa học:", error);
+        message.error(error.message || "Có lỗi xảy ra khi cập nhật loại khóa học");
+      }
     } finally {
       setLoading(false);
     }
@@ -392,11 +387,13 @@ const Category = () => {
             label="Tên loại khóa học"
             rules={[
               { required: true, message: "Vui lòng nhập tên loại khóa học" },
-              {
-                whitespace: true,
-                message: "Tên không được chỉ chứa khoảng trắng",
-              },
+              { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
               { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+              { max: 50, message: "Tên không được vượt quá 50 ký tự" },
+              {
+                pattern: /^[a-zA-ZÀ-ỹ0-9\s]+$/,
+                message: "Tên chỉ được chứa chữ cái, số và khoảng trắng"
+              }
             ]}
           >
             <Input placeholder="Nhập tên loại khóa học" />
@@ -410,16 +407,34 @@ const Category = () => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
+            rules={[
+              { required: true, message: "Vui lòng chọn hình ảnh" },
+              {
+                validator: async (_, fileList) => {
+                  if (fileList && fileList.length > 0) {
+                    const file = fileList[0].originFileObj;
+                    if (file.size > 2 * 1024 * 1024) {
+                      throw new Error("Kích thước ảnh không được vượt quá 2MB");
+                    }
+                    const acceptedFormats = ['image/jpeg', 'image/png', 'image/gif'];
+                    if (!acceptedFormats.includes(file.type)) {
+                      throw new Error("Chỉ chấp nhận file ảnh định dạng JPG, PNG hoặc GIF");
+                    }
+                  }
+                }
+              }
+            ]}
           >
             <Upload
               listType="picture-card"
               maxCount={1}
               beforeUpload={() => false}
-              accept="image/*"
+              accept="image/jpeg,image/png,image/gif"
             >
               <div className="flex flex-col items-center">
                 <UploadCloud className="w-6 h-6 text-gray-400" />
                 <div className="mt-2">Tải lên</div>
+                <div className="text-xs text-gray-400 mt-1">JPG, PNG, GIF (tối đa 2MB)</div>
               </div>
             </Upload>
           </Form.Item>
@@ -523,7 +538,12 @@ const Category = () => {
             rules={[
               { required: true, message: "Vui lòng nhập tên loại khóa học" },
               { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
-              { min: 2, message: "Tên phải có ít nhất 2 ký tự" }
+              { min: 2, message: "Tên phải có ít nhất 2 ký tự" },
+              { max: 50, message: "Tên không được vượt quá 50 ký tự" },
+              {
+                pattern: /^[a-zA-ZÀ-ỹ0-9\s]+$/,
+                message: "Tên chỉ được chứa chữ cái, số và khoảng trắng"
+              }
             ]}
           >
             <Input placeholder="Nhập tên loại khóa học" />
@@ -537,6 +557,22 @@ const Category = () => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
+            rules={[
+              {
+                validator: async (_, fileList) => {
+                  if (fileList && fileList.length > 0) {
+                    const file = fileList[0].originFileObj;
+                    if (file.size > 2 * 1024 * 1024) {
+                      throw new Error('Kích thước ảnh không được vượt quá 2MB');
+                    }
+                    const isImage = file.type.startsWith('image/');
+                    if (!isImage) {
+                      throw new Error('Chỉ chấp nhận file ảnh');
+                    }
+                  }
+                }
+              }
+            ]}
           >
             <div className="mt-2">
               <Upload

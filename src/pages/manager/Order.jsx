@@ -220,12 +220,6 @@ const Order = () => {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 text-red-500 bg-red-50 p-4 rounded">
-            {error}
-          </div>
-        )}
-
         <CustomTable
           columns={columns}
           dataSource={paginatedOrders}
