@@ -509,29 +509,8 @@ const Master = () => {
             onClick={() => handleOpenViewModal(record)}
             className="!bg-blue-500 hover:!bg-blue-600 !text-white"
           >
-            Xem chi tiết
+            Xem 
           </CustomButton>
-          <CustomButton
-            type="default"
-            size="small"
-            onClick={() => handleOpenEditModal(record)}
-            className="!bg-transparent hover:!bg-blue-50 !text-blue-500 !border !border-blue-500"
-          >
-            Chỉnh sửa
-          </CustomButton>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa bậc thầy này không?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <CustomButton
-              type="text"
-              danger
-              size="small"
-              icon={<Trash2 size={16} />}
-            />
-          </Popconfirm>
         </Space>
       ),
     },

@@ -603,11 +603,7 @@ const KoiFishManagement = () => {
                     {color.colorName || color.color?.colorName || "Không tên"}:{" "}
                     {color.percentage}%
                     <span className="ml-1 text-gray-500">
-                      (
-                      {color.element ||
-                        color.color?.element ||
-                        "Không xác định"}
-                      )
+                      ({color.element || color.color?.element || "Không xác định"})
                     </span>
                   </span>
                 </li>
@@ -622,13 +618,6 @@ const KoiFishManagement = () => {
           )}
         </ul>
       ),
-    },
-    {
-      title: "Điểm tương thích",
-      key: "compatibilityScore",
-      dataIndex: "compatibilityScore",
-      width: "5%",
-      render: (score) => <span>{score || 0}</span>,
     },
     {
       title: "Hành động",

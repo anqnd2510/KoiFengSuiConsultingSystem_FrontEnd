@@ -276,6 +276,10 @@ const Workshop = () => {
   const [rejectedTotalPages, setRejectedTotalPages] = useState(1);
   const [activeTab, setActiveTab] = useState("1");
   const [pageSize, setPageSize] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [originalWorkshops, setOriginalWorkshops] = useState([]);
+  const [originalPendingWorkshops, setOriginalPendingWorkshops] = useState([]);
+  const [originalRejectedWorkshops, setOriginalRejectedWorkshops] = useState([]);
 
   // Kiểm tra xác thực khi component mount
   useEffect(() => {
@@ -312,28 +316,15 @@ const Workshop = () => {
       const data = await getAllWorkshops();
       console.log("Dữ liệu gốc từ getAllWorkshops:", data);
 
-      // In ra thông tin hình ảnh từ dữ liệu gốc
-      if (Array.isArray(data)) {
-        data.forEach(workshop => {
-          console.log(`Workshop ${workshop.workshopId} từ API - image: ${workshop.image}, imageUrl: ${workshop.imageUrl}`);
-        });
-      }
-
       const formattedData = formatWorkshopsData(data);
       console.log("Dữ liệu đã format từ getAllWorkshops:", formattedData);
-      
-      // In ra thông tin hình ảnh sau khi format
-      if (Array.isArray(formattedData)) {
-        formattedData.forEach(workshop => {
-          console.log(`Workshop ${workshop.id} sau format - image: ${workshop.image}, imageUrl: ${workshop.imageUrl}`);
-        });
-      }
 
       // Lọc các workshop đã bị từ chối
       const rejected = formattedData.filter(
         (workshop) => workshop.status === "Từ chối"
       );
       setRejectedWorkshops(rejected);
+      setOriginalRejectedWorkshops(rejected);
       setRejectedTotalPages(Math.ceil(rejected.length / 10));
 
       // Lọc các workshop không bị từ chối và không phải chờ duyệt để hiển thị ở tab 1
@@ -342,19 +333,16 @@ const Workshop = () => {
           workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
       );
       setWorkshops(approved);
+      setOriginalWorkshops(approved);
       setTotalPages(Math.ceil(approved.length / 10));
       setError(null);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
-
-      // Xử lý lỗi 401
       if (err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
         return;
       }
-      
-      // Không set error nữa, chỉ set workshops là mảng rỗng
       setWorkshops([]);
     } finally {
       setLoading(false);
@@ -366,30 +354,18 @@ const Workshop = () => {
     try {
       setLoading(true);
       const data = await getPendingWorkshops();
-      
-      // Log dữ liệu gốc từ API
-      console.log("Dữ liệu gốc từ getPendingWorkshops:", data);
-      
       const formattedData = formatPendingWorkshopsData(data);
-      
-      // Log dữ liệu sau khi format
-      console.log("Dữ liệu sau khi format:", formattedData);
-      
       setPendingWorkshops(formattedData);
-      setPendingTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
+      setOriginalPendingWorkshops(formattedData);
+      setPendingTotalPages(Math.ceil(formattedData.length / 10));
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
-
-      // Xử lý lỗi 401
       if (err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
         return;
       }
-
-      message.error(
-        "Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau."
-      );
+      message.error("Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -422,9 +398,43 @@ const Workshop = () => {
   };
 
   const handleSearch = (searchTerm) => {
-    // Xử lý tìm kiếm ở đây
-    console.log("Searching for:", searchTerm);
-    // Có thể thêm logic tìm kiếm từ API ở đây
+    setSearchTerm(searchTerm);
+    
+    if (!searchTerm.trim()) {
+      // Nếu không có từ khóa tìm kiếm, hiển thị lại toàn bộ danh sách gốc
+      setWorkshops(originalWorkshops);
+      setPendingWorkshops(originalPendingWorkshops);
+      setRejectedWorkshops(originalRejectedWorkshops);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase().trim();
+
+    // Tìm kiếm trong danh sách workshops đã duyệt
+    const filteredWorkshops = originalWorkshops.filter(workshop =>
+      workshop.name.toLowerCase().includes(searchTermLower) ||
+      workshop.location.toLowerCase().includes(searchTermLower)
+    );
+    setWorkshops(filteredWorkshops);
+
+    // Tìm kiếm trong danh sách workshops chờ duyệt
+    const filteredPendingWorkshops = originalPendingWorkshops.filter(workshop =>
+      workshop.name.toLowerCase().includes(searchTermLower) ||
+      workshop.location.toLowerCase().includes(searchTermLower)
+    );
+    setPendingWorkshops(filteredPendingWorkshops);
+
+    // Tìm kiếm trong danh sách workshops bị từ chối
+    const filteredRejectedWorkshops = originalRejectedWorkshops.filter(workshop =>
+      workshop.name.toLowerCase().includes(searchTermLower) ||
+      workshop.location.toLowerCase().includes(searchTermLower)
+    );
+    setRejectedWorkshops(filteredRejectedWorkshops);
+
+    // Reset về trang đầu tiên sau khi tìm kiếm
+    setCurrentPage(1);
+    setPendingCurrentPage(1);
+    setRejectedCurrentPage(1);
   };
 
   const handleOpenCreateModal = () => {
