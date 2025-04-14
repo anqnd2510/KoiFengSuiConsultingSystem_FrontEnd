@@ -22,6 +22,7 @@ import axios from "axios";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
 import CustomButton from "../../components/Common/CustomButton";
+import SearchBar from "../../components/Common/SearchBar";
 import KoiPondService from "../../services/koipond.service";
 
 const { Title } = Typography;
@@ -219,6 +220,9 @@ const KoiPondManagement = () => {
   const [isViewModalVisible, setIsViewModalVisible] = useState(false);
   const [viewPond, setViewPond] = useState(null);
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredPonds, setFilteredPonds] = useState([]);
+
   // Lấy danh sách hồ cá khi component được mount
   useEffect(() => {
     testApiConnection();
@@ -229,6 +233,28 @@ const KoiPondManagement = () => {
   useEffect(() => {
     fetchPondShapes();
   }, []);
+
+  // Thêm hàm xử lý tìm kiếm
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    if (!value.trim()) {
+      setFilteredPonds(pondTypes);
+      return;
+    }
+
+    const filtered = pondTypes.filter((pond) =>
+      pond.pondName.toLowerCase().includes(value.toLowerCase()) ||
+      pond.shapeName.toLowerCase().includes(value.toLowerCase()) ||
+      pond.introduction.toLowerCase().includes(value.toLowerCase()) ||
+      pond.description.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredPonds(filtered);
+  };
+
+  // Cập nhật useEffect để khởi tạo filteredPonds
+  useEffect(() => {
+    setFilteredPonds(pondTypes);
+  }, [pondTypes]);
 
   const testApiConnection = async () => {
     try {
@@ -879,23 +905,26 @@ const KoiPondManagement = () => {
 
       <div className="p-6">
         <div className="mb-4 flex justify-between items-center">
-          {loadingShapes ? (
-            <Spin size="small" />
-          ) : pondShapes && pondShapes.length > 0 ? (
-            <CustomButton
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreatePond}
-            >
-              Tạo hồ mới
-            </CustomButton>
-          ) : (
-            <Tooltip title="Cần có dữ liệu hình dạng hồ trước khi tạo hồ mới">
-              <CustomButton type="primary" icon={<PlusOutlined />} disabled>
+          <div>
+            {loadingShapes ? (
+              <Spin size="small" />
+            ) : pondShapes && pondShapes.length > 0 ? (
+              <CustomButton
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreatePond}
+              >
                 Tạo hồ mới
               </CustomButton>
-            </Tooltip>
-          )}
+            ) : (
+              <Tooltip title="Cần có dữ liệu hình dạng hồ trước khi tạo hồ mới">
+                <CustomButton type="primary" icon={<PlusOutlined />} disabled>
+                  Tạo hồ mới
+                </CustomButton>
+              </Tooltip>
+            )}
+          </div>
+          <SearchBar onSearch={handleSearch} />
         </div>
 
         {loading ? (
@@ -906,8 +935,8 @@ const KoiPondManagement = () => {
           <Error message={error} />
         ) : (
           <Row gutter={[16, 16]}>
-            {pondTypes && pondTypes.length > 0 ? (
-              pondTypes.map((pondType) => (
+            {filteredPonds && filteredPonds.length > 0 ? (
+              filteredPonds.map((pondType) => (
                 <Col xs={24} sm={12} md={8} lg={6} key={pondType.koiPondId}>
                   <PondCard
                     title={pondType.pondName}
@@ -927,7 +956,7 @@ const KoiPondManagement = () => {
             ) : (
               <Col span={24}>
                 <div className="text-center p-8">
-                  <p>Không có dữ liệu hồ cá. Vui lòng thêm hồ cá mới.</p>
+                  <p>Không có dữ liệu hồ cá phù hợp với tìm kiếm.</p>
                 </div>
               </Col>
             )}
