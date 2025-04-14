@@ -122,9 +122,11 @@ const WorkshopManager = () => {
 
   // Tùy chọn trạng thái cho bộ lọc
   const statusOptions = [
+    { value: "Chờ duyệt", label: "Chờ duyệt" },
     { value: "Sắp diễn ra", label: "Sắp diễn ra" },
-    { value: "Đang diễn ra", label: "Đang diễn ra" },
-    { value: "Đã xong", label: "Đã xong" },
+    //{ value: "Đang diễn ra", label: "Đang diễn ra" },
+    //{ value: "Đã xong", label: "Đã xong" },
+    { value: "Từ chối", label: "Từ chối" }
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
