@@ -312,7 +312,7 @@ const AudienceList = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-gray-500">Người hướng dẫn</p>
+                <p className="text-gray-500">Diễn giả</p>
                 <p className="font-medium">{workshop.master}</p>
               </div>
               <div>

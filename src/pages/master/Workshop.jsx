@@ -95,6 +95,9 @@ const WorkshopForm = ({ form, loading, locations }) => {
               if (value && value.isBefore(dayjs(), 'day')) {
                 return Promise.reject('Ngày tổ chức không được là ngày trong quá khứ');
               }
+              if (value && value.isBefore(dayjs().add(7, 'day'), 'day')) {
+                return Promise.reject('Ngày tổ chức phải cách ngày hiện tại ít nhất 1 tuần');
+              }
             }
           }
         ]}
@@ -134,6 +137,18 @@ const WorkshopForm = ({ form, loading, locations }) => {
                   if (value.isBefore(startTime)) {
                     return Promise.reject('Giờ kết thúc phải sau giờ bắt đầu');
                   }
+                  
+                  // Tính khoảng cách thời gian bằng phút
+                  const durationInMinutes = value.diff(startTime, 'minutes');
+                  
+                  if (durationInMinutes < 30) {
+                    return Promise.reject('Thời gian hội thảo phải ít nhất 30 phút');
+                  }
+                  
+                  if (durationInMinutes > 180) {
+                    return Promise.reject('Thời gian hội thảo không được vượt quá 3 tiếng');
+                  }
+                  
                   return Promise.resolve();
                 }
               })
@@ -159,6 +174,9 @@ const WorkshopForm = ({ form, loading, locations }) => {
                 validator: async (_, value) => {
                   if (value && value <= 0) {
                     return Promise.reject('Giá vé phải lớn hơn 0');
+                  }
+                  if (value && value <= 2000) {
+                    return Promise.reject('Giá vé phải lớn hơn 2000 VND');
                   }
                 }
               }
