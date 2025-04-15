@@ -27,6 +27,7 @@ const WorkshopCheck = () => {
   const [selectedWorkshop, setSelectedWorkshop] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [workshops, setWorkshops] = useState([]);
+  const [originalWorkshops, setOriginalWorkshops] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -47,12 +48,12 @@ const WorkshopCheck = () => {
       const data = await getPendingWorkshops();
       const formattedData = formatPendingWorkshopsData(data);
       setWorkshops(formattedData);
-      setTotalPages(Math.ceil(formattedData.length / 10)); // Giả sử hiển thị 10 items mỗi trang
+      setOriginalWorkshops(formattedData);
+      setTotalPages(Math.ceil(formattedData.length / 10));
       setError("");
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
 
-      // Xử lý lỗi 401
       if (err.message.includes("đăng nhập")) {
         message.error(err.message);
         navigate("/login");
@@ -181,8 +182,22 @@ const WorkshopCheck = () => {
   };
 
   const handleSearch = (searchTerm) => {
-    // Xử lý tìm kiếm ở đây
-    console.log("Đang tìm kiếm:", searchTerm);
+    if (!searchTerm.trim()) {
+      // Nếu không có từ khóa tìm kiếm, hiển thị lại toàn bộ danh sách gốc
+      setWorkshops(originalWorkshops);
+      return;
+    }
+
+    const searchTermLower = searchTerm.toLowerCase().trim();
+
+    // Tìm kiếm trong danh sách workshops
+    const filteredWorkshops = originalWorkshops.filter(workshop =>
+      workshop.name.toLowerCase().includes(searchTermLower) ||
+      workshop.location.toLowerCase().includes(searchTermLower) ||
+      workshop.id.toString().includes(searchTermLower)
+    );
+    setWorkshops(filteredWorkshops);
+    setCurrentPage(1);
   };
 
   const columns = [
