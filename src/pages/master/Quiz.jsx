@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Row, Col, Tag, message, Form, Input, Modal } from "antd";
+import { Row, Col, Tag, message, Form, Input, Modal, Upload } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   FaSearch,
@@ -8,7 +8,10 @@ import {
   FaEdit,
   FaTrash,
   FaArrowLeft,
+  FaQuestion,
+  FaFileExcel,
 } from "react-icons/fa";
+import { UploadOutlined, InboxOutlined } from "@ant-design/icons";
 import Header from "../../components/Common/Header";
 import CustomButton from "../../components/Common/CustomButton";
 import SearchBar from "../../components/Common/SearchBar";
@@ -22,6 +25,7 @@ import {
   createQuiz,
   updateQuiz,
   deleteQuiz,
+  importQuiz,
 } from "../../services/quiz.service";
 import { getAllCourses } from "../../services/course.service";
 
@@ -47,6 +51,10 @@ const Quiz = () => {
   const [deletingQuiz, setDeletingQuiz] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const pageSize = 10;
+  const [hasExistingQuiz, setHasExistingQuiz] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (courseId) {
@@ -100,6 +108,7 @@ const Quiz = () => {
 
       if (Array.isArray(data)) {
         setQuizzes(data);
+        setHasExistingQuiz(data.length > 0);
       } else {
         console.warn("Received non-array data:", data);
         setQuizzes([]);
@@ -222,7 +231,7 @@ const Quiz = () => {
       const quizRequest = {
         title: values.title.trim(),
         quizId: selectedQuiz.quizId,
-        score: selectedQuiz.score // Giữ nguyên điểm số cũ
+        score: selectedQuiz.score, // Giữ nguyên điểm số cũ
       };
 
       await updateQuiz(courseId, quizRequest);
@@ -262,6 +271,147 @@ const Quiz = () => {
   const handleCancelDelete = () => {
     setIsDeleteModalOpen(false);
     setDeletingQuiz(null);
+  };
+
+  const handleOpenImportModal = () => {
+    setIsImportModalOpen(true);
+  };
+
+  const handleCloseImportModal = () => {
+    setIsImportModalOpen(false);
+    setImportFile(null);
+  };
+
+  const handleFileChange = (info) => {
+    console.log("File change event:", info);
+
+    // Luôn lấy file mới nhất từ info (dù ở bất kỳ trạng thái nào)
+    const fileObj =
+      info.fileList.length > 0
+        ? info.fileList[info.fileList.length - 1].originFileObj ||
+          info.file.originFileObj
+        : null;
+
+    if (fileObj) {
+      console.log("Setting file to state:", fileObj.name);
+      setImportFile(fileObj);
+    }
+
+    // Thông báo dựa trên status
+    if (info.file.status === "done") {
+      message.success(`${info.file.name} đã sẵn sàng để import`);
+    } else if (info.file.status === "error") {
+      message.error(`${info.file.name} tải lên thất bại.`);
+    }
+  };
+
+  const handleImportExcel = async () => {
+    // Lấy file từ DOM nếu state chưa có
+    const uploadInput = document.querySelector(
+      '.ant-upload input[type="file"]'
+    );
+    const selectedFile =
+      uploadInput && uploadInput.files && uploadInput.files[0];
+
+    // Sử dụng file từ state nếu có, nếu không thì dùng file từ DOM
+    const fileToUse = importFile || selectedFile;
+
+    console.log("Import file state:", importFile);
+    console.log("Selected DOM file:", selectedFile);
+    console.log("File to use:", fileToUse);
+
+    if (!fileToUse) {
+      message.error("Vui lòng chọn file Excel để import");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("file", fileToUse);
+
+      // Nếu đang trong trang quiz, lấy quizId, nếu không thì lấy courseId
+      const quizId = selectedQuiz?.quizId;
+      if (quizId) {
+        formData.append("quizId", quizId);
+      } else {
+        formData.append("courseId", courseId);
+      }
+
+      // Kiểm tra FormData
+      console.log("FormData entries:");
+      for (let pair of formData.entries()) {
+        console.log(
+          `- ${pair[0]}: ${
+            typeof pair[1] === "object" ? "File: " + pair[1].name : pair[1]
+          }`
+        );
+      }
+
+      // Gọi API import
+      const response = await importQuiz(formData);
+      console.log("Import response:", response);
+
+      if (response && response.isSuccess) {
+        // Xử lý kết quả import thành công
+        const importedData = response.data;
+
+        if (Array.isArray(importedData) && importedData.length > 0) {
+          // Hiển thị chi tiết
+          let totalQuestions = 0;
+          importedData.forEach((quiz) => {
+            if (quiz.questions && Array.isArray(quiz.questions)) {
+              totalQuestions += quiz.questions.length;
+            }
+          });
+
+          Modal.success({
+            title: "Import bài kiểm tra thành công!",
+            content: (
+              <div className="py-2">
+                <p>
+                  Đã import thành công {totalQuestions} câu hỏi từ file Excel.
+                </p>
+                <div className="mt-4 border-t pt-4">
+                  <h4 className="font-medium mb-2">Chi tiết:</h4>
+                  <ul className="list-disc pl-5 text-sm">
+                    {importedData.map((quiz, index) => (
+                      <li key={index} className="mb-2">
+                        <strong>{quiz.title}</strong>:{" "}
+                        {quiz.questions?.length || 0} câu hỏi
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ),
+            okText: "Xác nhận",
+            onOk: () => {
+              handleCloseImportModal();
+              fetchQuizzes();
+            },
+          });
+        } else {
+          message.success("Import bài kiểm tra thành công!");
+          handleCloseImportModal();
+          await fetchQuizzes();
+        }
+      } else {
+        message.error(
+          "Import bài kiểm tra thất bại. Vui lòng kiểm tra lại file của bạn."
+        );
+      }
+    } catch (error) {
+      console.error("Error importing quiz:", error);
+      message.error(
+        "Có lỗi xảy ra khi import bài kiểm tra: " +
+          (error.message || "Lỗi không xác định")
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   const columns = [
@@ -358,13 +508,25 @@ const Quiz = () => {
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>
           </div>
-          <CustomButton
-            type="primary"
-            icon={<FaPlus size={14} />}
-            onClick={handleOpenCreateModal}
-          >
-            Thêm bài kiểm tra mới
-          </CustomButton>
+          <div className="flex gap-2">
+            <CustomButton
+              type="default"
+              onClick={handleOpenImportModal}
+              icon={<FaFileExcel size={14} />}
+              className="bg-green-500 hover:bg-green-600 text-white"
+            >
+              Import từ Excel
+            </CustomButton>
+            {!hasExistingQuiz && (
+              <CustomButton
+                type="primary"
+                icon={<FaPlus size={14} />}
+                onClick={handleOpenCreateModal}
+              >
+                Thêm bài kiểm tra mới
+              </CustomButton>
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -657,6 +819,138 @@ const Quiz = () => {
               loading={isDeleting}
             >
               Xác nhận xóa
+            </CustomButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal import quiz từ Excel */}
+      <Modal
+        title={
+          <div className="text-xl font-semibold">
+            Import bài kiểm tra từ Excel
+          </div>
+        }
+        open={isImportModalOpen}
+        onCancel={handleCloseImportModal}
+        footer={null}
+        width={600}
+        className="quiz-modal"
+      >
+        <div className="p-4">
+          <div className="mb-6">
+            <p className="text-gray-600 mb-4">
+              Sử dụng tính năng này để import bài kiểm tra và câu hỏi từ file
+              Excel. Vui lòng đảm bảo file Excel của bạn tuân theo định dạng
+              mẫu.
+            </p>
+
+            <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+              <h4 className="font-medium text-yellow-800 mb-2 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Lưu ý quan trọng
+              </h4>
+              <ul className="list-disc pl-5 text-sm text-yellow-700">
+                <li>File Excel phải đúng định dạng mẫu</li>
+                <li>Mỗi bài kiểm tra cần có ít nhất 1 câu hỏi</li>
+                <li>Mỗi câu hỏi phải có đúng 1 đáp án đúng</li>
+                <li>Kích thước file tối đa 5MB</li>
+              </ul>
+            </div>
+
+            <Upload.Dragger
+              name="file"
+              multiple={false}
+              maxCount={1}
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              beforeUpload={(file) => {
+                // Lưu ngay file vào state khi chọn
+                setImportFile(file);
+                console.log("Set file in beforeUpload:", file.name);
+
+                const isExcel =
+                  file.type ===
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                  file.type === "application/vnd.ms-excel";
+                if (!isExcel) {
+                  message.error("Chỉ chấp nhận file Excel (.xlsx, .xls)");
+                }
+
+                const isLt5M = file.size / 1024 / 1024 < 5;
+                if (!isLt5M) {
+                  message.error("File phải nhỏ hơn 5MB!");
+                }
+
+                // Return false để tránh auto upload, nhưng vẫn hiện file trong list
+                return false;
+              }}
+            >
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined style={{ fontSize: "48px", color: "#1890ff" }} />
+              </p>
+              <p className="ant-upload-text font-medium">
+                Nhấp hoặc kéo thả file Excel vào đây
+              </p>
+              <p className="ant-upload-hint text-sm text-gray-500">
+                Hỗ trợ tải lên file Excel (.xlsx, .xls)
+              </p>
+            </Upload.Dragger>
+
+            {importFile && (
+              <div className="mt-2 p-2 bg-blue-50 rounded border border-blue-200 flex items-center">
+                <div className="text-blue-600 mr-2">
+                  <FaFileExcel size={20} />
+                </div>
+                <div className="flex-1 text-sm">
+                  <div className="font-medium">{importFile.name}</div>
+                  <div className="text-xs text-gray-500">
+                    {(importFile.size / 1024).toFixed(2)} KB
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 text-center">
+              <CustomButton
+                type="default"
+                className="bg-blue-500 hover:bg-blue-600 text-white mr-2"
+                onClick={() => {
+                  const a = document.createElement("a");
+                  a.href = "/templates/quiz_template.xlsx";
+                  a.download = "quiz_template.xlsx";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  message.info("Đang tải xuống file mẫu...");
+                }}
+              >
+                Tải xuống file mẫu
+              </CustomButton>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
+            <CustomButton onClick={handleCloseImportModal}>Hủy</CustomButton>
+            <CustomButton
+              type="primary"
+              onClick={handleImportExcel}
+              loading={uploading}
+              icon={<UploadOutlined />}
+              disabled={!importFile}
+            >
+              Import
             </CustomButton>
           </div>
         </div>

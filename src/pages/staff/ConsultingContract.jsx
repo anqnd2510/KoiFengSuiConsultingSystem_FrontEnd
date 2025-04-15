@@ -11,8 +11,40 @@ import {
   Upload,
   Button,
   InputNumber,
+  Tag,
+  Tooltip,
+  Card,
+  Row,
+  Col,
+  Divider,
+  Tabs,
+  Badge,
+  Space,
+  Progress,
+  Avatar,
+  Alert,
 } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  EyeOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SyncOutlined,
+  SafetyCertificateOutlined,
+  StopOutlined,
+  CreditCardOutlined,
+  FileAddOutlined,
+  ReloadOutlined,
+  UserDeleteOutlined,
+  InfoCircleOutlined,
+  BellOutlined,
+  DollarOutlined,
+  FileDoneOutlined,
+  ExclamationCircleOutlined,
+  UserOutlined,
+  EnvironmentOutlined,
+} from "@ant-design/icons";
 import moment from "moment";
 import { FaEye, FaDownload } from "react-icons/fa";
 import Header from "../../components/Common/Header";
@@ -20,12 +52,31 @@ import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import CustomButton from "../../components/Common/CustomButton";
 import { getAllBookingOffline } from "../../services/booking.service";
-// Giả định service cho hợp đồng
 import {
   createContract,
   getAllContractsByStaff,
 } from "../../services/contract.service";
 import { useNavigate } from "react-router-dom";
+
+const stringToColor = (string) => {
+  let hash = 0;
+  let i;
+
+  /* eslint-disable no-bitwise */
+  for (i = 0; i < string.length; i += 1) {
+    hash = string.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  let color = "#";
+
+  for (i = 0; i < 3; i += 1) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += `00${value.toString(16)}`.slice(-2);
+  }
+  /* eslint-enable no-bitwise */
+
+  return color;
+};
 
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
@@ -48,6 +99,7 @@ const ConsultingContract = () => {
     pendingBookings: 0,
     completedBookings: 0,
     activeContracts: 0,
+    rejectedContracts: 0,
   });
   const [previewUrl, setPreviewUrl] = useState(null);
   const [contractSearchTerm, setContractSearchTerm] = useState("");
@@ -63,44 +115,69 @@ const ConsultingContract = () => {
         // Xử lý dữ liệu booking
         const offlineBookings = response.data.map((booking) => ({
           id: booking.bookingOfflineId,
-          status: booking.status,
+          status: booking.status || "Pending", // Mặc định là Pending nếu không có
+          bookingStatus: booking.bookingStatus || booking.status || "Pending", // Sử dụng bookingStatus hoặc fallback về status
           customerName: booking.customerName || "Không có tên",
           customerEmail: booking.customerEmail || "Không có email",
           location: booking.location || "Không có địa điểm",
           description: booking.description || "Không có mô tả",
           bookingDate: booking.bookingDate,
-          hasContract: booking.hasContract || false, // Thêm trường này để biết booking đã có hợp đồng chưa
+          createDate: booking.createDate, // Thêm trường createDate
+          hasContract: booking.hasContract || false,
+          contractId: booking.contractId || null,
+          contractStatus: booking.contractStatus || null,
         }));
 
         console.log("Processed bookings:", offlineBookings);
         setBookings(offlineBookings);
         setTotalPages(Math.ceil(offlineBookings.length / 10));
-        setError(null); // Xóa lỗi nếu có
+        setError(null);
 
         // Tính toán số liệu thống kê
         const pendingCount = offlineBookings.filter(
-          (b) => b.status === "Scheduled" && !b.hasContract
+          (b) => b.bookingStatus === "Pending" || !b.hasContract
         ).length;
+
+        const rejectedCount = offlineBookings.filter(
+          (b) =>
+            b.bookingStatus === "ContractRejectedByManager" ||
+            b.bookingStatus === "ContractRejectedByCustomer"
+        ).length;
+
         const completedCount = offlineBookings.filter(
-          (b) => b.status === "Completed"
+          (b) => b.bookingStatus === "Completed"
+        ).length;
+
+        const activeCount = offlineBookings.filter(
+          (b) =>
+            b.bookingStatus === "ContractConfirmedByManager" ||
+            b.bookingStatus === "ContractConfirmedByCustomer" ||
+            b.bookingStatus === "VerifyingOTP" ||
+            b.bookingStatus === "VerifiedOTP"
         ).length;
 
         setStats((prev) => ({
           ...prev,
           pendingBookings: pendingCount,
           completedBookings: completedCount,
+          rejectedContracts: rejectedCount,
+          activeContracts: activeCount,
         }));
       } else {
         console.error("Invalid booking data format:", response);
-        setBookings([]); // Đặt mảng rỗng thay vì hiển thị lỗi
+        setBookings([]);
         setTotalPages(1);
-        setError(null); // Đảm bảo không hiển thị lỗi khi chỉ là không có dữ liệu
+        setError("Không có dữ liệu lịch tư vấn");
       }
     } catch (err) {
       console.error("Error fetching bookings:", err);
-      setBookings([]); // Đặt mảng rỗng khi có lỗi
+      setBookings([]);
       setTotalPages(1);
-      setError(null); // Không hiển thị lỗi trong UI, chỉ log lỗi ra console
+      setError(
+        err.message === "Network Error"
+          ? "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại."
+          : "Có lỗi xảy ra khi tải dữ liệu lịch tư vấn. Vui lòng thử lại sau."
+      );
     } finally {
       setBookingsLoading(false);
     }
@@ -119,7 +196,7 @@ const ConsultingContract = () => {
           contractNumber: contract.docNo,
           customerName: contract.bookingOffline?.customerName || "Không có tên",
           contractName: contract.contractName,
-          status: contract.status,
+          status: contract.status || "Pending", // Mặc định là Pending nếu không có
           contractURL: contract.contractUrl,
           createdDate: contract.createdDate,
           // Thêm các trường cần thiết khác với giá trị mặc định
@@ -133,20 +210,25 @@ const ConsultingContract = () => {
 
         // Cập nhật số liệu thống kê
         const activeCount = formattedContracts.filter(
-          (c) => c.status === "active" || c.status === "Active"
+          (c) =>
+            c.status === "ContractConfirmedByManager" ||
+            c.status === "ContractConfirmedByCustomer" ||
+            c.status === "VerifyingOTP" ||
+            c.status === "VerifiedOTP"
         ).length;
+
         setStats((prev) => ({
           ...prev,
           activeContracts: activeCount,
         }));
       } else {
         setContracts([]);
-        setError(null); // Đảm bảo không hiển thị lỗi khi chỉ là không có dữ liệu
+        setError(null);
       }
     } catch (err) {
       console.error("Error fetching contracts:", err);
-      setContracts([]); // Đặt mảng rỗng khi có lỗi
-      setError(null); // Không hiển thị lỗi trong UI, chỉ log lỗi ra console
+      setContracts([]);
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -333,6 +415,327 @@ const ConsultingContract = () => {
     }
   };
 
+  // Helper function để kiểm tra xem có thể tạo hợp đồng hay không
+  const canCreateContract = (record) => {
+    // Nếu booking chưa có hợp đồng
+    if (!record.hasContract) {
+      return record.status === "Scheduled";
+    }
+
+    // Nếu booking đã có hợp đồng, chỉ cho phép tạo lại trong trường hợp bị từ chối
+    if (
+      record.contractStatus === "ContractRejectedByManager" ||
+      record.contractStatus === "ContractRejectedByCustomer"
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  // Render function cho trạng thái booking
+  const renderBookingStatus = (status) => {
+    let color = "gray";
+    let text = status || "Chưa xác định";
+    let bgColor = "bg-gray-100";
+    let icon = <InfoCircleOutlined />;
+
+    switch (status) {
+      case "Pending":
+        color = "#faad14";
+        text = "Chờ xử lý";
+        bgColor = "bg-yellow-50";
+        icon = <ClockCircleOutlined className="mr-1" />;
+        break;
+      case "InProgress":
+        color = "#1890ff";
+        text = "Đang xử lý";
+        bgColor = "bg-blue-50";
+        icon = <SyncOutlined spin className="mr-1" />;
+        break;
+      case "ContractRejectedByManager":
+        color = "#f5222d";
+        text = "Quản lý từ chối";
+        bgColor = "bg-red-50";
+        icon = <CloseCircleOutlined className="mr-1" />;
+        break;
+      case "ContractRejectedByCustomer":
+        color = "#f5222d";
+        text = "Khách hàng từ chối";
+        bgColor = "bg-red-50";
+        icon = <UserDeleteOutlined className="mr-1" />;
+        break;
+      case "ContractConfirmedByManager":
+        color = "#52c41a";
+        text = "Quản lý đã duyệt";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "ContractConfirmedByCustomer":
+        color = "#52c41a";
+        text = "Khách hàng đã duyệt";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "VerifyingOTP":
+        color = "#722ed1";
+        text = "Đang xác thực OTP";
+        bgColor = "bg-purple-50";
+        icon = <SafetyCertificateOutlined className="mr-1" />;
+        break;
+      case "VerifiedOTP":
+        color = "#13c2c2";
+        text = "Đã xác thực OTP";
+        bgColor = "bg-cyan-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "FirstPaymentPending":
+        color = "#fa8c16";
+        text = "Chờ thanh toán";
+        bgColor = "bg-orange-50";
+        icon = <CreditCardOutlined className="mr-1" />;
+        break;
+      case "FirstPaymentSuccess":
+        color = "#52c41a";
+        text = "Đã thanh toán";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "Completed":
+        color = "#52c41a";
+        text = "Đã hoàn thành";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "Canceled":
+        color = "#f5222d";
+        text = "Đã hủy";
+        bgColor = "bg-red-50";
+        icon = <CloseCircleOutlined className="mr-1" />;
+        break;
+      default:
+        break;
+    }
+
+    return (
+      <span
+        className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor} flex items-center`}
+        style={{ color, display: "inline-flex", width: "fit-content" }}
+      >
+        {icon}
+        {text}
+      </span>
+    );
+  };
+
+  // Columns cho bảng booking
+  const bookingColumns = [
+    {
+      title: "Khách hàng",
+      dataIndex: "customerName",
+      key: "customerName",
+      render: (text, record) => (
+        <div className="flex items-center gap-2">
+          <Avatar
+            style={{
+              backgroundColor: stringToColor(text),
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+            }}
+            size="default"
+            icon={<UserOutlined />}
+          />
+          <div className="flex flex-col">
+            <span className="text-gray-800 font-medium">{text}</span>
+            <span className="text-gray-500 text-xs">
+              {record.customerEmail}
+            </span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      title: "Địa điểm",
+      dataIndex: "location",
+      key: "location",
+      width: "15%",
+      render: (text) => (
+        <div className="flex items-center">
+          <EnvironmentOutlined className="text-blue-400 mr-1" />
+          <span>{text}</span>
+        </div>
+      ),
+    },
+    {
+      title: "Ngày đặt lịch",
+      dataIndex: "bookingDate",
+      key: "bookingDate",
+      width: "15%",
+      render: (date) => (
+        <div className="flex flex-col">
+          <span className="font-medium">
+            {moment(date).format("DD/MM/YYYY")}
+          </span>
+          <span className="text-xs text-gray-500">
+            {moment(date).format("HH:mm")}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createDate",
+      key: "createDate",
+      width: "15%",
+      render: (date) =>
+        date ? (
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {moment(date).format("DD/MM/YYYY")}
+            </span>
+            <span className="text-xs text-gray-500">
+              {moment(date).format("HH:mm")}
+            </span>
+          </div>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "bookingStatus",
+      key: "bookingStatus",
+      width: "15%",
+      render: (status) => renderBookingStatus(status),
+    },
+    {
+      title: "Thao tác",
+      key: "actions",
+      render: (_, record) => {
+        // Lấy trạng thái booking
+        const bookingStatus = record.bookingStatus || "Pending";
+
+        // Booking đã hủy
+        if (bookingStatus === "Canceled") {
+          return (
+            <Tag color="red" className="rounded-full px-3 py-1">
+              <CloseCircleOutlined className="mr-1" />
+              Đã hủy
+            </Tag>
+          );
+        }
+
+        // Booking đã hoàn thành
+        if (bookingStatus === "Completed") {
+          return (
+            <Button
+              size="small"
+              type="primary"
+              className="bg-green-500 hover:bg-green-600"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/contract-details/${record.contractId}`)}
+            >
+              Xem hợp đồng
+            </Button>
+          );
+        }
+
+        // Booking đang trong trạng thái xác thực OTP
+        if (
+          bookingStatus === "VerifyingOTP" ||
+          bookingStatus === "VerifiedOTP"
+        ) {
+          return (
+            <Button
+              size="small"
+              type="primary"
+              className="bg-purple-500 hover:bg-purple-600"
+              icon={<EyeOutlined />}
+              onClick={() => navigate(`/contract-details/${record.contractId}`)}
+            >
+              Theo dõi hợp đồng
+            </Button>
+          );
+        }
+
+        // Booking đang chờ thanh toán
+        if (
+          bookingStatus === "FirstPaymentPending" ||
+          bookingStatus === "FirstPaymentSuccess"
+        ) {
+          return (
+            <Button
+              size="small"
+              type="primary"
+              className="bg-orange-500 hover:bg-orange-600"
+              icon={<CreditCardOutlined />}
+              onClick={() => navigate(`/contract-details/${record.contractId}`)}
+            >
+              Xem thanh toán
+            </Button>
+          );
+        }
+
+        // Booking đang trong quá trình xử lý
+        if (
+          bookingStatus === "InProgress" ||
+          bookingStatus === "ContractConfirmedByManager" ||
+          bookingStatus === "ContractConfirmedByCustomer"
+        ) {
+          return (
+            <Button
+              size="small"
+              type="dashed"
+              icon={<SyncOutlined spin />}
+              onClick={() =>
+                message.info("Hợp đồng đang được xử lý. Vui lòng đợi.")
+              }
+            >
+              Đang xử lý
+            </Button>
+          );
+        }
+
+        // Booking bị từ chối hợp đồng
+        if (
+          bookingStatus === "ContractRejectedByManager" ||
+          bookingStatus === "ContractRejectedByCustomer"
+        ) {
+          const rejectionText =
+            bookingStatus === "ContractRejectedByManager"
+              ? "Quản lý từ chối"
+              : "Khách hàng từ chối";
+
+          return (
+            <Tooltip title={`${rejectionText} - Bạn có thể tạo lại hợp đồng`}>
+              <Button
+                danger
+                type="primary"
+                size="small"
+                onClick={() => handleOpenModal(record)}
+                icon={<ReloadOutlined />}
+              >
+                Tạo lại hợp đồng
+              </Button>
+            </Tooltip>
+          );
+        }
+
+        // Mặc định: Hiển thị nút tạo hợp đồng (cho trạng thái Pending)
+        return (
+          <Button
+            type="primary"
+            size="small"
+            onClick={() => handleOpenModal(record)}
+            icon={<FileAddOutlined />}
+          >
+            Tạo hợp đồng
+          </Button>
+        );
+      },
+    },
+  ];
+
+  // Thêm định nghĩa columns sau function renderBookingStatus (khoảng dòng 477)
   const columns = [
     {
       title: "Mã hợp đồng",
@@ -348,152 +751,167 @@ const ConsultingContract = () => {
       title: "Khách hàng",
       dataIndex: "customerName",
       key: "customerName",
+      render: (text) => (
+        <div className="flex items-center gap-2">
+          <Avatar
+            style={{
+              backgroundColor: stringToColor(text),
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+            }}
+            size="default"
+            icon={<UserOutlined />}
+          />
+          <span className="font-medium">{text}</span>
+        </div>
+      ),
     },
     {
       title: "Ngày tạo",
       dataIndex: "createdDate",
       key: "createdDate",
-      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : "-"),
+      render: (date) =>
+        date ? (
+          <div className="flex flex-col">
+            <span className="font-medium">
+              {moment(date).format("DD/MM/YYYY")}
+            </span>
+            <span className="text-xs text-gray-500">
+              {moment(date).format("HH:mm")}
+            </span>
+          </div>
+        ) : (
+          "-"
+        ),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      render: (status) => {
-        let color = "gray";
-        let text = "Chưa xác định";
-
-        switch (status) {
-          case "active":
-          case "Active":
-            color = "green";
-            text = "Đang hiệu lực";
-            break;
-          case "expired":
-          case "Expired":
-            color = "red";
-            text = "Hết hạn";
-            break;
-          case "pending":
-          case "Pending":
-            color = "orange";
-            text = "Chờ xác nhận";
-            break;
-          default:
-            break;
-        }
-
-        return <span style={{ color }}>{text}</span>;
-      },
+      render: (status) => renderBookingStatus(status),
     },
     {
       title: "Thao tác",
       key: "action",
-      render: (_, record) => (
-        <div className="flex space-x-2">
-          <button
-            onClick={() => handleViewContract(record.contractURL)}
-            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200"
-            title="Xem hợp đồng"
-          >
-            <FaEye />
-          </button>
-          <button
-            onClick={() =>
-              handleDownloadContract(record.contractURL, record.contractName)
-            }
-            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all duration-200"
-            title="Tải xuống"
-          >
-            <FaDownload />
-          </button>
-        </div>
-      ),
-    },
-  ];
+      render: (_, record) => {
+        // Trạng thái hợp đồng
+        const status = record.status || "Pending";
 
-  // Columns cho bảng booking
-  const bookingColumns = [
-    {
-      title: "Khách hàng",
-      dataIndex: "customerName",
-      key: "customerName",
-    },
-    {
-      title: "Email",
-      dataIndex: "customerEmail",
-      key: "customerEmail",
-    },
-    {
-      title: "Địa điểm",
-      dataIndex: "location",
-      key: "location",
-    },
-    {
-      title: "Ngày đặt lịch",
-      dataIndex: "bookingDate",
-      key: "bookingDate",
-      render: (date) => moment(date).format("DD/MM/YYYY HH:mm"),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      render: (status, record) => {
-        let color = "gray";
-        let text = "Chưa xác định";
-        let bgColor = "bg-gray-100";
-
-        switch (status) {
-          case "Scheduled":
-            color = record.hasContract ? "#52c41a" : "#1890ff";
-            text = record.hasContract ? "Đã có hợp đồng" : "Cần tạo hợp đồng";
-            bgColor = record.hasContract ? "bg-green-50" : "bg-blue-50";
-            break;
-          case "Completed":
-            color = "#52c41a";
-            text = "Đã hoàn thành";
-            bgColor = "bg-green-50";
-            break;
-          case "Cancelled":
-            color = "#f5222d";
-            text = "Đã hủy";
-            bgColor = "bg-red-50";
-            break;
-          default:
-            break;
+        // Xử lý theo trạng thái
+        if (status === "Completed") {
+          return (
+            <div className="flex space-x-2">
+              <Button
+                size="small"
+                type="primary"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewContract(record.contractURL)}
+                className="bg-green-500 hover:bg-green-600"
+              >
+                Xem hợp đồng
+              </Button>
+              <Button
+                size="small"
+                type="default"
+                icon={<FaDownload className="mr-1" />}
+                onClick={() =>
+                  handleDownloadContract(
+                    record.contractURL,
+                    record.contractName
+                  )
+                }
+              >
+                Tải xuống
+              </Button>
+            </div>
+          );
         }
 
+        if (status === "VerifyingOTP" || status === "VerifiedOTP") {
+          return (
+            <div className="flex space-x-2">
+              <Button
+                size="small"
+                type="primary"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewContract(record.contractURL)}
+                className="bg-purple-500 hover:bg-purple-600"
+              >
+                Xem
+              </Button>
+              <Button
+                size="small"
+                type="default"
+                icon={<FaDownload className="mr-1" />}
+                onClick={() =>
+                  handleDownloadContract(
+                    record.contractURL,
+                    record.contractName
+                  )
+                }
+              >
+                Tải xuống
+              </Button>
+            </div>
+          );
+        }
+
+        if (
+          status === "FirstPaymentPending" ||
+          status === "FirstPaymentSuccess"
+        ) {
+          return (
+            <div className="flex space-x-2">
+              <Button
+                size="small"
+                type="primary"
+                icon={<EyeOutlined />}
+                onClick={() => handleViewContract(record.contractURL)}
+                className="bg-orange-500 hover:bg-orange-600"
+              >
+                Xem
+              </Button>
+              <Button
+                size="small"
+                type="default"
+                icon={<FaDownload className="mr-1" />}
+                onClick={() =>
+                  handleDownloadContract(
+                    record.contractURL,
+                    record.contractName
+                  )
+                }
+              >
+                Tải xuống
+              </Button>
+            </div>
+          );
+        }
+
+        // Mặc định
         return (
-          <span
-            className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}
-            style={{ color }}
-          >
-            {text}
-          </span>
+          <div className="flex space-x-2">
+            <Button
+              size="small"
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={() => handleViewContract(record.contractURL)}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              Xem
+            </Button>
+            <Button
+              size="small"
+              type="default"
+              icon={<FaDownload className="mr-1" />}
+              onClick={() =>
+                handleDownloadContract(record.contractURL, record.contractName)
+              }
+            >
+              Tải xuống
+            </Button>
+          </div>
         );
       },
-    },
-    {
-      title: "Thao tác",
-      key: "actions",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <CustomButton
-            type="primary"
-            size="small"
-            onClick={() => handleOpenModal(record)}
-            disabled={record.status !== "Scheduled" || record.hasContract}
-            className={
-              record.status === "Scheduled" && !record.hasContract
-                ? "bg-blue-500 hover:bg-blue-600"
-                : ""
-            }
-          >
-            {record.hasContract ? "Đã có hợp đồng" : "Tạo hợp đồng"}
-          </CustomButton>
-        </div>
-      ),
     },
   ];
 
@@ -505,37 +923,169 @@ const ConsultingContract = () => {
       />
 
       <div className="p-6">
-        {/* Tabs */}
-        <div className="mb-6 bg-white rounded-lg shadow">
-          <div className="flex border-b">
-            <button
-              className={`px-4 py-3 font-medium text-sm ${
-                activeTab === "bookings"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("bookings")}
-            >
-              Lịch tư vấn
-            </button>
-            <button
-              className={`px-4 py-3 font-medium text-sm ${
-                activeTab === "contracts"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500"
-              }`}
-              onClick={() => setActiveTab("contracts")}
-            >
-              Hợp đồng đã tạo
-            </button>
-          </div>
+        {/* Thống kê tổng quan */}
+        <div className="mb-6">
+          <Card className="shadow-md border-0 rounded-xl">
+            <Row gutter={[24, 24]}>
+              <Col xs={24} lg={24} className="mb-4">
+                <div className="flex flex-wrap items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                      <FileDoneOutlined className="mr-2 text-blue-500" /> Tổng
+                      quan hợp đồng
+                    </h2>
+                    <p className="text-gray-500 mt-1">
+                      Thống kê về hợp đồng tư vấn
+                    </p>
+                  </div>
+                  <div>
+                    <Button
+                      type="primary"
+                      className="bg-blue-500 hover:bg-blue-600"
+                      onClick={() => {
+                        message.loading({
+                          content: "Đang tải dữ liệu...",
+                          key: "dataLoading",
+                        });
+                        fetchBookings()
+                          .then(() =>
+                            message.success({
+                              content: "Dữ liệu đã được cập nhật",
+                              key: "dataLoading",
+                            })
+                          )
+                          .catch(() =>
+                            message.error({
+                              content: "Không thể tải dữ liệu",
+                              key: "dataLoading",
+                            })
+                          );
+                      }}
+                      icon={<SyncOutlined />}
+                      loading={bookingsLoading}
+                    >
+                      Cập nhật dữ liệu
+                    </Button>
+                  </div>
+                </div>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Card className="bg-blue-50 border-0 text-center h-full hover:shadow-md transition-all duration-300">
+                  <Badge
+                    count={stats.pendingBookings}
+                    offset={[10, 10]}
+                    color="blue"
+                  >
+                    <div className="rounded-full bg-blue-100 p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                      <BellOutlined className="text-blue-500 text-lg" />
+                    </div>
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-blue-500">
+                    {stats.pendingBookings}
+                  </h3>
+                  <p className="text-gray-600">Chờ tạo hợp đồng</p>
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Card className="bg-red-50 border-0 text-center h-full hover:shadow-md transition-all duration-300">
+                  <Badge
+                    count={stats.rejectedContracts}
+                    offset={[10, 10]}
+                    color="red"
+                  >
+                    <div className="rounded-full bg-red-100 p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                      <CloseCircleOutlined className="text-red-500 text-lg" />
+                    </div>
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-red-500">
+                    {stats.rejectedContracts || 0}
+                  </h3>
+                  <p className="text-gray-600">Hợp đồng bị từ chối</p>
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Card className="bg-green-50 border-0 text-center h-full hover:shadow-md transition-all duration-300">
+                  <Badge
+                    count={stats.activeContracts}
+                    offset={[10, 10]}
+                    color="green"
+                  >
+                    <div className="rounded-full bg-green-100 p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                      <CheckCircleOutlined className="text-green-500 text-lg" />
+                    </div>
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-green-500">
+                    {stats.activeContracts}
+                  </h3>
+                  <p className="text-gray-600">Hợp đồng hiệu lực</p>
+                </Card>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Card className="bg-purple-50 border-0 text-center h-full hover:shadow-md transition-all duration-300">
+                  <Badge
+                    count={stats.completedBookings}
+                    offset={[10, 10]}
+                    color="purple"
+                  >
+                    <div className="rounded-full bg-purple-100 p-3 w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                      <DollarOutlined className="text-purple-500 text-lg" />
+                    </div>
+                  </Badge>
+                  <h3 className="text-2xl font-bold text-purple-500">
+                    {stats.completedBookings}
+                  </h3>
+                  <p className="text-gray-600">Hoàn thành</p>
+                </Card>
+              </Col>
+            </Row>
+          </Card>
         </div>
+
+        {/* Tabs */}
+        <Tabs
+          defaultActiveKey={activeTab}
+          onChange={(key) => setActiveTab(key)}
+          className="custom-tabs bg-white rounded-lg shadow-md mb-6"
+          type="card"
+        >
+          <Tabs.TabPane
+            tab={
+              <span className="flex items-center">
+                <ClockCircleOutlined className="mr-2" /> Lịch tư vấn
+                {stats.pendingBookings > 0 && (
+                  <Badge count={stats.pendingBookings} className="ml-2" />
+                )}
+              </span>
+            }
+            key="bookings"
+          />
+          <Tabs.TabPane
+            tab={
+              <span className="flex items-center">
+                <FileDoneOutlined className="mr-2" /> Hợp đồng đã tạo
+                {stats.activeContracts > 0 && (
+                  <Badge
+                    count={stats.activeContracts}
+                    className="ml-2"
+                    color="green"
+                  />
+                )}
+              </span>
+            }
+            key="contracts"
+          />
+        </Tabs>
 
         {activeTab === "bookings" && (
           <>
-            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
               <div>
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <ClockCircleOutlined className="mr-2 text-blue-500" />
                   Danh sách lịch tư vấn offline
                 </h2>
                 <p className="text-gray-500 text-sm">
@@ -557,19 +1107,37 @@ const ConsultingContract = () => {
                     Đã có hợp đồng
                   </Select.Option>
                   <Select.Option value="Completed">Đã hoàn thành</Select.Option>
-                  <Select.Option value="Cancelled">Đã hủy</Select.Option>
+                  <Select.Option value="Canceled">Đã hủy</Select.Option>
                 </Select>
                 <SearchBar
                   onSearch={handleSearch}
-                  placeholder="Tìm kiếm lịch tư vấn..."
+                  placeholder="Tìm kiếm..."
                   className="w-full md:w-64"
                 />
               </div>
             </div>
 
+            {error && (
+              <Alert
+                message="Lỗi kết nối"
+                description={error}
+                type="error"
+                showIcon
+                className="mb-4"
+                action={
+                  <Button size="small" onClick={fetchBookings}>
+                    Thử lại
+                  </Button>
+                }
+              />
+            )}
+
             {bookingsLoading ? (
-              <div className="text-center py-4">
+              <div className="text-center py-16 bg-white rounded-lg shadow">
                 <Spin size="large" />
+                <div className="mt-4 text-gray-500">
+                  Đang tải dữ liệu lịch tư vấn...
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow mb-8">
@@ -578,11 +1146,18 @@ const ConsultingContract = () => {
                   dataSource={filteredBookings}
                   rowKey="id"
                   pagination={false}
-                  rowClassName={(record) =>
-                    record.status === "Scheduled" && !record.hasContract
-                      ? "bg-blue-50 hover:bg-blue-100"
-                      : ""
-                  }
+                  rowClassName={(record) => {
+                    const status = record.bookingStatus || "Pending";
+                    if (status === "Pending")
+                      return "bg-blue-50 hover:bg-blue-100";
+                    if (status.includes("Rejected"))
+                      return "bg-red-50 hover:bg-red-100";
+                    if (status === "VerifyingOTP" || status === "VerifiedOTP")
+                      return "bg-purple-50 hover:bg-purple-100";
+                    if (status === "Completed")
+                      return "bg-green-50 hover:bg-green-100";
+                    return "";
+                  }}
                   locale={{
                     emptyText: searchTerm
                       ? "Không tìm thấy kết quả phù hợp"
@@ -604,9 +1179,10 @@ const ConsultingContract = () => {
 
         {activeTab === "contracts" && (
           <>
-            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
               <div>
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold flex items-center">
+                  <FileDoneOutlined className="mr-2 text-green-500" />
                   Danh sách hợp đồng đã tạo
                 </h2>
                 <p className="text-gray-500 text-sm">
@@ -621,20 +1197,51 @@ const ConsultingContract = () => {
             </div>
 
             {loading ? (
-              <div className="text-center py-4">
+              <div className="text-center py-16 bg-white rounded-lg shadow">
                 <Spin size="large" />
+                <div className="mt-4 text-gray-500">
+                  Đang tải dữ liệu hợp đồng...
+                </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow mb-8">
                 <Table
                   columns={columns}
                   dataSource={filteredContracts}
                   rowKey="id"
                   pagination={false}
+                  rowClassName={(record) => {
+                    const status = record.status || "Pending";
+                    if (status.includes("Rejected"))
+                      return "bg-red-50 hover:bg-red-100";
+                    if (status === "VerifyingOTP" || status === "VerifiedOTP")
+                      return "bg-purple-50 hover:bg-purple-100";
+                    if (status === "Completed")
+                      return "bg-green-50 hover:bg-green-100";
+                    if (
+                      status === "FirstPaymentPending" ||
+                      status === "FirstPaymentSuccess"
+                    )
+                      return "bg-orange-50 hover:bg-orange-100";
+                    if (
+                      status === "ContractConfirmedByManager" ||
+                      status === "ContractConfirmedByCustomer"
+                    )
+                      return "bg-blue-50 hover:bg-blue-100";
+                    return "";
+                  }}
                   locale={{ emptyText: "Chưa có hợp đồng nào được tạo" }}
                 />
               </div>
             )}
+
+            <div className="mt-4 mb-8">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredContracts.length / 10)}
+                onPageChange={handlePageChange}
+              />
+            </div>
           </>
         )}
 
@@ -827,6 +1434,22 @@ const ConsultingContract = () => {
           .pdf-preview-container iframe {
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             background-color: white;
+          }
+          .custom-tabs .ant-tabs-nav {
+            margin-bottom: 0;
+          }
+          .custom-tabs .ant-tabs-tab {
+            padding: 12px 20px;
+            transition: all 0.3s;
+          }
+          .custom-tabs .ant-tabs-tab:hover {
+            color: #1890ff;
+          }
+          .custom-tabs .ant-tabs-tab.ant-tabs-tab-active {
+            background-color: #e6f7ff;
+          }
+          .custom-tabs .ant-tabs-tab-btn {
+            font-weight: 500;
           }
         `}</style>
       </div>

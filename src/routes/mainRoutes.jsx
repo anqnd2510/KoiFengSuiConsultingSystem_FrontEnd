@@ -1,7 +1,6 @@
 import Dashboard from "../pages/manager/Dashboard";
 import Schedule from "../pages/master/Schedule";
 import BookingSchedule from "../pages/staff/BookingSchedule";
-import BookingScheduleDetails from "../pages/master/BookingScheduleDetails";
 import Workshop from "../pages/master/Workshop";
 import WorkshopList from "../pages/manager/WorkshopList";
 import WorkshopStaff from "../pages/staff/WorkshopStaff";
@@ -54,11 +53,6 @@ export const mainRoutes = [
     path: "staff/booking-schedule",
     element: <BookingSchedule />,
     roles: ["staff"],
-  },
-  {
-    path: "master/booking-schedule/:id",
-    element: <BookingScheduleDetails />,
-    roles: ["master"],
   },
   {
     path: "master/workshop-master",
