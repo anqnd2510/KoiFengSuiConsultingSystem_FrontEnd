@@ -151,11 +151,11 @@ const Question = () => {
         // Format lại dữ liệu câu hỏi và đáp án
         const formattedQuestion = {
           ...questionData,
-          answers: questionData.answers.map(answer => ({
+          answers: questionData.answers.map((answer) => ({
             ...answer,
             optionText: answer.optionText || "",
-            isCorrect: answer.isCorrect || false
-          }))
+            isCorrect: answer.isCorrect || false,
+          })),
         };
 
         setSelectedQuestion(formattedQuestion);
@@ -165,11 +165,11 @@ const Question = () => {
           questionText: formattedQuestion.questionText,
           questionType: formattedQuestion.questionType,
           point: formattedQuestion.point,
-          answerUpdateRequests: formattedQuestion.answers.map(answer => ({
+          answerUpdateRequests: formattedQuestion.answers.map((answer) => ({
             ...answer,
             optionText: answer.optionText || "",
-            isCorrect: answer.isCorrect || false
-          }))
+            isCorrect: answer.isCorrect || false,
+          })),
         });
 
         setIsEditModalOpen(true);
@@ -270,7 +270,7 @@ const Question = () => {
   const handleViewQuestion = async (question) => {
     try {
       setLoading(true);
-      
+
       // Sử dụng API getQuestionById để lấy chi tiết câu hỏi
       const questionData = await getQuestionById(question.questionId);
       console.log("Question details:", questionData);
@@ -279,13 +279,13 @@ const Question = () => {
         // Format lại dữ liệu câu hỏi và đáp án
         const formattedQuestion = {
           ...questionData,
-          answers: questionData.answers.map(answer => ({
+          answers: questionData.answers.map((answer) => ({
             ...answer,
             optionText: answer.optionText || "",
-            isCorrect: answer.isCorrect || false
-          }))
+            isCorrect: answer.isCorrect || false,
+          })),
         };
-        
+
         setSelectedQuestion(formattedQuestion);
         setIsViewModalOpen(true);
       } else {
@@ -405,21 +405,21 @@ const Question = () => {
               Danh sách câu hỏi
             </h2>
           </div>
-          <CustomButton
-            type="primary"
-            icon={<FaPlus size={14} />}
-            onClick={handleOpenCreateModal}
-          >
-            Thêm câu hỏi mới
-          </CustomButton>
+          <div className="flex gap-2">
+            <CustomButton
+              type="primary"
+              icon={<FaPlus size={14} />}
+              onClick={handleOpenCreateModal}
+            >
+              Thêm câu hỏi mới
+            </CustomButton>
+          </div>
         </div>
 
         {loading ? (
           <div className="bg-white p-8 rounded-lg shadow text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">
-              Đang tải danh sách câu hỏi...
-            </p>
+            <p className="mt-4 text-gray-600">Đang tải danh sách câu hỏi...</p>
           </div>
         ) : (
           <>
@@ -575,9 +575,7 @@ const Question = () => {
             </div>
 
             <div className="flex justify-between items-center mt-8">
-              <div>
-                {/* Đã xóa phần điểm và loại câu hỏi */}
-              </div>
+              <div>{/* Đã xóa phần điểm và loại câu hỏi */}</div>
 
               <div className="flex gap-3">
                 <CustomButton onClick={handleCloseCreateModal}>
@@ -778,9 +776,7 @@ const Question = () => {
             </Form.List>
 
             <div className="flex justify-between items-center mt-8">
-              <div>
-                {/* Đã xóa phần điểm và loại câu hỏi */}
-              </div>
+              <div>{/* Đã xóa phần điểm và loại câu hỏi */}</div>
 
               <div className="flex gap-3">
                 <CustomButton onClick={handleCloseEditModal}>Hủy</CustomButton>
