@@ -285,7 +285,7 @@ export const updateCourseStatus = async (courseId, status) => {
 
     console.log("Đang gọi API cập nhật trạng thái khóa học:", {
       courseId,
-      status
+      status,
     });
 
     const response = await apiClient.put(

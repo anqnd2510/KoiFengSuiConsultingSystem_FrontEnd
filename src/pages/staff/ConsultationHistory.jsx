@@ -242,7 +242,7 @@ const ConsultationHistory = () => {
         },
         master: item.masterName || "Chưa phân công",
         consultType: item.type,
-        consultDate: item.bookingDate,
+        consultDate: item.createDate,
         topics: [item.description].filter(Boolean),
       }));
 
@@ -380,11 +380,41 @@ const ConsultationHistory = () => {
       render: (master) => master || "Chưa phân công",
     },
     {
-      title: "Ngày tư vấn",
+      title: "Ngày tạo tư vấn",
       dataIndex: "consultDate",
       key: "consultDate",
-      render: (date) =>
-        date ? new Date(date).toLocaleDateString("vi-VN") : "Chưa có ngày",
+      render: (date) => {
+        if (!date) return "Chưa có ngày";
+
+        try {
+          const dateObj = new Date(date);
+
+          // Kiểm tra xem ngày có hợp lệ không
+          if (isNaN(dateObj.getTime())) return "Ngày không hợp lệ";
+
+          // Format ngày theo định dạng DD/MM/YYYY
+          const day = dateObj.getDate().toString().padStart(2, "0");
+          const month = (dateObj.getMonth() + 1).toString().padStart(2, "0");
+          const year = dateObj.getFullYear();
+
+          // Format giờ theo định dạng HH:MM
+          const hours = dateObj.getHours().toString().padStart(2, "0");
+          const minutes = dateObj.getMinutes().toString().padStart(2, "0");
+
+          return (
+            <div>
+              <div className="font-medium">{`${day}/${month}/${year}`}</div>
+              <div className="text-xs text-gray-500 flex items-center mt-1">
+                <Clock className="inline-block mr-1 w-3 h-3" />
+                {`${hours}:${minutes}`}
+              </div>
+            </div>
+          );
+        } catch (error) {
+          console.error("Error formatting date:", error);
+          return "Lỗi định dạng ngày";
+        }
+      },
     },
     {
       title: "Loại tư vấn",
