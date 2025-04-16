@@ -984,7 +984,7 @@ const KoiPondManagement = () => {
         <Form form={editForm} layout="vertical">
           <Form.Item
             name="pondName"
-            label={<span className="text-red-500">* Tên hồ cá</span>}
+            label={<span> Tên hồ cá</span>}
             rules={[{ required: true, message: "Vui lòng nhập tên hồ cá" }]}
           >
             <input
@@ -994,7 +994,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="shapeId"
-            label={<span className="text-red-500">* Hình dạng hồ</span>}
+            label={<span> Hình dạng hồ</span>}
             rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
             <div className="shape-select">
@@ -1020,7 +1020,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="introduction"
-            label={<span className="text-red-500">* Giới thiệu</span>}
+            label={<span>Giới thiệu</span>}
             rules={[{ required: true, message: "Vui lòng nhập giới thiệu" }]}
           >
             <textarea
@@ -1031,7 +1031,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="description"
-            label={<span className="text-red-500">* Mô tả</span>}
+            label={<span>Mô tả</span>}
             rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
             <textarea
@@ -1042,7 +1042,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="imageUrl"
-            label={<span className="text-red-500">* Hình ảnh</span>}
+            label={<span>Hình ảnh</span>}
             initialValue={selectedPond?.imageUrl}
             rules={[
               {
@@ -1098,7 +1098,7 @@ const KoiPondManagement = () => {
         <Form form={createForm} layout="vertical">
           <Form.Item
             name="pondName"
-            label={<span className="text-red-500">* Tên hồ cá</span>}
+            label={<span>Tên hồ cá</span>}
             rules={[{ required: true, message: "Vui lòng nhập tên hồ cá" }]}
           >
             <input
@@ -1108,7 +1108,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="shapeId"
-            label={<span className="text-red-500">* Hình dạng hồ</span>}
+            label={<span>Hình dạng hồ</span>}
             rules={[{ required: true, message: "Vui lòng chọn hình dạng hồ" }]}
           >
             <div className="shape-select">
@@ -1128,7 +1128,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="introduction"
-            label={<span className="text-red-500">* Giới thiệu</span>}
+            label={<span>Giới thiệu</span>}
             rules={[{ required: true, message: "Vui lòng nhập giới thiệu" }]}
           >
             <textarea
@@ -1139,7 +1139,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="description"
-            label={<span className="text-red-500">* Mô tả</span>}
+            label={<span>Mô tả</span>}
             rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
           >
             <textarea
@@ -1150,7 +1150,7 @@ const KoiPondManagement = () => {
           </Form.Item>
           <Form.Item
             name="imageUrl"
-            label={<span className="text-red-500">* Hình ảnh</span>}
+            label={<span>Hình ảnh</span>}
             rules={[{ required: true, message: "Vui lòng tải ảnh lên" }]}
           >
             <div className="mt-2">

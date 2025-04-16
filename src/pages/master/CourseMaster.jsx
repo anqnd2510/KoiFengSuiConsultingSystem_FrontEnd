@@ -98,7 +98,7 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       </Form.Item>
 
       <Form.Item
-        label={<span className="text-red-500">* Loại khóa học</span>}
+        label={<span>Loại khóa học</span>}
         name="courseCategory"
         rules={[
           { required: true, message: "Vui lòng chọn loại khóa học" }
