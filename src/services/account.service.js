@@ -100,3 +100,39 @@ export const getAllStaff = async () => {
     throw error;
   }
 };
+
+/**
+ * Lấy danh sách tất cả khách hàng từ hệ thống
+ * @returns {Promise<Array>} Promise chứa mảng thông tin khách hàng
+ * @throws {Error} Lỗi khi không thể lấy danh sách khách hàng
+ */
+export const getAllCustomers = async () => {
+  try {
+    const response = await apiClient.get(
+      `${ACCOUNT_ENDPOINT}/get-all-customers`
+    );
+    console.log("API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    throw error;
+  }
+};
+
+/**
+ * Lấy danh sách tất cả thông tin cho dashboard từ hệ thống
+ * @returns {Promise<Array>} Promise chứa mảng thông tin dashboard
+ * @throws {Error} Lỗi khi không thể lấy danh sách dashboard
+ */
+export const getDashboardInfo = async () => {
+  try {
+    const response = await apiClient.get(
+      `${ACCOUNT_ENDPOINT}/get-dashboard-data`
+    );
+    console.log("API response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching dashboard info:", error);
+    throw error;
+  }
+};
