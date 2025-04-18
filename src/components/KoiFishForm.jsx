@@ -156,7 +156,7 @@ const KoiFishForm = ({
       <Row gutter={16}>
         <Col span={24}>
           <Form.Item
-            label={<span className="text-red-500">* Tên giống cá Koi</span>}
+            label={<span> Tên giống cá Koi</span>}
             name="breed"
             rules={[
               { required: true, message: "Vui lòng nhập tên giống cá Koi" },
@@ -169,7 +169,7 @@ const KoiFishForm = ({
 
       <Form.Item
         name="imageUrl"
-        label={<span className="text-red-500">* Hình ảnh</span>}
+        label={<span> Hình ảnh</span>}
         rules={[
           {
             required: !initialData,
@@ -234,7 +234,7 @@ const KoiFishForm = ({
 
       <Form.Item
         name="description"
-        label={<span className="text-red-500">* Mô tả</span>}
+        label={<span> Mô tả</span>}
         rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
       >
         <TextArea rows={4} placeholder="Nhập mô tả về giống cá" />
@@ -242,7 +242,7 @@ const KoiFishForm = ({
 
       <Form.Item
         name="introduction"
-        label={<span className="text-red-500">* Giới thiệu</span>}
+        label={<span> Giới thiệu</span>}
         rules={[{ required: true, message: "Vui lòng nhập giới thiệu" }]}
       >
         <TextArea
