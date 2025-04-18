@@ -22,6 +22,8 @@ import {
   FaPlay,
   FaList,
   FaClock,
+  FaFileExcel,
+  FaQuestion,
 } from "react-icons/fa";
 import { Book, Video, FileText } from "lucide-react";
 import Header from "../../components/Common/Header";
@@ -732,13 +734,23 @@ const Chapter = () => {
               {courseInfo ? courseInfo.name : "Đang tải..."}
             </h2>
           </div>
-          <CustomButton
-            type="primary"
-            icon={<FaPlus size={14} />}
-            onClick={handleOpenCreateChapterModal}
-          >
-            Thêm chương mới
-          </CustomButton>
+          <div className="flex gap-2">
+            <CustomButton
+              type="primary"
+              onClick={() => navigate(`/master/course-quiz/${courseId}`)}
+              icon={<FaQuestion size={14} />}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              Xem quiz
+            </CustomButton>
+            <CustomButton
+              type="primary"
+              icon={<FaPlus size={14} />}
+              onClick={handleOpenCreateChapterModal}
+            >
+              Thêm chương mới
+            </CustomButton>
+          </div>
         </div>
 
         {loadingChapters ? (

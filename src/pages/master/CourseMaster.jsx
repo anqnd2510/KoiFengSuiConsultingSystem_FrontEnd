@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaSearch, FaPlus, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaSearch, FaPlus, FaEye, FaEdit } from "react-icons/fa";
 import {
   Modal,
   Form,
@@ -711,7 +711,7 @@ const CourseMaster = () => {
             danger
             size="small"
             onClick={() => handleDeleteCourse(record)}
-            icon={<FaTrash size={14} />}
+            icon={<Trash2 size={16} />}
           />
         </div>
       ),
@@ -1784,7 +1784,7 @@ const CourseMaster = () => {
                               danger
                               size="small"
                               onClick={() => handleDeleteChapter(chapter)}
-                              icon={<FaTrash size={14} />}
+                              icon={<Trash2 size={16} />}
                             />
                           </div>
                         </div>

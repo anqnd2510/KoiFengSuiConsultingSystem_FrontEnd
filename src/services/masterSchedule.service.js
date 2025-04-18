@@ -15,7 +15,7 @@ export const getCurrentMasterSchedule = async () => {
     }
 
     const response = await apiClient.get(
-      `${API_URL}/get-schedule-by-current-master`,
+      `${API_URL}/get-current-master-schedule`,
       {
         headers: {
           "Content-Type": "application/json",

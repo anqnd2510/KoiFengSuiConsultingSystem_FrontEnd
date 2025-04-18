@@ -18,6 +18,7 @@ import {
   PlusOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import { Eye, Edit } from "lucide-react";
 import axios from "axios";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
@@ -53,13 +54,6 @@ const PondCard = ({
                 alt={title}
                 className="w-full h-32 object-cover mb-3 rounded"
               />
-              <button
-                className="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
-                onClick={onImageUpdate}
-                title="Cập nhật hình ảnh"
-              >
-                <UploadOutlined style={{ color: "#52c41a" }} />
-              </button>
             </div>
           )}
         </div>
@@ -84,10 +78,21 @@ const PondCard = ({
         <div className="border-t pt-2">
           <div className="flex items-center justify-between mt-2">
             <div className="flex gap-2">
-              <CustomButton type="default" onClick={onView} size="small">
+              <CustomButton 
+                type="primary" 
+                onClick={onView} 
+                size="small"
+                icon={<Eye size={14} />}
+                className="!bg-blue-500 hover:!bg-blue-600 !text-white"
+              >
                 Xem
               </CustomButton>
-              <CustomButton type="primary" onClick={onUpdate} size="small">
+              <CustomButton
+                type="default"
+                size="small"
+                icon={<Edit size={14} />}
+                onClick={onUpdate}
+              >
                 Cập nhật
               </CustomButton>
             </div>
@@ -809,8 +814,11 @@ const KoiPondManagement = () => {
       const formData = new FormData();
       formData.append("ShapeId", values.shapeId);
       formData.append("PondName", values.pondName.trim());
+      // Xử lý description để chỉ giữ lại các ký tự hợp lệ
+      const sanitizedDescription = values.description.trim()
+        .replace(/[^a-zA-Z0-9\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ,._-]/g, '');
+      formData.append("Description", sanitizedDescription);
       formData.append("Introduction", values.introduction.trim());
-      formData.append("Description", values.description.trim());
 
       // Nếu có file ảnh mới, đính kèm trực tiếp
       if (editImageFile) {

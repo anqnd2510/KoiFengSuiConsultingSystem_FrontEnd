@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Row, Col, Tag, message, Form, Input, Modal, Radio } from "antd";
 import { useParams, useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaPlus, FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import { FaArrowLeft, FaPlus, FaEdit, FaEye } from "react-icons/fa";
+import { Trash2 } from "lucide-react";
 import Header from "../../components/Common/Header";
 import CustomButton from "../../components/Common/CustomButton";
 import CustomTable from "../../components/Common/CustomTable";
@@ -347,15 +348,14 @@ const Question = () => {
             Cập nhật
           </CustomButton>
           <CustomButton
-            type="primary"
+            type="text"
             danger
             size="small"
             onClick={() => handleDeleteQuestion(record)}
-            icon={<FaTrash size={14} />}
+            icon={<Trash2 size={16} />}
           >
-            Xóa
           </CustomButton>
-        </div>
+        </div>  
       ),
     },
   ];
@@ -388,7 +388,7 @@ const Question = () => {
     <div className="min-h-screen bg-gray-50">
       <Header
         title="Quản lý câu hỏi"
-        description={`Danh sách câu hỏi của bài kiểm tra ${quizId}`}
+        description={`Danh sách câu hỏi của bài kiểm tra`}
       />
 
       <div className="p-4 md:p-6">
@@ -894,7 +894,7 @@ const Question = () => {
               danger
               onClick={handleConfirmDelete}
               loading={isDeleting}
-              icon={<FaTrash size={14} />}
+              icon={<Trash2 size={16} />}
             >
               Xác nhận xóa
             </CustomButton>
