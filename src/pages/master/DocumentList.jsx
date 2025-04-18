@@ -67,14 +67,16 @@ const DocumentList = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Đã tạo":
-        return "success";
-      case "Đang xử lý":
-        return "processing";
-      case "Chờ duyệt":
+      case "Pending":
         return "warning";
-      case "Đã hủy":
+      case "ConfirmedByManager":
+        return "processing";
+      case "CancelledByManager":
         return "error";
+      case "CancelledByCustomer":
+        return "error";
+      case "Success":
+        return "success";
       default:
         return "default";
     }

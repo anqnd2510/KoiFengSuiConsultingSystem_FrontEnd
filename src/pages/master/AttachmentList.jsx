@@ -70,9 +70,13 @@ const AttachmentList = () => {
     switch (status) {
       case "Pending":
         return "warning";
-      case "Approved":
+      case "Confirmed":
         return "success";
-      case "Rejected":
+      case "VefifyingOTP":
+        return "processing";
+      case "Success":
+        return "success";
+      case "Cancelled":
         return "error";
       default:
         return "default";
@@ -83,10 +87,14 @@ const AttachmentList = () => {
     switch (status) {
       case "Pending":
         return "Chờ duyệt";
-      case "Approved":
+      case "Confirmed":
         return "Đã duyệt";
-      case "Rejected":
-        return "Từ chối";
+      case "VefifyingOTP":
+        return "Đang xác thực OTP";
+      case "Success":
+        return "Hoàn thành";
+      case "Cancelled":
+        return "Đã hủy";
       default:
         return status;
     }
