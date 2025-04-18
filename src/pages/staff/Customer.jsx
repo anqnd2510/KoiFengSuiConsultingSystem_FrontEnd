@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Space,
   Table,
@@ -18,6 +18,12 @@ import {
   Upload,
   InputNumber,
   Switch,
+  Spin,
+  Dropdown,
+  Menu,
+  Radio,
+  Badge,
+  Card,
 } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -38,13 +44,19 @@ import {
   Star,
   Shield,
   CreditCard,
+  Filter,
+  Clock,
+  ChevronDown,
+  RefreshCw,
 } from "lucide-react";
 import dayjs from "dayjs";
 import CustomTable from "../../components/Common/CustomTable";
+import { getAllCustomers } from "../../services/account.service";
 
 const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+const { RangePicker } = DatePicker;
 
 // Component form cho Khách hàng
 const CustomerForm = ({ form, initialData, loading }) => {
@@ -84,7 +96,7 @@ const CustomerForm = ({ form, initialData, loading }) => {
         <Col span={24} md={12}>
           <Form.Item
             label="Số điện thoại"
-            name="phone"
+            name="phoneNumber"
             rules={[{ required: true, message: "Vui lòng nhập số điện thoại" }]}
           >
             <Input placeholder="Nhập số điện thoại" />
@@ -93,18 +105,11 @@ const CustomerForm = ({ form, initialData, loading }) => {
 
         <Col span={24} md={12}>
           <Form.Item
-            label="Membership"
-            name="membership"
-            rules={[
-              { required: true, message: "Vui lòng chọn gói thành viên" },
-            ]}
+            label="Tên đăng nhập"
+            name="userName"
+            rules={[{ required: true, message: "Vui lòng nhập tên đăng nhập" }]}
           >
-            <Select placeholder="Chọn gói thành viên">
-              <Option value="Diamond">Kim cương</Option>
-              <Option value="Gold">Vàng</Option>
-              <Option value="Silver">Bạc</Option>
-              <Option value="Basic">Cơ bản</Option>
-            </Select>
+            <Input placeholder="Nhập tên đăng nhập" />
           </Form.Item>
         </Col>
       </Row>
@@ -113,7 +118,7 @@ const CustomerForm = ({ form, initialData, loading }) => {
         <Col span={24} md={8}>
           <Form.Item
             label="Ngày sinh"
-            name="birthDate"
+            name="dob"
             rules={[{ required: true, message: "Vui lòng chọn ngày sinh" }]}
           >
             <DatePicker
@@ -127,33 +132,29 @@ const CustomerForm = ({ form, initialData, loading }) => {
         <Col span={24} md={8}>
           <Form.Item
             label="Cung mệnh"
-            name="zodiac"
+            name="lifePalace"
             rules={[{ required: true, message: "Vui lòng chọn cung mệnh" }]}
           >
             <Select placeholder="Chọn cung mệnh">
-              <Option value="Bạch Dương">Bạch Dương</Option>
-              <Option value="Kim Ngưu">Kim Ngưu</Option>
-              <Option value="Song Tử">Song Tử</Option>
-              <Option value="Cự Giải">Cự Giải</Option>
-              <Option value="Sư Tử">Sư Tử</Option>
-              <Option value="Xử Nữ">Xử Nữ</Option>
-              <Option value="Thiên Bình">Thiên Bình</Option>
-              <Option value="Bọ Cạp">Bọ Cạp</Option>
-              <Option value="Nhân Mã">Nhân Mã</Option>
-              <Option value="Ma Kết">Ma Kết</Option>
-              <Option value="Bảo Bình">Bảo Bình</Option>
-              <Option value="Song Ngư">Song Ngư</Option>
+              <Option value="Càn">Càn</Option>
+              <Option value="Khảm">Khảm</Option>
+              <Option value="Cấn">Cấn</Option>
+              <Option value="Chấn">Chấn</Option>
+              <Option value="Tốn">Tốn</Option>
+              <Option value="Ly">Ly</Option>
+              <Option value="Khôn">Khôn</Option>
+              <Option value="Đoài">Đoài</Option>
             </Select>
           </Form.Item>
         </Col>
 
         <Col span={24} md={8}>
           <Form.Item
-            label="Sinh mệnh"
-            name="lifeElement"
-            rules={[{ required: true, message: "Vui lòng chọn sinh mệnh" }]}
+            label="Ngũ hành"
+            name="element"
+            rules={[{ required: true, message: "Vui lòng chọn ngũ hành" }]}
           >
-            <Select placeholder="Chọn sinh mệnh">
+            <Select placeholder="Chọn ngũ hành">
               <Option value="Kim">Kim</Option>
               <Option value="Mộc">Mộc</Option>
               <Option value="Thủy">Thủy</Option>
@@ -165,62 +166,33 @@ const CustomerForm = ({ form, initialData, loading }) => {
       </Row>
 
       <Row gutter={16}>
-        <Col span={24} md={16}>
+        <Col span={24} md={12}>
           <Form.Item
-            label="Địa chỉ"
-            name="address"
-            rules={[{ required: true, message: "Vui lòng nhập địa chỉ" }]}
+            label="Giới tính"
+            name="gender"
+            rules={[{ required: true, message: "Vui lòng chọn giới tính" }]}
           >
-            <Input placeholder="Nhập địa chỉ khách hàng" />
+            <Select placeholder="Chọn giới tính">
+              <Option value="Male">Nam</Option>
+              <Option value="Female">Nữ</Option>
+              <Option value="Other">Khác</Option>
+            </Select>
           </Form.Item>
         </Col>
 
-        <Col span={24} md={8}>
-          <Form.Item
-            label="Ngày đăng ký"
-            name="registrationDate"
-            rules={[{ required: true, message: "Vui lòng chọn ngày đăng ký" }]}
-          >
-            <DatePicker
-              placeholder="Chọn ngày đăng ký"
-              style={{ width: "100%" }}
-              format="DD/MM/YYYY"
+        <Col span={24} md={12}>
+          <Form.Item label="Trạng thái" name="isActive" valuePropName="checked">
+            <Switch
+              checkedChildren="Hoạt động"
+              unCheckedChildren="Vô hiệu"
+              defaultChecked={initialData?.isActive}
             />
           </Form.Item>
         </Col>
       </Row>
 
-      <Form.Item
-        label="Trạng thái"
-        name="status"
-        valuePropName="checked"
-        initialValue={initialData?.status === "Actived"}
-      >
-        <Switch
-          checkedChildren="Actived"
-          unCheckedChildren="Banned"
-          defaultChecked={initialData?.status === "Actived"}
-        />
-      </Form.Item>
-
-      <Form.Item label="Ảnh đại diện" name="avatar">
-        <Upload
-          listType="picture-card"
-          maxCount={1}
-          beforeUpload={() => false} // Ngăn tự động upload
-        >
-          <div className="flex flex-col items-center">
-            <UploadCloud className="w-6 h-6 text-gray-400" />
-            <div className="mt-2">Upload</div>
-          </div>
-        </Upload>
-      </Form.Item>
-
-      <Form.Item label="Ghi chú" name="notes">
-        <TextArea
-          placeholder="Nhập ghi chú về khách hàng"
-          autoSize={{ minRows: 3, maxRows: 6 }}
-        />
+      <Form.Item label="Ảnh đại diện" name="imageUrl">
+        <Input placeholder="Nhập đường dẫn ảnh đại diện" />
       </Form.Item>
     </Form>
   );
@@ -231,81 +203,73 @@ const Customer = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [error, setError] = useState(null);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+
+  // States cho filter
+  const [genderFilter, setGenderFilter] = useState("all"); // all, male, female, other
+  const [dateFilter, setDateFilter] = useState(null); // [startDate, endDate]
 
   // States cho modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
 
-  // Mock data cho danh sách khách hàng
-  const initialData = [
-    {
-      id: 1,
-      fullName: "Nguyễn Thị Anh",
-      email: "nguyenthianh@example.com",
-      phone: "0901234567",
-      membership: "Diamond",
-      birthDate: "1985-05-15",
-      registrationDate: "2023-01-10",
-      address: "123 Đường Lê Lợi, Quận 1, TP.HCM",
-      status: "Actived",
-      zodiac: "Kim Ngưu",
-      lifeElement: "Mộc",
-      notes:
-        "Khách hàng thân thiết, quan tâm đến phong thủy hồ cá và thiết kế không gian sống.",
-      avatar: "https://example.com/avatar1.jpg",
-    },
-    {
-      id: 2,
-      fullName: "Trần Văn Bình",
-      email: "tranvanbinh@example.com",
-      phone: "0912345678",
-      membership: "Gold",
-      birthDate: "1990-08-22",
-      registrationDate: "2023-03-15",
-      address: "456 Đường Nguyễn Huệ, Quận 3, TP.HCM",
-      status: "Actived",
-      zodiac: "Sư Tử",
-      lifeElement: "Hỏa",
-      notes: "Khách hàng có sở thích nuôi cá Koi và học hỏi về phong thủy.",
-      avatar: "https://example.com/avatar2.jpg",
-    },
-    {
-      id: 3,
-      fullName: "Lê Thị Châu",
-      email: "lethichau@example.com",
-      phone: "0923456789",
-      membership: "Silver",
-      birthDate: "1995-12-10",
-      registrationDate: "2023-06-20",
-      address: "789 Đường Cách Mạng Tháng 8, Quận 10, TP.HCM",
-      status: "Banned",
-      zodiac: "Nhân Mã",
-      lifeElement: "Thủy",
-      notes:
-        "Khách hàng mới, quan tâm đến các hội thảo về phong thủy và nuôi cá Koi.",
-      avatar: "https://example.com/avatar3.jpg",
-    },
-    {
-      id: 4,
-      fullName: "Phạm Văn Dũng",
-      email: "phamvandung@example.com",
-      phone: "0934567890",
-      membership: "Diamond",
-      birthDate: "1980-03-05",
-      registrationDate: "2022-11-25",
-      address: "101 Đường Hai Bà Trưng, Quận 1, TP.HCM",
-      status: "Actived",
-      zodiac: "Song Ngư",
-      lifeElement: "Kim",
-      notes:
-        "Khách hàng có sở thích sưu tầm cá Koi đắt tiền và rất quan tâm đến phong thủy.",
-      avatar: "https://example.com/avatar4.jpg",
-    },
-  ];
+  // Fetch dữ liệu từ API
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
 
-  const [data, setData] = useState(initialData);
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true);
+      const response = await getAllCustomers();
+      console.log("Customers response:", response);
+
+      if (response && response.isSuccess && Array.isArray(response.data)) {
+        // Chỉ lấy các trường cần thiết
+        const formattedData = response.data.map((customer, index) => ({
+          key: index.toString(),
+          customerId: customer.customerId,
+          userName: customer.userName,
+          email: customer.email,
+          phoneNumber: customer.phoneNumber,
+          fullName: customer.fullName,
+          dob: customer.dob,
+          gender: customer.gender,
+          lifePalace: customer.lifePalace || "Chưa xác định",
+          element: customer.element || "Chưa xác định",
+          imageUrl:
+            customer.imageUrl || "https://via.placeholder.com/40?text=User",
+          createDate: customer.createDate,
+          isActive: customer.isActive,
+        }));
+
+        setData(formattedData);
+        setTotalItems(formattedData.length);
+        setError(null);
+      } else {
+        setError("Không thể tải dữ liệu khách hàng");
+        message.error("Không thể tải dữ liệu khách hàng");
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      setError("Đã xảy ra lỗi khi tải dữ liệu khách hàng");
+      message.error("Đã xảy ra lỗi khi tải dữ liệu khách hàng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset tất cả bộ lọc
+  const resetFilters = () => {
+    setGenderFilter("all");
+    setDateFilter(null);
+    setSearchText("");
+    setCurrentPage(1);
+  };
 
   // Hàm xử lý tìm kiếm
   const handleSearch = (value) => {
@@ -313,61 +277,25 @@ const Customer = () => {
     setCurrentPage(1);
   };
 
-  // Hàm xóa khách hàng
-  const handleDelete = (id) => {
-    const newData = data.filter((item) => item.id !== id);
-    setData(newData);
-    message.success("Đã xóa khách hàng thành công");
-  };
-
-  // Hàm chuyển đổi trạng thái
-  const handleToggleStatus = (id) => {
-    const newData = data.map((item) => {
-      if (item.id === id) {
-        const newStatus = item.status === "Actived" ? "Banned" : "Actived";
-        message.success(`Đã chuyển đổi trạng thái thành ${newStatus}`);
-        return {
-          ...item,
-          status: newStatus,
-        };
-      }
-      return item;
-    });
-    setData(newData);
-  };
-
   // Hàm chuyển trang
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
 
-  // Hàm mở modal để tạo mới
-  const handleOpenCreateModal = () => {
-    setSelectedCustomer(null);
-    form.resetFields();
-    form.setFieldsValue({
-      status: true, // Mặc định là Actived
-    });
-    setIsModalOpen(true);
-  };
-
-  // Hàm mở modal để chỉnh sửa
-  const handleOpenEditModal = (customer) => {
+  // Hàm mở modal để xem chi tiết
+  const handleViewDetails = (customer) => {
     setSelectedCustomer(customer);
     form.setFieldsValue({
       fullName: customer.fullName,
       email: customer.email,
-      phone: customer.phone,
-      membership: customer.membership,
-      birthDate: customer.birthDate ? dayjs(customer.birthDate) : undefined,
-      registrationDate: customer.registrationDate
-        ? dayjs(customer.registrationDate)
-        : undefined,
-      address: customer.address,
-      status: customer.status === "Actived",
-      zodiac: customer.zodiac,
-      lifeElement: customer.lifeElement,
-      notes: customer.notes,
+      phoneNumber: customer.phoneNumber,
+      userName: customer.userName,
+      dob: customer.dob ? dayjs(customer.dob) : undefined,
+      gender: customer.gender,
+      lifePalace: customer.lifePalace,
+      element: customer.element,
+      isActive: customer.isActive,
+      imageUrl: customer.imageUrl,
     });
     setIsModalOpen(true);
   };
@@ -388,51 +316,39 @@ const Customer = () => {
     }
   };
 
-  // Hàm lưu dữ liệu
+  // Hàm lưu dữ liệu - chỉ demo, không có API cập nhật
   const handleSave = () => {
     form.validateFields().then((values) => {
-      setLoading(true);
+      setFormLoading(true);
 
       setTimeout(() => {
-        const formattedValues = {
-          ...values,
-          status: values.status ? "Actived" : "Banned",
-          birthDate: values.birthDate
-            ? values.birthDate.format("YYYY-MM-DD")
-            : null,
-          registrationDate: values.registrationDate
-            ? values.registrationDate.format("YYYY-MM-DD")
-            : null,
-        };
-
-        if (selectedCustomer) {
-          // Cập nhật
-          const newData = data.map((item) => {
-            if (item.id === selectedCustomer.id) {
-              return {
-                ...item,
-                ...formattedValues,
-              };
-            }
-            return item;
-          });
-          setData(newData);
-          message.success("Đã cập nhật thông tin khách hàng thành công");
-        } else {
-          // Tạo mới
-          const newId = Math.max(...data.map((item) => item.id)) + 1;
-          const newCustomer = {
-            id: newId,
-            ...formattedValues,
-          };
-          setData([...data, newCustomer]);
-          message.success("Đã tạo mới khách hàng thành công");
-        }
-
-        setLoading(false);
+        message.info("Chức năng cập nhật thông tin đang được phát triển");
+        setFormLoading(false);
         handleCloseModal();
       }, 1000);
     });
+  };
+
+  // Lấy giới tính dạng text
+  const getGenderText = (gender) => {
+    switch (gender) {
+      case "Male":
+        return "Nam";
+      case "Female":
+        return "Nữ";
+      default:
+        return "Khác";
+    }
+  };
+
+  // Lấy màu badge cho trạng thái
+  const getStatusBadgeColor = (isActive) => {
+    return isActive ? "success" : "error";
+  };
+
+  // Lấy text cho trạng thái
+  const getStatusText = (isActive) => {
+    return isActive ? "Hoạt động" : "Vô hiệu";
   };
 
   // Cấu hình các cột cho bảng
@@ -441,12 +357,12 @@ const Customer = () => {
       title: "Khách hàng",
       dataIndex: "fullName",
       key: "fullName",
-      width: "15%",
+      width: "22%",
       render: (_, record) => (
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 overflow-hidden rounded-full">
             <img
-              src={record.avatar}
+              src={record.imageUrl}
               alt={record.fullName}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -456,7 +372,7 @@ const Customer = () => {
           </div>
           <div>
             <div className="font-medium">{record.fullName}</div>
-            <div className="text-xs text-gray-500">{record.email}</div>
+            <div className="text-xs text-gray-500">{record.userName}</div>
           </div>
         </div>
       ),
@@ -464,12 +380,12 @@ const Customer = () => {
     {
       title: "Liên hệ",
       key: "contact",
-      width: "15%",
+      width: "22%",
       render: (_, record) => (
         <div>
           <div>
             <Phone className="inline-block mr-1 w-4 h-4" />
-            {record.phone}
+            {record.phoneNumber}
           </div>
           <div className="mt-1">
             <Mail className="inline-block mr-1 w-4 h-4" />
@@ -479,116 +395,110 @@ const Customer = () => {
       ),
     },
     {
-      title: "Membership",
-      dataIndex: "membership",
-      key: "membership",
-      width: "10%",
-      render: (membership) => {
-        let color = "blue";
-        if (membership === "Diamond") color = "purple";
-        if (membership === "Gold") color = "gold";
-        if (membership === "Silver") color = "gray";
-        if (membership === "Basic") color = "blue";
-        return (
-          <Tag
-            color={color}
-            icon={<CreditCard className="inline-block mr-1 w-4 h-4" />}
-          >
-            {membership}
-          </Tag>
-        );
-      },
+      title: "Thông tin cá nhân",
+      key: "info",
+      width: "22%",
+      render: (_, record) => (
+        <div>
+          <div>
+            <Calendar className="inline-block mr-1 w-4 h-4" />
+            {record.dob
+              ? dayjs(record.dob).format("DD/MM/YYYY")
+              : "Chưa cập nhật"}
+          </div>
+          <div className="mt-1">
+            <User className="inline-block mr-1 w-4 h-4" />
+            {getGenderText(record.gender)}
+          </div>
+        </div>
+      ),
     },
     {
       title: "Phong thủy",
       key: "fengshui",
-      width: "15%",
+      width: "22%",
       render: (_, record) => (
         <div>
           <div>
             <Star className="inline-block mr-1 w-4 h-4" />
-            {record.zodiac}
+            Cung: {record.lifePalace}
           </div>
           <div className="mt-1">
             <Shield className="inline-block mr-1 w-4 h-4" />
-            {record.lifeElement}
+            Ngũ hành: {record.element}
           </div>
         </div>
       ),
     },
     {
-      title: "Ngày đăng ký",
-      dataIndex: "registrationDate",
-      key: "registrationDate",
-      width: "10%",
-      render: (date) => (
-        <div>
-          <Calendar className="inline-block mr-1 w-4 h-4" />
-          {dayjs(date).format("DD/MM/YYYY")}
-        </div>
-      ),
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      key: "status",
-      width: "10%",
-      render: (status, record) => (
-        <Switch
-          checkedChildren={<CheckCircle className="w-3 h-3" />}
-          unCheckedChildren={<XCircle className="w-3 h-3" />}
-          checked={status === "Actived"}
-          onChange={() => handleToggleStatus(record.id)}
-        />
-      ),
-    },
-    {
-      title: "Địa chỉ",
-      dataIndex: "address",
-      key: "address",
-      width: "10%",
-      ellipsis: true,
-      render: (address) => (
-        <div>
-          <Home className="inline-block mr-1 w-4 h-4" />
-          {address}
-        </div>
-      ),
-    },
-    {
-      title: "Hành động",
-      key: "action",
-      width: "10%",
+      title: "Ngày tạo",
+      key: "createDate",
+      width: "12%",
       render: (_, record) => (
-        <Space size="middle">
-          <CustomButton
-            type="primary"
-            className="bg-blue-500"
-            onClick={() => handleOpenEditModal(record)}
-          >
-            Chỉnh sửa
-          </CustomButton>
-          <Popconfirm
-            title="Bạn có chắc chắn muốn xóa khách hàng này không?"
-            onConfirm={() => handleDelete(record.id)}
-            okText="Có"
-            cancelText="Không"
-          >
-            <CustomButton type="text" danger icon={<Trash2 size={16} />} />
-          </Popconfirm>
-        </Space>
+        <div>
+          {record.createDate ? (
+            <div>
+              <Calendar className="inline-block mr-1 w-4 h-4" />
+              {dayjs(record.createDate).format("DD/MM/YYYY")}
+            </div>
+          ) : (
+            <span className="text-gray-400">Chưa có dữ liệu</span>
+          )}
+        </div>
       ),
     },
   ];
 
-  // Lọc dữ liệu theo tìm kiếm
-  const filteredData = data.filter(
-    (item) =>
-      item.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.phone.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.membership.toLowerCase().includes(searchText.toLowerCase())
-  );
+  // Áp dụng các bộ lọc
+  const applyFilters = (data) => {
+    let filteredData = data;
+
+    // Lọc theo giới tính
+    if (genderFilter !== "all") {
+      filteredData = filteredData.filter(
+        (item) => item.gender?.toLowerCase() === genderFilter
+      );
+    }
+
+    // Lọc theo ngày tạo
+    if (dateFilter && dateFilter[0] && dateFilter[1]) {
+      const startDate = dateFilter[0].startOf("day");
+      const endDate = dateFilter[1].endOf("day");
+
+      filteredData = filteredData.filter((item) => {
+        if (!item.createDate) return false;
+        const createDate = dayjs(item.createDate);
+        return createDate.isAfter(startDate) && createDate.isBefore(endDate);
+      });
+    }
+
+    // Lọc theo tìm kiếm
+    if (searchText) {
+      filteredData = filteredData.filter(
+        (item) =>
+          item.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.email?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.phoneNumber?.toLowerCase().includes(searchText.toLowerCase()) ||
+          item.userName?.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    return filteredData;
+  };
+
+  // Áp dụng lọc vào dữ liệu
+  const filteredData = applyFilters(data);
+
+  // Tính toán dữ liệu hiển thị cho trang hiện tại
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const currentData = filteredData.slice(startIndex, endIndex);
+
+  // Tính tổng số trang
+  const totalPages = Math.ceil(filteredData.length / pageSize);
+
+  // Hiển thị số lượng bản ghi đang được áp dụng lọc
+  const filterCount = data.length - filteredData.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -599,35 +509,117 @@ const Customer = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="flex justify-end mb-4">
-          <SearchBar
-            placeholder="Tìm kiếm theo tên, email, số điện thoại..."
-            onSearch={handleSearch}
-            className="w-64"
-          />
+        {/* Thanh công cụ và tìm kiếm */}
+        <div className="mb-6">
+          <Card className="shadow-sm">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 flex-wrap">
+              {/* Các bộ lọc */}
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-gray-500" />
+                  <span className="text-gray-500">Bộ lọc:</span>
+                </div>
+
+                {/* Lọc theo giới tính */}
+                <Select
+                  value={genderFilter}
+                  onChange={(value) => setGenderFilter(value)}
+                  style={{ width: 120 }}
+                  placeholder="Giới tính"
+                >
+                  <Option value="all">Tất cả</Option>
+                  <Option value="male">Nam</Option>
+                  <Option value="female">Nữ</Option>
+                  <Option value="other">Khác</Option>
+                </Select>
+
+                {/* Lọc theo ngày tạo */}
+                <RangePicker
+                  value={dateFilter}
+                  onChange={(dates) => setDateFilter(dates)}
+                  placeholder={["Từ ngày", "Đến ngày"]}
+                  format="DD/MM/YYYY"
+                  style={{ width: 240 }}
+                />
+
+                {/* Nút reset bộ lọc */}
+                <Button
+                  type="default"
+                  onClick={resetFilters}
+                  icon={<RefreshCw className="w-4 h-4" />}
+                >
+                  Đặt lại
+                </Button>
+              </div>
+
+              {/* Tìm kiếm và tải lại */}
+              <div className="flex items-center gap-3">
+                <SearchBar
+                  placeholder="Tìm kiếm theo tên, email, số điện thoại..."
+                  onSearch={handleSearch}
+                  value={searchText}
+                  className="w-64"
+                />
+                <Button
+                  type="primary"
+                  className="bg-blue-500"
+                  onClick={() => fetchCustomers()}
+                  icon={<RefreshCw className="w-4 h-4 mr-1" />}
+                >
+                  Tải lại
+                </Button>
+              </div>
+            </div>
+
+            {/* Hiển thị thông tin lọc */}
+            {filterCount > 0 && (
+              <div className="mt-3 text-blue-600 text-sm">
+                Đã lọc {filterCount} khách hàng từ tổng số {data.length} bản ghi
+              </div>
+            )}
+          </Card>
         </div>
 
         {error && <Error message={error} />}
 
-        <CustomTable
-          columns={columns}
-          dataSource={filteredData}
-          loading={loading}
-          pagination={{
-            current: currentPage,
-            totalPages: Math.ceil(filteredData.length / pageSize),
-            onPageChange: handlePageChange
-          }}
-        />
+        {loading ? (
+          <div className="flex justify-center items-center h-64">
+            <Spin tip="Đang tải dữ liệu..." />
+          </div>
+        ) : (
+          <>
+            <Card className="shadow-sm">
+              <CustomTable
+                columns={columns}
+                dataSource={currentData}
+                loading={false}
+                pagination={false}
+                onRow={(record) => ({
+                  onClick: () => handleViewDetails(record),
+                  className: "cursor-pointer hover:bg-gray-50",
+                })}
+              />
+              <div className="mt-4 flex justify-between items-center">
+                <div className="text-gray-500 text-sm">
+                  Hiển thị {currentData.length} khách hàng trong tổng số{" "}
+                  {filteredData.length} kết quả
+                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </Card>
+          </>
+        )}
       </div>
 
-      {/* Modal for Create/Edit */}
+      {/* Modal for View Details */}
       <Modal
         title={
           <div className="text-xl font-semibold">
-            {selectedCustomer
-              ? "Chỉnh sửa thông tin khách hàng"
-              : "Thêm khách hàng mới"}
+            Chi tiết thông tin khách hàng
           </div>
         }
         open={isModalOpen}
@@ -645,18 +637,18 @@ const Customer = () => {
           <CustomerForm
             form={form}
             initialData={selectedCustomer}
-            loading={loading}
+            loading={formLoading}
           />
 
           <div className="flex justify-end gap-3 mt-6">
-            <CustomButton onClick={handleCloseModal}>Hủy bỏ</CustomButton>
+            <CustomButton onClick={handleCloseModal}>Đóng</CustomButton>
             <CustomButton
               type="primary"
               className="bg-blue-500"
               onClick={handleSave}
-              loading={loading}
+              loading={formLoading}
             >
-              {selectedCustomer ? "Cập nhật" : "Tạo mới"}
+              Cập nhật
             </CustomButton>
           </div>
         </div>
