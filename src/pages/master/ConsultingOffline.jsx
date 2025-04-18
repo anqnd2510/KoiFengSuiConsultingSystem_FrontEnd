@@ -76,9 +76,7 @@ const ConsultingOffline = () => {
           customerName: booking.customerName || "Không có tên",
           customerEmail: booking.customerEmail || "Không có email",
           service: booking.type || "Tư vấn trực tiếp",
-          date:
-            booking.bookingDate ||
-            dayjs(booking.createdAt).format("DD-MM-YYYY"),
+          date: dayjs(booking.bookingDate).format("DD-MM-YYYY"),
           status: mapStatusFromApi(booking.status),
           description: booking.description || "",
           location: booking.location || "",
@@ -174,10 +172,10 @@ const ConsultingOffline = () => {
 
   // Kiểm tra xem có thể tạo lại hồ sơ không
   const canRecreateDocument = (booking) => {
-    const documentStatus = booking?.rawData?.document?.status;
+    const status = booking?.rawData?.status;
     return (
-      documentStatus === "CancelledByManager" ||
-      documentStatus === "CancelledByCustomer"
+      status === "DocumentRejectedByManager" ||
+      status === "DocumentRejectedByCustomer"
     );
   };
 
@@ -187,19 +185,32 @@ const ConsultingOffline = () => {
     return status === "DocumentConfirmedByCustomer";
   };
 
+  // Kiểm tra xem có thể tạo lại biên bản không
+  const canRecreateAttachment = (booking) => {
+    const status = booking?.rawData?.status;
+    return status === "AttachmentRejected";
+  };
+
   // Kiểm tra xem hồ sơ có đang trong quá trình xử lý không
   const isDocumentProcessing = (booking) => {
-    const documentStatus = booking?.rawData?.document?.status;
+    const status = booking?.rawData?.status;
+    return status === "Pending" || status === "DocumentConfirmedByManager";
+  };
+
+  // Kiểm tra xem biên bản có đang trong quá trình xử lý không
+  const isAttachmentProcessing = (booking) => {
+    const status = booking?.rawData?.status;
     return (
-      documentStatus === "Pending" || documentStatus === "ConfirmedByManager"
+      status === "AttachmentConfirmed" ||
+      status === "VerifyingOTPAttachment" ||
+      status === "VerifiedOTPAttachment"
     );
   };
 
   // Kiểm tra xem booking đã hoàn thành chưa
   const isBookingCompleted = (booking) => {
     const status = booking?.rawData?.status;
-    const documentStatus = booking?.rawData?.document?.status;
-    return status === "Completed" || documentStatus === "Success";
+    return status === "Completed";
   };
 
   // Kiểm tra xem booking đã bị hủy chưa
@@ -422,7 +433,7 @@ const ConsultingOffline = () => {
       ),
     },
     {
-      title: "Ngày tạo",
+      title: "Ngày tư vấn",
       dataIndex: "date",
       key: "date",
       width: "12%",
@@ -440,7 +451,7 @@ const ConsultingOffline = () => {
             color={getStatusColor(status)}
             className="px-3 py-1 text-xs font-medium rounded-full"
           >
-            {status} {apiStatus !== status ? `(${apiStatus})` : ""}
+            {status}
           </Tag>
         );
       },
@@ -450,9 +461,10 @@ const ConsultingOffline = () => {
       key: "action",
       width: "12%",
       render: (_, record) => {
+        const status = record.rawData?.status || "";
         return (
           <div className="flex gap-2">
-            {canCreateDocument(record) && (
+            {status === "FirstPaymentSuccess" && (
               <button
                 onClick={() => handleOpenModal(record)}
                 className="px-3 py-1.5 bg-[#B4925A] text-white text-xs rounded-lg hover:bg-[#8B6B3D] transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
@@ -462,7 +474,8 @@ const ConsultingOffline = () => {
               </button>
             )}
 
-            {canRecreateDocument(record) && (
+            {(status === "DocumentRejectedByManager" ||
+              status === "DocumentRejectedByCustomer") && (
               <button
                 onClick={() => handleOpenModal(record)}
                 className="px-3 py-1.5 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
@@ -472,14 +485,16 @@ const ConsultingOffline = () => {
               </button>
             )}
 
-            {isDocumentProcessing(record) && (
+            {(status === "Pending" ||
+              status === "DocumentConfirmedByManager" ||
+              status === "ConfirmedByManager") && (
               <span className="px-3 py-1.5 bg-gray-300 text-gray-600 text-xs rounded-lg shadow-sm flex items-center justify-center">
                 <span className="hidden sm:inline">Đang xử lý</span>
                 <span className="sm:hidden">Xử lý</span>
               </span>
             )}
 
-            {canCreateAttachment(record) && (
+            {status === "DocumentConfirmedByCustomer" && (
               <button
                 onClick={() => handleCreateReport(record)}
                 className="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
@@ -489,14 +504,47 @@ const ConsultingOffline = () => {
               </button>
             )}
 
-            {isBookingCompleted(record) && (
-              <span className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg shadow-sm flex items-center justify-center">
-                <span className="hidden sm:inline">Hoàn thành</span>
-                <span className="sm:hidden">Hoàn thành</span>
+            {status === "AttachmentRejected" && (
+              <button
+                onClick={() => handleCreateReport(record)}
+                className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
+              >
+                <span className="hidden sm:inline">Tạo lại BB</span>
+                <span className="sm:hidden">Tạo lại</span>
+              </button>
+            )}
+
+            {(status === "AttachmentConfirmed" ||
+              status === "VerifyingOTPAttachment" ||
+              status === "VerifiedOTPAttachment") && (
+              <span className="px-3 py-1.5 bg-gray-300 text-gray-600 text-xs rounded-lg shadow-sm flex items-center justify-center">
+                <span className="hidden sm:inline">BB đang xử lý</span>
+                <span className="sm:hidden">BB xử lý</span>
               </span>
             )}
 
-            {isBookingCanceled(record) && (
+            {/* Hiển thị hoàn thành khi cả quy trình đã hoàn tất */}
+            {status === "Completed" && (
+              <span className="text-green-600 text-xs font-medium flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span>Đã hoàn thành</span>
+              </span>
+            )}
+
+            {status === "Canceled" && (
               <span className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg shadow-sm flex items-center justify-center">
                 <span className="hidden sm:inline">Đã hủy</span>
                 <span className="sm:hidden">Hủy</span>
