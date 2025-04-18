@@ -40,6 +40,7 @@ const Schedule = () => {
             let eventType = "";
             let tooltipContent = null;
             let eventColor = "";
+            let displayTime = "";
 
             // Kiểm tra nếu có booking online
             if (schedule.bookingOnlines && schedule.bookingOnlines.length > 0) {
@@ -47,6 +48,7 @@ const Schedule = () => {
               eventTitle = booking.customer.fullName || "Khách hàng online";
               eventType = "Tư vấn trực tuyến";
               eventColor = "bg-green-500";
+              displayTime = `${startTime}-${endTime}`;
               tooltipContent = (
                 <div className="py-2 px-1">
                   <div className="text-sm font-medium mb-2 border-b pb-1">
@@ -84,6 +86,7 @@ const Schedule = () => {
               eventTitle = booking.customer?.fullName || "Khách hàng offline";
               eventType = "Tư vấn trực tiếp";
               eventColor = "bg-orange-500";
+              displayTime = booking.location || "Không có địa điểm";
               tooltipContent = (
                 <div className="py-2 px-1">
                   <div className="text-sm font-medium mb-2 border-b pb-1">
@@ -104,10 +107,8 @@ const Schedule = () => {
                     </div>
                   </div>
                   <div className="flex items-center mb-1 text-xs text-gray-600">
-                    <Clock size={12} className="mr-1.5" />
-                    <span>
-                      {startTime} - {endTime}
-                    </span>
+                    <MapPin size={12} className="mr-1.5" />
+                    <span>{booking.location || "Không có địa điểm"}</span>
                   </div>
                 </div>
               );
@@ -118,6 +119,7 @@ const Schedule = () => {
               eventTitle = workshop.workshopName || "Workshop";
               eventType = "Workshop";
               eventColor = "bg-blue-500";
+              displayTime = `${startTime}-${endTime}`;
               tooltipContent = (
                 <div className="py-2 px-1">
                   <div className="text-sm font-medium mb-2 border-b pb-1">
@@ -152,6 +154,7 @@ const Schedule = () => {
               eventTitle = "Lịch trống";
               eventType = "Chưa có lịch hẹn";
               eventColor = "bg-gray-400";
+              displayTime = `${startTime}-${endTime}`;
             }
 
             return {
@@ -162,7 +165,7 @@ const Schedule = () => {
               fullDate: new Date(dateSchedule.date),
               isCurrentMonth: false,
               customerName: eventTitle,
-              time: `${startTime}-${endTime}`,
+              time: displayTime,
               tooltipContent: tooltipContent,
               eventType: eventType,
               eventColor: eventColor,
@@ -198,13 +201,22 @@ const Schedule = () => {
           overlayInnerStyle={{ color: "#333" }}
         >
           <div
-            className={`cursor-pointer p-1.5 rounded mb-1 text-white text-xs ${
+            className={`cursor-pointer p-1 rounded text-white text-xs ${
               booking.eventColor || "bg-blue-500"
             } hover:opacity-90 transition-opacity`}
             onClick={booking.onClick}
           >
             <div className="font-medium truncate">{booking.customerName}</div>
-            <div className="text-xs truncate">{booking.time}</div>
+            <div className="text-xs truncate flex items-center">
+              {booking.eventType === "Tư vấn trực tiếp" ? (
+                <MapPin className="inline-block w-3 h-3 mr-1" />
+              ) : booking.eventType === "Workshop" ? (
+                <CalendarIcon className="inline-block w-3 h-3 mr-1" />
+              ) : (
+                <Clock className="inline-block w-3 h-3 mr-1" />
+              )}
+              {booking.time}
+            </div>
           </div>
         </Tooltip>
       );
@@ -214,13 +226,13 @@ const Schedule = () => {
     if (booking.eventType === "Chưa có lịch hẹn") {
       return (
         <div
-          className="cursor-pointer p-1.5 rounded mb-1 text-white text-xs bg-gray-400 hover:bg-gray-500 transition-colors flex items-center justify-center"
+          className="cursor-pointer p-1 rounded text-white text-xs bg-gray-400 hover:bg-gray-500 transition-colors"
           onClick={booking.onClick}
         >
-          <div className="text-center">
-            <div className="font-medium truncate">{booking.customerName}</div>
-            <div className="text-xs truncate">{booking.time}</div>
-            <div className="text-xs mt-1 opacity-75">Có thể đặt lịch</div>
+          <div className="font-medium truncate">{booking.customerName}</div>
+          <div className="text-xs truncate flex items-center">
+            <Clock className="inline-block w-3 h-3 mr-1" />
+            {booking.time}
           </div>
         </div>
       );
@@ -228,13 +240,22 @@ const Schedule = () => {
 
     return (
       <div
-        className={`cursor-pointer p-1.5 rounded mb-1 text-white text-xs ${
+        className={`cursor-pointer p-1 rounded text-white text-xs ${
           booking.eventColor || "bg-blue-500"
         } hover:opacity-90 transition-opacity`}
         onClick={booking.onClick}
       >
         <div className="font-medium truncate">{booking.customerName}</div>
-        <div className="text-xs truncate">{booking.time}</div>
+        <div className="text-xs truncate flex items-center">
+          {booking.eventType === "Tư vấn trực tiếp" ? (
+            <MapPin className="inline-block w-3 h-3 mr-1" />
+          ) : booking.eventType === "Workshop" ? (
+            <CalendarIcon className="inline-block w-3 h-3 mr-1" />
+          ) : (
+            <Clock className="inline-block w-3 h-3 mr-1" />
+          )}
+          {booking.time}
+        </div>
       </div>
     );
   };
@@ -251,12 +272,14 @@ const Schedule = () => {
               <Spin size="large" tip="Đang tải lịch..." />
             </div>
           ) : (
-            <Calendar
-              bookings={bookings}
-              renderBooking={renderBookingWithTooltip}
-              onMonthChange={setCurrentMonth}
-              currentMonth={currentMonth}
-            />
+            <div className="max-w-screen-xl mx-auto">
+              <Calendar
+                bookings={bookings}
+                renderBooking={renderBookingWithTooltip}
+                onMonthChange={setCurrentMonth}
+                currentMonth={currentMonth}
+              />
+            </div>
           )}
         </main>
       </div>

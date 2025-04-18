@@ -115,22 +115,100 @@ const ConsultingOffline = () => {
 
   const mapStatusFromApi = (apiStatus) => {
     switch (apiStatus) {
-      case "Scheduled":
-        return "Đã lên lịch";
-      case "Completed":
-        return "Hoàn thành";
-      case "Cancelled":
-        return "Đã hủy";
       case "Pending":
         return "Chờ xử lý";
-      case "In Progress":
+      case "InProgress":
         return "Đang xử lý";
+      case "ContractRejectedByManager":
+        return "Hợp đồng bị từ chối bởi quản lý";
+      case "ContractConfirmedByManager":
+        return "Hợp đồng được duyệt bởi quản lý";
+      case "ContractRejectedByCustomer":
+        return "Hợp đồng bị từ chối bởi khách hàng";
+      case "ContractConfirmedByCustomer":
+        return "Hợp đồng được duyệt bởi khách hàng";
+      case "VerifyingOTP":
+        return "Đang xác thực OTP";
+      case "VerifiedOTP":
+        return "Đã xác thực OTP";
+      case "FirstPaymentPending":
+        return "Chờ thanh toán đầu tiên";
+      case "FirstPaymentPendingConfirm":
+        return "Chờ xác nhận thanh toán đầu tiên";
+      case "FirstPaymentSuccess":
+        return "Đã thanh toán đầu tiên";
+      case "DocumentRejectedByManager":
+        return "Hồ sơ bị từ chối bởi quản lý";
+      case "DocumentConfirmedByManager":
+        return "Hồ sơ được duyệt bởi quản lý";
+      case "DocumentRejectedByCustomer":
+        return "Hồ sơ bị từ chối bởi khách hàng";
+      case "DocumentConfirmedByCustomer":
+        return "Hồ sơ được duyệt bởi khách hàng";
+      case "AttachmentRejected":
+        return "Biên bản bị từ chối";
+      case "AttachmentConfirmed":
+        return "Biên bản được duyệt";
+      case "VerifyingOTPAttachment":
+        return "Đang xác thực OTP biên bản";
+      case "VerifiedOTPAttachment":
+        return "Đã xác thực OTP biên bản";
+      case "SecondPaymentPending":
+        return "Chờ thanh toán cuối cùng";
+      case "SecondPaymentPendingConfirm":
+        return "Chờ xác nhận thanh toán cuối cùng";
+      case "Completed":
+        return "Hoàn thành";
+      case "Canceled":
+        return "Đã hủy";
       default:
         return apiStatus || "Không xác định";
     }
   };
 
+  // Kiểm tra xem có thể tạo hồ sơ không
+  const canCreateDocument = (booking) => {
+    const status = booking?.rawData?.status;
+    return status === "FirstPaymentSuccess";
+  };
+
+  // Kiểm tra xem có thể tạo lại hồ sơ không
+  const canRecreateDocument = (booking) => {
+    const documentStatus = booking?.rawData?.document?.status;
+    return (
+      documentStatus === "CancelledByManager" ||
+      documentStatus === "CancelledByCustomer"
+    );
+  };
+
+  // Kiểm tra xem có thể tạo biên bản không
+  const canCreateAttachment = (booking) => {
+    const status = booking?.rawData?.status;
+    return status === "DocumentConfirmedByCustomer";
+  };
+
+  // Kiểm tra xem hồ sơ có đang trong quá trình xử lý không
+  const isDocumentProcessing = (booking) => {
+    const documentStatus = booking?.rawData?.document?.status;
+    return (
+      documentStatus === "Pending" || documentStatus === "ConfirmedByManager"
+    );
+  };
+
+  // Kiểm tra xem booking đã hoàn thành chưa
+  const isBookingCompleted = (booking) => {
+    const status = booking?.rawData?.status;
+    const documentStatus = booking?.rawData?.document?.status;
+    return status === "Completed" || documentStatus === "Success";
+  };
+
+  // Kiểm tra xem booking đã bị hủy chưa
+  const isBookingCanceled = (booking) => {
+    return booking?.rawData?.status === "Canceled";
+  };
+
   const mapStatusToApi = (uiStatus) => {
+    // Hàm này vẫn giữ nguyên vì nó không được sử dụng trong ngữ cảnh mới
     switch (uiStatus) {
       case "Đã lên lịch":
         return "Scheduled";
@@ -270,7 +348,14 @@ const ConsultingOffline = () => {
     }
   };
 
+  // Cập nhật getStatusColor để hỗ trợ các trạng thái mới
   const getStatusColor = (status) => {
+    if (status.includes("từ chối") || status.includes("hủy")) return "error";
+    if (status.includes("được duyệt") || status.includes("Xác thực"))
+      return "success";
+    if (status.includes("Chờ") || status.includes("Đang")) return "warning";
+    if (status.includes("Hoàn thành")) return "success";
+
     switch (status) {
       case "Đã lên lịch":
         return "blue";
@@ -282,6 +367,8 @@ const ConsultingOffline = () => {
         return "error";
       case "Chờ xử lý":
         return "default";
+      case "Đã thanh toán đầu tiên":
+        return "green";
       default:
         return "default";
     }
@@ -346,37 +433,78 @@ const ConsultingOffline = () => {
       dataIndex: "status",
       key: "status",
       width: "12%",
-      render: (status) => (
-        <Tag
-          color={getStatusColor(status)}
-          className="px-3 py-1 text-xs font-medium rounded-full"
-        >
-          {status}
-        </Tag>
-      ),
+      render: (status, record) => {
+        const apiStatus = record.rawData?.status || "Pending";
+        return (
+          <Tag
+            color={getStatusColor(status)}
+            className="px-3 py-1 text-xs font-medium rounded-full"
+          >
+            {status} {apiStatus !== status ? `(${apiStatus})` : ""}
+          </Tag>
+        );
+      },
     },
     {
       title: "Tạo mới",
       key: "action",
       width: "12%",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleOpenModal(record)}
-            className="px-3 py-1.5 bg-[#B4925A] text-white text-xs rounded-lg hover:bg-[#8B6B3D] transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
-          >
-            <span className="hidden sm:inline">Hồ sơ</span>
-            <span className="sm:hidden">Hồ sơ</span>
-          </button>
-          <button
-            onClick={() => handleCreateReport(record)}
-            className="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
-          >
-            <span className="hidden sm:inline">Biên bản</span>
-            <span className="sm:hidden">BB</span>
-          </button>
-        </div>
-      ),
+      render: (_, record) => {
+        return (
+          <div className="flex gap-2">
+            {canCreateDocument(record) && (
+              <button
+                onClick={() => handleOpenModal(record)}
+                className="px-3 py-1.5 bg-[#B4925A] text-white text-xs rounded-lg hover:bg-[#8B6B3D] transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
+              >
+                <span className="hidden sm:inline">Hồ sơ</span>
+                <span className="sm:hidden">Hồ sơ</span>
+              </button>
+            )}
+
+            {canRecreateDocument(record) && (
+              <button
+                onClick={() => handleOpenModal(record)}
+                className="px-3 py-1.5 bg-orange-500 text-white text-xs rounded-lg hover:bg-orange-600 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
+              >
+                <span className="hidden sm:inline">Tạo lại</span>
+                <span className="sm:hidden">Tạo lại</span>
+              </button>
+            )}
+
+            {isDocumentProcessing(record) && (
+              <span className="px-3 py-1.5 bg-gray-300 text-gray-600 text-xs rounded-lg shadow-sm flex items-center justify-center">
+                <span className="hidden sm:inline">Đang xử lý</span>
+                <span className="sm:hidden">Xử lý</span>
+              </span>
+            )}
+
+            {canCreateAttachment(record) && (
+              <button
+                onClick={() => handleCreateReport(record)}
+                className="px-3 py-1.5 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 transition-all duration-200 shadow-sm cursor-pointer flex items-center justify-center"
+              >
+                <span className="hidden sm:inline">Biên bản</span>
+                <span className="sm:hidden">BB</span>
+              </button>
+            )}
+
+            {isBookingCompleted(record) && (
+              <span className="px-3 py-1.5 bg-blue-500 text-white text-xs rounded-lg shadow-sm flex items-center justify-center">
+                <span className="hidden sm:inline">Hoàn thành</span>
+                <span className="sm:hidden">Hoàn thành</span>
+              </span>
+            )}
+
+            {isBookingCanceled(record) && (
+              <span className="px-3 py-1.5 bg-red-500 text-white text-xs rounded-lg shadow-sm flex items-center justify-center">
+                <span className="hidden sm:inline">Đã hủy</span>
+                <span className="sm:hidden">Hủy</span>
+              </span>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
