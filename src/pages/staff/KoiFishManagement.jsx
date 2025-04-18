@@ -769,9 +769,6 @@ const KoiFishManagement = () => {
             <CustomButton type="primary" onClick={handleOpenCreateModal}>
               Tạo mới loài cá Koi
             </CustomButton>
-            <CustomButton onClick={handleOpenColorModal}>
-              Quản lý màu sắc
-            </CustomButton>
           </div>
           <SearchBar
             placeholder="Tìm kiếm theo giống cá..."

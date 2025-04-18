@@ -101,6 +101,29 @@ const WorkshopForm = ({ form, loading, locations }) => {
     }
   };
 
+  const isTimeSlotDisabled = (slot) => {
+    if (!selectedDate || !masterSchedule.length) return false;
+
+    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
+    const scheduleOnDate = masterSchedule.filter(schedule => {
+      const scheduleDate = dayjs(schedule.date).format('YYYY-MM-DD');
+      return scheduleDate === selectedDateStr;
+    });
+
+    // Kiểm tra xem có lịch Offline không
+    const hasOfflineSchedule = scheduleOnDate.some(schedule => 
+      schedule.type === 'Offline' || schedule.isFullDay
+    );
+    if (hasOfflineSchedule) return true;
+
+    // Kiểm tra từng lịch để xác định slot có bị ảnh hưởng không
+    return scheduleOnDate.some(schedule => {
+      const affectedSlots = schedule.affectedTimeSlots || [];
+      const slotTime = timeSlots.find(t => t.value === slot.value)?.start;
+      return affectedSlots.includes(slotTime);
+    });
+  };
+
   const handleTimeSlotChange = (value) => {
     const selectedSlot = timeSlots.find(slot => slot.value === value);
     setSelectedTimeSlot(selectedSlot);
@@ -112,49 +135,19 @@ const WorkshopForm = ({ form, loading, locations }) => {
     }
   };
 
-  const isMorningSlot = (value) => ['1', '2'].includes(value);
-  const isAfternoonSlot = (value) => ['3', '4'].includes(value);
-
-  const isTimeSlotConflict = (slot) => {
-    if (!selectedDate || !masterSchedule.length) return false;
-
-    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
-    const scheduleOnDate = masterSchedule.filter(schedule => {
-      const scheduleDate = dayjs(schedule.date).format('YYYY-MM-DD');
-      return scheduleDate === selectedDateStr;
-    });
-
-    return scheduleOnDate.some(schedule => {
-      const scheduleStart = schedule.startTime?.substring(0, 5);
-      if (!scheduleStart) return false;
-      
-      // Kiểm tra xem khung giờ có trùng với lịch của master không
-      if (isMorningSlot(slot.value)) {
-        return ['07:00', '09:30'].includes(scheduleStart);
-      }
-      if (isAfternoonSlot(slot.value)) {
-        return ['12:30', '15:00'].includes(scheduleStart);
-      }
-      return false;
-    });
-  };
-
   const disableTimeSlot = (value) => {
     const slot = timeSlots.find(s => s.value === value);
     if (!slot) return false;
 
     // Kiểm tra xem có trùng với lịch của master không
-    if (isTimeSlotConflict(slot)) {
+    if (isTimeSlotDisabled(slot)) {
       return true;
     }
 
     // Nếu đã chọn một slot, vô hiệu hóa slot cùng buổi
     if (selectedTimeSlot) {
-      if (isMorningSlot(selectedTimeSlot.value) && isMorningSlot(value)) {
-        return value !== selectedTimeSlot.value;
-      }
-      if (isAfternoonSlot(selectedTimeSlot.value) && isAfternoonSlot(value)) {
-        return value !== selectedTimeSlot.value;
+      if (selectedTimeSlot.value === value) {
+        return false;
       }
     }
 
@@ -660,8 +653,9 @@ const Workshop = () => {
 
       // Gọi API tạo workshop
       const response = await createWorkshop(workshopData);
+      console.log("Response from createWorkshop:", response);
 
-      if (response && response.isSuccess) {
+      if (response.isSuccess) {
         message.success("Tạo mới hội thảo thành công!");
         handleCloseCreateModal();
         form.resetFields();
@@ -669,28 +663,40 @@ const Workshop = () => {
         await fetchWorkshops();
         await fetchPendingWorkshops();
       } else {
-        // Kiểm tra nếu là lỗi thời gian biểu đã tồn tại
-        if (response?.statusCode === 409) {
-          if (response?.message?.includes("địa điểm khác")) {
-            message.error("Bạn đã có một hội thảo với cùng ngày bắt đầu ở địa điểm khác");
-          } else {
-            message.error("Thời gian biểu đã tồn tại");
-          }
-        } else {
-          message.error(response?.message || "Có lỗi xảy ra khi tạo hội thảo");
-        }
+        // Hiển thị message lỗi trực tiếp từ backend
+        message.error(response.message || "Có lỗi xảy ra khi tạo hội thảo");
       }
     } catch (error) {
       console.error("Lỗi khi tạo hội thảo:", error);
-      // Kiểm tra nếu là lỗi thời gian biểu đã tồn tại
-      if (error.response?.status === 409) {
-        if (error.response?.data?.message?.includes("địa điểm khác")) {
-          message.error("Bạn đã có một hội thảo với cùng ngày bắt đầu ở địa điểm khác");
-        } else {
-          message.error("Thời gian biểu đã tồn tại");
+      
+      let errorMessage = "Có lỗi xảy ra khi tạo hội thảo";
+      
+      // Xử lý lỗi từ API Error object
+      if (error.message && typeof error.message === 'string') {
+        try {
+          // Kiểm tra xem message có phải là JSON string không
+          const errorObject = JSON.parse(error.message.substring(error.message.indexOf('{')));
+          if (errorObject && errorObject.message) {
+            errorMessage = errorObject.message;
+          }
+        } catch {
+          // Nếu không parse được JSON, sử dụng error message gốc
+          errorMessage = error.message;
         }
-      } else {
-        message.error("Có lỗi xảy ra khi tạo hội thảo");
+      }
+      
+      // Xử lý lỗi từ response data
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        errorMessage = errorData.message || errorMessage;
+      }
+
+      // Hiển thị message lỗi
+      message.error(errorMessage);
+      
+      // Xử lý redirect nếu là lỗi 401
+      if (error.response?.status === 401) {
+        navigate("/login");
       }
     } finally {
       setLoading(false);
