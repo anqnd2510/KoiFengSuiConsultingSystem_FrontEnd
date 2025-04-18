@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FaExclamationCircle, FaSync, FaEye, FaTimes } from "react-icons/fa";
-import { Tag, Button, Modal, Dropdown, Checkbox, Menu } from "antd";
+import { Tag, Button, Modal, Dropdown, Checkbox, Menu, Rate } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import CustomTable from "../../components/Common/CustomTable";
@@ -37,7 +37,7 @@ const CourseManagement = () => {
     paymentMethod: false,
     customerName: false,
     total: true,
-    rating: false,
+    rating: true,
     certificate: true,
     creator: true,
     status: true,
@@ -313,6 +313,19 @@ const CourseManagement = () => {
       render: (total) => `${total.toLocaleString()} đ`,
     },
     {
+      title: "ĐÁNH GIÁ",
+      dataIndex: "rating",
+      key: "rating",
+      render: (rating) => (
+        <div className="flex items-center">
+          <Rate disabled defaultValue={rating || 0} />
+          <span className="ml-2 text-gray-500">
+            {rating ? `(${rating})` : "Chưa có đánh giá"}
+          </span>
+        </div>
+      ),
+    },
+    {
       title: "NGƯỜI TẠO",
       dataIndex: "creator",
       key: "creator",
@@ -376,13 +389,6 @@ const CourseManagement = () => {
                 onSearch={handleSearch}
                 className="w-64 mr-2"
               />
-              <Button
-                icon={<FaSync />}
-                onClick={fetchCourses}
-                loading={loading}
-                className="ml-2"
-                title="Làm mới dữ liệu"
-              />
               <Dropdown overlay={columnMenu} trigger={["click"]}>
                 <Button
                   className="ml-2"
@@ -392,16 +398,15 @@ const CourseManagement = () => {
                   Hiển thị cột
                 </Button>
               </Dropdown>
+              <FilterBar
+                statusOptions={statusOptions}
+                onStatusChange={handleStatusFilterChange}
+                defaultValue="all"
+                placeholder="Trạng thái"
+                width="150px"
+                className="ml-2"
+              />
             </div>
-
-            <FilterBar
-              statusOptions={statusOptions}
-              onStatusChange={handleStatusFilterChange}
-              defaultValue="all"
-              placeholder="Trạng thái"
-              width="150px"
-              className="ml-auto"
-            />
           </div>
 
           {error && (
@@ -503,6 +508,15 @@ const CourseManagement = () => {
                     {selectedCourse.certificate ? "Có" : "Không"}
                   </Tag>
                 </p>
+              </div>
+              <div className="detail-item">
+                <p className="font-semibold">Đánh giá:</p>
+                <div className="flex items-center">
+                  <Rate disabled defaultValue={selectedCourse.rating || 0} />
+                  <span className="ml-2 text-gray-500">
+                    {selectedCourse.rating ? `(${selectedCourse.rating})` : "Chưa có đánh giá"}
+                  </span>
+                </div>
               </div>
               <div className="detail-item">
                 <p className="font-semibold">Người tạo:</p>

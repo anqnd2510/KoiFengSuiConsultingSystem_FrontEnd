@@ -28,6 +28,7 @@ import {
   importQuiz,
 } from "../../services/quiz.service";
 import { getAllCourses } from "../../services/course.service";
+import { Trash2 } from "lucide-react";
 
 const Quiz = () => {
   const { courseId } = useParams();
@@ -466,13 +467,12 @@ const Quiz = () => {
             Cập nhật
           </CustomButton>
           <CustomButton
-            type="primary"
+            type="text"
             danger
             size="small"
             onClick={() => handleDeleteQuiz(record)}
-            icon={<FaTrash size={14} />}
+            icon={<Trash2 size={16} />}
           >
-            Xóa
           </CustomButton>
         </div>
       ),
@@ -497,7 +497,7 @@ const Quiz = () => {
     <div className="min-h-screen bg-gray-50">
       <Header
         title="Quản lý bài kiểm tra"
-        description={`Danh sách các bài kiểm tra của khóa học ${courseId}`}
+        description={`Danh sách các bài kiểm tra của khóa học`}
       />
 
       <div className="p-4 md:p-6">

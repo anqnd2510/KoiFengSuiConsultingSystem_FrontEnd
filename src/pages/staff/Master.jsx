@@ -33,6 +33,7 @@ import {
   Clock,
   UploadCloud,
   Star,
+  Eye,
 } from "lucide-react";
 import CustomTable from "../../components/Common/CustomTable";
 import { getMasterList } from "../../services/master.service";
@@ -504,9 +505,10 @@ const Master = () => {
       render: (_, record) => (
         <Space size="middle">
           <CustomButton
-            type="default"
+            type="primary"
             size="small"
             onClick={() => handleOpenViewModal(record)}
+            icon={<Eye size={14} />}
             className="!bg-blue-500 hover:!bg-blue-600 !text-white"
           >
             Xem 
@@ -541,14 +543,9 @@ const Master = () => {
       <div className="p-6">
         <div className="bg-white rounded-lg shadow-sm">
           <div className="p-6">
-            <div className="flex flex-wrap justify-between items-center mb-4">
-              <div className="flex gap-2 mb-4">
-                <CustomButton type="primary" onClick={handleOpenCreateModal}>
-                  Thêm bậc thầy mới
-                </CustomButton>
-              </div>
+            <div className="flex flex-wrap justify-end items-center mb-4">
               <SearchBar
-                placeholder="Tìm kiếm theo tên, email, cấp bậc..."
+                placeholder="Tìm theo tên, email..."
                 onSearch={handleSearch}
                 className="w-64"
               />

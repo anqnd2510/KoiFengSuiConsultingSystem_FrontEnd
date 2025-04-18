@@ -19,12 +19,11 @@ import {
   Tag,
 } from "antd";
 import {
-  EditOutlined,
   DeleteOutlined,
   PlusOutlined,
-  EyeOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
+import { Eye, Edit } from "lucide-react";
 import Header from "../../components/Common/Header";
 import SearchBar from "../../components/Common/SearchBar";
 import Error from "../../components/Common/Error";
@@ -371,18 +370,21 @@ const ConsultationPackage = () => {
       render: (_, record) => (
         <Space size="small">
           <CustomButton
-            type="default"
+            type="primary"
             size="small"
+            icon={<Eye size={14} />}
             onClick={() => handleViewDetails(record)}
+            className="!bg-blue-500 hover:!bg-blue-600 !text-white"
           >
             Xem
           </CustomButton>
           <CustomButton
-            type="primary"
+            type="default"
             size="small"
+            icon={<Edit size={14} />}
             onClick={() => handleEdit(record)}
           >
-            Chỉnh sửa
+            Cập nhật
           </CustomButton>
         </Space>
       ),
