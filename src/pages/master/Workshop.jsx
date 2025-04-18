@@ -44,6 +44,7 @@ import {
   getPendingWorkshops,
   formatPendingWorkshopsData,
 } from "../../services/approve.service";
+import { getCurrentMasterSchedule } from "../../services/masterSchedule.service";
 import { isAuthenticated } from "../../services/auth.service";
 import { getAllLocations } from "../../services/location.service";
 import dayjs from "dayjs";
@@ -52,8 +53,114 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { TabPane } = Tabs;
 
+const timeSlots = [
+  { label: '7:00 - 9:15', value: '1', start: '07:00', end: '09:15' },
+  { label: '9:30 - 11:45', value: '2', start: '09:30', end: '11:45' },
+  { label: '12:30 - 14:45', value: '3', start: '12:30', end: '14:45' },
+  { label: '15:00 - 17:15', value: '4', start: '15:00', end: '17:15' },
+];
+
 // Component form cho workshop
 const WorkshopForm = ({ form, loading, locations }) => {
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [masterSchedule, setMasterSchedule] = useState([]);
+  const [loadingSchedule, setLoadingSchedule] = useState(false);
+
+  // Fetch lịch của master khi chọn ngày
+  const fetchMasterSchedule = async (date) => {
+    try {
+      setLoadingSchedule(true);
+      const response = await getCurrentMasterSchedule();
+      if (response && response.data) {
+        console.log("Lịch của master:", response.data);
+        setMasterSchedule(response.data);
+      } else {
+        setMasterSchedule([]);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy lịch của master:", error);
+      if (error.response?.status === 404) {
+        // Nếu không tìm thấy lịch, set mảng rỗng và không hiển thị lỗi
+        setMasterSchedule([]);
+      } else {
+        message.error("Không thể lấy lịch của master. Vui lòng thử lại sau.");
+      }
+    } finally {
+      setLoadingSchedule(false);
+    }
+  };
+
+  // Xử lý khi thay đổi ngày
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    form.setFieldValue('timeSlot', undefined);
+    setSelectedTimeSlot(null);
+    if (date) {
+      fetchMasterSchedule(date);
+    }
+  };
+
+  const handleTimeSlotChange = (value) => {
+    const selectedSlot = timeSlots.find(slot => slot.value === value);
+    setSelectedTimeSlot(selectedSlot);
+    if (selectedSlot) {
+      form.setFieldsValue({
+        startTime: dayjs(selectedSlot.start, 'HH:mm'),
+        endTime: dayjs(selectedSlot.end, 'HH:mm')
+      });
+    }
+  };
+
+  const isMorningSlot = (value) => ['1', '2'].includes(value);
+  const isAfternoonSlot = (value) => ['3', '4'].includes(value);
+
+  const isTimeSlotConflict = (slot) => {
+    if (!selectedDate || !masterSchedule.length) return false;
+
+    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
+    const scheduleOnDate = masterSchedule.filter(schedule => {
+      const scheduleDate = dayjs(schedule.date).format('YYYY-MM-DD');
+      return scheduleDate === selectedDateStr;
+    });
+
+    return scheduleOnDate.some(schedule => {
+      const scheduleStart = schedule.startTime?.substring(0, 5);
+      if (!scheduleStart) return false;
+      
+      // Kiểm tra xem khung giờ có trùng với lịch của master không
+      if (isMorningSlot(slot.value)) {
+        return ['07:00', '09:30'].includes(scheduleStart);
+      }
+      if (isAfternoonSlot(slot.value)) {
+        return ['12:30', '15:00'].includes(scheduleStart);
+      }
+      return false;
+    });
+  };
+
+  const disableTimeSlot = (value) => {
+    const slot = timeSlots.find(s => s.value === value);
+    if (!slot) return false;
+
+    // Kiểm tra xem có trùng với lịch của master không
+    if (isTimeSlotConflict(slot)) {
+      return true;
+    }
+
+    // Nếu đã chọn một slot, vô hiệu hóa slot cùng buổi
+    if (selectedTimeSlot) {
+      if (isMorningSlot(selectedTimeSlot.value) && isMorningSlot(value)) {
+        return value !== selectedTimeSlot.value;
+      }
+      if (isAfternoonSlot(selectedTimeSlot.value) && isAfternoonSlot(value)) {
+        return value !== selectedTimeSlot.value;
+      }
+    }
+
+    return false;
+  };
+
   return (
     <Form form={form} layout="vertical" disabled={loading}>
       <Form.Item
@@ -106,58 +213,44 @@ const WorkshopForm = ({ form, loading, locations }) => {
           format="DD/MM/YYYY"
           style={{ width: "100%" }}
           placeholder="Chọn ngày tổ chức"
+          onChange={handleDateChange}
+          disabledDate={(current) => {
+            return current && (
+              current.isBefore(dayjs(), 'day') || 
+              current.isBefore(dayjs().add(7, 'day'), 'day')
+            );
+          }}
+          className="bg-gray-50 hover:bg-white focus:bg-white transition-colors"
+          popupClassName="workshop-calendar"
         />
       </Form.Item>
 
-      <Row gutter={16}>
-        <Col span={12}>
-          <Form.Item
-            label="Giờ bắt đầu"
-            name="startTime"
-            rules={[
-              { required: true, message: "Vui lòng chọn giờ bắt đầu" }
-            ]}
-          >
-            <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ bắt đầu" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            label="Giờ kết thúc"
-            name="endTime"
-            dependencies={['startTime']}
-            rules={[
-              { required: true, message: "Vui lòng chọn giờ kết thúc" },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  const startTime = getFieldValue('startTime');
-                  if (!startTime || !value) {
-                    return Promise.resolve();
-                  }
-                  if (value.isBefore(startTime)) {
-                    return Promise.reject('Giờ kết thúc phải sau giờ bắt đầu');
-                  }
-                  
-                  // Tính khoảng cách thời gian bằng phút
-                  const durationInMinutes = value.diff(startTime, 'minutes');
-                  
-                  if (durationInMinutes < 30) {
-                    return Promise.reject('Thời gian hội thảo phải ít nhất 30 phút');
-                  }
-                  
-                  if (durationInMinutes > 180) {
-                    return Promise.reject('Thời gian hội thảo không được vượt quá 3 tiếng');
-                  }
-                  
-                  return Promise.resolve();
-                }
-              })
-            ]}
-          >
-            <TimePicker format="HH:mm" style={{ width: "100%" }} placeholder="Chọn giờ kết thúc" />
-          </Form.Item>
-        </Col>
-      </Row>
+      <Form.Item
+        label="Khung giờ"
+        name="timeSlot"
+        rules={[
+          { required: true, message: "Vui lòng chọn khung giờ" }
+        ]}
+      >
+        <Select
+          placeholder="Chọn khung giờ"
+          onChange={handleTimeSlotChange}
+          loading={loadingSchedule}
+          options={timeSlots.map(slot => ({
+            value: slot.value,
+            label: slot.label,
+            disabled: disableTimeSlot(slot)
+          }))}
+        />
+      </Form.Item>
+
+      {/* Hidden fields for actual time values */}
+      <Form.Item name="startTime" hidden>
+        <Input />
+      </Form.Item>
+      <Form.Item name="endTime" hidden>
+        <Input />
+      </Form.Item>
 
       <Row gutter={16}>
         <Col span={12}>
@@ -1065,6 +1158,34 @@ const Workshop = () => {
         }
         .workshop-modal .ant-modal-footer {
           border-top: 1px solid #f0f0f0;
+        }
+        
+        /* Style cho calendar */
+        .workshop-calendar .ant-picker-cell-disabled {
+          pointer-events: none;
+        }
+        
+        .workshop-calendar .ant-picker-cell-disabled .ant-picker-cell-inner {
+          background: rgba(0, 0, 0, 0) !important;
+          color: rgba(0, 0, 0, 0.25) !important;
+          border-radius: 2px;
+          position: relative;
+        }
+
+        .workshop-calendar .ant-picker-cell-disabled::before {
+          content: none !important;
+        }
+
+        /* Hover effect cho các ngày có thể chọn */
+        .workshop-calendar .ant-picker-cell:not(.ant-picker-cell-disabled):hover .ant-picker-cell-inner {
+          background: #e6f4ff !important;
+        }
+
+        /* Style cho ngày được chọn */
+        .workshop-calendar .ant-picker-cell-selected .ant-picker-cell-inner {
+          background: #1890ff !important;
+          color: white !important;
+          font-weight: bold;
         }
       `}</style>
     </div>

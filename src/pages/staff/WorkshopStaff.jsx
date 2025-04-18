@@ -220,13 +220,12 @@ const WorkshopStaff = () => {
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="flex flex-wrap justify-between items-center mb-4">
-            <div className="flex items-center">
-              <SearchBar
-                placeholder="Tìm workshop..."
-                onSearch={handleSearch}
-              />
-            </div>
+          <div className="flex flex-wrap justify-end items-center mb-4">
+            <SearchBar
+              placeholder="Tìm workshop..."
+              onSearch={handleSearch}
+              className="w-64"
+            />
           </div>
 
           {loading ? (
