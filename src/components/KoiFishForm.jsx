@@ -156,13 +156,17 @@ const KoiFishForm = ({
       <Row gutter={16}>
         <Col span={24}>
           <Form.Item
-            label={<span> Tên giống cá Koi</span>}
             name="breed"
+            label="Tên cá Koi"
             rules={[
-              { required: true, message: "Vui lòng nhập tên giống cá Koi" },
+              { required: true, message: "Vui lòng nhập tên cá Koi" },
+              {
+                pattern: /^[^0-9]+$/,
+                message: "Tên cá Koi không được chứa số"
+              }
             ]}
           >
-            <Input placeholder="Nhập tên giống cá" />
+            <Input placeholder="Nhập tên cá Koi" />
           </Form.Item>
         </Col>
       </Row>

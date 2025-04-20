@@ -114,6 +114,12 @@ export const createCourse = async (courseData) => {
       );
     }
 
+    // Kiểm tra trường introduction
+    if (!courseData.has("Introduction")) {
+      console.log("Không có trường Introduction, thêm giá trị mặc định");
+      courseData.append("Introduction", "");
+    }
+
     // Gửi request với FormData thay vì JSON
     const response = await axios.post(
       "http://localhost:5261/api/Course/create-course",
@@ -302,6 +308,33 @@ export const updateCourseStatus = async (courseId, status) => {
     return response.data;
   } catch (error) {
     console.error("Lỗi khi cập nhật trạng thái khóa học:", error);
+    throw error;
+  }
+};
+
+// Lấy chi tiết khóa học theo ID
+export const getCourseById = async (courseId) => {
+  try {
+    // Kiểm tra token đăng nhập
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    console.log("Gọi API để lấy chi tiết khóa học:", courseId);
+    const response = await apiClient.get(
+      `${COURSE_ENDPOINT}/get-course/${courseId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    console.log("API response:", response);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy chi tiết khóa học:", error);
     throw error;
   }
 };

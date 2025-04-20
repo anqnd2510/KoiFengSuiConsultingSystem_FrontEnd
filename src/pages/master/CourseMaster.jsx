@@ -37,6 +37,7 @@ import {
   updateCourse,
   getAllCoursesByMaster,
   updateCourseStatus,
+  getCourseById,
 } from "../../services/course.service";
 import { formatDate, formatPrice } from "../../utils/formatters";
 import {
@@ -123,6 +124,22 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
             )}
           </select>
         </div>
+      </Form.Item>
+
+      <Form.Item
+        label="Giới thiệu"
+        name="introduction"
+        rules={[
+          { required: true, message: "Vui lòng nhập giới thiệu khóa học" },
+          { whitespace: true, message: "Giới thiệu không được chỉ chứa khoảng trắng" },
+          { min: 20, message: "Giới thiệu phải có ít nhất 20 ký tự" },
+          { max: 500, message: "Giới thiệu không được vượt quá 500 ký tự" }
+        ]}
+      >
+        <TextArea
+          placeholder="Nhập giới thiệu ngắn gọn về khóa học"
+          autoSize={{ minRows: 2, maxRows: 4 }}
+        />
       </Form.Item>
 
       <Form.Item
@@ -422,6 +439,14 @@ const CourseMaster = () => {
         const mappedCourses = response.data.map((course) => {
           console.log("Processing course:", course);
           
+          // Debug trường introduction
+          console.log("Introduction fields:", {
+            introduction: course.introduction,
+            Introduction: course.Introduction,
+            intro: course.intro,
+            courseIntroduction: course.courseIntroduction
+          });
+          
           // Kiểm tra và xử lý trường status
           let courseStatus = "Inactive"; // Giá trị mặc định
           
@@ -525,6 +550,19 @@ const CourseMaster = () => {
 
           console.log("Final image URL for course:", course.courseName, "->", imageUrl);
 
+          // Xử lý trường introduction
+          let introduction = "Chưa có giới thiệu";
+          if (course.introduction && course.introduction !== "undefined") {
+            introduction = course.introduction;
+          } else if (course.Introduction && course.Introduction !== "undefined") {
+            introduction = course.Introduction;
+          } else if (course.intro && course.intro !== "undefined") {
+            introduction = course.intro;
+          } else if (course.courseIntroduction && course.courseIntroduction !== "undefined") {
+            introduction = course.courseIntroduction;
+          }
+          console.log("Final introduction value:", introduction);
+
           return {
             id: course.courseId || course.id || "N/A",
             name: course.courseName || "N/A",
@@ -535,6 +573,7 @@ const CourseMaster = () => {
             createdAt: course.createAt || "N/A",
             status: courseStatus,
             description: course.description || "N/A",
+            introduction: introduction,
             learningObjectives: course.learningObjectives || "N/A",
             videoUrl: course.videoUrl || "",
             image: imageUrl || "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh",
@@ -741,7 +780,8 @@ const CourseMaster = () => {
         !values.courseName ||
         !values.courseCategory ||
         !values.description ||
-        !values.price
+        !values.price ||
+        !values.introduction
       ) {
         message.error("Vui lòng điền đầy đủ thông tin khóa học");
         setLoading(false);
@@ -759,33 +799,29 @@ const CourseMaster = () => {
       );
 
       if (!selectedCategory) {
-        console.warn("Selected category ID not found in categories list:", values.courseCategory);
+        console.error("Invalid category:", values.courseCategory, "Available categories:", courseCategories);
         message.warning("Loại khóa học không hợp lệ. Vui lòng chọn lại.");
         setLoading(false);
         return;
       }
 
-      // Tạo FormData để gửi dữ liệu và file
+      // Tạo FormData để gửi dữ liệu
       const formData = new FormData();
       formData.append("CourseName", values.courseName.trim());
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
+      formData.append("Introduction", values.introduction.trim());
       formData.append("Price", Number(values.price));
 
-      // Xử lý file hình ảnh nếu có
-      if (values.image && values.image.length > 0) {
-        const imageFile = values.image[0].originFileObj;
-        console.log("Đính kèm file hình ảnh:", imageFile.name);
-        formData.append("ImageUrl", imageFile);
+      // Xử lý hình ảnh
+      if (values.image && values.image[0]?.originFileObj) {
+        formData.append("ImageUrl", values.image[0].originFileObj);
       }
 
-      // Log FormData để debug
-      console.log("Sending course data:");
-      for (let [key, value] of formData.entries()) {
-        console.log(
-          key + ":",
-          value instanceof File ? `File: ${value.name}` : value
-        );
+      // Log FormData để kiểm tra
+      console.log("FormData entries before API call:");
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ": " + pair[1]);
       }
 
       const response = await createCourse(formData);
@@ -829,29 +865,46 @@ const CourseMaster = () => {
     });
   };
 
-  const handleViewCourse = (course) => {
-    console.log("Viewing course details:", course);
-    
-    // Tìm dữ liệu gốc từ API response
-    let rawCourseData = null;
-    if (rawData && rawData.data && Array.isArray(rawData.data)) {
-      rawCourseData = rawData.data.find(c => 
-        c.courseId === course.id || c.id === course.id);
+  const handleViewCourse = async (course) => {
+    try {
+      console.log("Viewing course details:", course);
       
-      if (rawCourseData) {
-        console.log("Found raw course data from API:", rawCourseData);
+      // Gọi API để lấy chi tiết khóa học
+      const response = await getCourseById(course.id);
+      console.log("Course detail API response:", response);
+
+      if (response && response.isSuccess) {
+        const courseData = response.data;
+        
+        // Tạo object với thông tin chi tiết từ API
+        const courseWithFullData = {
+          id: courseData.courseId || courseData.id,
+          name: courseData.courseName,
+          categoryName: courseData.categoryName || course.categoryName,
+          categoryId: courseData.categoryId || course.categoryId,
+          price: courseData.price,
+          date: courseData.createAt,
+          status: courseData.status,
+          description: courseData.description,
+          introduction: courseData.introduction || "Chưa có giới thiệu",
+          learningObjectives: courseData.learningObjectives,
+          videoUrl: courseData.videoUrl,
+          image: courseData.imageUrl || courseData.image || "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh",
+          creator: courseData.createBy || courseData.createdBy || "N/A",
+          certificate: courseData.certificateId ? true : false,
+          quizId: courseData.quizId
+        };
+
+        console.log("Setting selected course with:", courseWithFullData);
+        setSelectedCourse(courseWithFullData);
+        setIsViewModalOpen(true);
+      } else {
+        message.error("Không thể tải thông tin chi tiết khóa học");
       }
+    } catch (error) {
+      console.error("Error fetching course details:", error);
+      message.error("Có lỗi xảy ra khi tải thông tin khóa học");
     }
-    
-    // Tạo object mới với thông tin từ cả state và API gốc
-    const courseWithFullData = {
-      ...course,
-      imageUrl: rawCourseData?.imageUrl,  // Thêm trường imageUrl
-    };
-    
-    console.log("Setting selected course with:", courseWithFullData);
-    setSelectedCourse(courseWithFullData);
-    setIsViewModalOpen(true);
   };
 
   const handleCloseViewModal = () => {
@@ -859,34 +912,70 @@ const CourseMaster = () => {
     setSelectedCourse(null);
   };
 
-  const handleUpdateCourse = (record) => {
-    console.log("Updating course:", record);
-    setSelectedCourse(record);
-    setIsEditMode(true);
+  const handleUpdateCourse = async (record) => {
+    try {
+      console.log("Updating course:", record);
+      
+      // Gọi API để lấy thông tin chi tiết khóa học
+      const response = await getCourseById(record.id);
+      console.log("Course detail API response:", response);
 
-    // Log để debug
-    console.log("Course category data for update:", {
-      categoryId: record.categoryId,
-      categoryName: record.categoryName
-    });
+      if (response && response.isSuccess) {
+        const courseData = response.data;
+        
+        // Tạo object với thông tin chi tiết từ API
+        const courseWithFullData = {
+          id: courseData.courseId || courseData.id,
+          name: courseData.courseName,
+          categoryName: courseData.categoryName || record.categoryName,
+          categoryId: courseData.categoryId || record.categoryId,
+          price: courseData.price,
+          date: courseData.createAt,
+          status: courseData.status,
+          description: courseData.description,
+          introduction: courseData.introduction || "Chưa có giới thiệu",
+          learningObjectives: courseData.learningObjectives,
+          videoUrl: courseData.videoUrl,
+          image: courseData.imageUrl || courseData.image || "https://via.placeholder.com/640x360?text=Không+có+hình+ảnh",
+          creator: courseData.createBy || courseData.createdBy || "N/A",
+          certificate: courseData.certificateId ? true : false,
+          quizId: courseData.quizId
+        };
 
-    // Thiết lập giá trị cho form
-    updateForm.setFieldsValue({
-      courseName: record.name,
-      courseCategory: record.categoryId,  // Set giá trị categoryId cũ
-      price: record.price,
-      description: record.description,
-      image: record.image ? [
-        {
-          uid: '-1',
-          name: 'current-image.jpg',
-          status: 'done',
-          url: record.image
-        }
-      ] : []
-    });
+        setSelectedCourse(courseWithFullData);
+        setIsEditMode(true);
 
-    setIsUpdateModalOpen(true);
+        // Log để debug
+        console.log("Course category data for update:", {
+          categoryId: courseWithFullData.categoryId,
+          categoryName: courseWithFullData.categoryName
+        });
+
+        // Thiết lập giá trị cho form
+        updateForm.setFieldsValue({
+          courseName: courseWithFullData.name,
+          courseCategory: courseWithFullData.categoryId,
+          price: courseWithFullData.price,
+          description: courseWithFullData.description,
+          introduction: courseWithFullData.introduction,
+          image: courseWithFullData.image ? [
+            {
+              uid: '-1',
+              name: 'current-image.jpg',
+              status: 'done',
+              url: courseWithFullData.image
+            }
+          ] : []
+        });
+
+        setIsUpdateModalOpen(true);
+      } else {
+        message.error("Không thể tải thông tin chi tiết khóa học");
+      }
+    } catch (error) {
+      console.error("Error fetching course details for update:", error);
+      message.error("Có lỗi xảy ra khi tải thông tin khóa học");
+    }
   };
 
   const handleCloseUpdateModal = () => {
@@ -901,7 +990,7 @@ const CourseMaster = () => {
       setLoading(true);
 
       // Kiểm tra các trường bắt buộc
-      if (!values.courseName || !values.courseCategory || !values.description || !values.price) {
+      if (!values.courseName || !values.courseCategory || !values.description || !values.price || !values.introduction) {
         message.error("Vui lòng điền đầy đủ thông tin khóa học");
         setLoading(false);
         return;
@@ -925,6 +1014,7 @@ const CourseMaster = () => {
       formData.append("CourseName", values.courseName.trim());
       formData.append("CourseCategory", values.courseCategory);
       formData.append("Description", values.description.trim());
+      formData.append("Introduction", values.introduction.trim());
       formData.append("Price", Number(values.price));
 
       // Xử lý hình ảnh
@@ -1538,71 +1628,82 @@ const CourseMaster = () => {
                     </div>
                   )}
                 </div>
-
-                <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                  <h3 className="text-lg font-semibold mb-2">
-                    Thông tin chung
-                  </h3>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <Book className="text-gray-500 w-5 h-5" />
-                      <span className="text-gray-700">
-                        Mã khóa học: {selectedCourse.id}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="text-gray-500 w-5 h-5" />
-                      <span className="text-gray-700">
-                        Ngày tạo: {formatDate(selectedCourse.createdAt)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="text-gray-500 w-5 h-5" />
-                      <span className="text-gray-700">
-                        Giá: {formatPrice(selectedCourse.price)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Award className="text-gray-500 w-5 h-5" />
-                      <span className="text-gray-700">
-                        Chứng chỉ: {selectedCourse.certificate ? "Có" : "Không"}
+              </Col>
+              <Col xs={24} md={12}>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">
+                      {selectedCourse.name || selectedCourse.courseName}
+                    </h3>
+                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {selectedCourse.date
+                          ? new Date(selectedCourse.date).toLocaleDateString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              }
+                            )
+                          : "Chưa có ngày"}
                       </span>
                     </div>
                   </div>
-                </div>
-              </Col>
 
-              <Col xs={24} md={12}>
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold mb-1">
-                    {selectedCourse.name}
-                  </h2>
-                  <Tag
-                    color={getStatusColor(selectedCourse.status)}
-                    className="mb-4"
-                  >
-                    {selectedCourse.status}
-                  </Tag>
-                </div>
-
-                <Divider orientation="left">Mô tả</Divider>
-                <p className="text-gray-700 mb-6">
-                  {selectedCourse.description}
-                </p>
-
-                {selectedCourse.videoUrl && (
-                  <>
-                    <Divider orientation="left">Video</Divider>
-                    <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden">
-                      <iframe
-                        src={selectedCourse.videoUrl}
-                        title={selectedCourse.name}
-                        className="w-full h-full"
-                        allowFullScreen
-                      ></iframe>
+                  <div>
+                    <label className="text-gray-600 font-medium">Loại khóa học</label>
+                    <div className="mt-1">
+                      <Tag color="blue">
+                        {selectedCourse.categoryName ||
+                          getCategoryName(selectedCourse.categoryId)}
+                      </Tag>
                     </div>
-                  </>
-                )}
+                  </div>
+
+                  <div>
+                    <label className="text-gray-600 font-medium">Giới thiệu</label>
+                    <p className="mt-1 text-gray-800">
+                      {selectedCourse.introduction || "Chưa có giới thiệu"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-600 font-medium">Mô tả</label>
+                    <p className="mt-1 text-gray-800">
+                      {selectedCourse.description || "Chưa có mô tả"}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-600 font-medium">Giá</label>
+                    <div className="mt-1 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      <span className="text-lg font-semibold text-green-600">
+                        {selectedCourse.price?.toLocaleString()} đ
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-600 font-medium">Trạng thái</label>
+                    <div className="mt-1">
+                      <Tag color={getStatusColor(selectedCourse.status)}>
+                        {selectedCourse.status}
+                      </Tag>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-gray-600 font-medium">Chứng chỉ</label>
+                    <div className="mt-1">
+                      <Tag color={selectedCourse.certificate ? "success" : "default"}>
+                        {selectedCourse.certificate ? "Có" : "Không"}
+                      </Tag>
+                    </div>
+                  </div>
+                </div>
               </Col>
             </Row>
 
