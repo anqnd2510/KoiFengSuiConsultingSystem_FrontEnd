@@ -646,7 +646,7 @@ const ConsultationPackage = () => {
                 )}
               </Upload>
 
-              {imageUrl && (
+              {imageUrl ? (
                 <div className="mt-2">
                   <p className="text-gray-600 text-sm">Hình ảnh đã chọn:</p>
                   <img
@@ -655,15 +655,26 @@ const ConsultationPackage = () => {
                     className="mt-1 h-20 object-cover rounded"
                     onError={(e) => {
                       console.error("Lỗi tải hình ảnh preview:", e);
-                      e.target.src =
-                        "https://placehold.co/200x100?text=Không+tải+được+ảnh";
-                      message.warning(
-                        "Không thể hiển thị hình ảnh, nhưng bạn vẫn có thể tải lên hình mới"
-                      );
+                      e.target.src = "https://placehold.co/200x100?text=Không+tải+được+ảnh";
+                      message.warning("Không thể hiển thị hình ảnh, nhưng bạn vẫn có thể tải lên hình mới");
                     }}
                   />
                 </div>
-              )}
+              ) : isEditMode && currentPackage?.imageUrl ? (
+                <div className="mt-2">
+                  <p className="text-gray-600 text-sm">Hình ảnh hiện tại:</p>
+                  <img
+                    src={currentPackage.imageUrl}
+                    alt={currentPackage.packageName}
+                    className="mt-1 h-20 object-cover rounded"
+                    onError={(e) => {
+                      console.error("Lỗi tải hình ảnh hiện tại:", e);
+                      e.target.src = "https://placehold.co/200x100?text=Không+tải+được+ảnh";
+                      message.warning("Không thể hiển thị hình ảnh hiện tại");
+                    }}
+                  />
+                </div>
+              ) : null}
             </div>
           </Form.Item>
         </Form>

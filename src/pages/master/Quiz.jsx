@@ -29,6 +29,7 @@ import {
 } from "../../services/quiz.service";
 import { getAllCourses } from "../../services/course.service";
 import { Trash2 } from "lucide-react";
+import { Book } from "lucide-react";
 
 const Quiz = () => {
   const { courseId } = useParams();
@@ -511,6 +512,14 @@ const Quiz = () => {
           <div className="flex gap-2">
             <CustomButton
               type="default"
+              onClick={() => navigate(`/master/course-chapters/${courseId}`)}
+              icon={<Book size={14} />}
+              className="mr-2"
+            >
+              Xem chương
+            </CustomButton>
+            <CustomButton
+              type="default"
               onClick={handleOpenImportModal}
               icon={<FaFileExcel size={14} />}
               className="bg-green-500 hover:bg-green-600 text-white"
@@ -713,8 +722,11 @@ const Quiz = () => {
                 {
                   validator: async (_, value) => {
                     if (value) {
-                      const trimmedValue = value.trim();
-                      if (/^\d+$/.test(trimmedValue)) {
+                      const specialChars = /[!@#$%^&*()_+\=\[\]{};':"\\|,.<>?~]/;
+                      if (specialChars.test(value)) {
+                        return Promise.reject('Tiêu đề không được chứa ký tự đặc biệt');
+                      }
+                      if (/^\d+$/.test(value.trim())) {
                         return Promise.reject('Tiêu đề không được chỉ chứa số');
                       }
                     }
@@ -763,9 +775,28 @@ const Quiz = () => {
             <Form.Item
               name="title"
               label="Tiêu đề bài kiểm tra"
-              rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
+              rules={[
+                { required: true, message: "Vui lòng nhập tiêu đề" },
+                { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng" },
+                { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
+                { max: 200, message: "Tiêu đề không được vượt quá 200 ký tự" },
+                {
+                  validator: async (_, value) => {
+                    if (value) {
+                      const specialChars = /[!@#$%^&*()_+\=\[\]{};':"\\|,.<>?~]/;
+                      if (specialChars.test(value)) {
+                        return Promise.reject('Tiêu đề không được chứa ký tự đặc biệt');
+                      }
+                      if (/^\d+$/.test(value.trim())) {
+                        return Promise.reject('Tiêu đề không được chỉ chứa số');
+                      }
+                    }
+                    return Promise.resolve();
+                  }
+                }
+              ]}
             >
-              <Input placeholder="Nhập tiêu đề bài kiểm tra" />
+              <Input placeholder="Nhập tiêu đề bài kiểm tra" maxLength={200} />
             </Form.Item>
 
             <div className="flex justify-end gap-3 mt-6">

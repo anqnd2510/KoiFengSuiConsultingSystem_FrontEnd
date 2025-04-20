@@ -37,6 +37,8 @@ const Category = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [imageFile, setImageFile] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
 
   useEffect(() => {
     fetchCategories();
@@ -129,11 +131,10 @@ const Category = () => {
 
       if (response && response.isSuccess) {
         setSelectedCategory(response.data);
-
-        // Set giá trị cho form từ dữ liệu hiện tại
+        setImageUrl(response.data.imageUrl || '');
+        
         form.setFieldsValue({
           categoryName: response.data.categoryName,
-          // Không set image, người dùng sẽ chọn lại nếu muốn thay đổi
         });
 
         setIsEditModalOpen(true);
@@ -148,55 +149,15 @@ const Category = () => {
     }
   };
 
-  // Hàm xử lý thay đổi trạng thái category
-  const handleStatusChange = (categoryId, checked) => {
-    // Hiển thị modal xác nhận trước khi thay đổi
-    Modal.confirm({
-      title: "Xác nhận thay đổi",
-      content: "Bạn chắc chắn muốn đổi trạng thái?",
-      okText: "Đồng ý",
-      cancelText: "Hủy",
-      onOk: async () => {
-        try {
-          const newStatus = checked ? "Active" : "Inactive";
-
-          // Gọi API cập nhật trạng thái
-          const response = await updateCategoryStatus(categoryId, newStatus);
-
-          if (response && response.isSuccess) {
-            message.success("Cập nhật trạng thái thành công!");
-
-            // Cập nhật state local
-            setCategories((prevCategories) =>
-              prevCategories.map((category) =>
-                category.id === categoryId
-                  ? { ...category, status: newStatus }
-                  : category
-              )
-            );
-          } else {
-            message.error(response?.message || "Không thể cập nhật trạng thái");
-            // Nếu thất bại, đặt lại trạng thái switch
-            setTimeout(() => {
-              setCategories((prevCategories) => [...prevCategories]);
-            }, 0);
-          }
-        } catch (error) {
-          console.error("Lỗi khi cập nhật trạng thái:", error);
-          message.error("Có lỗi xảy ra khi cập nhật trạng thái");
-          // Nếu có lỗi, đặt lại trạng thái switch
-          setTimeout(() => {
-            setCategories((prevCategories) => [...prevCategories]);
-          }, 0);
-        }
-      },
-      onCancel() {
-        // Nếu người dùng hủy, đặt lại trạng thái switch
-        setTimeout(() => {
-          setCategories((prevCategories) => [...prevCategories]);
-        }, 0);
-      },
-    });
+  const handleImageChange = ({ fileList }) => {
+    if (fileList.length > 0) {
+      setImageFile(fileList[0].originFileObj);
+      const url = URL.createObjectURL(fileList[0].originFileObj);
+      setImageUrl(url);
+    } else {
+      setImageFile(null);
+      setImageUrl(selectedCategory?.imageUrl || '');
+    }
   };
 
   const handleEditCategory = async () => {
@@ -214,22 +175,23 @@ const Category = () => {
         throw new Error("Thiếu ID danh mục. Vui lòng tải lại trang và thử lại.");
       }
 
-      const categoryData = {
-        categoryName: values.categoryName.trim(),
-        currentImageUrl: selectedCategory.imageUrl // Thêm đường dẫn hình ảnh hiện tại
-      };
+      const formData = new FormData();
+      formData.append('categoryName', values.categoryName.trim());
 
-      if (values.image && values.image.length > 0) {
-        const imageFile = values.image[0].originFileObj;
-        categoryData.imageFile = imageFile;
+      if (imageFile) {
+        formData.append('imageFile', imageFile);
+      } else if (imageUrl && imageUrl === selectedCategory.imageUrl) {
+        formData.append('currentImageUrl', imageUrl);
       }
 
-      const response = await updateCategory(selectedCategory.categoryId, categoryData);
+      const response = await updateCategory(selectedCategory.categoryId, formData);
 
       if (response && response.isSuccess) {
         message.success("Cập nhật loại khóa học thành công!");
         setIsEditModalOpen(false);
         form.resetFields();
+        setImageFile(null);
+        setImageUrl('');
         fetchCategories();
       } else {
         throw new Error(response?.message || "Không thể cập nhật loại khóa học");
@@ -242,6 +204,50 @@ const Category = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStatusChange = (categoryId, checked) => {
+    Modal.confirm({
+      title: "Xác nhận thay đổi",
+      content: "Bạn chắc chắn muốn đổi trạng thái?",
+      okText: "Đồng ý",
+      cancelText: "Hủy",
+      onOk: async () => {
+        try {
+          const newStatus = checked ? "Active" : "Inactive";
+
+          const response = await updateCategoryStatus(categoryId, newStatus);
+
+          if (response && response.isSuccess) {
+            message.success("Cập nhật trạng thái thành công!");
+
+            setCategories((prevCategories) =>
+              prevCategories.map((category) =>
+                category.id === categoryId
+                  ? { ...category, status: newStatus }
+                  : category
+              )
+            );
+          } else {
+            message.error(response?.message || "Không thể cập nhật trạng thái");
+            setTimeout(() => {
+              setCategories((prevCategories) => [...prevCategories]);
+            }, 0);
+          }
+        } catch (error) {
+          console.error("Lỗi khi cập nhật trạng thái:", error);
+          message.error("Có lỗi xảy ra khi cập nhật trạng thái");
+          setTimeout(() => {
+            setCategories((prevCategories) => [...prevCategories]);
+          }, 0);
+        }
+      },
+      onCancel() {
+        setTimeout(() => {
+          setCategories((prevCategories) => [...prevCategories]);
+        }, 0);
+      },
+    });
   };
 
   const columns = [
@@ -353,7 +359,6 @@ const Category = () => {
         />
       </div>
 
-      {/* Modal tạo loại khóa học mới */}
       <Modal
         title="Tạo loại khóa học mới"
         open={isCreateModalOpen}
@@ -441,7 +446,6 @@ const Category = () => {
         </Form>
       </Modal>
 
-      {/* Modal xem chi tiết */}
       <Modal
         title="Chi tiết loại khóa học"
         open={isViewModalOpen}
@@ -464,7 +468,6 @@ const Category = () => {
       >
         {selectedCategory && (
           <div className="space-y-6">
-            {/* Thêm phần hiển thị hình ảnh */}
             <div className="rounded-lg overflow-hidden h-64 bg-gray-100 mb-4">
               {selectedCategory.imageUrl ? (
                 <img
@@ -503,7 +506,6 @@ const Category = () => {
         )}
       </Modal>
 
-      {/* Modal cập nhật loại khóa học */}
       <Modal
         title="Cập nhật loại khóa học"
         open={isEditModalOpen}
@@ -557,22 +559,6 @@ const Category = () => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
-            rules={[
-              {
-                validator: async (_, fileList) => {
-                  if (fileList && fileList.length > 0) {
-                    const file = fileList[0].originFileObj;
-                    if (file.size > 2 * 1024 * 1024) {
-                      throw new Error('Kích thước ảnh không được vượt quá 2MB');
-                    }
-                    const isImage = file.type.startsWith('image/');
-                    if (!isImage) {
-                      throw new Error('Chỉ chấp nhận file ảnh');
-                    }
-                  }
-                }
-              }
-            ]}
           >
             <div className="mt-2">
               <Upload
@@ -580,18 +566,15 @@ const Category = () => {
                 maxCount={1}
                 beforeUpload={() => false}
                 accept="image/*"
-                onChange={(info) => {
-                  console.log("File changed:", info.fileList);
-                  if (info.fileList.length > 0) {
-                    form.setFieldsValue({
-                      image: info.fileList,
-                    });
-                  } else {
-                    form.setFieldsValue({
-                      image: [],
-                    });
-                  }
-                }}
+                onChange={handleImageChange}
+                fileList={imageUrl ? [
+                  {
+                    uid: '-1',
+                    name: 'image.png',
+                    status: 'done',
+                    url: imageUrl,
+                  },
+                ] : []}
               >
                 <div className="flex flex-col items-center">
                   <UploadCloud className="w-6 h-6 text-gray-400" />
@@ -599,13 +582,12 @@ const Category = () => {
                 </div>
               </Upload>
 
-              {/* Hiển thị hình ảnh hiện tại nếu có */}
-              {selectedCategory && selectedCategory.imageUrl && !form.getFieldValue('image')?.length && (
-                <div className="mt-4">
+              {imageUrl && (
+                <div className="mt-2">
                   <p className="text-gray-600 text-sm mb-2">Hình ảnh hiện tại:</p>
                   <img
-                    src={selectedCategory.imageUrl}
-                    alt={selectedCategory.categoryName}
+                    src={imageUrl}
+                    alt="Preview"
                     className="max-h-[200px] object-contain rounded border p-2"
                     onError={(e) => {
                       console.error("Lỗi tải hình ảnh:", e);
