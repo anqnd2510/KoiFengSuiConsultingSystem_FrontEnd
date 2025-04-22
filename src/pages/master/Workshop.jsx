@@ -417,8 +417,14 @@ const Workshop = () => {
   const fetchWorkshops = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
       const data = await getAllWorkshops();
       console.log("Dữ liệu gốc từ getAllWorkshops:", data);
+
+      if (!data || !Array.isArray(data)) {
+        throw new Error("Dữ liệu không hợp lệ từ API");
+      }
 
       const formattedData = formatWorkshopsData(data);
       console.log("Dữ liệu đã format từ getAllWorkshops:", formattedData);
@@ -439,14 +445,17 @@ const Workshop = () => {
       setWorkshops(approved);
       setOriginalWorkshops(approved);
       setTotalPages(Math.ceil(approved.length / 10));
-      setError(null);
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
+      setError(err.message);
+      
       if (err.message.includes("đăng nhập")) {
-        message.error(err.message);
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         navigate("/login");
         return;
       }
+      
+     
       setWorkshops([]);
     } finally {
       setLoading(false);
@@ -458,18 +467,25 @@ const Workshop = () => {
     try {
       setLoading(true);
       const data = await getPendingWorkshops();
+      
+      if (!data || !Array.isArray(data)) {
+        throw new Error("Dữ liệu không hợp lệ từ API");
+      }
+
       const formattedData = formatPendingWorkshopsData(data);
       setPendingWorkshops(formattedData);
       setOriginalPendingWorkshops(formattedData);
       setPendingTotalPages(Math.ceil(formattedData.length / 10));
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
+      
       if (err.message.includes("đăng nhập")) {
-        message.error(err.message);
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         navigate("/login");
         return;
       }
-      message.error("Không thể tải danh sách hội thảo chờ phê duyệt. Vui lòng thử lại sau.");
+      
+      setPendingWorkshops([]);
     } finally {
       setLoading(false);
     }
