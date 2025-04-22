@@ -27,7 +27,7 @@ export const getCurrentMasterSchedule = async () => {
     console.log("Master schedule response:", response.data);
     return response.data;
   } catch (error) {
-    console.error("Error fetching master schedule:", error);
+    //console.error("Error fetching master schedule:", error);
     throw error;
   }
 };
