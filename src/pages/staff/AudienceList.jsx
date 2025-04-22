@@ -232,22 +232,40 @@ const AudienceList = () => {
       width: "15%",
     },
     {
-      title: "Tên người tham dự",
-      dataIndex: "attendName",
-      key: "attendName",
-      width: "20%",
+      title: "Khách hàng",
+      dataIndex: "customerId",
+      key: "customerId",
+      width: "25%",
+      sorter: {
+        compare: (a, b) => {
+          // Tách tên thành các phần
+          const aNames = a.customerId.trim().split(' ');
+          const bNames = b.customerId.trim().split(' ');
+          
+          // Lấy tên (phần cuối cùng)
+          const aFirstName = aNames[aNames.length - 1];
+          const bFirstName = bNames[bNames.length - 1];
+          
+          // So sánh tên trước
+          const firstNameComparison = aFirstName.localeCompare(bFirstName, 'vi');
+          
+          // Nếu tên giống nhau, so sánh toàn bộ tên đầy đủ
+          if (firstNameComparison === 0) {
+            return a.customerId.localeCompare(b.customerId, 'vi');
+          }
+          
+          return firstNameComparison;
+        },
+        multiple: 1
+      },
+      showSorterTooltip: false,
     },
     {
       title: "Số điện thoại",
       dataIndex: "phoneNumber",
       key: "phoneNumber",
       width: "15%",
-    },
-    {
-      title: "Khách hàng",
-      dataIndex: "customerId",
-      key: "customerId",
-      width: "20%",
+      
     },
     {
       title: "Trạng thái",
@@ -262,35 +280,91 @@ const AudienceList = () => {
       title: "Hành động",
       key: "action",
       width: "15%",
-      render: (_, record) =>
-        record.status !== "Confirmed" && record.status !== "CheckedIn" ? (
-          <Popconfirm
-            title="Điểm danh người tham dự"
-            description={`Bạn có chắc muốn điểm danh cho ${record.attendName}?`}
-            onConfirm={() => handleCheckIn(record)}
-            okText="Có"
-            cancelText="Không"
-            icon={<QuestionCircleOutlined style={{ color: "green" }} />}
-          >
+      render: (_, record) => {
+        // Chuyển đổi ngày workshop và ngày hiện tại sang cùng định dạng để so sánh
+        const workshopDate = workshop.date ? new Date(workshop.date.split('/').reverse().join('-')) : null;
+        const today = new Date();
+        
+        // Reset giờ, phút, giây để chỉ so sánh ngày
+        if (workshopDate) {
+          workshopDate.setHours(0, 0, 0, 0);
+        }
+        today.setHours(0, 0, 0, 0);
+
+        // Kiểm tra các điều kiện
+        const isWorkshopPassed = workshopDate && workshopDate < today;
+        const isWorkshopToday = workshopDate && workshopDate.getTime() === today.getTime();
+        const isWorkshopFuture = workshopDate && workshopDate > today;
+
+        // Nếu workshop đã diễn ra trong quá khứ
+        if (isWorkshopPassed) {
+          return (
             <Button
               type="primary"
               icon={<CheckCircleOutlined />}
               size="small"
-              loading={checkingIn}
+              disabled
+              style={{ opacity: 0.5 }}
             >
-              Điểm danh
+              Đã kết thúc
             </Button>
-          </Popconfirm>
-        ) : (
-          <Button
-            type="primary"
-            icon={<CheckCircleOutlined />}
-            size="small"
-            disabled
-          >
-            Đã điểm danh
-          </Button>
-        ),
+          );
+        }
+
+        // Nếu workshop là trong tương lai
+        if (isWorkshopFuture) {
+          return (
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              size="small"
+              disabled
+              style={{ opacity: 0.5 }}
+            >
+              Chưa đến ngày
+            </Button>
+          );
+        }
+
+        // Nếu đã điểm danh rồi
+        if (record.status === "Confirmed" || record.status === "CheckedIn") {
+          return (
+            <Button
+              type="primary"
+              icon={<CheckCircleOutlined />}
+              size="small"
+              disabled
+            >
+              Đã điểm danh
+            </Button>
+          );
+        }
+
+        // Chỉ cho phép điểm danh nếu là ngày diễn ra workshop
+        if (isWorkshopToday) {
+          return (
+            <Popconfirm
+              title="Điểm danh người tham dự"
+              description={`Bạn có chắc muốn điểm danh cho ${record.attendName}?`}
+              onConfirm={() => handleCheckIn(record)}
+              okText="Có"
+              cancelText="Không"
+              icon={<QuestionCircleOutlined style={{ color: "green" }} />}
+            >
+              <Button
+                type="primary"
+                icon={<CheckCircleOutlined />}
+                size="small"
+                loading={checkingIn}
+              >
+                Điểm danh
+              </Button>
+            </Popconfirm>
+          );
+        }
+
+        return null;
+      },
     },
   ];
 

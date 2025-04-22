@@ -73,7 +73,7 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
     : [];
     
   console.log("Category dropdown options:", categoryOptions);
-  console.log("Selected category value:", initialData?.courseCategory);
+  console.log("Selected category value:", initialData?.categoryCategory);
 
   return (
     <Form
@@ -81,8 +81,19 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
       layout="vertical"
       disabled={loading}
       initialValues={{
-        ...initialData,
-        courseCategory: initialData?.categoryId
+        courseName: initialData?.name || '',
+        courseCategory: initialData?.categoryId || null,
+        price: initialData?.price || 0,
+        description: initialData?.description || '',
+        introduction: initialData?.introduction || '',
+        image: initialData?.image ? [
+          {
+            uid: '-1',
+            name: 'current-image.jpg',
+            status: 'done',
+            url: initialData.image
+          }
+        ] : []
       }}
     >
       <Form.Item
@@ -105,25 +116,17 @@ const CourseForm = ({ form, initialData, loading, courseCategories, isEdit = fal
           { required: true, message: "Vui lòng chọn loại khóa học" }
         ]}
       >
-        <div className="shape-select">
-          <select 
-            className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#90B77D] transition-colors duration-200"
-          >
-            <option value="">{initialData?.categoryName ? `${initialData.categoryName}` : '-- Chọn loại khóa học --'}</option>
-            {categoryOptions && categoryOptions.length > 0 ? (
-              categoryOptions.map((category) => (
-                <option 
-                  key={category.value} 
-                  value={category.value}
-                >
-                  {category.label}
-                </option>
-              ))
-            ) : (
-              <option disabled>Đang tải danh sách...</option>
-            )}
-          </select>
-        </div>
+        <Select
+          placeholder="Chọn loại khóa học"
+          className="w-full"
+          options={categoryOptions}
+        >
+          {categoryOptions.map(option => (
+            <Select.Option key={option.value} value={option.value}>
+              {option.label}
+            </Select.Option>
+          ))}
+        </Select>
       </Form.Item>
 
       <Form.Item
@@ -727,33 +730,52 @@ const CourseMaster = () => {
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <CustomButton
-            type="primary"
-            size="small"
-            onClick={() => handleViewCourse(record)}
-            icon={<FaEye size={14} />}
-          >
-            Xem
-          </CustomButton>
-          <CustomButton
-            type="default"
-            size="small"
-            onClick={() => handleUpdateCourse(record)}
-            icon={<FaEdit size={14} />}
-          >
-            Cập nhật
-          </CustomButton>
-          <CustomButton
-            type="text"
-            danger
-            size="small"
-            onClick={() => handleDeleteCourse(record)}
-            icon={<Trash2 size={16} />}
-          />
-        </div>
-      ),
+      render: (_, record) => {
+        const isActive = record.status === "Active";
+        return (
+          <div className="flex gap-2">
+            <CustomButton
+              type="primary"
+              size="small"
+              onClick={() => handleViewCourse(record)}
+              icon={<FaEye size={14} />}
+            >
+              Xem
+            </CustomButton>
+            <CustomButton
+              type="default"
+              size="small"
+              onClick={(e) => {
+                if (isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                handleUpdateCourse(record);
+              }}
+              icon={<FaEdit size={14} />}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            >
+              Cập nhật
+            </CustomButton>
+            <CustomButton
+              type="text"
+              danger
+              size="small"
+              onClick={(e) => {
+                if (isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                handleDeleteCourse(record);
+              }}
+              icon={<Trash2 size={16} />}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            />
+          </div>
+        );
+      },
     },
   ];
 
@@ -942,6 +964,7 @@ const CourseMaster = () => {
           quizId: courseData.quizId
         };
 
+        console.log("Setting selected course with full data:", courseWithFullData);
         setSelectedCourse(courseWithFullData);
         setIsEditMode(true);
 
@@ -949,23 +972,6 @@ const CourseMaster = () => {
         console.log("Course category data for update:", {
           categoryId: courseWithFullData.categoryId,
           categoryName: courseWithFullData.categoryName
-        });
-
-        // Thiết lập giá trị cho form
-        updateForm.setFieldsValue({
-          courseName: courseWithFullData.name,
-          courseCategory: courseWithFullData.categoryId,
-          price: courseWithFullData.price,
-          description: courseWithFullData.description,
-          introduction: courseWithFullData.introduction,
-          image: courseWithFullData.image ? [
-            {
-              uid: '-1',
-              name: 'current-image.jpg',
-              status: 'done',
-              url: courseWithFullData.image
-            }
-          ] : []
         });
 
         setIsUpdateModalOpen(true);
@@ -1678,8 +1684,7 @@ const CourseMaster = () => {
 
                   <div>
                     <label className="text-gray-600 font-medium">Giá</label>
-                    <div className="mt-1 flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-green-600" />
+                    <div className="mt-1">
                       <span className="text-lg font-semibold text-green-600">
                         {selectedCourse.price?.toLocaleString()} đ
                       </span>
@@ -1691,15 +1696,6 @@ const CourseMaster = () => {
                     <div className="mt-1">
                       <Tag color={getStatusColor(selectedCourse.status)}>
                         {selectedCourse.status}
-                      </Tag>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-gray-600 font-medium">Chứng chỉ</label>
-                    <div className="mt-1">
-                      <Tag color={selectedCourse.certificate ? "success" : "default"}>
-                        {selectedCourse.certificate ? "Có" : "Không"}
                       </Tag>
                     </div>
                   </div>

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tag, message, Spin, Button, Tooltip, Typography } from "antd";
+import { Tag, message, Spin, Button, Tooltip, Typography, Select } from "antd";
 import {
   ReloadOutlined,
   InfoCircleOutlined,
   EyeOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
@@ -41,6 +42,7 @@ const WorkshopStaff = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("all");
 
   // Fetch workshops từ API
   const fetchWorkshops = async () => {
@@ -54,14 +56,37 @@ const WorkshopStaff = () => {
       if (!data || data.length === 0) {
         setWorkshops([]);
       } else {
-        const formattedData = formatWorkshopsData(data);
+        // Lọc chỉ lấy những workshop có status là approved
+        const approvedWorkshops = data.filter(workshop => workshop.status === "Approved");
+        const formattedData = formatWorkshopsData(approvedWorkshops);
         console.log("Dữ liệu workshop đã định dạng:", formattedData);
-        // Lọc chỉ lấy workshop có trạng thái "Sắp diễn ra"
-        const upcomingWorkshops = formattedData.filter(
-          (workshop) => workshop.status === "Sắp diễn ra"
+        
+        // Lọc và cập nhật trạng thái workshop
+        const today = new Date();
+        const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+
+        const updatedWorkshops = formattedData.map(workshop => {
+          console.log('So sánh ngày:', {
+            workshopDate: workshop.date,
+            today: todayStr,
+            isToday: workshop.date === todayStr
+          });
+
+          if (workshop.date === todayStr) {
+            return { ...workshop, status: "Đang diễn ra" };
+          }else if (workshop.date < todayStr) {
+            return { ...workshop, status: "Đã kết thúc" }; 
+          }
+          return workshop;
+        });
+
+        // Lọc chỉ lấy workshop có trạng thái "Sắp diễn ra" hoặc "Đang diễn ra"
+        const relevantWorkshops = updatedWorkshops.filter(
+          (workshop) => workshop.status === "Sắp diễn ra" || workshop.status === "Đang diễn ra" || workshop.status === "Đã kết thúc"
         );
-        console.log("Workshop sắp diễn ra:", upcomingWorkshops);
-        setWorkshops(upcomingWorkshops);
+        
+        console.log("Workshop đã cập nhật:", relevantWorkshops);
+        setWorkshops(relevantWorkshops);
       }
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu workshop:", err);
@@ -113,25 +138,43 @@ const WorkshopStaff = () => {
   // Tùy chọn trạng thái cho bộ lọc - bỏ đi vì chỉ hiển thị "Sắp diễn ra"
   const statusOptions = [];
 
-  // Lọc dữ liệu chỉ theo từ khóa tìm kiếm
-  const filteredWorkshops = workshops.filter((workshop) => {
-    const matchesSearch =
-      (workshop.name &&
-        workshop.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.master &&
-        workshop.master.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.location &&
-        workshop.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (workshop.workshopId &&
-        workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
+  // Hàm xử lý sắp xếp
+  const handleSort = (value) => {
+    setSortOrder(value);
+    console.log("Sắp xếp theo:", value);
+  };
 
-    return matchesSearch;
-  });
+  // Lọc và sắp xếp dữ liệu
+  const getFilteredAndSortedWorkshops = () => {
+    let result = [...workshops].filter((workshop) => {
+      const matchesSearch =
+        (workshop.name &&
+          workshop.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (workshop.master &&
+          workshop.master.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (workshop.location &&
+          workshop.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (workshop.workshopId &&
+          workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
 
-  // Sắp xếp dữ liệu theo ngày tạo mới nhất (mặc định)
-  const sortedWorkshops = [...filteredWorkshops].sort((a, b) => {
-    return new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date);
-  });
+      // Lọc theo trạng thái được chọn
+      const matchesStatus = 
+        sortOrder === "all" ||
+        (sortOrder === "ongoing" && workshop.status === "Đang diễn ra") ||
+        (sortOrder === "upcoming" && workshop.status === "Sắp diễn ra");
+
+      return matchesSearch && matchesStatus;
+    });
+
+    // Sắp xếp theo ngày
+    result.sort((a, b) => {
+      const dateA = new Date(a.date.split('/').reverse().join('-'));
+      const dateB = new Date(b.date.split('/').reverse().join('-'));
+      return dateA - dateB;
+    });
+
+    return result;
+  };
 
   const columns = [
     {
@@ -220,12 +263,27 @@ const WorkshopStaff = () => {
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
-          <div className="flex flex-wrap justify-end items-center mb-4">
-            <SearchBar
-              placeholder="Tìm workshop..."
-              onSearch={handleSearch}
-              className="w-64"
-            />
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <SearchBar
+                placeholder="Tìm workshop..."
+                onSearch={handleSearch}
+                className="w-64"
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <Select
+                defaultValue="all"
+                style={{ width: 200 }}
+                onChange={handleSort}
+                options={[
+                  { value: 'all', label: 'Tất cả' },
+                  { value: 'ongoing', label: 'Đang diễn ra' },
+                  { value: 'upcoming', label: 'Sắp diễn ra' },
+                  
+                ]}
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -251,7 +309,7 @@ const WorkshopStaff = () => {
                 <>
                   <CustomTable
                     columns={columns}
-                    dataSource={sortedWorkshops}
+                    dataSource={getFilteredAndSortedWorkshops()}
                     onRowClick={handleRowClick}
                     rowKey="id"
                     scroll={{ x: 1200 }}
@@ -260,7 +318,7 @@ const WorkshopStaff = () => {
                   <div className="mt-4 flex justify-end">
                     <Pagination
                       currentPage={currentPage}
-                      totalPages={Math.ceil(sortedWorkshops.length / 10)}
+                      totalPages={Math.ceil(getFilteredAndSortedWorkshops().length / 10)}
                       onPageChange={handlePageChange}
                     />
                   </div>
