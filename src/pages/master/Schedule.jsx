@@ -21,7 +21,7 @@ const Schedule = () => {
   const fetchMasterSchedule = async () => {
     try {
       const response = await getCurrentMasterSchedule();
-      console.log("Schedule response:", response);
+      //console.log("Schedule response:", response);
 
       if (response.isSuccess) {
         const formattedBookings = response.data.flatMap((dateSchedule) => {
@@ -174,16 +174,26 @@ const Schedule = () => {
           });
         });
 
-        console.log("Formatted bookings:", formattedBookings);
         setBookings(formattedBookings);
       } else {
-        setError(response.message || "Không thể lấy dữ liệu lịch");
-        message.error("Không thể lấy dữ liệu lịch");
+        if (response.status === 404) {
+          // Không có lịch, nhưng không phải lỗi
+          //message.info("Hiện tại bạn chưa có lịch hẹn nào.");
+          setBookings([]); // Trống cũng được, miễn không là lỗi
+        } else {
+          setError(response.message || "Không thể lấy dữ liệu lịch");
+          message.error("Không thể lấy dữ liệu lịch");
+        }
       }
     } catch (error) {
-      console.error("Error fetching schedule:", error);
-      setError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu lịch");
-      message.error("Đã xảy ra lỗi khi lấy dữ liệu lịch");
+      if (error.response?.status === 404) {
+        message.info("Chưa có dữ liệu lịch hẹn nào.");
+        setBookings([]);
+      } else {
+        console.error("Error fetching schedule:", error);
+        setError(error.message || "Đã xảy ra lỗi khi lấy dữ liệu lịch");
+        message.error("Đã xảy ra lỗi khi lấy dữ liệu lịch");
+      }
     } finally {
       setLoading(false);
     }

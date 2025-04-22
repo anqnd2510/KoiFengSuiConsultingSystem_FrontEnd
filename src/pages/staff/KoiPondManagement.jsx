@@ -78,9 +78,9 @@ const PondCard = ({
         <div className="border-t pt-2">
           <div className="flex items-center justify-between mt-2">
             <div className="flex gap-2">
-              <CustomButton 
-                type="primary" 
-                onClick={onView} 
+              <CustomButton
+                type="primary"
+                onClick={onView}
                 size="small"
                 icon={<Eye size={14} />}
                 className="!bg-blue-500 hover:!bg-blue-600 !text-white"
@@ -145,10 +145,7 @@ const NoShapesMessage = () => (
       Vui lòng kiểm tra kết nối API hoặc thêm dữ liệu hình dạng hồ trước khi tạo
       hồ mới.
     </p>
-    <button
-      onClick={fetchPondShapes}
-      className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
-    >
+    <button className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors">
       Thử lại
     </button>
   </div>
@@ -247,11 +244,12 @@ const KoiPondManagement = () => {
       return;
     }
 
-    const filtered = pondTypes.filter((pond) =>
-      pond.pondName.toLowerCase().includes(value.toLowerCase()) ||
-      pond.shapeName.toLowerCase().includes(value.toLowerCase()) ||
-      pond.introduction.toLowerCase().includes(value.toLowerCase()) ||
-      pond.description.toLowerCase().includes(value.toLowerCase())
+    const filtered = pondTypes.filter(
+      (pond) =>
+        pond.pondName.toLowerCase().includes(value.toLowerCase()) ||
+        pond.shapeName.toLowerCase().includes(value.toLowerCase()) ||
+        pond.introduction.toLowerCase().includes(value.toLowerCase()) ||
+        pond.description.toLowerCase().includes(value.toLowerCase())
     );
     setFilteredPonds(filtered);
   };
@@ -815,8 +813,12 @@ const KoiPondManagement = () => {
       formData.append("ShapeId", values.shapeId);
       formData.append("PondName", values.pondName.trim());
       // Xử lý description để chỉ giữ lại các ký tự hợp lệ
-      const sanitizedDescription = values.description.trim()
-        .replace(/[^a-zA-Z0-9\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ,._-]/g, '');
+      const sanitizedDescription = values.description
+        .trim()
+        .replace(
+          /[^a-zA-Z0-9\sáàảãạăắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ,._-]/g,
+          ""
+        );
       formData.append("Description", sanitizedDescription);
       formData.append("Introduction", values.introduction.trim());
 
