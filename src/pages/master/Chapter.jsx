@@ -80,33 +80,6 @@ const ChapterForm = ({
         />
       </Form.Item>
 
-      <Form.Item
-        label="Thứ tự hiển thị"
-        name="order"
-        rules={[
-          { required: true, message: "Vui lòng nhập thứ tự hiển thị" },
-          {
-            type: 'number',
-            min: 1,
-            message: "Thứ tự phải lớn hơn 0"
-          },
-          {
-            validator: (_, value) => {
-              if (value && !Number.isInteger(value)) {
-                return Promise.reject('Thứ tự phải là số nguyên');
-              }
-              return Promise.resolve();
-            }
-          }
-        ]}
-      >
-        <InputNumber
-          placeholder="Nhập thứ tự hiển thị"
-          min={1}
-          style={{ width: "100%" }}
-        />
-      </Form.Item>
-
       {isUpdate && currentVideo && (
         <div className="mb-4">
           <div className="text-sm font-medium mb-2">Video hiện tại:</div>
@@ -217,8 +190,9 @@ const Chapter = () => {
             id: course.courseId || course.id,
             name: course.courseName || course.name,
             description: course.description,
-            // Các thông tin khác của khóa học
+            status: course.status || "Inactive"
           });
+          console.log("Course status:", course.status);
         } else {
           setError("Không tìm thấy thông tin khóa học");
           message.error("Không tìm thấy thông tin khóa học");
@@ -747,6 +721,8 @@ const Chapter = () => {
               type="primary"
               icon={<FaPlus size={14} />}
               onClick={handleOpenCreateChapterModal}
+              disabled={courseInfo?.status === "Active"}
+              className={`${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
             >
               Thêm chương mới
             </CustomButton>
@@ -825,23 +801,7 @@ const Chapter = () => {
                               : "hover:bg-gray-100 border border-transparent"
                           }`}
                         >
-                          <div className="flex-shrink-0 w-8 text-center text-gray-500 font-medium">
-                            {chapter.videoUrl ? (
-                              chapter.isActive ? (
-                                <FaPlay
-                                  size={14}
-                                  className="text-blue-600 mx-auto"
-                                />
-                              ) : (
-                                chapter.order
-                              )
-                            ) : (
-                              <Tooltip title="Chương này không có video">
-                                <span className="opacity-50">{chapter.order}</span>
-                              </Tooltip>
-                            )}
-                          </div>
-                          <div className="ml-2 flex-grow">
+                          <div className="flex-grow">
                             <h4
                               className={`font-medium line-clamp-2 text-sm ${
                                 chapter.isActive
@@ -851,13 +811,6 @@ const Chapter = () => {
                             >
                               {chapter.title}
                             </h4>
-                            <div className="flex items-center mt-1 text-xs text-gray-500">
-                              {chapter.order && (
-                                <span className="mr-2">
-                                  Chương {chapter.order}
-                                </span>
-                              )}
-                            </div>
                           </div>
 
                           {/* Thêm nút quản lý */}
@@ -868,7 +821,8 @@ const Chapter = () => {
                                   e.stopPropagation();
                                   handleUpdateChapter(chapter);
                                 }}
-                                className="text-gray-400 hover:text-blue-600 p-1"
+                                className={`text-gray-400 hover:text-blue-600 p-1 ${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+                                disabled={courseInfo?.status === "Active"}
                               >
                                 <FaEdit size={14} />
                               </button>
@@ -879,7 +833,8 @@ const Chapter = () => {
                                   e.stopPropagation();
                                   handleDeleteChapter(chapter);
                                 }}
-                                className="text-gray-400 hover:text-red-500 p-1"
+                                className={`text-gray-400 hover:text-red-500 p-1 ${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+                                disabled={courseInfo?.status === "Active"}
                               >
                                 <FaTrash size={14} />
                               </button>

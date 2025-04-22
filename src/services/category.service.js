@@ -117,24 +117,19 @@ export const updateCategory = async (categoryId, categoryData) => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    const formData = new FormData();
-    formData.append("CategoryName", categoryData.categoryName);
-
-    // Nếu có hình ảnh mới, gửi file mới
-    if (categoryData.imageFile && categoryData.imageFile instanceof File) {
-      formData.append("ImageUrl", categoryData.imageFile);
-    } 
-    // Nếu không có hình ảnh mới và có đường dẫn hình ảnh cũ, gửi đường dẫn cũ
-    else if (categoryData.currentImageUrl) {
-      formData.append("CurrentImageUrl", categoryData.currentImageUrl);
-    }
+    // Log để debug
+    console.log("Updating category with data:", {
+      categoryId,
+      categoryName: categoryData.get("CategoryName")
+    });
 
     const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
-    const apiUrl = `${baseUrl}/Category/${categoryId}`;
+    const apiUrl = `${baseUrl}${CATEGORY_ENDPOINT}/${categoryId}`;
 
-    const response = await axios.put(apiUrl, formData, {
+    const response = await axios.put(apiUrl, categoryData, {
       headers: {
         Authorization: `Bearer ${token}`,
+        // Không set Content-Type, để axios tự xử lý với FormData
       },
     });
 
@@ -144,6 +139,7 @@ export const updateCategory = async (categoryId, categoryData) => {
     if (error.response) {
       console.error("Server response:", error.response.data);
       console.error("Status code:", error.response.status);
+      throw error.response.data;  // Ném lỗi từ server để component có thể xử lý
     }
     throw error;
   }

@@ -162,44 +162,53 @@ const Category = () => {
 
   const handleEditCategory = async () => {
     try {
-      const values = await form.validateFields().catch(errorInfo => {
-        errorInfo.errorFields.forEach(error => {
-          message.error(error.errors[0]);
-        });
-        throw errorInfo;
-      });
-
+      const values = await form.validateFields();
       setLoading(true);
 
-      if (!selectedCategory || !selectedCategory.categoryId) {
-        throw new Error("Thiếu ID danh mục. Vui lòng tải lại trang và thử lại.");
+      if (!selectedCategory?.categoryId) {
+        throw new Error("Không tìm thấy ID danh mục");
       }
 
+      // Tạo FormData object
       const formData = new FormData();
-      formData.append('categoryName', values.categoryName.trim());
-
+      
+      // Thêm tên danh mục mới
+      const newCategoryName = values.categoryName.trim();
+      formData.append("CategoryName", newCategoryName);
+      
+      // Thêm file hình ảnh nếu có
       if (imageFile) {
-        formData.append('imageFile', imageFile);
-      } else if (imageUrl && imageUrl === selectedCategory.imageUrl) {
-        formData.append('currentImageUrl', imageUrl);
+        formData.append("ImageUrl", imageFile);
       }
+
+      // Log data trước khi gửi request
+      console.log("Updating category:", {
+        id: selectedCategory.categoryId,
+        oldName: selectedCategory.categoryName,
+        newName: newCategoryName,
+        hasImage: !!imageFile
+      });
 
       const response = await updateCategory(selectedCategory.categoryId, formData);
+      console.log("Update response:", response);
 
       if (response && response.isSuccess) {
         message.success("Cập nhật loại khóa học thành công!");
         setIsEditModalOpen(false);
         form.resetFields();
         setImageFile(null);
-        setImageUrl('');
-        fetchCategories();
+        setImageUrl("");
+        fetchCategories(); // Refresh danh sách
       } else {
         throw new Error(response?.message || "Không thể cập nhật loại khóa học");
       }
     } catch (error) {
-      if (!error.errorFields) {
-        console.error("Lỗi khi cập nhật loại khóa học:", error);
-        message.error(error.message || "Có lỗi xảy ra khi cập nhật loại khóa học");
+      console.error("Lỗi khi cập nhật:", error);
+      // Hiển thị message lỗi từ API nếu có
+      if (typeof error === 'object' && error.message) {
+        message.error(error.message);
+      } else {
+        message.error("Có lỗi xảy ra khi cập nhật loại khóa học");
       }
     } finally {
       setLoading(false);
@@ -283,24 +292,35 @@ const Category = () => {
       title: "Hành động",
       key: "action",
       width: "20%",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <CustomButton
-            type="primary"
-            icon={<EyeOutlined />}
-            onClick={() => handleView(record.id)}
-          >
-            Xem
-          </CustomButton>
-          <CustomButton
-            type="default"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record.id)}
-          >
-            Sửa
-          </CustomButton>
-        </div>
-      ),
+      render: (_, record) => {
+        const isActive = record.status === "Active";
+        return (
+          <div className="flex gap-2">
+            <CustomButton
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={() => handleView(record.id)}
+            >
+              Xem
+            </CustomButton>
+            <CustomButton
+              type="default"
+              icon={<EditOutlined />}
+              onClick={(e) => {
+                if (isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                handleEdit(record.id);
+              }}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            >
+              Cập nhật
+            </CustomButton>
+          </div>
+        );
+      },
     },
   ];
 
@@ -567,14 +587,7 @@ const Category = () => {
                 beforeUpload={() => false}
                 accept="image/*"
                 onChange={handleImageChange}
-                fileList={imageUrl ? [
-                  {
-                    uid: '-1',
-                    name: 'image.png',
-                    status: 'done',
-                    url: imageUrl,
-                  },
-                ] : []}
+                showUploadList={false}
               >
                 <div className="flex flex-col items-center">
                   <UploadCloud className="w-6 h-6 text-gray-400" />

@@ -19,27 +19,42 @@ export const getAllWorkshops = async () => {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
 
-    const response = await apiClient.get(
-      `${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`
-    );
-    console.log("API Response:", response.data);
+    // Gọi API sử dụng fetch thay vì apiClient
+    const response = await fetch(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-master`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    // Kiểm tra response status
+    if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log("API Response:", data);
 
     // Kiểm tra cấu trúc response
-    if (
-      response.data &&
-      response.data.isSuccess &&
-      Array.isArray(response.data.data)
-    ) {
-      return response.data.data; // Trả về mảng data từ response
+    if (data && Array.isArray(data)) {
+      return data; // Trả về mảng data từ response
+    } else if (data && data.data && Array.isArray(data.data)) {
+      return data.data;
     } else {
-      console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);
+      console.warn("Cấu trúc dữ liệu không như mong đợi:", data);
       return [];
     }
   } catch (error) {
     console.error("Lỗi khi lấy danh sách workshop:", error);
 
     // Xử lý lỗi 401
-    if (error.response && error.response.status === 401) {
+    if (error.message.includes("đăng nhập")) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
       throw new Error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");

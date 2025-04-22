@@ -367,27 +367,38 @@ const ConsultationPackage = () => {
       width: 160,
       align: "left",
       fixed: "right",
-      render: (_, record) => (
-        <Space size="small">
-          <CustomButton
-            type="primary"
-            size="small"
-            icon={<Eye size={14} />}
-            onClick={() => handleViewDetails(record)}
-            className="!bg-blue-500 hover:!bg-blue-600 !text-white"
-          >
-            Xem
-          </CustomButton>
-          <CustomButton
-            type="default"
-            size="small"
-            icon={<Edit size={14} />}
-            onClick={() => handleEdit(record)}
-          >
-            Cập nhật
-          </CustomButton>
-        </Space>
-      ),
+      render: (_, record) => {
+        const isActive = record.status === "Active";
+        return (
+          <Space size="small">
+            <CustomButton
+              type="primary"
+              size="small"
+              icon={<Eye size={14} />}
+              onClick={() => handleViewDetails(record)}
+              className="!bg-blue-500 hover:!bg-blue-600 !text-white"
+            >
+              Xem
+            </CustomButton>
+            <CustomButton
+              type="default"
+              size="small"
+              icon={<Edit size={14} />}
+              onClick={(e) => {
+                if (isActive) {
+                  e.preventDefault();
+                  return;
+                }
+                handleEdit(record);
+              }}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            >
+              Cập nhật
+            </CustomButton>
+          </Space>
+        );
+      },
     },
   ];
 

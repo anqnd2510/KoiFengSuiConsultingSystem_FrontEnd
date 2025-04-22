@@ -16,6 +16,8 @@ import {
   getQuestionById,
 } from "../../services/question.service";
 import { getAnswerById } from "../../services/answer.service";
+import { getAllCourses } from "../../services/course.service";
+import { getQuizById } from "../../services/quiz.service";
 
 const Question = () => {
   const { quizId } = useParams();
@@ -38,12 +40,111 @@ const Question = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [answerDetails, setAnswerDetails] = useState(null);
   const [loadingAnswer, setLoadingAnswer] = useState(false);
+  const [courseInfo, setCourseInfo] = useState(null);
 
   useEffect(() => {
     if (quizId) {
       fetchQuestions();
+      fetchCourseInfo();
     }
   }, [quizId]);
+
+  const fetchCourseInfo = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      // 1. Lấy thông tin quiz từ quizId
+      console.log("Getting quiz info for quizId:", quizId);
+      const quizResponse = await getQuizById(quizId);
+      console.log("Quiz Response full:", quizResponse);
+
+      // Kiểm tra response của quiz và lấy data
+      let quizData;
+      if (quizResponse?.data) {
+        quizData = quizResponse.data;
+      } else if (quizResponse) {
+        quizData = quizResponse;
+      } else {
+        console.error("Quiz Response không hợp lệ:", quizResponse);
+        setError("Không thể lấy thông tin bài kiểm tra");
+        message.error("Không thể lấy thông tin bài kiểm tra");
+        return;
+      }
+
+      console.log("Quiz Data after processing:", quizData);
+
+      // 2. Lấy courseId từ quiz data
+      const courseId = quizData.courseId || quizData.CourseId;
+      console.log("Found courseId:", courseId);
+
+      if (!courseId) {
+        console.error("Không tìm thấy courseId trong quiz data:", quizData);
+        setError("Không tìm thấy courseId");
+        message.error("Không tìm thấy courseId");
+        return;
+      }
+
+      // 3. Lấy danh sách khóa học
+      console.log("Getting courses for courseId:", courseId);
+      const courseResponse = await getAllCourses();
+      console.log("Course Response full:", courseResponse);
+
+      // Kiểm tra và xử lý response của courses
+      let coursesData = [];
+      if (courseResponse?.data?.data) {
+        coursesData = courseResponse.data.data;
+      } else if (courseResponse?.data) {
+        coursesData = courseResponse.data;
+      } else if (Array.isArray(courseResponse)) {
+        coursesData = courseResponse;
+      }
+
+      console.log("Courses data after processing:", coursesData);
+
+      // Tìm khóa học phù hợp
+      const course = coursesData.find(c => 
+        c.courseId === courseId || 
+        c.id === courseId || 
+        c.CourseId === courseId
+      );
+      console.log("Found course:", course);
+
+      if (!course) {
+        console.error("Không tìm thấy khóa học với ID:", courseId);
+        setError(`Không tìm thấy khóa học với ID: ${courseId}`);
+        message.error(`Không tìm thấy khóa học với ID: ${courseId}`);
+        return;
+      }
+
+      // 5. Lưu thông tin khóa học vào state
+      const courseInfo = {
+        id: course.courseId || course.CourseId || course.id,
+        name: course.courseName || course.name || course.Name,
+        description: course.description || course.Description || "",
+        status: course.status || course.Status || "Inactive"
+      };
+
+      console.log("Setting courseInfo:", courseInfo);
+      console.log("Course status:", courseInfo.status);
+      setCourseInfo(courseInfo);
+
+    } catch (error) {
+      console.error("Chi tiết lỗi:", error);
+      setError("Không thể tải thông tin khóa học");
+      message.error("Không thể tải thông tin khóa học");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Thêm useEffect để log mỗi khi courseInfo thay đổi
+  useEffect(() => {
+    if (courseInfo) {
+      console.log("CourseInfo updated:", courseInfo);
+      console.log("Course status:", courseInfo.status);
+    }
+  }, [courseInfo]);
 
   const fetchQuestions = async () => {
     try {
@@ -344,6 +445,8 @@ const Question = () => {
             size="small"
             onClick={() => handleEditQuestion(record)}
             icon={<FaEdit size={14} />}
+            disabled={courseInfo?.status === "Active"}
+            className={`${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
           >
             Cập nhật
           </CustomButton>
@@ -353,9 +456,12 @@ const Question = () => {
             size="small"
             onClick={() => handleDeleteQuestion(record)}
             icon={<Trash2 size={16} />}
+            disabled={courseInfo?.status === "Active"}
+            className={`${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
           >
+          
           </CustomButton>
-        </div>  
+        </div>
       ),
     },
   ];
@@ -410,6 +516,8 @@ const Question = () => {
               type="primary"
               icon={<FaPlus size={14} />}
               onClick={handleOpenCreateModal}
+              disabled={courseInfo?.status === "Active"}
+              className={`${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
             >
               Thêm câu hỏi mới
             </CustomButton>
@@ -944,6 +1052,45 @@ const Question = () => {
         .answer-input:focus {
           border-color: #40a9ff;
           box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+      `}</style>
+
+      {/* Thêm styles cho các nút disabled */}
+      <style jsx global>{`
+        .ant-btn[disabled] {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+          pointer-events: none !important;
+          background-color: #f5f5f5 !important;
+          border-color: #d9d9d9 !important;
+          color: rgba(0, 0, 0, 0.25) !important;
+          box-shadow: none !important;
+        }
+
+        .ant-btn[disabled]:hover,
+        .ant-btn[disabled]:focus,
+        .ant-btn[disabled]:active {
+          opacity: 0.5 !important;
+          cursor: not-allowed !important;
+          pointer-events: none !important;
+          background-color: #f5f5f5 !important;
+          border-color: #d9d9d9 !important;
+          color: rgba(0, 0, 0, 0.25) !important;
+          box-shadow: none !important;
+        }
+
+        .ant-btn-dangerous[disabled] {
+          background-color: #fff !important;
+          border-color: #ff4d4f !important;
+          color: #ff4d4f !important;
+          opacity: 0.5 !important;
+        }
+
+        .ant-btn-primary[disabled] {
+          background-color: #1890ff !important;
+          border-color: #1890ff !important;
+          color: #fff !important;
+          opacity: 0.5 !important;
         }
       `}</style>
     </div>

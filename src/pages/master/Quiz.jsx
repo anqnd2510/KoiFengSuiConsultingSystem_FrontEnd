@@ -84,7 +84,9 @@ const Quiz = () => {
             id: course.courseId || course.id,
             name: course.courseName || course.name,
             description: course.description,
+            status: course.status || "Inactive"
           });
+          console.log("Course status:", course.status);
         } else {
           setError("Không tìm thấy thông tin khóa học");
           message.error("Không tìm thấy thông tin khóa học");
@@ -448,35 +450,42 @@ const Quiz = () => {
       title: "Hành động",
       key: "action",
       width: "15%",
-      render: (_, record) => (
-        <div className="flex gap-2">
-          <CustomButton
-            type="primary"
-            size="small"
-            onClick={() => handleViewQuiz(record)}
-            icon={<FaEye size={14} />}
-            loading={loadingQuiz && selectedQuiz?.quizId === record.quizId}
-          >
-            Xem
-          </CustomButton>
-          <CustomButton
-            type="default"
-            size="small"
-            onClick={() => handleEditQuiz(record)}
-            icon={<FaEdit size={14} />}
-          >
-            Cập nhật
-          </CustomButton>
-          <CustomButton
-            type="text"
-            danger
-            size="small"
-            onClick={() => handleDeleteQuiz(record)}
-            icon={<Trash2 size={16} />}
-          >
-          </CustomButton>
-        </div>
-      ),
+      render: (_, record) => {
+        const isActive = courseInfo?.status === "Active";
+        return (
+          <div className="flex gap-2">
+            <CustomButton
+              type="primary"
+              size="small"
+              onClick={() => handleViewQuiz(record)}
+              icon={<FaEye size={14} />}
+              loading={loadingQuiz && selectedQuiz?.quizId === record.quizId}
+            >
+              Xem
+            </CustomButton>
+            <CustomButton
+              type="default"
+              size="small"
+              onClick={() => handleEditQuiz(record)}
+              icon={<FaEdit size={14} />}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            >
+              Cập nhật
+            </CustomButton>
+            <CustomButton
+              type="text"
+              danger
+              size="small"
+              onClick={() => handleDeleteQuiz(record)}
+              icon={<Trash2 size={16} />}
+              disabled={isActive}
+              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
+            >
+            </CustomButton>
+          </div>
+        );
+      },
     },
   ];
 
@@ -522,7 +531,8 @@ const Quiz = () => {
               type="default"
               onClick={handleOpenImportModal}
               icon={<FaFileExcel size={14} />}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              disabled={courseInfo?.status === "Active"}
+              className={`bg-green-500 hover:bg-green-600 text-white ${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
             >
               Import từ Excel
             </CustomButton>
@@ -531,6 +541,8 @@ const Quiz = () => {
                 type="primary"
                 icon={<FaPlus size={14} />}
                 onClick={handleOpenCreateModal}
+                disabled={courseInfo?.status === "Active"}
+                className={`${courseInfo?.status === "Active" ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
               >
                 Thêm bài kiểm tra mới
               </CustomButton>
