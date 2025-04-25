@@ -429,8 +429,39 @@ const Workshop = () => {
       const formattedData = formatWorkshopsData(data);
       console.log("Dữ liệu đã format từ getAllWorkshops:", formattedData);
 
+      // Cập nhật trạng thái dựa trên ngày
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
+
+      const updatedWorkshops = formattedData.map(workshop => {
+        // Chuyển đổi ngày workshop từ format dd/mm/yyyy sang Date object
+        const [day, month, year] = workshop.date.split('/');
+        const workshopDate = new Date(year, month - 1, day);
+        workshopDate.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
+
+        console.log('So sánh ngày:', {
+          workshopDate: workshopDate.toISOString(),
+          today: today.toISOString(),
+          comparison: workshopDate.getTime() === today.getTime() ? 'equal' : workshopDate.getTime() > today.getTime() ? 'future' : 'past'
+        });
+
+        // Nếu workshop đã bị từ chối hoặc đang chờ duyệt, giữ nguyên trạng thái
+        if (workshop.status === "Từ chối" || workshop.status === "Chờ duyệt") {
+          return workshop;
+        }
+
+        // Cập nhật trạng thái dựa trên ngày
+        if (workshopDate.getTime() === today.getTime()) {
+          return { ...workshop, status: "Đang diễn ra" };
+        } else if (workshopDate.getTime() > today.getTime()) {
+          return { ...workshop, status: "Sắp diễn ra" };
+        } else {
+          return { ...workshop, status: "Đã kết thúc" };
+        }
+      });
+
       // Lọc các workshop đã bị từ chối
-      const rejected = formattedData.filter(
+      const rejected = updatedWorkshops.filter(
         (workshop) => workshop.status === "Từ chối"
       );
       setRejectedWorkshops(rejected);
@@ -438,7 +469,7 @@ const Workshop = () => {
       setRejectedTotalPages(Math.ceil(rejected.length / 10));
 
       // Lọc các workshop không bị từ chối và không phải chờ duyệt để hiển thị ở tab 1
-      const approved = formattedData.filter(
+      const approved = updatedWorkshops.filter(
         (workshop) =>
           workshop.status !== "Từ chối" && workshop.status !== "Chờ duyệt"
       );
@@ -455,7 +486,6 @@ const Workshop = () => {
         return;
       }
       
-     
       setWorkshops([]);
     } finally {
       setLoading(false);

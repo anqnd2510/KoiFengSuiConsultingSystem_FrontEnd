@@ -99,25 +99,18 @@ const KoiFishManagement = () => {
     setLoading(true);
     try {
       const response = await KoiFishService.getAllKoiFish();
-      console.log("Nhận dữ liệu từ service:", response);
-
-      // In ra mẫu ID của một vài phần tử để kiểm tra
-      if (Array.isArray(response) && response.length > 0) {
-        console.log("Mẫu ID của cá Koi đầu tiên:", response[0].id);
-        console.log("Dữ liệu gốc của cá Koi đầu tiên:", response[0]);
-      }
-
-      // Dữ liệu đã được xử lý bởi service
       setData(response);
       setError(null);
     } catch (err) {
-      console.error("Lỗi khi fetch danh sách cá:", err);
-      const errorMessage =
-        err.response?.data?.message ||
-        err.message ||
-        "Không thể tải danh sách cá Koi";
-      setError(errorMessage);
-      message.error(errorMessage);
+      if (!err.response || err.response.status !== 404) {
+        const errorMessage =
+          err.response?.data?.message ||
+          err.message ||
+          "Không thể tải danh sách cá Koi";
+        setError(errorMessage);
+        message.error(errorMessage);
+      }
+      setData([]);
     } finally {
       setLoading(false);
     }

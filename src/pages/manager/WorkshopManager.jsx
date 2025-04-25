@@ -52,21 +52,57 @@ const WorkshopManager = () => {
 
     try {
       const data = await getWorkshopsByCreatedDate();
-      console.log("Dữ liệu workshop gốc:", data);
+      console.log("Raw data from API:", data);
 
       if (!data || data.length === 0) {
-        message.info("Không có dữ liệu workshop");
         setWorkshops([]);
       } else {
         const formattedData = formatWorkshopsData(data);
-        console.log("Dữ liệu workshop đã định dạng:", formattedData);
-        setWorkshops(formattedData);
-        message.success(`Đã tải ${formattedData.length} workshop`);
+        console.log("Formatted data:", formattedData);
+        
+        // Cập nhật trạng thái dựa trên ngày
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
+
+        const updatedWorkshops = formattedData.map(workshop => {
+          // Kiểm tra status với nhiều định dạng có thể
+          const status = workshop.status?.toLowerCase();
+          console.log("Workshop current status:", status);
+
+          // Nếu workshop đang chờ duyệt hoặc bị từ chối, giữ nguyên trạng thái
+          if (status === "chờ duyệt" || status === "từ chối" || 
+              status === "pending" || status === "rejected") {
+            return workshop;
+          }
+
+          // Chuyển đổi ngày workshop từ format dd/mm/yyyy sang Date object
+          const [day, month, year] = workshop.date.split('/');
+          const workshopDate = new Date(year, month - 1, day);
+          workshopDate.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
+
+          console.log('So sánh ngày:', {
+            workshopId: workshop.workshopId,
+            workshopDate: workshopDate.toISOString(),
+            today: today.toISOString(),
+            comparison: workshopDate.getTime() === today.getTime() ? 'equal' : workshopDate.getTime() > today.getTime() ? 'future' : 'past'
+          });
+
+          // Cập nhật trạng thái dựa trên ngày
+          if (workshopDate.getTime() === today.getTime()) {
+            return { ...workshop, status: "Đang diễn ra" };
+          } else if (workshopDate.getTime() > today.getTime()) {
+            return { ...workshop, status: "Sắp diễn ra" };
+          } else {
+            return { ...workshop, status: "Đã kết thúc" };
+          }
+        });
+
+        console.log("Updated workshops with new status:", updatedWorkshops);
+        setWorkshops(updatedWorkshops);
       }
     } catch (err) {
-      console.error("Lỗi khi tải dữ liệu workshop:", err);
+      console.error("Error fetching workshops:", err);
       setError(`Không thể tải dữ liệu workshop: ${err.message}`);
-      message.error("Không thể tải dữ liệu workshop");
     } finally {
       setLoading(false);
     }
@@ -84,7 +120,7 @@ const WorkshopManager = () => {
         return "blue";
       case "Đang diễn ra":
         return "green";
-      case "Đã xong":
+      case "Đã kết thúc":
         return "gray";
       case "Từ chối":
         return "red";
@@ -97,22 +133,19 @@ const WorkshopManager = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
-    console.log("Searching for:", searchTerm);
   };
 
   const handleStatusFilterChange = (value) => {
     setStatusFilter(value);
     setCurrentPage(1);
-    console.log("Lọc theo trạng thái:", value);
   };
 
   const handleRowClick = (workshop) => {
-    console.log("Đã chọn workshop:", workshop);
+    setSelectedWorkshop(workshop);
   };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
-    console.log("Changing to page:", page);
   };
 
   const openWorkshopDetail = (workshop) => {
@@ -124,8 +157,8 @@ const WorkshopManager = () => {
   const statusOptions = [
     { value: "Chờ duyệt", label: "Chờ duyệt" },
     { value: "Sắp diễn ra", label: "Sắp diễn ra" },
-    //{ value: "Đang diễn ra", label: "Đang diễn ra" },
-    //{ value: "Đã xong", label: "Đã xong" },
+    { value: "Đang diễn ra", label: "Đang diễn ra" },
+    { value: "Đã kết thúc", label: "Đã kết thúc" },
     { value: "Từ chối", label: "Từ chối" }
   ];
 
@@ -263,13 +296,7 @@ const WorkshopManager = () => {
                   <p className="text-gray-500 mb-4">
                     Không có dữ liệu workshop. Vui lòng thử lại sau.
                   </p>
-                  <Button
-                    type="primary"
-                    onClick={fetchWorkshops}
-                    icon={<ReloadOutlined />}
-                  >
-                    Thử lại
-                  </Button>
+                  
                 </div>
               ) : (
                 <>

@@ -25,6 +25,17 @@ export const getAllCategories = async () => {
   }
 };
 
+// Lấy tất cả categories đang active
+export const getAllActiveCategories = async () => {
+  try {
+    const response = await apiClient.get(`${CATEGORY_ENDPOINT}/get-all-active`);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách categories đang active:", error);
+    throw error;
+  }
+};
+
 // Tạo mới category
 export const createCategory = async (categoryData) => {
   try {
