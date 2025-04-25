@@ -1,4 +1,5 @@
 import apiClient from "./apiClient";
+import axios from "axios";
 
 const ACCOUNT_ENDPOINT = "/Account";
 
@@ -133,6 +134,161 @@ export const getDashboardInfo = async () => {
     return response.data;
   } catch (error) {
     console.error("Error fetching dashboard info:", error);
+    throw error;
+  }
+};
+
+/**
+ * Chỉnh sửa thông tin cá nhân của người dùng
+ * @param {Object} profileData - Thông tin cần cập nhật
+ * @returns {Promise<Object>} Promise chứa kết quả cập nhật thông tin
+ * @throws {Error} Lỗi khi không thể cập nhật thông tin
+ */
+export const editProfile = async (profileData) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    // Tạo FormData từ profileData
+    const formData = new FormData();
+    Object.keys(profileData).forEach(key => {
+      // Xử lý đặc biệt cho trường dob để đảm bảo format đúng
+      if (key === 'dob' && profileData[key]) {
+        formData.append(key, profileData[key]);
+      } 
+      // Xử lý đặc biệt cho trường gender để chuyển thành boolean
+      else if (key === 'gender') {
+        formData.append(key, profileData[key].toString());
+      }
+      // Xử lý các trường còn lại
+      else if (profileData[key] !== undefined && profileData[key] !== null) {
+        formData.append(key, profileData[key]);
+      }
+    });
+
+    // Log để kiểm tra dữ liệu trước khi gửi
+    for (let pair of formData.entries()) {
+      console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    const response = await apiClient.put(
+      `${ACCOUNT_ENDPOINT}/edit-profile`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      }
+    );
+
+    console.log("BE response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error in editProfile service:", error);
+    throw error;
+  }
+};
+
+/**
+ * Đổi mật khẩu người dùng
+ * @param {Object} passwordData - Dữ liệu đổi mật khẩu
+ * @param {string} passwordData.oldPassword - Mật khẩu hiện tại
+ * @param {string} passwordData.newPassword - Mật khẩu mới
+ * @param {string} passwordData.confirmPassword - Xác nhận mật khẩu mới
+ * @returns {Promise<Object>} Promise chứa kết quả đổi mật khẩu
+ * @throws {Error} Lỗi khi không thể đổi mật khẩu
+ */
+export const changePassword = async (passwordData) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    // Format dữ liệu theo yêu cầu của BE (PascalCase)
+    const formattedData = {
+      OldPassword: passwordData.oldPassword,
+      NewPassword: passwordData.newPassword,
+      ConfirmPassword: passwordData.confirmPassword
+    };
+
+    console.log("Sending password change request:", formattedData);
+
+    const response = await apiClient.put(
+      `${ACCOUNT_ENDPOINT}/change-password`,
+      formattedData,
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("Password change response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error changing password:", error);
+    if (error.response?.data?.message) {
+      // Xử lý các trường hợp lỗi cụ thể từ BE
+      switch (error.response.data.statusCode) {
+        case 400:
+          if (error.response.data.message.includes("mật khẩu cũ")) {
+            throw new Error("Mật khẩu cũ không đúng");
+          } else if (error.response.data.message.includes("mật khẩu mới")) {
+            throw new Error("Mật khẩu mới không được trùng với mật khẩu cũ");
+          }
+          break;
+        case 401:
+          throw new Error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+        case 404:
+          throw new Error("Không tìm thấy thông tin tài khoản");
+        default:
+          throw new Error(error.response.data.message);
+      }
+    }
+    throw error;
+  }
+};
+
+/**
+ * Gửi yêu cầu quên mật khẩu
+ * @param {string} email - Email của tài khoản cần khôi phục mật khẩu
+ * @returns {Promise<Object>} Promise chứa kết quả gửi yêu cầu
+ * @throws {Error} Lỗi khi không thể gửi yêu cầu
+ */
+export const forgotPassword = async (email) => {
+  try {
+    console.log("Sending forgot password request for email:", email);
+
+    const response = await apiClient.post(
+      `${ACCOUNT_ENDPOINT}/forgot-password`,
+      { Email: email },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log("Forgot password response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error in forgot password:", error);
+    if (error.response?.data?.message) {
+      // Xử lý các trường hợp lỗi cụ thể từ BE
+      switch (error.response.data.statusCode) {
+        case 400:
+          throw new Error("Email không hợp lệ");
+        case 404:
+          throw new Error("Không tìm thấy tài khoản với email này");
+        default:
+          throw new Error(error.response.data.message);
+      }
+    }
     throw error;
   }
 };

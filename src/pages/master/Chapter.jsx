@@ -634,9 +634,56 @@ const Chapter = () => {
     });
   };
 
-  // Hàm hiển thị embed video từ URL
+  // Cập nhật hàm getDirectVideoUrl
+  const getDirectVideoUrl = async (url) => {
+    try {
+      // Xử lý URL từ Bunny CDN
+      if (url.includes('b-cdn.net')) {
+        // Lấy video ID từ URL - lấy phần GUID từ URL
+        const matches = url.match(/\/([a-f0-9-]+)\/play\.mp4$/);
+        if (matches && matches[1]) {
+          const videoId = matches[1];
+          // Tạo URL embed từ Bunny Stream
+          const libraryId = '413206'; // Lấy từ URL gốc vz-413206
+          const directUrl = `https://iframe.mediadelivery.net/embed/${libraryId}/${videoId}`;
+          console.log("Converted URL:", directUrl);
+          return directUrl;
+        }
+      }
+      return url;
+    } catch (error) {
+      console.error("Error getting direct video URL:", error);
+      return url;
+    }
+  };
+
+  // Cập nhật hàm renderVideoEmbed
   const renderVideoEmbed = (videoUrl) => {
     if (!videoUrl) return null;
+
+    // Xử lý URL Bunny
+    if (videoUrl.includes("mediadelivery.net") || videoUrl.includes("b-cdn.net")) {
+      let embedUrl = videoUrl;
+      
+      if (videoUrl.includes("b-cdn.net")) {
+        const matches = videoUrl.match(/\/([a-f0-9-]+)\/play\.mp4$/);
+        if (matches && matches[1]) {
+          embedUrl = `https://iframe.mediadelivery.net/embed/413206/${matches[1]}`;
+        }
+      }
+        
+      return (
+        <iframe
+          className="w-full h-full rounded-lg"
+          src={embedUrl}
+          loading="lazy"
+          title="Bunny video player"
+          style={{ border: "none" }}
+          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+          allowFullScreen={true}
+        ></iframe>
+      );
+    }
 
     // Xử lý URL YouTube
     if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
@@ -692,6 +739,24 @@ const Chapter = () => {
       </video>
     );
   };
+
+  // Cập nhật useEffect
+  useEffect(() => {
+    const updateVideoUrl = async () => {
+      if (selectedVideoChapter && selectedVideoChapter.videoUrl) {
+        console.log("Original URL:", selectedVideoChapter.videoUrl); // Log để debug
+        const directUrl = await getDirectVideoUrl(selectedVideoChapter.videoUrl);
+        console.log("Processed URL:", directUrl); // Log để debug
+        if (directUrl !== selectedVideoChapter.videoUrl) {
+          setSelectedVideoChapter(prev => ({
+            ...prev,
+            videoUrl: directUrl
+          }));
+        }
+      }
+    };
+    updateVideoUrl();
+  }, [selectedVideoChapter?.id]);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800">

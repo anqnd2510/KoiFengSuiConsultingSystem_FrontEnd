@@ -9,9 +9,7 @@ const KoiFishService = {
   // Lấy danh sách tất cả cá Koi
   getAllKoiFish: async () => {
     try {
-      console.log("Gọi API lấy danh sách cá Koi");
       const response = await apiClient.get(`${KOI_ENDPOINT}/get-all`);
-      console.log("API response:", response);
 
       // Kiểm tra cấu trúc phản hồi từ API BE
       if (
@@ -42,12 +40,11 @@ const KoiFishService = {
           compatibilityScore: item.compatibilityScore || 0,
         }));
       }
-
-      // Nếu phản hồi API không có cấu trúc mong đợi, trả về mảng rỗng
-      console.warn("API không trả về dữ liệu đúng định dạng, trả về mảng rỗng");
       return [];
     } catch (error) {
-      console.error("Lỗi khi lấy danh sách cá Koi:", error);
+      if (error.response?.status === 404) {
+        return [];
+      }
       throw error;
     }
   },

@@ -63,24 +63,30 @@ const WorkshopStaff = () => {
         
         // Lọc và cập nhật trạng thái workshop
         const today = new Date();
-        const todayStr = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+        today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
 
         const updatedWorkshops = formattedData.map(workshop => {
+          // Chuyển đổi ngày workshop từ format dd/mm/yyyy sang Date object
+          const [day, month, year] = workshop.date.split('/');
+          const workshopDate = new Date(year, month - 1, day);
+          workshopDate.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
+
           console.log('So sánh ngày:', {
-            workshopDate: workshop.date,
-            today: todayStr,
-            isToday: workshop.date === todayStr
+            workshopDate: workshopDate.toISOString(),
+            today: today.toISOString(),
+            comparison: workshopDate.getTime() === today.getTime() ? 'equal' : workshopDate.getTime() > today.getTime() ? 'future' : 'past'
           });
 
-          if (workshop.date === todayStr) {
+          if (workshopDate.getTime() === today.getTime()) {
             return { ...workshop, status: "Đang diễn ra" };
-          }else if (workshop.date < todayStr) {
-            return { ...workshop, status: "Đã kết thúc" }; 
+          } else if (workshopDate.getTime() > today.getTime()) {
+            return { ...workshop, status: "Sắp diễn ra" };
+          } else {
+            return { ...workshop, status: "Đã kết thúc" };
           }
-          return workshop;
         });
 
-        // Lọc chỉ lấy workshop có trạng thái "Sắp diễn ra" hoặc "Đang diễn ra"
+        // Lọc chỉ lấy workshop có trạng thái phù hợp
         const relevantWorkshops = updatedWorkshops.filter(
           (workshop) => workshop.status === "Sắp diễn ra" || workshop.status === "Đang diễn ra" || workshop.status === "Đã kết thúc"
         );
@@ -295,15 +301,9 @@ const WorkshopStaff = () => {
               {workshops.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500 mb-4">
-                    Không có workshop nào sắp diễn ra
+                    Không có hội thảo nào sắp diễn ra
                   </p>
-                  <Button
-                    type="primary"
-                    onClick={fetchWorkshops}
-                    icon={<ReloadOutlined />}
-                  >
-                    Thử lại
-                  </Button>
+
                 </div>
               ) : (
                 <>

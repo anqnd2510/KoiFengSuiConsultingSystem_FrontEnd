@@ -49,6 +49,7 @@ import {
   getCategoryById,
   getAllCategories,
   createCategory,
+  getAllActiveCategories
 } from "../../services/category.service";
 import { useNavigate } from "react-router-dom";
 import Chapter from "./Chapter";
@@ -358,12 +359,12 @@ const CourseMaster = () => {
 
   const fetchCourseCategories = async () => {
     try {
-      const response = await getAllCategories();
-      console.log("Categories API response:", response);
+      const response = await getAllActiveCategories();
+      console.log("Active Categories API response:", response);
 
       // Kiểm tra response có đúng cấu trúc không
       if (response && response.isSuccess && response.data) {
-        console.log("Categories data:", response.data);
+        console.log("Active Categories data:", response.data);
 
         // Map dữ liệu để đảm bảo có đúng định dạng (categoryId, categoryName)
         const mappedCategories = response.data.map((category) => {
@@ -387,7 +388,7 @@ const CourseMaster = () => {
           };
         });
 
-        console.log("Final mapped categories:", mappedCategories);
+        console.log("Final mapped active categories:", mappedCategories);
         
         // Lưu categories vào state
         setCourseCategories(mappedCategories.filter(c => c.categoryId && c.categoryName));
@@ -404,10 +405,10 @@ const CourseMaster = () => {
         return;
       }
 
-      console.warn("Invalid categories response structure:", response);
+      console.warn("Invalid active categories response structure:", response);
       setCourseCategories([]);
     } catch (err) {
-      console.error("Error fetching course categories:", err);
+      console.error("Error fetching active course categories:", err);
       setCourseCategories([]); // Set mảng rỗng khi có lỗi
     }
   };
@@ -603,7 +604,7 @@ const CourseMaster = () => {
       }
     } catch (err) {
       console.error("Error fetching courses:", err);
-      setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
+      //setError("Không thể tải danh sách khóa học. Vui lòng thử lại sau.");
     } finally {
       setLoading(false);
     }
@@ -1510,13 +1511,7 @@ const CourseMaster = () => {
             >
               Loại khóa học
             </CustomButton>
-            <CustomButton
-              onClick={fetchCourses}
-              loading={loading}
-              title="Làm mới dữ liệu"
-            >
-              Làm mới
-            </CustomButton>
+            
           </div>
           <SearchBar
             onSearch={handleSearch}
@@ -1542,13 +1537,6 @@ const CourseMaster = () => {
         {courses.length === 0 && !loading && !error && (
           <div className="bg-white p-8 rounded-lg shadow text-center">
             <p className="text-gray-500 mb-4">Không có dữ liệu khóa học nào</p>
-            <CustomButton
-              type="primary"
-              onClick={fetchCourses}
-              loading={loading}
-            >
-              Làm mới dữ liệu
-            </CustomButton>
           </div>
         )}
 
