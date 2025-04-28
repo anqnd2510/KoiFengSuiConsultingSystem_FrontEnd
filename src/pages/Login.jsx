@@ -64,6 +64,27 @@ const Login = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
 
+    // Kiểm tra các trường bắt buộc
+    if (!registerData.fullName.trim()) {
+      message.error("Vui lòng nhập họ và tên!");
+      return;
+    }
+
+    if (!registerData.email.trim()) {
+      message.error("Vui lòng nhập email!");
+      return;
+    }
+
+    if (!registerData.phoneNumber.trim()) {
+      message.error("Vui lòng nhập số điện thoại!");
+      return;
+    }
+
+    if (!registerData.dob) {
+      message.error("Vui lòng chọn ngày sinh!");
+      return;
+    }
+
     // Kiểm tra mật khẩu và xác nhận mật khẩu
     if (!registerData.password) {
       message.error("Vui lòng nhập mật khẩu!");
@@ -528,6 +549,8 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập họ và tên"
                       required
+                      onInvalid={(e) => e.target.setCustomValidity('Vui lòng nhập họ và tên')}
+                      onInput={(e) => e.target.setCustomValidity('')}
                     />
                   </div>
 
@@ -547,6 +570,15 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập địa chỉ email"
                       required
+                      pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                      onInvalid={(e) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity('Vui lòng nhập email')
+                        } else if (e.target.validity.patternMismatch) {
+                          e.target.setCustomValidity('Vui lòng nhập email hợp lệ (ví dụ: example@domain.com)')
+                        }
+                      }}
+                      onInput={(e) => e.target.setCustomValidity('')}
                     />
                   </div>
 
@@ -566,6 +598,15 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập số điện thoại"
                       required
+                      pattern="[0-9]{10,11}"
+                      onInvalid={(e) => {
+                        if (e.target.validity.valueMissing) {
+                          e.target.setCustomValidity('Vui lòng nhập số điện thoại')
+                        } else if (e.target.validity.patternMismatch) {
+                          e.target.setCustomValidity('Số điện thoại phải có từ 10 đến 11 số')
+                        }
+                      }}
+                      onInput={(e) => e.target.setCustomValidity('')}
                     />
                   </div>
 
@@ -585,6 +626,8 @@ const Login = () => {
                         onChange={handleRegisterChange}
                         className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                         required
+                        onInvalid={(e) => e.target.setCustomValidity('Vui lòng chọn ngày sinh')}
+                        onInput={(e) => e.target.setCustomValidity('')}
                       />
                     </div>
 
@@ -636,6 +679,8 @@ const Login = () => {
                         className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                         placeholder="Nhập mật khẩu"
                         required
+                        onInvalid={(e) => e.target.setCustomValidity('Vui lòng nhập mật khẩu')}
+                        onInput={(e) => e.target.setCustomValidity('')}
                       />
                       <button
                         type="button"
@@ -691,6 +736,8 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập lại mật khẩu"
                       required
+                      onInvalid={(e) => e.target.setCustomValidity('Vui lòng xác nhận mật khẩu')}
+                      onInput={(e) => e.target.setCustomValidity('')}
                     />
                   </div>
 

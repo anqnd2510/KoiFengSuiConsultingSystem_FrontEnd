@@ -706,7 +706,7 @@ const KoiFishManagement = () => {
         <div className="flex flex-wrap justify-between items-center mb-4">
           <div className="flex gap-2 mb-4">
             <CustomButton type="primary" onClick={handleOpenCreateModal}>
-              Tạo mới loài cá Koi
+              Tạo mới cá Koi
             </CustomButton>
           </div>
           <SearchBar
@@ -916,7 +916,7 @@ const KoiFishManagement = () => {
 
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 uppercase tracking-wider">
-                  Giống cá
+                  Tên cá
                 </p>
                 <p className="text-base font-medium text-gray-800">
                   {viewKoi.varietyName}

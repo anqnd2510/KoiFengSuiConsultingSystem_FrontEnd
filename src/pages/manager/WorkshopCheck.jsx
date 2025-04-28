@@ -217,12 +217,12 @@ const WorkshopCheck = () => {
       key: "location",
     },
     {
-      title: "Ngày",
+      title: "Ngày tổ chức",
       dataIndex: "date",
       key: "date",
     },
     {
-      title: "Thao tác",
+      title: "Hành động",
       key: "action",
       render: (_, workshop) => (
         <div className="flex gap-2">
@@ -367,7 +367,7 @@ const WorkshopCheck = () => {
 
               {selectedWorkshop.masterName && (
                 <div>
-                  <p className="text-gray-500 mb-1">Master phụ trách</p>
+                  <p className="text-gray-500 mb-1">Diễn giả</p>
                   <p className="font-medium">{selectedWorkshop.masterName}</p>
                 </div>
               )}

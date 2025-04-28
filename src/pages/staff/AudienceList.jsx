@@ -423,7 +423,7 @@ const AudienceList = () => {
           <>
             {audiences.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-500">Không tìm thấy người tham dự cho workshop này</p>
+                <p className="text-gray-500">Không tìm thấy người tham dự cho hội thảo này</p>
               </div>
             ) : (
               <>
