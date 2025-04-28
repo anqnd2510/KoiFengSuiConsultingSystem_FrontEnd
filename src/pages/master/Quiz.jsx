@@ -432,7 +432,7 @@ const Quiz = () => {
       width: "35%",
     },
     {
-      title: "Master phụ trách",
+      title: "Người tạo",
       dataIndex: "masterName",
       key: "masterName",
       width: "20%",
@@ -472,16 +472,6 @@ const Quiz = () => {
               className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
             >
               Cập nhật
-            </CustomButton>
-            <CustomButton
-              type="text"
-              danger
-              size="small"
-              onClick={() => handleDeleteQuiz(record)}
-              icon={<Trash2 size={16} />}
-              disabled={isActive}
-              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
-            >
             </CustomButton>
           </div>
         );
@@ -635,7 +625,7 @@ const Quiz = () => {
                         </div>
                         <div>
                           <label className="text-gray-600 block mb-1">
-                            Master phụ trách
+                            Người tạo
                           </label>
                           <input
                             type="text"
@@ -731,20 +721,6 @@ const Quiz = () => {
                 { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng" },
                 { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
                 { max: 200, message: "Tiêu đề không được vượt quá 200 ký tự" },
-                {
-                  validator: async (_, value) => {
-                    if (value) {
-                      const specialChars = /[!@#$%^&*()_+\=\[\]{};':"\\|,.<>?~]/;
-                      if (specialChars.test(value)) {
-                        return Promise.reject('Tiêu đề không được chứa ký tự đặc biệt');
-                      }
-                      if (/^\d+$/.test(value.trim())) {
-                        return Promise.reject('Tiêu đề không được chỉ chứa số');
-                      }
-                    }
-                    return Promise.resolve();
-                  }
-                }
               ]}
             >
               <Input placeholder="Nhập tiêu đề bài kiểm tra" maxLength={200} />
@@ -792,20 +768,7 @@ const Quiz = () => {
                 { whitespace: true, message: "Tiêu đề không được chỉ chứa khoảng trắng" },
                 { min: 5, message: "Tiêu đề phải có ít nhất 5 ký tự" },
                 { max: 200, message: "Tiêu đề không được vượt quá 200 ký tự" },
-                {
-                  validator: async (_, value) => {
-                    if (value) {
-                      const specialChars = /[!@#$%^&*()_+\=\[\]{};':"\\|,.<>?~]/;
-                      if (specialChars.test(value)) {
-                        return Promise.reject('Tiêu đề không được chứa ký tự đặc biệt');
-                      }
-                      if (/^\d+$/.test(value.trim())) {
-                        return Promise.reject('Tiêu đề không được chỉ chứa số');
-                      }
-                    }
-                    return Promise.resolve();
-                  }
-                }
+                
               ]}
             >
               <Input placeholder="Nhập tiêu đề bài kiểm tra" maxLength={200} />
@@ -861,7 +824,7 @@ const Quiz = () => {
               onClick={handleConfirmDelete}
               loading={isDeleting}
             >
-              Xác nhận xóa
+              Xóa
             </CustomButton>
           </div>
         </div>

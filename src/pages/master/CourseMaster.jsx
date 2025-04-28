@@ -1561,7 +1561,7 @@ const CourseMaster = () => {
 
       {/* Modal tạo khóa học mới */}
       <Modal
-        title={<div className="text-xl font-semibold">Tạo mới khóa học</div>}
+        title={<div className="text-xl font-semibold">Tạo khóa học mới</div>}
         open={isCreateModalOpen}
         onCancel={handleCloseCreateModal}
         footer={null}

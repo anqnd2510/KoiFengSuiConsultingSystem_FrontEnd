@@ -591,7 +591,6 @@ const Question = () => {
                 rules={[
                   { required: true, message: "Vui lòng nhập nội dung câu hỏi" },
                   { whitespace: true, message: "Nội dung không được chỉ chứa khoảng trắng" },
-                  { min: 10, message: "Nội dung phải có ít nhất 10 ký tự" },
                   { max: 1000, message: "Nội dung không được vượt quá 1000 ký tự" },
                   {
                     validator: async (_, value) => {
@@ -987,12 +986,7 @@ const Question = () => {
                 </p>
               </div>
             )}
-            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-yellow-800 text-sm">
-                <strong>Lưu ý:</strong> Hành động này không thể hoàn tác. Tất cả
-                dữ liệu liên quan đến câu hỏi này sẽ bị xóa vĩnh viễn.
-              </p>
-            </div>
+            
           </div>
 
           <div className="flex justify-end gap-3">
@@ -1001,10 +995,9 @@ const Question = () => {
               type="primary"
               danger
               onClick={handleConfirmDelete}
-              loading={isDeleting}
-              icon={<Trash2 size={16} />}
+              loading={isDeleting}              
             >
-              Xác nhận xóa
+              Xóa
             </CustomButton>
           </div>
         </div>

@@ -48,6 +48,7 @@ const ChapterForm = ({
   loading,
   isUpdate = false,
   currentVideo = null,
+  renderVideoEmbed = null,
 }) => {
   return (
     <Form form={form} layout="vertical" disabled={loading}>
@@ -71,7 +72,7 @@ const ChapterForm = ({
           { required: true, message: "Vui lòng nhập mô tả chương" },
           { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
           { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
-          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
+          { max: 1000, message: " " }
         ]}
       >
         <TextArea
@@ -84,13 +85,16 @@ const ChapterForm = ({
         <div className="mb-4">
           <div className="text-sm font-medium mb-2">Video hiện tại:</div>
           <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-            <video
-              src={currentVideo}
-              controls
-              className="w-full h-full object-contain"
-            >
-              Trình duyệt của bạn không hỗ trợ video.
-            </video>
+            {renderVideoEmbed ? renderVideoEmbed(currentVideo) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center p-6">
+                  <Video className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">
+                    Không thể hiển thị video
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -942,7 +946,7 @@ const Chapter = () => {
               onClick={handleSaveChapter}
               loading={creatingChapter}
             >
-              Tạo mới chương
+              Tạo mới 
             </CustomButton>
           </div>
         </div>
@@ -959,7 +963,7 @@ const Chapter = () => {
         open={isUpdateChapterModalOpen}
         onCancel={handleCloseUpdateChapterModal}
         footer={null}
-        width={700}
+        width={800}
         className="chapter-modal"
       >
         <div className="p-4">
@@ -968,6 +972,7 @@ const Chapter = () => {
             loading={updatingChapter}
             isUpdate={true}
             currentVideo={selectedChapter?.videoUrl}
+            renderVideoEmbed={renderVideoEmbed}
           />
 
           <div className="flex justify-end gap-3 mt-6">

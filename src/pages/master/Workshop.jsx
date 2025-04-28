@@ -342,7 +342,7 @@ const WorkshopForm = ({ form, loading, locations }) => {
       </Form.Item>
 
       <Form.Item
-        label="Mô tả hội thảo"
+        label="Mô tả"
         name="description"
         rules={[
           { required: true, message: "Vui lòng nhập mô tả hội thảo" },
@@ -887,7 +887,7 @@ const Workshop = () => {
               icon={<Plus size={16} />}
               onClick={handleOpenCreateModal}
             >
-              Tạo mới hội thảo
+              Tạo hội thảo mới
             </CustomButton>
           </div>
           <SearchBar onSearch={handleSearch} />
@@ -1122,7 +1122,7 @@ const Workshop = () => {
 
               {selectedWorkshop.masterName && (
                 <div className="space-y-2 col-span-2">
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">Master phụ trách</p>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">Diễn giả</p>
                   <p className="text-base font-medium text-gray-800">
                     {selectedWorkshop.masterName}
                   </p>
@@ -1134,7 +1134,7 @@ const Workshop = () => {
             {selectedWorkshop.description && (
               <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
                 <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả hội thảo</p>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả</p>
                   <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                     {selectedWorkshop.description}
                   </p>
