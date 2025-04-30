@@ -36,21 +36,9 @@ const menuItems = [
     roles: ["master"],
   },
   {
-    icon: MessageSquare,
-    label: "Đánh giá",
-    path: "/feedback",
-    roles: ["staff", "master", "manager"],
-  },
-  {
     icon: Users,
     label: "Danh sách khách hàng",
     path: "/staff/customer-management",
-    roles: ["staff"],
-  },
-  {
-    icon: Bell,
-    label: "Thông báo",
-    path: "/staff/notifications",
     roles: ["staff"],
   },
   {
@@ -94,12 +82,6 @@ const menuItems = [
     label: "Khóa học",
     path: "/staff/course-management",
     roles: ["staff"],
-  },
-  {
-    icon: Award,
-    label: "Chứng chỉ",
-    path: "/certificate",
-    roles: ["staff", "master", "manager"],
   },
   {
     icon: MessageCircle,
@@ -180,12 +162,6 @@ const menuItems = [
     roles: ["admin"],
   },
   {
-    icon: FileText,
-    label: "Quản lý danh mục",
-    path: "/admin/categories",
-    roles: ["admin"],
-  },
-  {
     icon: ClipboardList,
     label: "Quản lý giao dịch",
     path: "/manager/order",
@@ -257,11 +233,7 @@ const Sidebar = () => {
     <div className="w-64 bg-[#90B77D] min-h-screen">
       <div className="p-4">
         <div className="flex justify-center items-center mb-8">
-          <img
-            src="/BitKoi.png"
-            alt="BitKoi Logo"
-            className="w-48 h-auto"
-          />
+          <img src="/BitKoi.png" alt="BitKoi Logo" className="w-48 h-auto" />
         </div>
 
         <nav className="space-y-2">

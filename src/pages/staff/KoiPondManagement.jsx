@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Row,
   Col,
@@ -9,15 +9,9 @@ import {
   Upload,
   Form,
   Spin,
-  Space,
-  Popconfirm,
   Tooltip,
 } from "antd";
-import {
-  UploadOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { Eye, Edit } from "lucide-react";
 import axios from "axios";
 import Header from "../../components/Common/Header";
@@ -43,47 +37,57 @@ const PondCard = ({
   onView,
 }) => {
   return (
-    <Card className="h-full">
-      <div className="text-center">
-        <h3 className="text-base font-medium mb-2">{title}</h3>
-        <div className="mb-3">
-          {imageUrl && (
-            <div className="relative">
+    <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-md border border-gray-200">
+      <div className="flex flex-col h-full">
+        <h3 className="text-lg font-semibold mb-3 text-center text-gray-800">
+          {title}
+        </h3>
+        <div className="mb-3 flex-shrink-0">
+          {imageUrl ? (
+            <div className="relative overflow-hidden rounded-lg">
               <img
-                src={imageUrl}
+                src={imageUrl || "/placeholder.svg"}
                 alt={title}
-                className="w-full h-32 object-cover mb-3 rounded"
+                className="w-full h-40 object-cover transition-transform duration-500 hover:scale-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+          ) : (
+            <div className="w-full h-40 bg-gray-100 rounded-lg flex items-center justify-center">
+              <span className="text-gray-400">Không có hình ảnh</span>
             </div>
           )}
         </div>
-        <div className="mb-3 text-sm text-left">
-          <p className="truncate">
-            <span className="font-medium">ID Hồ:</span>{" "}
-            <span className="text-xs">{koiPondId || "Không có"}</span>
-          </p>
-          <p>
-            <span className="font-medium">Hình dạng:</span>{" "}
-            {shapeName || "Không có"}
-          </p>
-          <p className="truncate">
-            <span className="font-medium">Giới thiệu:</span>{" "}
-            {introduction || "Không có"}
-          </p>
-          <p className="truncate">
-            <span className="font-medium">Mô tả:</span>{" "}
-            {description || "Không có"}
-          </p>
+        <div className="mb-4 text-sm text-left flex-grow">
+          <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-1.5">
+            <span className="font-medium text-gray-700">ID Hồ:</span>
+            <span className="text-xs text-gray-600 truncate">
+              {koiPondId || "Không có"}
+            </span>
+
+            <span className="font-medium text-gray-700">Hình dạng:</span>
+            <span className="text-gray-600">{shapeName || "Không có"}</span>
+
+            <span className="font-medium text-gray-700">Giới thiệu:</span>
+            <span className="text-gray-600 truncate">
+              {introduction || "Không có"}
+            </span>
+
+            <span className="font-medium text-gray-700">Mô tả:</span>
+            <span className="text-gray-600 truncate">
+              {description || "Không có"}
+            </span>
+          </div>
         </div>
-        <div className="border-t pt-2">
-          <div className="flex items-center justify-between mt-2">
+        <div className="border-t pt-3 mt-auto">
+          <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <CustomButton
                 type="primary"
                 onClick={onView}
                 size="small"
                 icon={<Eye size={14} />}
-                className="!bg-blue-500 hover:!bg-blue-600 !text-white"
+                className="!bg-blue-500 hover:!bg-blue-600 !text-white !border-blue-500 hover:!border-blue-600 !shadow-sm"
               >
                 Xem
               </CustomButton>
@@ -92,28 +96,34 @@ const PondCard = ({
                 size="small"
                 icon={<Edit size={14} />}
                 onClick={onUpdate}
+                className="hover:!bg-gray-50 !shadow-sm"
               >
                 Cập nhật
               </CustomButton>
             </div>
-            <span className="cursor-pointer" onClick={onDelete}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#ff0000"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <Tooltip title="Xóa hồ cá">
+              <button
+                className="p-1.5 rounded-full hover:bg-red-50 text-red-500 transition-colors"
+                onClick={onDelete}
               >
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
-            </span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </Tooltip>
           </div>
         </div>
       </div>
@@ -123,10 +133,10 @@ const PondCard = ({
 
 // Component hiển thị khi không có hình dạng hồ
 const NoShapesMessage = () => (
-  <div className="text-center p-6 bg-yellow-50 rounded-lg border border-yellow-200 mt-4">
+  <div className="text-center p-8 bg-amber-50 rounded-lg border border-amber-200 mt-6 max-w-2xl mx-auto">
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      className="h-12 w-12 text-yellow-500 mx-auto mb-3"
+      className="h-16 w-16 text-amber-500 mx-auto mb-4"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -138,14 +148,14 @@ const NoShapesMessage = () => (
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
       />
     </svg>
-    <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+    <h3 className="text-xl font-bold text-amber-800 mb-3">
       Không tìm thấy dữ liệu hình dạng hồ
     </h3>
-    <p className="text-yellow-700 mb-4">
+    <p className="text-amber-700 mb-5 max-w-md mx-auto">
       Vui lòng kiểm tra kết nối API hoặc thêm dữ liệu hình dạng hồ trước khi tạo
       hồ mới.
     </p>
-    <button className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors">
+    <button className="px-5 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium shadow-sm">
       Thử lại
     </button>
   </div>
@@ -421,6 +431,8 @@ const KoiPondManagement = () => {
             } else {
               errorMessage = error.response.data?.message || errorMessage;
             }
+          } else {
+            errorMessage = error.message;
           }
 
           message.error(errorMessage);
@@ -913,16 +925,22 @@ const KoiPondManagement = () => {
         description="Quản lý thông tin và danh sách các loại hồ cá Koi"
       />
 
-      <div className="p-6">
-        <div className="mb-4 flex justify-between items-center">
+      <div className="p-6 max-w-7xl mx-auto">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             {loadingShapes ? (
-              <Spin size="small" />
+              <div className="flex items-center gap-2 h-10 px-4 border border-gray-200 rounded-lg bg-white">
+                <Spin size="small" />
+                <span className="text-gray-500 text-sm">
+                  Đang tải hình dạng hồ...
+                </span>
+              </div>
             ) : pondShapes && pondShapes.length > 0 ? (
               <CustomButton
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleCreatePond}
+                className="!bg-green-600 hover:!bg-green-700 !border-green-600 hover:!border-green-700 !shadow-sm"
               >
                 Tạo hồ mới
               </CustomButton>
@@ -938,8 +956,11 @@ const KoiPondManagement = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <Spin size="large" tip="Đang tải..." />
+          <div className="flex flex-col justify-center items-center h-64 bg-white rounded-xl shadow-sm border border-gray-100">
+            <Spin size="large" />
+            <span className="mt-4 text-gray-500">
+              Đang tải dữ liệu hồ cá...
+            </span>
           </div>
         ) : error ? (
           <Error message={error} />
@@ -965,8 +986,24 @@ const KoiPondManagement = () => {
               ))
             ) : (
               <Col span={24}>
-                <div className="text-center p-8">
-                  <p>Không có dữ liệu hồ cá phù hợp với tìm kiếm.</p>
+                <div className="text-center p-12 bg-white rounded-lg border border-gray-200">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-16 w-16 text-gray-300 mx-auto mb-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 12H4"
+                    />
+                  </svg>
+                  <p className="text-gray-500 text-lg">
+                    Không có dữ liệu hồ cá phù hợp với tìm kiếm.
+                  </p>
                 </div>
               </Col>
             )}
@@ -1084,7 +1121,7 @@ const KoiPondManagement = () => {
                 <div className="mt-2">
                   <p className="text-gray-600 text-sm">Hình ảnh hiện tại:</p>
                   <img
-                    src={selectedPond.imageUrl}
+                    src={selectedPond.imageUrl || "/placeholder.svg"}
                     alt={selectedPond.pondName}
                     className="mt-1 h-20 object-cover rounded"
                   />
@@ -1215,72 +1252,86 @@ const KoiPondManagement = () => {
 
       {/* Modal xem chi tiết hồ cá */}
       <Modal
-        title={`Chi tiết hồ ${viewPond?.pondName || ""}`}
+        title={
+          <div className="flex items-center gap-2 py-1">
+            <span className="text-xl font-semibold text-gray-800">
+              Chi tiết hồ {viewPond?.pondName || ""}
+            </span>
+          </div>
+        }
         open={isViewModalVisible}
         onCancel={handleViewCancel}
         footer={[
-          <CustomButton key="close" onClick={handleViewCancel}>
+          <CustomButton key="close" onClick={handleViewCancel} className="px-5">
             Đóng
           </CustomButton>,
         ]}
         width={700}
+        centered
+        className="view-pond-modal"
       >
         {viewPond && (
           <div className="space-y-6">
             <div className="text-center mb-8">
-              {viewPond.imageUrl && (
-                <img
-                  src={viewPond.imageUrl}
-                  alt={viewPond.pondName}
-                  className="max-h-[300px] w-full object-cover rounded-lg mx-auto shadow-lg"
-                />
+              {viewPond.imageUrl ? (
+                <div className="overflow-hidden rounded-lg shadow-md">
+                  <img
+                    src={viewPond.imageUrl || "/placeholder.svg"}
+                    alt={viewPond.pondName}
+                    className="max-h-[350px] w-full object-cover rounded-lg mx-auto"
+                  />
+                </div>
+              ) : (
+                <div className="h-[200px] bg-gray-100 rounded-lg flex items-center justify-center">
+                  <span className="text-gray-400">Không có hình ảnh</span>
+                </div>
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
                   ID Hồ
                 </p>
-                <p className="text-base font-medium text-gray-800">
+                <p className="text-base font-medium text-gray-800 bg-white p-2 rounded border border-gray-100">
                   {viewPond.koiPondId}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
                   Tên hồ
                 </p>
-                <p className="text-base font-medium text-gray-800">
+                <p className="text-base font-medium text-gray-800 bg-white p-2 rounded border border-gray-100">
                   {viewPond.pondName}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                <p className="text-sm text-gray-500 uppercase tracking-wider font-medium">
                   Hình dạng
                 </p>
-                <p className="text-base font-medium text-gray-800">
+                <p className="text-base font-medium text-gray-800 bg-white p-2 rounded border border-gray-100">
                   {viewPond.shapeName}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
+            <div className="space-y-5 bg-white p-6 rounded-lg border border-gray-100">
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider font-medium mb-2">
                   Giới thiệu
                 </p>
-                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded border border-gray-100">
                   {viewPond.introduction}
                 </p>
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                <p className="text-sm text-gray-500 uppercase tracking-wider font-medium mb-2">
                   Mô tả chi tiết
                 </p>
-                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
+                <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded border border-gray-100">
                   {viewPond.description}
                 </p>
               </div>
@@ -1292,31 +1343,36 @@ const KoiPondManagement = () => {
       {/* Thêm style cho modal xác nhận xóa */}
       <style jsx global>{`
         .delete-confirmation-modal .ant-modal-content {
-          border-radius: 8px;
+          border-radius: 12px;
           overflow: hidden;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+            0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .delete-confirmation-modal .ant-modal-body {
-          padding: 24px;
+          padding: 28px 24px;
         }
         .delete-confirmation-modal .ant-modal-confirm-title {
           font-size: 18px;
           font-weight: 600;
+          color: #1f2937;
         }
         .delete-confirmation-modal .ant-modal-confirm-content {
-          margin-top: 8px;
+          margin-top: 12px;
           margin-bottom: 24px;
-          font-size: 14px;
+          font-size: 15px;
+          color: #4b5563;
         }
         .delete-confirmation-modal .ant-modal-confirm-btns {
           margin-top: 24px;
         }
         .delete-confirmation-modal .ant-btn-primary {
-          background-color: #f5222d;
-          border-color: #f5222d;
+          background-color: #ef4444;
+          border-color: #ef4444;
+          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
         .delete-confirmation-modal .ant-btn-primary:hover {
-          background-color: #ff4d4f;
-          border-color: #ff4d4f;
+          background-color: #dc2626;
+          border-color: #dc2626;
         }
         .shape-select {
           position: relative;
@@ -1344,6 +1400,68 @@ const KoiPondManagement = () => {
 
         .shape-select select option:hover {
           background-color: #f5f5f5;
+        }
+
+        /* Improved modal styles */
+        .ant-modal-content {
+          border-radius: 12px;
+          overflow: hidden;
+        }
+
+        .ant-modal-header {
+          padding: 16px 24px;
+          border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ant-modal-title {
+          font-weight: 600;
+          font-size: 18px;
+        }
+
+        .ant-modal-footer {
+          padding: 16px 24px;
+          border-top: 1px solid #f0f0f0;
+        }
+
+        .ant-form-item-label > label {
+          font-weight: 500;
+          color: #374151;
+        }
+
+        .view-pond-modal .ant-modal-content {
+          overflow: hidden;
+          border-radius: 12px;
+        }
+
+        .view-pond-modal .ant-modal-body {
+          padding: 24px;
+        }
+
+        /* Improved form inputs */
+        input.ant-input,
+        textarea.ant-input,
+        .ant-select-selector {
+          border-radius: 8px !important;
+          border-color: #d1d5db !important;
+        }
+
+        input.ant-input:hover,
+        textarea.ant-input:hover,
+        .ant-select-selector:hover {
+          border-color: #9ca3af !important;
+        }
+
+        input.ant-input:focus,
+        textarea.ant-input:focus,
+        .ant-select-selector:focus {
+          border-color: #90b77d !important;
+          box-shadow: 0 0 0 2px rgba(144, 183, 125, 0.2) !important;
+        }
+
+        /* Custom button hover effects */
+        .ant-btn:hover {
+          transform: translateY(-1px);
+          transition: transform 0.2s;
         }
       `}</style>
     </div>

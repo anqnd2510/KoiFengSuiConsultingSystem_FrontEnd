@@ -41,7 +41,7 @@ import {
   formatWorkshopsData,
 } from "../../services/workshopmaster.service";
 import {
-  getPendingWorkshops,
+  getPendingWorkshopsByMaster,
   formatPendingWorkshopsData,
 } from "../../services/approve.service";
 import { getCurrentMasterSchedule } from "../../services/masterSchedule.service";
@@ -54,10 +54,10 @@ const { Option } = Select;
 const { TabPane } = Tabs;
 
 const timeSlots = [
-  { label: '7:00 - 9:15', value: '1', start: '07:00', end: '09:15' },
-  { label: '9:30 - 11:45', value: '2', start: '09:30', end: '11:45' },
-  { label: '12:30 - 14:45', value: '3', start: '12:30', end: '14:45' },
-  { label: '15:00 - 17:15', value: '4', start: '15:00', end: '17:15' },
+  { label: "7:00 - 9:15", value: "1", start: "07:00", end: "09:15" },
+  { label: "9:30 - 11:45", value: "2", start: "09:30", end: "11:45" },
+  { label: "12:30 - 14:45", value: "3", start: "12:30", end: "14:45" },
+  { label: "15:00 - 17:15", value: "4", start: "15:00", end: "17:15" },
 ];
 
 // Component form cho workshop
@@ -94,7 +94,7 @@ const WorkshopForm = ({ form, loading, locations }) => {
   // Xử lý khi thay đổi ngày
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    form.setFieldValue('timeSlot', undefined);
+    form.setFieldValue("timeSlot", undefined);
     setSelectedTimeSlot(null);
     if (date) {
       fetchMasterSchedule(date);
@@ -104,39 +104,39 @@ const WorkshopForm = ({ form, loading, locations }) => {
   const isTimeSlotDisabled = (slot) => {
     if (!selectedDate || !masterSchedule.length) return false;
 
-    const selectedDateStr = selectedDate.format('YYYY-MM-DD');
-    const scheduleOnDate = masterSchedule.filter(schedule => {
-      const scheduleDate = dayjs(schedule.date).format('YYYY-MM-DD');
+    const selectedDateStr = selectedDate.format("YYYY-MM-DD");
+    const scheduleOnDate = masterSchedule.filter((schedule) => {
+      const scheduleDate = dayjs(schedule.date).format("YYYY-MM-DD");
       return scheduleDate === selectedDateStr;
     });
 
     // Kiểm tra xem có lịch Offline không
-    const hasOfflineSchedule = scheduleOnDate.some(schedule => 
-      schedule.type === 'Offline' || schedule.isFullDay
+    const hasOfflineSchedule = scheduleOnDate.some(
+      (schedule) => schedule.type === "Offline" || schedule.isFullDay
     );
     if (hasOfflineSchedule) return true;
 
     // Kiểm tra từng lịch để xác định slot có bị ảnh hưởng không
-    return scheduleOnDate.some(schedule => {
+    return scheduleOnDate.some((schedule) => {
       const affectedSlots = schedule.affectedTimeSlots || [];
-      const slotTime = timeSlots.find(t => t.value === slot.value)?.start;
+      const slotTime = timeSlots.find((t) => t.value === slot.value)?.start;
       return affectedSlots.includes(slotTime);
     });
   };
 
   const handleTimeSlotChange = (value) => {
-    const selectedSlot = timeSlots.find(slot => slot.value === value);
+    const selectedSlot = timeSlots.find((slot) => slot.value === value);
     setSelectedTimeSlot(selectedSlot);
     if (selectedSlot) {
       form.setFieldsValue({
-        startTime: dayjs(selectedSlot.start, 'HH:mm'),
-        endTime: dayjs(selectedSlot.end, 'HH:mm')
+        startTime: dayjs(selectedSlot.start, "HH:mm"),
+        endTime: dayjs(selectedSlot.end, "HH:mm"),
       });
     }
   };
 
   const disableTimeSlot = (value) => {
-    const slot = timeSlots.find(s => s.value === value);
+    const slot = timeSlots.find((s) => s.value === value);
     if (!slot) return false;
 
     // Kiểm tra xem có trùng với lịch của master không
@@ -163,7 +163,7 @@ const WorkshopForm = ({ form, loading, locations }) => {
           { required: true, message: "Vui lòng nhập tên hội thảo" },
           { whitespace: true, message: "Tên không được chỉ chứa khoảng trắng" },
           { min: 5, message: "Tên phải có ít nhất 5 ký tự" },
-          { max: 100, message: "Tên không được vượt quá 100 ký tự" }
+          { max: 100, message: "Tên không được vượt quá 100 ký tự" },
         ]}
       >
         <Input placeholder="Nhập tên hội thảo" />
@@ -172,15 +172,13 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Địa điểm"
         name="locationId"
-        rules={[
-          { required: true, message: "Vui lòng chọn địa điểm!" }
-        ]}
+        rules={[{ required: true, message: "Vui lòng chọn địa điểm!" }]}
       >
         <Select
           placeholder="Chọn địa điểm"
           options={locations.map((location) => ({
             value: location.id,
-            label: location.name
+            label: location.name,
           }))}
         />
       </Form.Item>
@@ -192,14 +190,18 @@ const WorkshopForm = ({ form, loading, locations }) => {
           { required: true, message: "Vui lòng chọn ngày tổ chức" },
           {
             validator: async (_, value) => {
-              if (value && value.isBefore(dayjs(), 'day')) {
-                return Promise.reject('Ngày tổ chức không được là ngày trong quá khứ');
+              if (value && value.isBefore(dayjs(), "day")) {
+                return Promise.reject(
+                  "Ngày tổ chức không được là ngày trong quá khứ"
+                );
               }
-              if (value && value.isBefore(dayjs().add(7, 'day'), 'day')) {
-                return Promise.reject('Ngày tổ chức phải cách ngày hiện tại ít nhất 1 tuần');
+              if (value && value.isBefore(dayjs().add(7, "day"), "day")) {
+                return Promise.reject(
+                  "Ngày tổ chức phải cách ngày hiện tại ít nhất 1 tuần"
+                );
               }
-            }
-          }
+            },
+          },
         ]}
       >
         <DatePicker
@@ -208,9 +210,10 @@ const WorkshopForm = ({ form, loading, locations }) => {
           placeholder="Chọn ngày tổ chức"
           onChange={handleDateChange}
           disabledDate={(current) => {
-            return current && (
-              current.isBefore(dayjs(), 'day') || 
-              current.isBefore(dayjs().add(7, 'day'), 'day')
+            return (
+              current &&
+              (current.isBefore(dayjs(), "day") ||
+                current.isBefore(dayjs().add(7, "day"), "day"))
             );
           }}
           className="bg-gray-50 hover:bg-white focus:bg-white transition-colors"
@@ -221,18 +224,16 @@ const WorkshopForm = ({ form, loading, locations }) => {
       <Form.Item
         label="Khung giờ"
         name="timeSlot"
-        rules={[
-          { required: true, message: "Vui lòng chọn khung giờ" }
-        ]}
+        rules={[{ required: true, message: "Vui lòng chọn khung giờ" }]}
       >
         <Select
           placeholder="Chọn khung giờ"
           onChange={handleTimeSlotChange}
           loading={loadingSchedule}
-          options={timeSlots.map(slot => ({
+          options={timeSlots.map((slot) => ({
             value: slot.value,
             label: slot.label,
-            disabled: disableTimeSlot(slot)
+            disabled: disableTimeSlot(slot),
           }))}
         />
       </Form.Item>
@@ -254,18 +255,18 @@ const WorkshopForm = ({ form, loading, locations }) => {
               { required: true, message: "Vui lòng nhập giá vé" },
               {
                 pattern: /^[0-9]+$/,
-                message: "Giá vé chỉ được chứa số"
+                message: "Giá vé chỉ được chứa số",
               },
               {
                 validator: async (_, value) => {
                   if (value && value <= 0) {
-                    return Promise.reject('Giá vé phải lớn hơn 0');
+                    return Promise.reject("Giá vé phải lớn hơn 0");
                   }
                   if (value && value <= 2000) {
-                    return Promise.reject('Giá vé phải lớn hơn 2000 VND');
+                    return Promise.reject("Giá vé phải lớn hơn 2000 VND");
                   }
-                }
-              }
+                },
+              },
             ]}
           >
             <Input placeholder="Nhập giá vé (VD: 300.000 VND)" />
@@ -277,21 +278,23 @@ const WorkshopForm = ({ form, loading, locations }) => {
             name="ticketSlots"
             rules={[
               { required: true, message: "Vui lòng nhập số lượng vé" },
-              { type: 'number', message: "Số lượng vé phải là số" },
+              { type: "number", message: "Số lượng vé phải là số" },
               {
                 validator: async (_, value) => {
                   if (value === null || value === undefined) {
                     return Promise.resolve();
                   }
                   if (value <= 0) {
-                    return Promise.reject('Số lượng vé phải lớn hơn 0');
+                    return Promise.reject("Số lượng vé phải lớn hơn 0");
                   }
                   if (value > 1000) {
-                    return Promise.reject('Số lượng vé không được vượt quá 1000');
+                    return Promise.reject(
+                      "Số lượng vé không được vượt quá 1000"
+                    );
                   }
                   return Promise.resolve();
-                }
-              }
+                },
+              },
             ]}
           >
             <InputNumber
@@ -321,15 +324,17 @@ const WorkshopForm = ({ form, loading, locations }) => {
               if (fileList && fileList.length > 0) {
                 const file = fileList[0].originFileObj;
                 if (file.size > 2 * 1024 * 1024) {
-                  return Promise.reject('Kích thước ảnh không được vượt quá 2MB');
+                  return Promise.reject(
+                    "Kích thước ảnh không được vượt quá 2MB"
+                  );
                 }
-                const isImage = file.type.startsWith('image/');
+                const isImage = file.type.startsWith("image/");
                 if (!isImage) {
-                  return Promise.reject('Chỉ chấp nhận file ảnh');
+                  return Promise.reject("Chỉ chấp nhận file ảnh");
                 }
               }
-            }
-          }
+            },
+          },
         ]}
       >
         <Upload listType="picture-card" maxCount={1} beforeUpload={() => false}>
@@ -346,9 +351,12 @@ const WorkshopForm = ({ form, loading, locations }) => {
         name="description"
         rules={[
           { required: true, message: "Vui lòng nhập mô tả hội thảo" },
-          { whitespace: true, message: "Mô tả không được chỉ chứa khoảng trắng" },
+          {
+            whitespace: true,
+            message: "Mô tả không được chỉ chứa khoảng trắng",
+          },
           { min: 20, message: "Mô tả phải có ít nhất 20 ký tự" },
-          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" }
+          { max: 1000, message: "Mô tả không được vượt quá 1000 ký tự" },
         ]}
       >
         <TextArea
@@ -383,7 +391,9 @@ const Workshop = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [originalWorkshops, setOriginalWorkshops] = useState([]);
   const [originalPendingWorkshops, setOriginalPendingWorkshops] = useState([]);
-  const [originalRejectedWorkshops, setOriginalRejectedWorkshops] = useState([]);
+  const [originalRejectedWorkshops, setOriginalRejectedWorkshops] = useState(
+    []
+  );
 
   // Kiểm tra xác thực khi component mount
   useEffect(() => {
@@ -418,7 +428,7 @@ const Workshop = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const data = await getAllWorkshops();
       console.log("Dữ liệu gốc từ getAllWorkshops:", data);
 
@@ -433,16 +443,21 @@ const Workshop = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
 
-      const updatedWorkshops = formattedData.map(workshop => {
+      const updatedWorkshops = formattedData.map((workshop) => {
         // Chuyển đổi ngày workshop từ format dd/mm/yyyy sang Date object
-        const [day, month, year] = workshop.date.split('/');
+        const [day, month, year] = workshop.date.split("/");
         const workshopDate = new Date(year, month - 1, day);
         workshopDate.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
 
-        console.log('So sánh ngày:', {
+        console.log("So sánh ngày:", {
           workshopDate: workshopDate.toISOString(),
           today: today.toISOString(),
-          comparison: workshopDate.getTime() === today.getTime() ? 'equal' : workshopDate.getTime() > today.getTime() ? 'future' : 'past'
+          comparison:
+            workshopDate.getTime() === today.getTime()
+              ? "equal"
+              : workshopDate.getTime() > today.getTime()
+              ? "future"
+              : "past",
         });
 
         // Nếu workshop đã bị từ chối hoặc đang chờ duyệt, giữ nguyên trạng thái
@@ -479,13 +494,13 @@ const Workshop = () => {
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop:", err);
       setError(err.message);
-      
+
       if (err.message.includes("đăng nhập")) {
         message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         navigate("/login");
         return;
       }
-      
+
       setWorkshops([]);
     } finally {
       setLoading(false);
@@ -496,8 +511,8 @@ const Workshop = () => {
   const fetchPendingWorkshops = async () => {
     try {
       setLoading(true);
-      const data = await getPendingWorkshops();
-      
+      const data = await getPendingWorkshopsByMaster();
+
       if (!data || !Array.isArray(data)) {
         throw new Error("Dữ liệu không hợp lệ từ API");
       }
@@ -508,13 +523,13 @@ const Workshop = () => {
       setPendingTotalPages(Math.ceil(formattedData.length / 10));
     } catch (err) {
       console.error("Lỗi khi lấy danh sách workshop chờ phê duyệt:", err);
-      
+
       if (err.message.includes("đăng nhập")) {
         message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại");
         navigate("/login");
         return;
       }
-      
+
       setPendingWorkshops([]);
     } finally {
       setLoading(false);
@@ -525,18 +540,20 @@ const Workshop = () => {
   const fetchLocations = async () => {
     try {
       setLoading(true);
-        const data = await getAllLocations();
+      const data = await getAllLocations();
       console.log("Response từ API locations:", data);
 
       if (Array.isArray(data)) {
         console.log("Đã tải được", data.length, "địa điểm");
-        const formattedLocations = data.map(location => ({
+        const formattedLocations = data.map((location) => ({
           id: location.locationId,
-          name: location.locationName
+          name: location.locationName,
         }));
         setLocations(formattedLocations);
       } else {
-        console.warn("Không có dữ liệu địa điểm hoặc dữ liệu không đúng định dạng");
+        console.warn(
+          "Không có dữ liệu địa điểm hoặc dữ liệu không đúng định dạng"
+        );
         setLocations([]);
       }
     } catch (err) {
@@ -549,7 +566,7 @@ const Workshop = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
-    
+
     if (!searchTerm.trim()) {
       // Nếu không có từ khóa tìm kiếm, hiển thị lại toàn bộ danh sách gốc
       setWorkshops(originalWorkshops);
@@ -561,23 +578,26 @@ const Workshop = () => {
     const searchTermLower = searchTerm.toLowerCase().trim();
 
     // Tìm kiếm trong danh sách workshops đã duyệt
-    const filteredWorkshops = originalWorkshops.filter(workshop =>
-      workshop.name.toLowerCase().includes(searchTermLower) ||
-      workshop.location.toLowerCase().includes(searchTermLower)
+    const filteredWorkshops = originalWorkshops.filter(
+      (workshop) =>
+        workshop.name.toLowerCase().includes(searchTermLower) ||
+        workshop.location.toLowerCase().includes(searchTermLower)
     );
     setWorkshops(filteredWorkshops);
 
     // Tìm kiếm trong danh sách workshops chờ duyệt
-    const filteredPendingWorkshops = originalPendingWorkshops.filter(workshop =>
-      workshop.name.toLowerCase().includes(searchTermLower) ||
-      workshop.location.toLowerCase().includes(searchTermLower)
+    const filteredPendingWorkshops = originalPendingWorkshops.filter(
+      (workshop) =>
+        workshop.name.toLowerCase().includes(searchTermLower) ||
+        workshop.location.toLowerCase().includes(searchTermLower)
     );
     setPendingWorkshops(filteredPendingWorkshops);
 
     // Tìm kiếm trong danh sách workshops bị từ chối
-    const filteredRejectedWorkshops = originalRejectedWorkshops.filter(workshop =>
-      workshop.name.toLowerCase().includes(searchTermLower) ||
-      workshop.location.toLowerCase().includes(searchTermLower)
+    const filteredRejectedWorkshops = originalRejectedWorkshops.filter(
+      (workshop) =>
+        workshop.name.toLowerCase().includes(searchTermLower) ||
+        workshop.location.toLowerCase().includes(searchTermLower)
     );
     setRejectedWorkshops(filteredRejectedWorkshops);
 
@@ -598,12 +618,12 @@ const Workshop = () => {
 
   const handleViewWorkshop = (workshop) => {
     console.log("Workshop data đầy đủ:", workshop);
-    
+
     // Kiểm tra và in ra URL hình ảnh
     let imageUrl = workshop.imageUrl || workshop.image || "";
     console.log("Image URL gốc:", imageUrl);
 
-    // Nếu URL đã là URL đầy đủ (https://res.cloudinary.com hoặc bất kỳ URL http nào khác), 
+    // Nếu URL đã là URL đầy đủ (https://res.cloudinary.com hoặc bất kỳ URL http nào khác),
     // giữ nguyên không thay đổi
     if (imageUrl && !imageUrl.startsWith("http")) {
       // Chỉ thêm domain nếu đường dẫn là tương đối
@@ -612,15 +632,15 @@ const Workshop = () => {
     } else {
       console.log("Sử dụng URL đầy đủ:", imageUrl);
     }
-    
+
     // Lưu trữ dữ liệu workshop và thêm imageUrl để hiển thị trong modal
     const updatedWorkshop = {
       ...workshop,
-      imageUrl: imageUrl
+      imageUrl: imageUrl,
     };
-    
+
     console.log("Workshop data đã được xử lý:", updatedWorkshop);
-    
+
     // Mở modal với dữ liệu workshop đã được cập nhật
     setSelectedWorkshop(updatedWorkshop);
     setIsViewModalOpen(true);
@@ -639,7 +659,7 @@ const Workshop = () => {
 
   // Thêm hàm kiểm tra trùng lịch
   const checkTimeConflict = (workshops, newWorkshop) => {
-    return workshops.some(workshop => {
+    return workshops.some((workshop) => {
       // Chỉ kiểm tra các workshop cùng địa điểm
       if (workshop.locationId !== newWorkshop.locationId) {
         return false;
@@ -654,7 +674,7 @@ const Workshop = () => {
 
       // Chuyển đổi thời gian sang phút để dễ so sánh
       const getMinutes = (timeStr) => {
-        const [hours, minutes] = timeStr.split(':').map(Number);
+        const [hours, minutes] = timeStr.split(":").map(Number);
         return hours * 60 + minutes;
       };
 
@@ -678,7 +698,13 @@ const Workshop = () => {
       setLoading(true);
 
       // Validate dữ liệu đầu vào
-      if (!values.name || !values.locationId || !values.description || !values.ticketPrice || !values.ticketSlots) {
+      if (
+        !values.name ||
+        !values.locationId ||
+        !values.description ||
+        !values.ticketPrice ||
+        !values.ticketSlots
+      ) {
         message.error("Vui lòng điền đầy đủ thông tin hội thảo");
         setLoading(false);
         return;
@@ -694,7 +720,7 @@ const Workshop = () => {
         description: values.description.trim(),
         ticketPrice: Number(values.ticketPrice),
         ticketSlots: Number(values.ticketSlots),
-        image: values.image
+        image: values.image,
       };
 
       // Gọi API tạo workshop
@@ -714,14 +740,16 @@ const Workshop = () => {
       }
     } catch (error) {
       console.error("Lỗi khi tạo hội thảo:", error);
-      
+
       let errorMessage = "Có lỗi xảy ra khi tạo hội thảo";
-      
+
       // Xử lý lỗi từ API Error object
-      if (error.message && typeof error.message === 'string') {
+      if (error.message && typeof error.message === "string") {
         try {
           // Kiểm tra xem message có phải là JSON string không
-          const errorObject = JSON.parse(error.message.substring(error.message.indexOf('{')));
+          const errorObject = JSON.parse(
+            error.message.substring(error.message.indexOf("{"))
+          );
           if (errorObject && errorObject.message) {
             errorMessage = errorObject.message;
           }
@@ -730,7 +758,7 @@ const Workshop = () => {
           errorMessage = error.message;
         }
       }
-      
+
       // Xử lý lỗi từ response data
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -739,7 +767,7 @@ const Workshop = () => {
 
       // Hiển thị message lỗi
       message.error(errorMessage);
-      
+
       // Xử lý redirect nếu là lỗi 401
       if (error.response?.status === 401) {
         navigate("/login");
@@ -836,20 +864,14 @@ const Workshop = () => {
       dataIndex: "capacity",
       key: "capacity",
       width: "10%",
-      render: (capacity) => (
-        <div className="text-center">
-          {capacity}
-        </div>
-      ),
+      render: (capacity) => <div className="text-center">{capacity}</div>,
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       width: "15%",
-      render: (status) => (
-        <Tag color={getStatusColor(status)}>{status}</Tag>
-      ),
+      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
       title: "Hành động",
@@ -940,11 +962,12 @@ const Workshop = () => {
               key="2"
             >
               <WorkshopTable
-                workshops={pendingWorkshops.map(workshop => ({
+                workshops={pendingWorkshops.map((workshop) => ({
                   ...workshop,
-                  price: typeof workshop.price === 'string' 
-                    ? parseFloat(workshop.price.replace(/[^\d]/g, ""))
-                    : workshop.price
+                  price:
+                    typeof workshop.price === "string"
+                      ? parseFloat(workshop.price.replace(/[^\d]/g, ""))
+                      : workshop.price,
                 }))}
                 onViewWorkshop={handleViewWorkshop}
                 loading={loading}
@@ -1031,7 +1054,11 @@ const Workshop = () => {
 
       {/* Modal xem chi tiết workshop */}
       <Modal
-        title={<div className="text-xl font-semibold">{selectedWorkshop?.name || "Chi tiết hội thảo"}</div>}
+        title={
+          <div className="text-xl font-semibold">
+            {selectedWorkshop?.name || "Chi tiết hội thảo"}
+          </div>
+        }
         open={isViewModalOpen}
         onCancel={handleCloseViewModal}
         footer={null}
@@ -1048,8 +1075,12 @@ const Workshop = () => {
                   className="max-h-[300px] w-auto mx-auto object-contain rounded-lg shadow-lg"
                   onError={(e) => {
                     console.error("Lỗi tải hình ảnh:", e);
-                    console.log("URL hình ảnh bị lỗi:", selectedWorkshop.imageUrl);
-                    e.target.src = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_15ba800aa21%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AHelvetica%2C%20monospace%3Bfont-size%3A40pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_15ba800aa21%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23E5E5E5%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22277%22%20y%3D%22217.7%22%3EKh%C3%B4ng%20c%C3%B3%20h%C3%ACnh%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E";
+                    console.log(
+                      "URL hình ảnh bị lỗi:",
+                      selectedWorkshop.imageUrl
+                    );
+                    e.target.src =
+                      "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22800%22%20height%3D%22400%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20800%20400%22%20preserveAspectRatio%3D%22none%22%3E%3Cdefs%3E%3Cstyle%20type%3D%22text%2Fcss%22%3E%23holder_15ba800aa21%20text%20%7B%20fill%3A%23999%3Bfont-weight%3Anormal%3Bfont-family%3AHelvetica%2C%20monospace%3Bfont-size%3A40pt%20%7D%20%3C%2Fstyle%3E%3C%2Fdefs%3E%3Cg%20id%3D%22holder_15ba800aa21%22%3E%3Crect%20width%3D%22800%22%20height%3D%22400%22%20fill%3D%22%23E5E5E5%22%3E%3C%2Frect%3E%3Cg%3E%3Ctext%20x%3D%22277%22%20y%3D%22217.7%22%3EKh%C3%B4ng%20c%C3%B3%20h%C3%ACnh%20%E1%BA%A3nh%3C%2Ftext%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E";
                   }}
                 />
               ) : (
@@ -1058,7 +1089,7 @@ const Workshop = () => {
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xl font-semibold">{selectedWorkshop.name}</h3>
               <Tag
@@ -1071,15 +1102,19 @@ const Workshop = () => {
 
             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-6 rounded-lg mb-6">
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Ngày tổ chức</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Ngày tổ chức
+                </p>
                 <p className="text-base font-medium text-gray-800 flex items-center">
                   <Calendar size={16} className="mr-2 text-gray-500" />
                   {selectedWorkshop.date}
                 </p>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Địa điểm</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Địa điểm
+                </p>
                 <p className="text-base font-medium text-gray-800 flex items-center">
                   <MapPin size={16} className="mr-2 text-gray-500" />
                   {selectedWorkshop.location}
@@ -1087,21 +1122,31 @@ const Workshop = () => {
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Thời gian</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Thời gian
+                </p>
                 <div>
                   <p className="text-base font-medium text-gray-800 flex items-center mb-1">
                     <Clock size={16} className="mr-2 text-gray-500" />
-                    Bắt đầu: {selectedWorkshop.startTime ? selectedWorkshop.startTime.substring(0, 5) : "Chưa có thông tin"}
+                    Bắt đầu:{" "}
+                    {selectedWorkshop.startTime
+                      ? selectedWorkshop.startTime.substring(0, 5)
+                      : "Chưa có thông tin"}
                   </p>
                   <p className="text-base font-medium text-gray-800 flex items-center">
                     <Clock size={16} className="mr-2 text-gray-500" />
-                    Kết thúc: {selectedWorkshop.endTime ? selectedWorkshop.endTime.substring(0, 5) : "Chưa có thông tin"}
+                    Kết thúc:{" "}
+                    {selectedWorkshop.endTime
+                      ? selectedWorkshop.endTime.substring(0, 5)
+                      : "Chưa có thông tin"}
                   </p>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Giá vé</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Giá vé
+                </p>
                 <p className="text-base font-medium text-gray-800 flex items-center">
                   <Ticket size={16} className="mr-2 text-gray-500" />
                   {selectedWorkshop.price === 0
@@ -1109,20 +1154,24 @@ const Workshop = () => {
                     : `${selectedWorkshop.price.toLocaleString("vi-VN")} VND`}
                 </p>
               </div>
-              
+
               <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">Số lượng vé</p>
+                <p className="text-sm text-gray-500 uppercase tracking-wider">
+                  Số lượng vé
+                </p>
                 <p className="text-base font-medium text-gray-800 flex items-center">
                   <Info size={16} className="mr-2 text-gray-500" />
-                  {selectedWorkshop.capacity !== undefined ? selectedWorkshop.capacity : (
-                    selectedWorkshop.ticketSlots || "Chưa có thông tin"
-                  )}
+                  {selectedWorkshop.capacity !== undefined
+                    ? selectedWorkshop.capacity
+                    : selectedWorkshop.ticketSlots || "Chưa có thông tin"}
                 </p>
               </div>
 
               {selectedWorkshop.masterName && (
                 <div className="space-y-2 col-span-2">
-                  <p className="text-sm text-gray-500 uppercase tracking-wider">Diễn giả</p>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider">
+                    Diễn giả
+                  </p>
                   <p className="text-base font-medium text-gray-800">
                     {selectedWorkshop.masterName}
                   </p>
@@ -1134,7 +1183,9 @@ const Workshop = () => {
             {selectedWorkshop.description && (
               <div className="space-y-4 bg-white p-6 rounded-lg border border-gray-100">
                 <div>
-                  <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">Mô tả</p>
+                  <p className="text-sm text-gray-500 uppercase tracking-wider mb-2">
+                    Mô tả
+                  </p>
                   <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap bg-gray-50 p-4 rounded">
                     {selectedWorkshop.description}
                   </p>
@@ -1211,12 +1262,12 @@ const Workshop = () => {
         .workshop-modal .ant-modal-footer {
           border-top: 1px solid #f0f0f0;
         }
-        
+
         /* Style cho calendar */
         .workshop-calendar .ant-picker-cell-disabled {
           pointer-events: none;
         }
-        
+
         .workshop-calendar .ant-picker-cell-disabled .ant-picker-cell-inner {
           background: rgba(0, 0, 0, 0) !important;
           color: rgba(0, 0, 0, 0.25) !important;
@@ -1229,7 +1280,9 @@ const Workshop = () => {
         }
 
         /* Hover effect cho các ngày có thể chọn */
-        .workshop-calendar .ant-picker-cell:not(.ant-picker-cell-disabled):hover .ant-picker-cell-inner {
+        .workshop-calendar
+          .ant-picker-cell:not(.ant-picker-cell-disabled):hover
+          .ant-picker-cell-inner {
           background: #e6f4ff !important;
         }
 

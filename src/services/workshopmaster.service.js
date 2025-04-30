@@ -20,13 +20,16 @@ export const getAllWorkshops = async () => {
     }
 
     // Gọi API sử dụng fetch thay vì apiClient
-    const response = await fetch(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-master`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `${WORKSHOP_ENDPOINT}/sort-createdDate-for-master`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    });
+    );
 
     // Kiểm tra response status
     if (!response.ok) {
@@ -109,7 +112,7 @@ export const getWorkshopById = async (id) => {
  */
 export const createWorkshop = async (workshopData) => {
   try {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
@@ -326,22 +329,25 @@ export const formatWorkshopsData = (workshopsData) => {
     // In ra dữ liệu hình ảnh từ API để debug
     console.log(`Workshop ${workshop.workshopId} raw image data:`, {
       imageUrl: workshop.imageUrl,
-      image: workshop.image
+      image: workshop.image,
     });
 
     // Ưu tiên kiểm tra trường imageUrl từ API
     if (workshop.imageUrl) {
       // Nếu là URL Cloudinary hoặc URL đầy đủ khác, sử dụng nguyên URL
-      if (workshop.imageUrl.startsWith('http')) {
+      if (workshop.imageUrl.startsWith("http")) {
         imageUrl = workshop.imageUrl;
       } else {
         // Nếu là đường dẫn tương đối, thêm base URL
-        imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(/^\//, "")}`;
+        imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(
+          /^\//,
+          ""
+        )}`;
       }
     }
     // Sau đó mới kiểm tra trường image
     else if (workshop.image) {
-      if (workshop.image.startsWith('http')) {
+      if (workshop.image.startsWith("http")) {
         imageUrl = workshop.image;
       } else {
         // Nếu là đường dẫn tương đối, thêm base URL
@@ -357,8 +363,12 @@ export const formatWorkshopsData = (workshopsData) => {
       date: new Date(workshop.startDate).toLocaleDateString("vi-VN"),
       startDate: workshop.startDate,
       endDate: workshop.endDate,
-      startTime: workshop.startTime ? workshop.startTime.substring(0, 5) : "Chưa có thông tin",
-      endTime: workshop.endTime ? workshop.endTime.substring(0, 5) : "Chưa có thông tin",
+      startTime: workshop.startTime
+        ? workshop.startTime.substring(0, 5)
+        : "Chưa có thông tin",
+      endTime: workshop.endTime
+        ? workshop.endTime.substring(0, 5)
+        : "Chưa có thông tin",
       image: imageUrl,
       imageUrl: imageUrl,
       price: workshop.price,
@@ -368,7 +378,7 @@ export const formatWorkshopsData = (workshopsData) => {
       status: mapWorkshopStatus(workshop.status),
       description: workshop.description || "",
       content: workshop.content || "",
-      masterName: workshop.masterName || ""
+      masterName: workshop.masterName || "",
     };
   });
 };
@@ -386,7 +396,9 @@ export const getPendingWorkshops = async () => {
     }
 
     // Sử dụng API getAllWorkshops thay vì pending-workshops
-    const response = await apiClient.get(`${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`);
+    const response = await apiClient.get(
+      `${WORKSHOP_ENDPOINT}/sort-createdDate-for-web`
+    );
     console.log("API Response:", response.data);
 
     // Kiểm tra cấu trúc response
@@ -418,4 +430,3 @@ export const getPendingWorkshops = async () => {
     throw error;
   }
 };
-  
