@@ -118,7 +118,6 @@ export const getOfflineConsultingBookings = async () => {
     const response = await apiClient.get(
       `${BOOKING_ENDPOINT}/master/booking-offlines`
     );
-    console.log("API Response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching online consulting bookings:", error);

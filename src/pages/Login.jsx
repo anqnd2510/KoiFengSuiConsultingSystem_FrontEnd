@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { message, Modal, Form, Input } from "antd";
 import { login, register } from "../services/auth.service";
-import { forgotPassword } from "../services/account.service";
+import { forgotPassword, verifyOTP } from "../services/account.service";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,9 +10,13 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [isSignUpMode, setIsSignUpMode] = useState(false);
-  const [isForgotPasswordModalVisible, setIsForgotPasswordModalVisible] = useState(false);
+  const [isForgotPasswordModalVisible, setIsForgotPasswordModalVisible] =
+    useState(false);
   const [forgotPasswordForm] = Form.useForm();
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState("");
+  const [otpVerifyLoading, setOtpVerifyLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -282,8 +286,8 @@ const Login = () => {
 
         console.log("Determined role:", role);
 
-        localStorage.setItem("role", role);
         localStorage.setItem("userRole", role);
+        localStorage.setItem("role", role);
 
         console.log("Tokens saved, navigating based on role:", role);
 
@@ -350,15 +354,15 @@ const Login = () => {
 
   const handleForgotPassword = async () => {
     try {
-      const values = await forgotPasswordForm.validateFields();
+      const values = await forgotPasswordForm.validateFields(["email"]);
       setForgotPasswordLoading(true);
+      setForgotPasswordEmail(values.email);
 
       const response = await forgotPassword(values.email);
-      
+
       if (response && response.statusCode === 200) {
-        message.success("Vui lòng kiểm tra email của bạn để đặt lại mật khẩu!");
-        setIsForgotPasswordModalVisible(false);
-        forgotPasswordForm.resetFields();
+        message.success("Mã OTP đã được gửi đến email của bạn!");
+        setForgotPasswordStep(2); // Chuyển sang bước nhập OTP
       } else {
         message.error(response?.message || "Có lỗi xảy ra khi gửi yêu cầu");
       }
@@ -374,12 +378,67 @@ const Login = () => {
     }
   };
 
+  const handleVerifyOTP = async () => {
+    try {
+      const values = await forgotPasswordForm.validateFields(["otp"]);
+      setOtpVerifyLoading(true);
+
+      console.log(
+        "Verifying OTP:",
+        values.otp,
+        "for email:",
+        forgotPasswordEmail
+      );
+
+      // Đảm bảo OTP là chuỗi
+      const otpValue = values.otp.toString().trim();
+
+      const response = await verifyOTP(forgotPasswordEmail, otpValue);
+
+      if (response && response.statusCode === 200) {
+        // Nếu xác thực thành công
+        message.success(
+          response.message ||
+            "Xác thực OTP thành công! Mật khẩu mới đã được gửi đến email của bạn."
+        );
+
+        // Đóng modal và reset form
+        setIsForgotPasswordModalVisible(false);
+        forgotPasswordForm.resetFields();
+        setForgotPasswordStep(1);
+      } else {
+        message.error(response?.message || "Mã OTP không đúng");
+      }
+    } catch (error) {
+      console.error("Error in OTP verification:", error);
+      if (error.response?.data?.message) {
+        message.error(error.response.data.message);
+      } else if (error.message) {
+        message.error(error.message);
+      } else {
+        message.error("Có lỗi xảy ra khi xác thực OTP");
+      }
+    } finally {
+      setOtpVerifyLoading(false);
+    }
+  };
+
+  const handleCloseForgotPasswordModal = () => {
+    setIsForgotPasswordModalVisible(false);
+    forgotPasswordForm.resetFields();
+    setForgotPasswordStep(1);
+  };
+
   return (
     <>
       <div className="min-h-screen relative flex items-center justify-center p-4">
         {/* Background image */}
         <div className="fixed inset-0">
-          <img src="/KoiBase.png" alt="" className="w-full h-full object-cover" />
+          <img
+            src="/KoiBase.png"
+            alt=""
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-[#90B77D]/80 backdrop-blur-xl"></div>
         </div>
 
@@ -531,7 +590,9 @@ const Login = () => {
                   onSubmit={handleRegisterSubmit}
                   className="w-full max-w-md space-y-1.5 py-2"
                 >
-                  <h2 className="text-3xl font-bold text-white mb-2">Đăng ký</h2>
+                  <h2 className="text-3xl font-bold text-white mb-2">
+                    Đăng ký
+                  </h2>
 
                   <div className="mb-0.5">
                     <label
@@ -549,8 +610,10 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập họ và tên"
                       required
-                      onInvalid={(e) => e.target.setCustomValidity('Vui lòng nhập họ và tên')}
-                      onInput={(e) => e.target.setCustomValidity('')}
+                      onInvalid={(e) =>
+                        e.target.setCustomValidity("Vui lòng nhập họ và tên")
+                      }
+                      onInput={(e) => e.target.setCustomValidity("")}
                     />
                   </div>
 
@@ -573,12 +636,14 @@ const Login = () => {
                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                       onInvalid={(e) => {
                         if (e.target.validity.valueMissing) {
-                          e.target.setCustomValidity('Vui lòng nhập email')
+                          e.target.setCustomValidity("Vui lòng nhập email");
                         } else if (e.target.validity.patternMismatch) {
-                          e.target.setCustomValidity('Vui lòng nhập email hợp lệ (ví dụ: example@domain.com)')
+                          e.target.setCustomValidity(
+                            "Vui lòng nhập email hợp lệ (ví dụ: example@domain.com)"
+                          );
                         }
                       }}
-                      onInput={(e) => e.target.setCustomValidity('')}
+                      onInput={(e) => e.target.setCustomValidity("")}
                     />
                   </div>
 
@@ -601,12 +666,16 @@ const Login = () => {
                       pattern="[0-9]{10,11}"
                       onInvalid={(e) => {
                         if (e.target.validity.valueMissing) {
-                          e.target.setCustomValidity('Vui lòng nhập số điện thoại')
+                          e.target.setCustomValidity(
+                            "Vui lòng nhập số điện thoại"
+                          );
                         } else if (e.target.validity.patternMismatch) {
-                          e.target.setCustomValidity('Số điện thoại phải có từ 10 đến 11 số')
+                          e.target.setCustomValidity(
+                            "Số điện thoại phải có từ 10 đến 11 số"
+                          );
                         }
                       }}
-                      onInput={(e) => e.target.setCustomValidity('')}
+                      onInput={(e) => e.target.setCustomValidity("")}
                     />
                   </div>
 
@@ -626,8 +695,10 @@ const Login = () => {
                         onChange={handleRegisterChange}
                         className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                         required
-                        onInvalid={(e) => e.target.setCustomValidity('Vui lòng chọn ngày sinh')}
-                        onInput={(e) => e.target.setCustomValidity('')}
+                        onInvalid={(e) =>
+                          e.target.setCustomValidity("Vui lòng chọn ngày sinh")
+                        }
+                        onInput={(e) => e.target.setCustomValidity("")}
                       />
                     </div>
 
@@ -679,8 +750,10 @@ const Login = () => {
                         className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                         placeholder="Nhập mật khẩu"
                         required
-                        onInvalid={(e) => e.target.setCustomValidity('Vui lòng nhập mật khẩu')}
-                        onInput={(e) => e.target.setCustomValidity('')}
+                        onInvalid={(e) =>
+                          e.target.setCustomValidity("Vui lòng nhập mật khẩu")
+                        }
+                        onInput={(e) => e.target.setCustomValidity("")}
                       />
                       <button
                         type="button"
@@ -736,8 +809,10 @@ const Login = () => {
                       className="w-full px-3 py-1.5 bg-white/10 border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B69D74] focus:border-transparent text-white placeholder-white/50"
                       placeholder="Nhập lại mật khẩu"
                       required
-                      onInvalid={(e) => e.target.setCustomValidity('Vui lòng xác nhận mật khẩu')}
-                      onInput={(e) => e.target.setCustomValidity('')}
+                      onInvalid={(e) =>
+                        e.target.setCustomValidity("Vui lòng xác nhận mật khẩu")
+                      }
+                      onInput={(e) => e.target.setCustomValidity("")}
                     />
                   </div>
 
@@ -976,52 +1051,114 @@ const Login = () => {
 
       {/* Modal Quên mật khẩu */}
       <Modal
-        title={<div className="text-xl font-semibold">Quên mật khẩu</div>}
+        title={
+          <div className="text-xl font-semibold">
+            {forgotPasswordStep === 1 && "Quên mật khẩu"}
+            {forgotPasswordStep === 2 && "Xác thực OTP"}
+          </div>
+        }
         open={isForgotPasswordModalVisible}
-        onCancel={() => {
-          setIsForgotPasswordModalVisible(false);
-          forgotPasswordForm.resetFields();
-        }}
+        onCancel={handleCloseForgotPasswordModal}
         footer={null}
         width={400}
       >
-        <Form
-          form={forgotPasswordForm}
-          layout="vertical"
-          className="pt-4"
-        >
-          <Form.Item
-            label="Email"
-            name="email"
-            rules={[
-              { required: true, message: "Vui lòng nhập email" },
-              { type: "email", message: "Email không hợp lệ" }
-            ]}
-          >
-            <Input 
-              placeholder="Nhập email của bạn"
-              className="rounded-lg"
-            />
-          </Form.Item>
+        <Form form={forgotPasswordForm} layout="vertical" className="pt-4">
+          {forgotPasswordStep === 1 && (
+            <>
+              <p className="mb-4 text-gray-600">
+                Nhập email của bạn để nhận mã OTP đặt lại mật khẩu.
+              </p>
+              <Form.Item
+                label="Email"
+                name="email"
+                rules={[
+                  { required: true, message: "Vui lòng nhập email" },
+                  { type: "email", message: "Email không hợp lệ" },
+                ]}
+              >
+                <Input
+                  placeholder="Nhập email của bạn"
+                  className="rounded-lg"
+                />
+              </Form.Item>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <button
-              onClick={() => {
-                setIsForgotPasswordModalVisible(false);
-                forgotPasswordForm.resetFields();
-              }}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-            >
-              Hủy
-            </button>
-            <button
-              onClick={handleForgotPassword}
-              disabled={forgotPasswordLoading}
-              className="px-4 py-2 bg-[#90B77D] text-white rounded-lg hover:bg-[#829e72] disabled:opacity-50"
-            >
-              {forgotPasswordLoading ? "Đang xử lý..." : "Gửi yêu cầu"}
-            </button>
-          </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <button
+                  onClick={handleCloseForgotPasswordModal}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Hủy
+                </button>
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={forgotPasswordLoading}
+                  className="px-4 py-2 bg-[#90B77D] text-white rounded-lg hover:bg-[#829e72] disabled:opacity-50"
+                >
+                  {forgotPasswordLoading ? "Đang xử lý..." : "Gửi yêu cầu"}
+                </button>
+              </div>
+            </>
+          )}
+
+          {forgotPasswordStep === 2 && (
+            <>
+              <p className="mb-4 text-gray-600">
+                Mã OTP đã được gửi đến email {forgotPasswordEmail}. Vui lòng
+                kiểm tra và nhập mã xác thực.
+              </p>
+              <Form.Item
+                label="Mã OTP"
+                name="otp"
+                rules={[
+                  { required: true, message: "Vui lòng nhập mã OTP" },
+                  {
+                    pattern: /^\d+$/,
+                    message: "OTP chỉ bao gồm số",
+                  },
+                  {
+                    len: 6,
+                    message: "Mã OTP phải có đúng 6 ký tự số",
+                  },
+                ]}
+                validateTrigger={["onChange", "onBlur"]}
+              >
+                <Input
+                  placeholder="Nhập mã OTP"
+                  className="rounded-lg"
+                  maxLength={6}
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                />
+              </Form.Item>
+
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={handleForgotPassword}
+                  disabled={forgotPasswordLoading}
+                  className="text-[#90B77D] hover:underline text-sm"
+                >
+                  Gửi lại mã
+                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setForgotPasswordStep(1)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                  >
+                    Quay lại
+                  </button>
+                  <button
+                    onClick={handleVerifyOTP}
+                    disabled={otpVerifyLoading}
+                    className="px-4 py-2 bg-[#90B77D] text-white rounded-lg hover:bg-[#829e72] disabled:opacity-50"
+                  >
+                    {otpVerifyLoading ? "Đang xác thực..." : "Xác nhận"}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
         </Form>
       </Modal>
     </>

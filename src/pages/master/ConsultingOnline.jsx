@@ -43,10 +43,19 @@ const ConsultingOnline = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching consulting data:", err);
-      setError(
-        "Không thể tải dữ liệu tư vấn trực tuyến. Vui lòng thử lại sau."
-      );
-      setConsultingData([]);
+      // Nếu là lỗi 404 hoặc không có dữ liệu, không hiển thị lỗi
+      if (
+        err.response &&
+        (err.response.status === 404 || err.response.status === "404")
+      ) {
+        setConsultingData([]);
+        setError(null);
+      } else {
+        // Chỉ hiển thị lỗi khi có vấn đề kết nối hoặc server
+        setError(
+          "Không thể tải dữ liệu tư vấn trực tuyến. Vui lòng thử lại sau."
+        );
+      }
     } finally {
       setLoading(false);
     }

@@ -15,8 +15,6 @@ import ConsultingOnline from "../pages/master/ConsultingOnline";
 import ConsultingOffline from "../pages/master/ConsultingOffline";
 import KoiFishManagement from "../pages/staff/KoiFishManagement";
 import KoiPondManagement from "../pages/staff/KoiPondManagement";
-import Feedback from "../pages/Feedback";
-import Certificate from "../pages/Certificate";
 import Master from "../pages/staff/Master";
 import Customer from "../pages/staff/Customer";
 import Notifications from "../pages/staff/Notifications";
@@ -128,16 +126,6 @@ export const mainRoutes = [
     path: "staff/koi-pond-management",
     element: <KoiPondManagement />,
     roles: ["staff"],
-  },
-  {
-    path: "feedback",
-    element: <Feedback />,
-    roles: ["staff", "master", "manager"],
-  },
-  {
-    path: "certificate",
-    element: <Certificate />,
-    roles: ["staff", "master", "manager"],
   },
   {
     path: "staff/master-management",

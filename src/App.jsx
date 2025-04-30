@@ -15,14 +15,16 @@ function App() {
   return (
     <Routes>
       {/* Đường dẫn gốc sẽ chuyển hướng về login nếu chưa có token */}
-      <Route 
-        path="/" 
-        element={hasToken ? <RoleBasedRedirect /> : <Navigate to="/login" replace />} 
+      <Route
+        path="/"
+        element={
+          hasToken ? <RoleBasedRedirect /> : <Navigate to="/login" replace />
+        }
       />
 
       {/* Đường dẫn đăng nhập */}
       <Route path="/login" element={<Login />} />
-      
+
       {/* Đường dẫn trang chờ xác nhận tài khoản */}
       <Route path="/pending" element={<Pending />} />
 
@@ -39,16 +41,14 @@ function App() {
             }
           />
         ))}
-        
+
         {/* Admin Routes */}
         {adminRoutes.map((route) => (
           <Route
             key={route.path}
             path={`admin/${route.path}`}
             element={
-              <ProtectedRoute roles={["admin"]}>
-                {route.element}
-              </ProtectedRoute>
+              <ProtectedRoute roles={["admin"]}>{route.element}</ProtectedRoute>
             }
           />
         ))}

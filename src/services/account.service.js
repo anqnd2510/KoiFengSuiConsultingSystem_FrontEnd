@@ -1,5 +1,4 @@
 import apiClient from "./apiClient";
-import axios from "axios";
 
 const ACCOUNT_ENDPOINT = "/Account";
 
@@ -10,12 +9,55 @@ const ACCOUNT_ENDPOINT = "/Account";
  */
 export const getAllAccounts = async () => {
   try {
-    const response = await apiClient.get(`${ACCOUNT_ENDPOINT}/accounts`);
-    console.log("API response:", response.data);
+    // Lấy token từ localStorage
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
+    }
+
+    // Log thêm thông tin để debug
+    console.log("Fetching all accounts with token...");
+
+    // Đảm bảo đường dẫn API đúng và thêm token vào header
+    const response = await apiClient.get(`${ACCOUNT_ENDPOINT}/accounts`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    console.log("API response accounts:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching accounts:", error);
-    throw error;
+
+    // Ghi log chi tiết hơn về lỗi
+    if (error.response) {
+      // Lỗi server trả về
+      console.error("Server response error:", {
+        status: error.response.status,
+        data: error.response.data,
+        headers: error.response.headers,
+      });
+
+      // Xử lý các trường hợp lỗi cụ thể
+      if (error.response.status === 401) {
+        throw new Error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại");
+      } else if (error.response.status === 403) {
+        throw new Error("Bạn không có quyền truy cập tính năng này");
+      }
+    } else if (error.request) {
+      // Request được gửi nhưng không nhận được response
+      console.error("No response received:", error.request);
+    } else {
+      // Lỗi khi setup request
+      console.error("Request setup error:", error.message);
+    }
+
+    // Ném lại lỗi với thông tin rõ ràng hơn
+    throw {
+      message: error.message || "Không thể tải danh sách tài khoản",
+      originalError: error,
+    };
   }
 };
 
@@ -153,13 +195,13 @@ export const editProfile = async (profileData) => {
 
     // Tạo FormData từ profileData
     const formData = new FormData();
-    Object.keys(profileData).forEach(key => {
+    Object.keys(profileData).forEach((key) => {
       // Xử lý đặc biệt cho trường dob để đảm bảo format đúng
-      if (key === 'dob' && profileData[key]) {
+      if (key === "dob" && profileData[key]) {
         formData.append(key, profileData[key]);
-      } 
+      }
       // Xử lý đặc biệt cho trường gender để chuyển thành boolean
-      else if (key === 'gender') {
+      else if (key === "gender") {
         formData.append(key, profileData[key].toString());
       }
       // Xử lý các trường còn lại
@@ -170,7 +212,7 @@ export const editProfile = async (profileData) => {
 
     // Log để kiểm tra dữ liệu trước khi gửi
     for (let pair of formData.entries()) {
-      console.log(pair[0] + ': ' + pair[1]);
+      console.log(pair[0] + ": " + pair[1]);
     }
 
     const response = await apiClient.put(
@@ -178,9 +220,9 @@ export const editProfile = async (profileData) => {
       formData,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       }
     );
 
@@ -212,7 +254,7 @@ export const changePassword = async (passwordData) => {
     const formattedData = {
       OldPassword: passwordData.oldPassword,
       NewPassword: passwordData.newPassword,
-      ConfirmPassword: passwordData.confirmPassword
+      ConfirmPassword: passwordData.confirmPassword,
     };
 
     console.log("Sending password change request:", formattedData);
@@ -222,9 +264,9 @@ export const changePassword = async (passwordData) => {
       formattedData,
       {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -269,8 +311,8 @@ export const forgotPassword = async (email) => {
       { Email: email },
       {
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       }
     );
 
@@ -283,6 +325,47 @@ export const forgotPassword = async (email) => {
       switch (error.response.data.statusCode) {
         case 400:
           throw new Error("Email không hợp lệ");
+        case 404:
+          throw new Error("Không tìm thấy tài khoản với email này");
+        default:
+          throw new Error(error.response.data.message);
+      }
+    }
+    throw error;
+  }
+};
+
+export const verifyOTP = async (email, otp) => {
+  try {
+    console.log(
+      "Sending OTP verification request for email:",
+      email,
+      "OTP:",
+      otp
+    );
+
+    // Sử dụng POST nhưng đặt tham số trong query string
+    const response = await apiClient.post(
+      `${ACCOUNT_ENDPOINT}/verify-otp?email=${encodeURIComponent(
+        email
+      )}&otp=${encodeURIComponent(otp)}`,
+      {}, // body rỗng
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log("OTP verification response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error in OTP verification:", error);
+    if (error.response?.data?.message) {
+      // Xử lý các trường hợp lỗi cụ thể từ BE
+      switch (error.response.data.statusCode) {
+        case 400:
+          throw new Error("OTP không hợp lệ hoặc đã hết hạn");
         case 404:
           throw new Error("Không tìm thấy tài khoản với email này");
         default:

@@ -98,13 +98,17 @@ const ConsultingOffline = () => {
       }
     } catch (err) {
       console.error("Lỗi khi tải dữ liệu tư vấn trực tiếp:", err);
-      // Chỉ hiển thị lỗi khi có vấn đề thực sự với API (không phải do không có dữ liệu)
-      if (err.response && err.response.status !== 404) {
+      // Nếu là lỗi 404 hoặc không có dữ liệu, không hiển thị lỗi
+      if (
+        err.response &&
+        (err.response.status === 404 || err.response.status === "404")
+      ) {
+        setBookings([]);
+        setTotalPages(1);
+      } else {
+        // Chỉ hiển thị lỗi khi có vấn đề kết nối hoặc server
         setError("Không thể tải dữ liệu. Vui lòng thử lại sau.");
         message.error("Không thể tải dữ liệu tư vấn trực tiếp");
-      } else {
-        // Nếu là lỗi 404 (không tìm thấy dữ liệu), đặt mảng rỗng
-        setBookings([]);
       }
     } finally {
       setLoading(false);
