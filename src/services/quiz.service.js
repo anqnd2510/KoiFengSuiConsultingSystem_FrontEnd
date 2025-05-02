@@ -187,7 +187,7 @@ export const importQuiz = async (formData) => {
 
     // Sửa endpoint API đúng với server
     const response = await axios.post(
-      "http://localhost:5261/api/Upload/UploadExcelFile",
+      "https://koifengshui-001-site1.ltempurl.com/api/Upload/UploadExcelFile",
       formData,
       {
         headers: {

@@ -7,7 +7,8 @@ const getAuthToken = () => {
 
 // Tạo instance axios với cấu hình mặc định
 const apiClient = axios.create({
-  baseURL: "http://localhost:5261/api",
+  //baseURL: "http://localhost:5261/api",
+  baseURL: "https://koifengshui-001-site1.ltempurl.com/api",
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",

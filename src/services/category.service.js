@@ -67,7 +67,9 @@ export const createCategory = async (categoryData) => {
     }
 
     // Sử dụng axios thay vì apiClient để tùy chỉnh headers và content-type
-    const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
+    const baseUrl =
+      apiClient.defaults.baseURL ||
+      "https://koifengshui-001-site1.ltempurl.com";
 
     const response = await axios.post(
       `${baseUrl}${CATEGORY_ENDPOINT}/create`,
@@ -120,7 +122,9 @@ export const updateCategoryStatus = async (categoryId, status) => {
 export const updateCategory = async (categoryId, categoryData) => {
   try {
     if (!categoryId) {
-      throw new Error("Thiếu ID danh mục. Vui lòng cung cấp ID danh mục cần cập nhật.");
+      throw new Error(
+        "Thiếu ID danh mục. Vui lòng cung cấp ID danh mục cần cập nhật."
+      );
     }
 
     const token = localStorage.getItem("accessToken");
@@ -131,10 +135,12 @@ export const updateCategory = async (categoryId, categoryData) => {
     // Log để debug
     console.log("Updating category with data:", {
       categoryId,
-      categoryName: categoryData.get("CategoryName")
+      categoryName: categoryData.get("CategoryName"),
     });
 
-    const baseUrl = apiClient.defaults.baseURL || "http://localhost:5261";
+    const baseUrl =
+      apiClient.defaults.baseURL ||
+      "https://koifengshui-001-site1.ltempurl.com";
     const apiUrl = `${baseUrl}${CATEGORY_ENDPOINT}/${categoryId}`;
 
     const response = await axios.put(apiUrl, categoryData, {
@@ -150,7 +156,7 @@ export const updateCategory = async (categoryId, categoryData) => {
     if (error.response) {
       console.error("Server response:", error.response.data);
       console.error("Status code:", error.response.status);
-      throw error.response.data;  // Ném lỗi từ server để component có thể xử lý
+      throw error.response.data; // Ném lỗi từ server để component có thể xử lý
     }
     throw error;
   }

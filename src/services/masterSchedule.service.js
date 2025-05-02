@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-const API_URL = "http://localhost:5261/api/MasterSchedule";
+const API_URL = "/MasterSchedule";
 
 /**
  * Hàm lấy lịch của master hiện tại

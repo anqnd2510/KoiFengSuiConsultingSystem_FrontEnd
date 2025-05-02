@@ -139,20 +139,23 @@ const KoiFishService = {
       console.log("FormData entries:");
       for (let pair of formData.entries()) {
         console.log(
-          pair[0] + ": " + 
-          (pair[1] instanceof File ? `File ${pair[1].name} (${pair[1].size} bytes)` : pair[1])
+          pair[0] +
+            ": " +
+            (pair[1] instanceof File
+              ? `File ${pair[1].name} (${pair[1].size} bytes)`
+              : pair[1])
         );
       }
 
       // Gửi request với Content-Type là multipart/form-data
       const response = await axios({
-        method: 'post',
-        url: 'http://localhost:5261/api/KoiVariety/create',
+        method: "post",
+        url: "https://koifengshui-001-site1.ltempurl.com/api/KoiVariety/create",
         data: formData,
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Accept': 'application/json'
-        }
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
       });
 
       console.log("Create koi fish response:", response);
@@ -164,10 +167,10 @@ const KoiFishService = {
         console.error("Response error status:", error.response.status);
         console.error("Response error headers:", error.response.headers);
         throw new Error(
-          error.response.data?.title || 
-          error.response.data?.message || 
-          error.response.data?.errors?.join(", ") || 
-          "Không thể tạo mới cá Koi"
+          error.response.data?.title ||
+            error.response.data?.message ||
+            error.response.data?.errors?.join(", ") ||
+            "Không thể tạo mới cá Koi"
         );
       }
       throw error;
@@ -182,17 +185,19 @@ const KoiFishService = {
       // Log dữ liệu FormData trước khi gửi
       console.log("FormData entries trước khi gửi:");
       for (let pair of formData.entries()) {
-        console.log(pair[0] + ": " + (pair[1] instanceof File ? pair[1].name : pair[1]));
+        console.log(
+          pair[0] + ": " + (pair[1] instanceof File ? pair[1].name : pair[1])
+        );
       }
 
       // Gửi request PUT với FormData
       const response = await axios({
-        method: 'put',
-        url: `http://localhost:5261/api/KoiVariety/${id}`,
+        method: "put",
+        url: `https://koifengshui-001-site1.ltempurl.com/api/KoiVariety/${id}`,
         data: formData,
         headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       console.log(`Kết quả cập nhật cá Koi ID ${id}:`, response.data);
@@ -204,8 +209,8 @@ const KoiFishService = {
         console.error("Server response status:", error.response.status);
         throw new Error(
           error.response.data?.message ||
-          error.response.data?.title ||
-          "Không thể cập nhật cá Koi"
+            error.response.data?.title ||
+            "Không thể cập nhật cá Koi"
         );
       }
       throw error;

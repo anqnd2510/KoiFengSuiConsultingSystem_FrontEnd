@@ -5,7 +5,8 @@
 import apiClient from "./apiClient";
 
 // URL cơ sở của API
-const WORKSHOP_ENDPOINT = "http://localhost:5261/api/Workshop";
+const WORKSHOP_ENDPOINT =
+  "https://koifengshui-001-site1.ltempurl.com/api/Workshop";
 
 /**
  * Lấy danh sách tất cả workshop
@@ -339,7 +340,7 @@ export const formatWorkshopsData = (workshopsData) => {
         imageUrl = workshop.imageUrl;
       } else {
         // Nếu là đường dẫn tương đối, thêm base URL
-        imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(
+        imageUrl = `https://koifengshui-001-site1.ltempurl.com/${workshop.imageUrl.replace(
           /^\//,
           ""
         )}`;
@@ -351,7 +352,10 @@ export const formatWorkshopsData = (workshopsData) => {
         imageUrl = workshop.image;
       } else {
         // Nếu là đường dẫn tương đối, thêm base URL
-        imageUrl = `http://localhost:5261/${workshop.image.replace(/^\//, "")}`;
+        imageUrl = `https://koifengshui-001-site1.ltempurl.com/${workshop.image.replace(
+          /^\//,
+          ""
+        )}`;
       }
     }
 
