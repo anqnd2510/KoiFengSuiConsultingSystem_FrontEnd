@@ -8,7 +8,7 @@ import axios from "axios";
 
 // URL cơ sở của API
 const WORKSHOP_ENDPOINT = "/Workshop";
-const FULL_API_URL = "http://localhost:5261/api";
+const FULL_API_URL = "https://koifengshui-001-site1.ltempurl.com/api";
 
 /**
  * Lấy danh sách workshop chờ phê duyệt
@@ -179,7 +179,7 @@ export const formatPendingWorkshopsData = (workshopsData) => {
           if (workshop.imageUrl.startsWith("http")) {
             imageUrl = workshop.imageUrl;
           } else {
-            imageUrl = `http://localhost:5261/${workshop.imageUrl.replace(
+            imageUrl = `https://koifengshui-001-site1.ltempurl.com/${workshop.imageUrl.replace(
               /^\//,
               ""
             )}`;
@@ -188,7 +188,7 @@ export const formatPendingWorkshopsData = (workshopsData) => {
           if (workshop.image.startsWith("http")) {
             imageUrl = workshop.image;
           } else {
-            imageUrl = `http://localhost:5261/${workshop.image.replace(
+            imageUrl = `https://koifengshui-001-site1.ltempurl.com/${workshop.image.replace(
               /^\//,
               ""
             )}`;

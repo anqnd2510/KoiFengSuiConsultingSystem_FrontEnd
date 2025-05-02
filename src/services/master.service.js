@@ -1,6 +1,6 @@
 import apiClient from "./apiClient";
 
-const MASTER_ENDPOINT = "http://localhost:5261/api/Master";
+const MASTER_ENDPOINT = "/Master";
 
 export const getMasterList = async () => {
   try {

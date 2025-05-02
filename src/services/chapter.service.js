@@ -100,7 +100,7 @@ export const createChapter = async (formData) => {
     try {
       console.log("Đang gửi request đến endpoint chính...");
       response = await axios.post(
-        "http://localhost:5261/api/Chapter/create-chapter",
+        "https://koifengshui-001-site1.ltempurl.com/api/Chapter/create-chapter",
         formData,
         axiosConfig
       );
@@ -112,7 +112,7 @@ export const createChapter = async (formData) => {
       try {
         console.log("Đang thử endpoint thay thế...");
         response = await axios.post(
-          "http://localhost:5261/api/Chapter",
+          "https://koifengshui-001-site1.ltempurl.com/api/Chapter",
           formData,
           axiosConfig
         );
@@ -228,7 +228,7 @@ export const updateChapter = async (chapterId, formData) => {
 
     // Gọi API cập nhật chương
     const response = await axios.put(
-      `http://localhost:5261/api/Chapter/update-chapter/${chapterId}`,
+      `https://koifengshui-001-site1.ltempurl.com/api/Chapter/update-chapter/${chapterId}`,
       formData,
       {
         headers: {

@@ -122,7 +122,7 @@ export const createCourse = async (courseData) => {
 
     // Gửi request với FormData thay vì JSON
     const response = await axios.post(
-      "http://localhost:5261/api/Course/create-course",
+      "https://koifengshui-001-site1.ltempurl.com/api/Course/create-course",
       courseData,
       {
         headers: {
@@ -214,7 +214,7 @@ export const updateCourse = async (formData) => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5261/api/Course/update-course/${courseId}`,
+        `https://koifengshui-001-site1.ltempurl.com/api/Course/update-course/${courseId}`,
         formData,
         {
           headers: {

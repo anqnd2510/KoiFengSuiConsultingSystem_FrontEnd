@@ -4,7 +4,7 @@ const ANSWER_ENDPOINT = "/Answer";
 
 export const getAnswerById = async (answerId) => {
   try {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
       throw new Error("Bạn chưa đăng nhập hoặc phiên đăng nhập đã hết hạn");
     }
@@ -13,11 +13,14 @@ export const getAnswerById = async (answerId) => {
       throw new Error("ID đáp án không được để trống");
     }
 
-    const response = await apiClient.get(`${ANSWER_ENDPOINT}/get-by/${answerId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
+    const response = await apiClient.get(
+      `${ANSWER_ENDPOINT}/get-by/${answerId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       }
-    });
+    );
 
     if (response.data.isSuccess) {
       return response.data.data;

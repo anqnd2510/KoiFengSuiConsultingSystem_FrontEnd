@@ -1,6 +1,7 @@
 import apiClient from "./apiClient";
 
-const LOCATION_ENDPOINT = "http://localhost:5261/api/Location";
+const LOCATION_ENDPOINT =
+  "https://koifengshui-001-site1.ltempurl.com/api/Location";
 
 /**
  * Lấy danh sách tất cả locations
@@ -18,7 +19,11 @@ export const getAllLocations = async () => {
     console.log("API Response:", response.data);
 
     // Kiểm tra cấu trúc response
-    if (response.data && response.data.isSuccess && Array.isArray(response.data.data)) {
+    if (
+      response.data &&
+      response.data.isSuccess &&
+      Array.isArray(response.data.data)
+    ) {
       return response.data.data;
     } else {
       console.warn("Cấu trúc dữ liệu không như mong đợi:", response.data);

@@ -1,7 +1,8 @@
 import axios from "axios";
 
 // URL cơ sở cho API gói tư vấn
-const BASE_URL = "http://localhost:5261/api/ConsultationPackage";
+const BASE_URL =
+  "https://koifengshui-001-site1.ltempurl.com/api/ConsultationPackage";
 
 // Service cho Consultation Package
 const ConsultationPackageService = {
@@ -43,7 +44,7 @@ const ConsultationPackageService = {
 
         // Nếu imageUrl là đường dẫn tương đối, chuyển thành URL đầy đủ
         if (packageData.imageUrl && !packageData.imageUrl.startsWith("http")) {
-          packageData.imageUrl = `http://localhost:5261${packageData.imageUrl}`;
+          packageData.imageUrl = `https://koifengshui-001-site1.ltempurl.com${packageData.imageUrl}`;
         }
       }
 
@@ -109,7 +110,8 @@ const ConsultationPackageService = {
       let response;
       try {
         // URL 1: với /api ở đầu
-        const apiUrl1 = "http://localhost:5261/api/ConsultationPackage/create";
+        const apiUrl1 =
+          "https://koifengshui-001-site1.ltempurl.com/api/ConsultationPackage/create";
         console.log("Thử gửi request đến URL 1:", apiUrl1);
 
         // Gửi request với Content-Type là multipart/form-data
@@ -121,7 +123,8 @@ const ConsultationPackageService = {
       } catch (error) {
         console.log("URL 1 thất bại, thử URL 2");
         // URL 2: không có /api ở đầu
-        const apiUrl2 = "http://localhost:5261/ConsultationPackage/create";
+        const apiUrl2 =
+          "https://koifengshui-001-site1.ltempurl.com/ConsultationPackage/create";
         console.log("Thử gửi request đến URL 2:", apiUrl2);
 
         // Gửi request với URL thay thế
@@ -203,7 +206,7 @@ const ConsultationPackageService = {
       let response;
       try {
         // URL 1: với /api ở đầu
-        const apiUrl1 = `http://localhost:5261/api/ConsultationPackage/update/${id}`;
+        const apiUrl1 = `https://koifengshui-001-site1.ltempurl.com/api/ConsultationPackage/update/${id}`;
         console.log("Thử gửi request đến URL 1:", apiUrl1);
 
         // Gửi request với Content-Type là multipart/form-data
@@ -215,7 +218,7 @@ const ConsultationPackageService = {
       } catch (error) {
         console.log("URL 1 thất bại, thử URL 2");
         // URL 2: không có /api ở đầu
-        const apiUrl2 = `http://localhost:5261/ConsultationPackage/update/${id}`;
+        const apiUrl2 = `https://koifengshui-001-site1.ltempurl.com/ConsultationPackage/update/${id}`;
         console.log("Thử gửi request đến URL 2:", apiUrl2);
 
         // Gửi request với URL thay thế

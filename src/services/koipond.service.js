@@ -105,7 +105,7 @@ const KoiPondService = {
 
       // Gửi trực tiếp FormData đến API
       const response = await axios.post(
-        "http://localhost:5261/api/KoiPond/create",
+        "https://koifengshui-001-site1.ltempurl.com/api/KoiPond/create",
         formData,
         {
           headers: {
@@ -244,7 +244,7 @@ const KoiPondService = {
 
       const response = await axios({
         method: "put",
-        url: `http://localhost:5261/api/KoiPond/update/${pondId}`,
+        url: `https://koifengshui-001-site1.ltempurl.com/api/KoiPond/update/${pondId}`,
         data: formData,
         headers: {
           "Content-Type": "multipart/form-data",

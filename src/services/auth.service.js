@@ -2,7 +2,8 @@ import axios from "axios";
 import apiClient from "./apiClient";
 
 // API URL cho authentication
-const AUTH_API_URL = "http://localhost:5261/api/Account";
+//const AUTH_API_URL = "http://localhost:5261/api/Account";
+const AUTH_API_URL = "https://koifengshui-001-site1.ltempurl.com/api/Account";
 
 /**
  * Hàm đăng ký tài khoản mới
@@ -23,11 +24,11 @@ export const register = async (userData) => {
     // Định dạng lại ngày sinh thành chuỗi ISO theo đúng yêu cầu của API
     // API yêu cầu định dạng: "yyyy-MM-ddThh:mm:ss.fffZ"
     let formattedDob = userData.dob || "1990-01-01";
-    
+
     // Loại bỏ phần thời gian nếu có và thêm vào theo định dạng chuẩn
-    if (formattedDob.includes('T')) {
+    if (formattedDob.includes("T")) {
       // Nếu đã có T, chỉ giữ phần ngày
-      formattedDob = formattedDob.split('T')[0] + "T00:00:00.000Z";
+      formattedDob = formattedDob.split("T")[0] + "T00:00:00.000Z";
     } else {
       // Nếu chưa có T, thêm vào
       formattedDob = `${formattedDob}T00:00:00.000Z`;
@@ -35,8 +36,12 @@ export const register = async (userData) => {
 
     // Đảm bảo cách xử lý gender theo API
     // API mong đợi giá trị Boolean thật, không phải chuỗi "true"/"false"
-    const genderValue = userData.gender === undefined ? true : 
-                       (typeof userData.gender === 'string' ? userData.gender === 'true' : userData.gender);
+    const genderValue =
+      userData.gender === undefined
+        ? true
+        : typeof userData.gender === "string"
+        ? userData.gender === "true"
+        : userData.gender;
 
     // Đảm bảo dữ liệu được gửi đi đúng định dạng API yêu cầu
     const registerData = {
@@ -46,24 +51,28 @@ export const register = async (userData) => {
       gender: genderValue,
       dob: formattedDob,
       password: userData.password,
-      ConfirmedPassword: userData.confirmPassword
+      ConfirmedPassword: userData.confirmPassword,
     };
 
     console.log("Formatted data for API:", registerData);
 
     // Thiết lập timeout dài hơn cho request
-    const response = await axios.post(`${AUTH_API_URL}/register`, registerData, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-      timeout: 10000 // 10 giây timeout
-    });
+    const response = await axios.post(
+      `${AUTH_API_URL}/register`,
+      registerData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        timeout: 10000, // 10 giây timeout
+      }
+    );
 
     console.log("Register API response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error in register:", error);
-    
+
     // Log chi tiết lỗi
     if (error.response) {
       // Server trả về response
@@ -77,7 +86,7 @@ export const register = async (userData) => {
       // Lỗi khi thiết lập request
       console.error("Error setting up request:", error.message);
     }
-    
+
     throw error;
   }
 };
@@ -109,13 +118,13 @@ export const login = async (credentials) => {
     if (response.data.accessToken) {
       localStorage.setItem("accessToken", response.data.accessToken);
       localStorage.setItem("refreshToken", response.data.refreshToken);
-      
+
       // Lưu email người dùng vào localStorage
       if (credentials.email) {
         console.log("Lưu email người dùng:", credentials.email);
         localStorage.setItem("userEmail", credentials.email);
       }
-      
+
       // Lưu tên người dùng vào localStorage
       if (response.data.fullName) {
         console.log("Lưu tên người dùng từ API:", response.data.fullName);
@@ -126,13 +135,16 @@ export const login = async (credentials) => {
         localStorage.setItem("userName", "Bob Chen");
       } else if (credentials.email) {
         // Nếu không có fullName, sử dụng email làm tên người dùng
-        const userName = credentials.email.split('@')[0];
+        const userName = credentials.email.split("@")[0];
         console.log("Lưu tên người dùng từ email:", userName);
         localStorage.setItem("userName", userName);
       }
-      
+
       // In ra giá trị đã lưu để debug
-      console.log("Tên người dùng đã lưu vào localStorage:", localStorage.getItem("userName"));
+      console.log(
+        "Tên người dùng đã lưu vào localStorage:",
+        localStorage.getItem("userName")
+      );
     }
 
     return response.data;
