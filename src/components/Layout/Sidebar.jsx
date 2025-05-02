@@ -60,12 +60,6 @@ const menuItems = [
     roles: ["staff"],
   },
   {
-    icon: Newspaper,
-    label: "Koi Feng Shui Blog",
-    path: "/blog-management",
-    roles: ["staff", "master", "manager"],
-  },
-  {
     icon: ClipboardList,
     label: "Hội thảo",
     path: "/staff/workshop-staff",
