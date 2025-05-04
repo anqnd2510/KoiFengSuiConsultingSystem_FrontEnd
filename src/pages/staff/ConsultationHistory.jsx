@@ -455,7 +455,7 @@ const ConsultationHistory = () => {
             icon = <Check className="inline-block mr-1 w-4 h-4" />;
             displayText = "Hoàn thành";
             break;
-          case "Cancelled":
+          case "Canceled":
             color = "error";
             icon = <Trash2 className="inline-block mr-1 w-4 h-4" />;
             displayText = "Đã hủy";
@@ -469,6 +469,10 @@ const ConsultationHistory = () => {
             color = "processing";
             icon = <CheckCircle className="inline-block mr-1 w-4 h-4" />;
             displayText = "Đã xác nhận";
+            break;
+          case "SecondPaymentPending":
+            color = "default";
+            displayText = "Chờ thanh toán lần 2";
             break;
           default:
             displayText = status || "Chưa xác định";

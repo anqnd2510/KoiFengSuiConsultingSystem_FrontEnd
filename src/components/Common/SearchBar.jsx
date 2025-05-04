@@ -5,7 +5,7 @@ const SearchBar = ({ onSearch }) => {
     <div className="relative">
       <input
         type="text"
-        placeholder="Search content..."
+        placeholder="Tìm kiếm..."
         className="pl-4 pr-10 py-2 border rounded-lg w-[300px]"
         onChange={(e) => onSearch(e.target.value)}
       />

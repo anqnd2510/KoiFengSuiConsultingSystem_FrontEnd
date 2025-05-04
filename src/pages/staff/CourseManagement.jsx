@@ -294,18 +294,17 @@ const CourseManagement = () => {
       title: "TRẠNG THÁI",
       dataIndex: "status",
       key: "status",
-      render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
-    },
-    {
-      title: "GIẤY CHỨNG NHẬN",
-      dataIndex: "certificate",
-      key: "certificate",
-      render: (certificate) => (
-        <Tag color={certificate ? "green" : "default"}>
-          {certificate ? "Có" : "Không"}
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {status === "Active"
+            ? "Hoạt động"
+            : status === "Inactive"
+            ? "Không hoạt động"
+            : status}
         </Tag>
       ),
     },
+    
     {
       title: "GIÁ",
       dataIndex: "total",
@@ -383,12 +382,7 @@ const CourseManagement = () => {
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
           <div className="flex flex-wrap justify-between items-center mb-4">
-            <div className="flex items-center">
-              <SearchBar
-                placeholder="Tìm theo tên khóa học, loại, người tạo"
-                onSearch={handleSearch}
-                className="w-64 mr-2"
-              />
+            <div className="flex items-center flex-1">
               <Dropdown overlay={columnMenu} trigger={["click"]}>
                 <Button
                   className="ml-2"
@@ -405,6 +399,13 @@ const CourseManagement = () => {
                 placeholder="Trạng thái"
                 width="150px"
                 className="ml-2"
+              />
+            </div>
+            <div className="flex items-center ml-auto">
+              <SearchBar
+                placeholder="Tìm theo tên khóa học, loại, người tạo"
+                onSearch={handleSearch}
+                className="w-64"
               />
             </div>
           </div>
@@ -530,7 +531,11 @@ const CourseManagement = () => {
                 <p className="font-semibold">Trạng thái:</p>
                 <p>
                   <Tag color={getStatusColor(selectedCourse.status)}>
-                    {selectedCourse.status}
+                    {selectedCourse.status === "Active"
+                      ? "Hoạt động"
+                      : selectedCourse.status === "Inactive"
+                      ? "Không hoạt động"
+                      : selectedCourse.status}
                   </Tag>
                 </p>
               </div>

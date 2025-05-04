@@ -1683,7 +1683,11 @@ const CourseMaster = () => {
                     <label className="text-gray-600 font-medium">Trạng thái</label>
                     <div className="mt-1">
                       <Tag color={getStatusColor(selectedCourse.status)}>
-                        {selectedCourse.status}
+                        {selectedCourse.status === "Active"
+                          ? "Đang hoạt động"
+                          : selectedCourse.status === "Inactive"
+                          ? "Ngừng hoạt động"
+                          : selectedCourse.status}
                       </Tag>
                     </div>
                   </div>

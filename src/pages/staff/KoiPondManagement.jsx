@@ -925,7 +925,7 @@ const KoiPondManagement = () => {
         description="Quản lý thông tin và danh sách các loại hồ cá Koi"
       />
 
-      <div className="p-6 max-w-7xl mx-auto">
+      <div className="p-6 ">
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             {loadingShapes ? (
@@ -940,7 +940,7 @@ const KoiPondManagement = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={handleCreatePond}
-                className="!bg-green-600 hover:!bg-green-700 !border-green-600 hover:!border-green-700 !shadow-sm"
+                className="!bg-blue-600 hover:!bg-blue-700 !border-blue-600 hover:!border-blue-700 !shadow-sm"
               >
                 Tạo hồ mới
               </CustomButton>

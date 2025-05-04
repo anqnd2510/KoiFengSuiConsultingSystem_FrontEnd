@@ -91,11 +91,28 @@ const BookingManagement = () => {
 
           // Ưu tiên dữ liệu từ API, nếu không có thì dùng localStorage
           const hasStaff = booking.staffName && booking.staffName.trim() !== "";
-          const staffName = hasStaff
-            ? booking.staffName
-            : localAssignment
-            ? localAssignment.staffName
-            : "Chưa phân công";
+          
+          // Chỉ hiển thị "Chưa phân công" nếu trạng thái đã được xác nhận
+          // Nếu đã canceled thì để trống phần staff
+          let staffName = "";
+          if (booking.status && booking.status.toLowerCase() === "canceled") {
+            staffName = "Đã hủy lịch";
+          } else if (booking.status && booking.status.toLowerCase() === "confirmed") {
+            staffName = hasStaff
+              ? booking.staffName
+              : localAssignment
+              ? localAssignment.staffName
+              : "Chưa phân công";
+          } else if (booking.status && booking.status.toLowerCase() === "completed") {
+            staffName = "Đã hoàn thành";
+          } else {
+            staffName = hasStaff
+              ? booking.staffName
+              : localAssignment
+              ? localAssignment.staffName
+              : "Chờ xác nhận";
+          }
+          
           const staffId =
             booking.staffId ||
             (localAssignment ? localAssignment.staffId : null);
@@ -158,7 +175,7 @@ const BookingManagement = () => {
             description: booking.description || "",
             date: formattedDate,
             rawDate: createDate, // Giữ nguyên giá trị gốc đã được kiểm tra để sắp xếp
-            consultingType: booking.type || "Online",
+            consultingType: booking.type || "Trực tuyến",
             staff: staffName,
             staffId: staffId,
             status: booking.status || "pending",
@@ -172,13 +189,13 @@ const BookingManagement = () => {
         const newStats = {
           total: transformedData.length,
           unassigned: transformedData.filter(
-            (b) => b.staff === "Chưa phân công"
+            (b) => b.staff === "Chưa phân công" && b.status.toLowerCase() === "confirmed"
           ).length,
           online: transformedData.filter(
-            (b) => b.consultingType.toLowerCase() === "online"
+            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
           ).length,
           offline: transformedData.filter(
-            (b) => b.consultingType.toLowerCase() === "offline"
+            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
           ).length,
           pending: transformedData.filter(
             (b) => b.status.toLowerCase() === "pending"
@@ -217,16 +234,16 @@ const BookingManagement = () => {
     if (activeTab !== "all") {
       switch (activeTab) {
         case "unassigned":
-          result = result.filter((b) => b.staff === "Chưa phân công");
+          result = result.filter((b) => b.staff === "Chưa phân công" && b.status.toLowerCase() === "confirmed");
           break;
         case "online":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "online"
+            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
           );
           break;
         case "offline":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "offline"
+            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
           );
           break;
         case "pending":
@@ -300,6 +317,19 @@ const BookingManagement = () => {
       if (reload) {
         console.log("Reloading all bookings");
         await fetchBookings();
+        return;
+      }
+
+      // Kiểm tra trạng thái của booking này trước khi cập nhật
+      const booking = bookings.find(b => b.id === recordId);
+      if (booking && booking.status && booking.status.toLowerCase() === "canceled") {
+        message.error("Không thể phân công cho lịch đã bị hủy!");
+        return;
+      }
+      
+      // Kiểm tra trạng thái đã được xác nhận chưa
+      if (booking && booking.status && booking.status.toLowerCase() !== "confirmed") {
+        message.error("Chỉ có thể phân công cho lịch đã được xác nhận!");
         return;
       }
 
@@ -530,7 +560,7 @@ const BookingManagement = () => {
                   <Statistic
                     title={
                       <Text strong className="text-gray-600">
-                        Tư vấn Online
+                        Tư vấn Trực tuyến
                       </Text>
                     }
                     value={stats.online}
@@ -557,7 +587,7 @@ const BookingManagement = () => {
                   <Statistic
                     title={
                       <Text strong className="text-gray-600">
-                        Tư vấn Offline
+                        Tư vấn Trực tiếp
                       </Text>
                     }
                     value={stats.offline}
@@ -676,7 +706,7 @@ const BookingManagement = () => {
                   <Space size="small" align="center">
                     <GlobalOutlined />
                     <Text strong className="mr-2">
-                      Online
+                      Trực tuyến
                     </Text>
                   </Space>
                 </Badge>
@@ -694,7 +724,7 @@ const BookingManagement = () => {
                   <Space size="small" align="center">
                     <EnvironmentOutlined />
                     <Text strong className="mr-2">
-                      Offline
+                      Trực tiếp
                     </Text>
                   </Space>
                 </Badge>
