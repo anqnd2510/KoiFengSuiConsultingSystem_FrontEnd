@@ -232,15 +232,15 @@ const Master = () => {
           const formattedData = response.data.map(master => ({
             id: master.masterId,
             fullName: master.masterName,
-            email: master.email || "Chưa cập nhật",
-            phone: master.phone || "Chưa cập nhật",
-            level: master.rating || "Chưa cập nhật",
-            experience: master.experience || "Chưa cập nhật",
+            email: master.email || "",
+            phone: master.phone || "",
+            level: master.rating || "",
+            experience: master.experience || "",
             rating: 5,
             expertise: [master.expertise || "Master"],
             workingHours: ["08:00", "17:00"],
             workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6"],
-            bio: master.biography || "Chưa cập nhật",
+            bio: master.biography || "",
             // avatar: master.imageUrl || "https://via.placeholder.com/40?text=Master",
           }));
           setData(formattedData);
@@ -415,9 +415,44 @@ const Master = () => {
   };
 
   // Hàm mở modal để xem chi tiết
-  const handleOpenViewModal = (master) => {
-    setViewMaster(master);
-    setIsViewModalOpen(true);
+  const handleOpenViewModal = async (master) => {
+    try {
+      // Fetch thông tin chi tiết của master từ API
+      const response = await fetch(`http://localhost:5261/api/Master/${master.id}`);
+      
+      if (response.ok) {
+        const detailData = await response.json();
+        
+        if (detailData.isSuccess) {
+          // Cập nhật thông tin chi tiết với dữ liệu mới nhất
+          const updatedMaster = {
+            ...master,
+            email: detailData.data.email || "",
+            phone: detailData.data.phoneNumber || "",
+            bio: detailData.data.biography || master.bio,
+            expertise: [detailData.data.expertise || master.expertise[0]],
+            experience: detailData.data.experience || master.experience
+          };
+          
+          setViewMaster(updatedMaster);
+        } else {
+          // Nếu API trả về lỗi, vẫn hiển thị dữ liệu hiện có
+          setViewMaster(master);
+          message.warning("Không thể lấy thông tin chi tiết mới nhất");
+        }
+      } else {
+        // Nếu request không thành công, vẫn hiển thị dữ liệu hiện có
+        setViewMaster(master);
+        message.warning("Không thể kết nối đến máy chủ");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tải thông tin chi tiết:", error);
+      // Vẫn hiển thị dữ liệu hiện có nếu có lỗi
+      setViewMaster(master);
+      message.warning("Đã xảy ra lỗi khi tải thông tin chi tiết");
+    } finally {
+      setIsViewModalOpen(true);
+    }
   };
 
   // Đóng modal xem chi tiết
@@ -447,16 +482,6 @@ const Master = () => {
       width: "20%",
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          {/* <div className="w-10 h-10 overflow-hidden rounded-full">
-            <img
-              src={record.avatar}
-              alt={record.fullName}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/40?text=Master";
-              }}
-            />
-          </div> */}
           <div>
             <div className="font-medium">{record.fullName}</div>
             <div className="text-xs text-gray-500">{record.email}</div>
@@ -487,7 +512,7 @@ const Master = () => {
       render: (experience) => (
         <div>
           <Award className="inline-block mr-1 w-4 h-4" />
-          {experience}
+          {experience && `${experience} năm`}
         </div>
       ),
     },
@@ -522,8 +547,8 @@ const Master = () => {
   const filteredData = data.filter(
     (item) =>
       item.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchText.toLowerCase()) ||
-      item.level.toLowerCase().includes(searchText.toLowerCase())
+      (item.email && item.email.toLowerCase().includes(searchText.toLowerCase())) ||
+      (item.level && item.level.toLowerCase().includes(searchText.toLowerCase()))
   );
 
   // Phân trang dữ liệu
@@ -633,30 +658,22 @@ const Master = () => {
         {viewMaster && (
           <div className="p-4">
             <div className="flex items-center gap-4 mb-6">
-              {/* <div className="w-20 h-20 overflow-hidden rounded-full">
-                <img
-                  src={viewMaster.avatar}
-                  alt={viewMaster.fullName}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/80?text=Master";
-                  }}
-                />
-              </div> */}
               <div>
                 <h2 className="text-xl font-bold">{viewMaster.fullName}</h2>
-                <Tag
-                  color={
-                    viewMaster.level === "Cao cấp"
-                      ? "gold"
-                      : viewMaster.level === "Trung cấp"
-                      ? "green"
-                      : "blue"
-                  }
-                  className="mt-1"
-                >
-                  {viewMaster.level}
-                </Tag>
+                {viewMaster.level && (
+                  <Tag
+                    color={
+                      viewMaster.level === "Cao cấp"
+                        ? "gold"
+                        : viewMaster.level === "Trung cấp"
+                        ? "green"
+                        : "blue"
+                    }
+                    className="mt-1"
+                  >
+                    {viewMaster.level}
+                  </Tag>
+                )}
               </div>
             </div>
 
@@ -680,11 +697,9 @@ const Master = () => {
               <Col span={24} md={12}>
                 <div className="mb-4">
                   <p className="text-gray-500 mb-1">Kinh nghiệm</p>
-                  <p className="font-medium">{viewMaster.experience} năm</p>
+                  <p className="font-medium">{viewMaster.experience && `${viewMaster.experience} năm`}</p>
                 </div>
               </Col>
-
-              
 
               <Col span={24}>
                 <div className="mb-4">
@@ -698,8 +713,6 @@ const Master = () => {
                   </div>
                 </div>
               </Col>
-
-              
 
               <Col span={24}>
                 <div className="mb-4">
