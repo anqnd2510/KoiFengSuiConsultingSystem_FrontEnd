@@ -73,150 +73,133 @@ const BookingManagement = () => {
   const fetchBookings = useCallback(async () => {
     try {
       setLoading(true);
+
       const response = await getBookingHistory();
       console.log("Booking API response:", response);
 
-      // Lấy dữ liệu phân công từ localStorage
       const assignmentData = JSON.parse(
         localStorage.getItem("staffAssignments") || "{}"
       );
       console.log("Local assignments:", assignmentData);
 
-      if (response?.data && Array.isArray(response.data)) {
-        const transformedData = response.data.map((booking) => {
-          console.log("Processing booking:", booking);
-
-          // Kiểm tra nếu có dữ liệu phân công trong localStorage
-          const localAssignment = assignmentData[booking.id];
-
-          // Ưu tiên dữ liệu từ API, nếu không có thì dùng localStorage
-          const hasStaff = booking.staffName && booking.staffName.trim() !== "";
-          
-          // Chỉ hiển thị "Chưa phân công" nếu trạng thái đã được xác nhận
-          // Nếu đã canceled thì để trống phần staff
-          let staffName = "";
-          if (booking.status && booking.status.toLowerCase() === "canceled") {
-            staffName = "Đã hủy lịch";
-          } else if (booking.status && booking.status.toLowerCase() === "confirmed") {
-            staffName = hasStaff
-              ? booking.staffName
-              : localAssignment
-              ? localAssignment.staffName
-              : "Chưa phân công";
-          } else if (booking.status && booking.status.toLowerCase() === "completed") {
-            staffName = "Đã hoàn thành";
-          } else {
-            staffName = hasStaff
-              ? booking.staffName
-              : localAssignment
-              ? localAssignment.staffName
-              : "Chờ xác nhận";
-          }
-          
-          const staffId =
-            booking.staffId ||
-            (localAssignment ? localAssignment.staffId : null);
-
-          // Lấy dữ liệu createDate từ API, đảm bảo dữ liệu này luôn tồn tại
-          let createDate = booking.createDate || "";
-
-          // Kiểm tra nếu createDate không phải là string hoặc không tồn tại
-          if (!createDate || typeof createDate !== "string") {
-            createDate = new Date().toISOString(); // Sử dụng thời gian hiện tại nếu không có ngày
-            console.warn(
-              `Booking ${booking.id} không có ngày tạo hợp lệ, sử dụng ngày hiện tại.`
-            );
-          }
-
-          // Chuyển đổi createDate thành đối tượng Date để kiểm tra tính hợp lệ
-          const dateObj = new Date(createDate);
-
-          // Nếu đối tượng Date không hợp lệ, sử dụng thời gian hiện tại
-          if (isNaN(dateObj.getTime())) {
-            createDate = new Date().toISOString();
-            console.warn(
-              `Booking ${booking.id} có ngày tạo không hợp lệ (${booking.createDate}), sử dụng ngày hiện tại.`
-            );
-          }
-
-          // Kiểm tra xem booking có phải mới tạo trong vòng 24h không
-          const currentTime = new Date();
-          const bookingTime = new Date(createDate);
-          const timeDiff = currentTime - bookingTime; // Khoảng cách thời gian tính bằng milliseconds
-          const hoursDiff = timeDiff / (1000 * 60 * 60); // Chuyển đổi thành số giờ
-          const isNewBooking = hoursDiff <= 24; // Booking mới nếu tạo trong vòng 24h
-
-          // Format lại ngày tháng để đẹp hơn
-          let formattedDate = "";
-
-          try {
-            const dateObj = new Date(createDate);
-            // Format ngày giờ theo kiểu DD/MM/YYYY HH:mm
-            formattedDate = `${dateObj
-              .getDate()
-              .toString()
-              .padStart(2, "0")}/${(dateObj.getMonth() + 1)
-              .toString()
-              .padStart(2, "0")}/${dateObj.getFullYear()} ${dateObj
-              .getHours()
-              .toString()
-              .padStart(2, "0")}:${dateObj
-              .getMinutes()
-              .toString()
-              .padStart(2, "0")}`;
-          } catch (e) {
-            console.error("Lỗi chuyển đổi ngày:", e);
-            formattedDate = "Không xác định";
-          }
-
-          return {
-            id: booking.id || "",
-            customerName: booking.customerName || "",
-            description: booking.description || "",
-            date: formattedDate,
-            rawDate: createDate, // Giữ nguyên giá trị gốc đã được kiểm tra để sắp xếp
-            consultingType: booking.type || "Trực tuyến",
-            staff: staffName,
-            staffId: staffId,
-            status: booking.status || "pending",
-            isNew: isNewBooking,
-          };
-        });
-
-        console.log("Transformed bookings:", transformedData);
-
-        // Tính toán thống kê
-        const newStats = {
-          total: transformedData.length,
-          unassigned: transformedData.filter(
-            (b) => b.staff === "Chưa phân công" && b.status.toLowerCase() === "confirmed"
-          ).length,
-          online: transformedData.filter(
-            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
-          ).length,
-          offline: transformedData.filter(
-            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
-          ).length,
-          pending: transformedData.filter(
-            (b) => b.status.toLowerCase() === "pending"
-          ).length,
-          new: transformedData.filter((b) => b.isNew).length,
-        };
-
-        setBookings(transformedData);
-        setFilteredBookings(transformedData);
-        setStats(newStats);
-        setError(null);
-      } else {
+      if (!Array.isArray(response?.data)) {
         setBookings([]);
         setFilteredBookings([]);
         setError("Không có dữ liệu từ server");
+        return;
       }
+
+      const transformedData = response.data.map((booking) => {
+        console.log("Processing booking:", booking);
+
+        const localAssignment = assignmentData[booking.id];
+        const hasStaff = booking.staffName?.trim() !== "";
+
+        let staffName = "";
+        const status = booking.status?.toLowerCase() || "pending";
+
+        switch (status) {
+          case "canceled":
+            staffName = "Đã hủy lịch";
+            break;
+          case "pending":
+            staffName = hasStaff
+              ? booking.staffName
+              : localAssignment?.staffName || "Chưa phân công";
+            break;
+          case "confirmed":
+            staffName = "Đã xác nhận";
+            break;
+          case "completed":
+            staffName = hasStaff
+              ? booking.staffName
+              : localAssignment?.staffName || "Đã xong";
+            break;
+          default:
+            staffName = hasStaff
+              ? booking.staffName
+              : localAssignment?.staffName || "Không xác định";
+        }
+
+        const staffId = booking.staffId || localAssignment?.staffId || null;
+
+        let createDate = booking.createDate || new Date().toISOString();
+        let parsedDate = new Date(createDate);
+
+        if (isNaN(parsedDate.getTime())) {
+          console.warn(
+            `Booking ${booking.id} có ngày tạo không hợp lệ (${booking.createDate}), sử dụng ngày hiện tại.`
+          );
+          parsedDate = new Date();
+          createDate = parsedDate.toISOString();
+        }
+
+        const currentTime = new Date();
+        const isNewBooking =
+          (currentTime.getTime() - parsedDate.getTime()) / (1000 * 60 * 60) <=
+          24;
+
+        const formattedDate = `${parsedDate
+          .getDate()
+          .toString()
+          .padStart(2, "0")}/${(parsedDate.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${parsedDate.getFullYear()} ${parsedDate
+          .getHours()
+          .toString()
+          .padStart(2, "0")}:${parsedDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`;
+
+        return {
+          id: booking.id || "",
+          customerName: booking.customerName || "",
+          description: booking.description || "",
+          date: formattedDate,
+          rawDate: createDate,
+          consultingType: booking.type || "Trực tuyến",
+          staff: staffName,
+          staffId,
+          status: booking.status || "pending",
+          isNew: isNewBooking,
+        };
+      });
+
+      console.log("Transformed bookings:", transformedData);
+
+      const newStats = {
+        total: transformedData.length,
+        unassigned: transformedData.filter(
+          (b) =>
+            b.staff === "Chưa phân công" &&
+            b.status.toLowerCase() === "confirmed"
+        ).length,
+        online: transformedData.filter(
+          (b) =>
+            b.consultingType.toLowerCase() === "online" ||
+            b.consultingType === "Trực tuyến"
+        ).length,
+        offline: transformedData.filter(
+          (b) =>
+            b.consultingType.toLowerCase() === "offline" ||
+            b.consultingType === "Trực tiếp"
+        ).length,
+        pending: transformedData.filter(
+          (b) => b.status.toLowerCase() === "pending"
+        ).length,
+        new: transformedData.filter((b) => b.isNew).length,
+      };
+
+      setBookings(transformedData);
+      setFilteredBookings(transformedData);
+      setStats(newStats);
+      setError(null);
     } catch (err) {
       console.error("Error fetching bookings:", err);
       setBookings([]);
       setFilteredBookings([]);
-      setError(null); // Không hiển thị lỗi trong UI, chỉ log lỗi ra console
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -234,16 +217,24 @@ const BookingManagement = () => {
     if (activeTab !== "all") {
       switch (activeTab) {
         case "unassigned":
-          result = result.filter((b) => b.staff === "Chưa phân công" && b.status.toLowerCase() === "confirmed");
+          result = result.filter(
+            (b) =>
+              b.staff === "Chưa phân công" &&
+              b.status.toLowerCase() === "confirmed"
+          );
           break;
         case "online":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
+            (b) =>
+              b.consultingType.toLowerCase() === "online" ||
+              b.consultingType === "Trực tuyến"
           );
           break;
         case "offline":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
+            (b) =>
+              b.consultingType.toLowerCase() === "offline" ||
+              b.consultingType === "Trực tiếp"
           );
           break;
         case "pending":
@@ -321,14 +312,22 @@ const BookingManagement = () => {
       }
 
       // Kiểm tra trạng thái của booking này trước khi cập nhật
-      const booking = bookings.find(b => b.id === recordId);
-      if (booking && booking.status && booking.status.toLowerCase() === "canceled") {
+      const booking = bookings.find((b) => b.id === recordId);
+      if (
+        booking &&
+        booking.status &&
+        booking.status.toLowerCase() === "canceled"
+      ) {
         message.error("Không thể phân công cho lịch đã bị hủy!");
         return;
       }
-      
+
       // Kiểm tra trạng thái đã được xác nhận chưa
-      if (booking && booking.status && booking.status.toLowerCase() !== "confirmed") {
+      if (
+        booking &&
+        booking.status &&
+        booking.status.toLowerCase() !== "confirmed"
+      ) {
         message.error("Chỉ có thể phân công cho lịch đã được xác nhận!");
         return;
       }
