@@ -447,7 +447,7 @@ const ConsultingOffline = () => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: "12%",
+      width: "15%",
       render: (status, record) => {
         const apiStatus = record.rawData?.status || "Pending";
         return (

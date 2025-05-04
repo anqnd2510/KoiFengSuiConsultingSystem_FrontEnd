@@ -300,7 +300,7 @@ const Login = () => {
             navigate("/master/schedule", { replace: true });
           } else if (role === "staff" || role === "Staff") {
             console.log("Navigating to staff booking schedule...");
-            navigate("/staff/notifications", { replace: true });
+            navigate("/staff/customer-management", { replace: true });
           } else if (role === "admin" || role === "Admin") {
             console.log("Navigating to admin accounts page...");
             navigate("/admin/accounts", { replace: true });

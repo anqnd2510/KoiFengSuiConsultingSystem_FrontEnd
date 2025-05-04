@@ -94,21 +94,36 @@ const DocumentDetail = () => {
     if (!status) return { label: "Không xác định", color: "default" };
 
     switch (status.toLowerCase()) {
-      case "draft":
-      case "nháp":
-        return { label: "Nháp", color: "default" };
-      case "published":
-      case "đã xuất bản":
-        return { label: "Đã xuất bản", color: "green" };
-      case "under review":
-      case "đang xem xét":
-        return { label: "Đang xem xét", color: "yellow" };
-      case "rejected":
-      case "bị từ chối":
-        return { label: "Bị từ chối", color: "red" };
-      case "archived":
-      case "đã lưu trữ":
-        return { label: "Đã lưu trữ", color: "blue" };
+      case "pending":
+        return {
+          label: "Chờ xử lý",
+          color: "warning",
+          icon: <ScheduleOutlined />,
+        };
+      case "confirmedbymanager":
+        return {
+          label: "Đã xác nhận",
+          color: "processing",
+          icon: <CheckCircleOutlined />,
+        };
+      case "cancelledbymanager":
+        return {
+          label: "Đã hủy bởi quản lý",
+          color: "error",
+          icon: <CloseCircleOutlined />,
+        };
+      case "cancelledbycustomer":
+        return {
+          label: "Đã hủy bởi khách hàng",
+          color: "error",
+          icon: <CloseCircleOutlined />,
+        };
+      case "success":
+        return {
+          label: "Thành công",
+          color: "success",
+          icon: <CheckCircleOutlined />,
+        };
       default:
         return { label: status, color: "default" };
     }
@@ -149,9 +164,10 @@ const DocumentDetail = () => {
     if (!document || !document.status) return false;
     const status = document.status.toLowerCase();
     return (
+      status === "pending" ||
       status === "under review" ||
       status === "đang xem xét" ||
-      status === "pending"
+      status === "contractapprovedbymanager"
     );
   };
 

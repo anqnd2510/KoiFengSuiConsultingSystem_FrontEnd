@@ -227,13 +227,6 @@ const ConsultingOnline = () => {
       ),
     },
     {
-      title: "Loại",
-      dataIndex: "type",
-      key: "type",
-      width: "10%",
-      render: (type) => <Tag color="default">{type}</Tag>,
-    },
-    {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
