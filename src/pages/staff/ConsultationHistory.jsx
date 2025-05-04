@@ -131,15 +131,6 @@ const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
                 </div>
               </div>
             </Col>
-
-            <Col span={24} md={12}>
-              <div>
-                <p className="text-gray-500 mb-1">Loại tư vấn</p>
-                <Tag color={formattedData.type === "Online" ? "green" : "gold"}>
-                  {formattedData.type}
-                </Tag>
-              </div>
-            </Col>
           </Row>
 
           <Row gutter={16} key="status-row">
@@ -422,7 +413,11 @@ const ConsultationHistory = () => {
       key: "consultType",
       render: (type) => (
         <Tag color={type === "Online" ? "green" : "gold"}>
-          {type || "Chưa xác định"}
+          {type === "Online"
+            ? "Trực tuyến"
+            : type === "Offline"
+            ? "Trực tiếp"
+            : type || "Chưa xác định"}
         </Tag>
       ),
     },
