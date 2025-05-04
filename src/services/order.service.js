@@ -1,5 +1,5 @@
 import apiClient from "./apiClient";
-
+import axios from "axios";
 const ORDER_ENDPOINT = "/Order";
 
 /**
@@ -155,21 +155,29 @@ export const getWaitingForRefundOrders = async () => {
       }
     };
 
-    const response = await apiClient.get(`${ORDER_ENDPOINT}/get-waitingForRefund-order`, config);
+    // Hãy kiểm tra đúng endpoint với backend
+    const response = await axios.get(`http://localhost:5261/api/Order/get-waitingForRefund-order`, config);
     
     if (response.data && response.data.isSuccess) {
       return response.data;
     } else {
-      throw new Error(response.data?.message || 'Không có dữ liệu trả về');
+      console.log("API response:", response.data);
+      // Trả về đối tượng với cấu trúc phù hợp ngay cả khi có lỗi
+      return {
+        isSuccess: false,
+        message: response.data?.message || 'Không có dữ liệu trả về',
+        data: []
+      };
     }
   } catch (error) {
     console.error("Error in getWaitingForRefundOrders:", error);
-    if (error.response?.status === 401) {
-      throw new Error('Vui lòng đăng nhập lại');
-    }
-    throw new Error(
-      error.response?.data?.message || "Không thể tải danh sách đơn hàng chờ hoàn tiền"
-    );
+    
+    // Trả về đối tượng với cấu trúc phù hợp thay vì throw error
+    return {
+      isSuccess: false,
+      message: error.response?.data?.message || "Không thể tải danh sách đơn hàng chờ hoàn tiền",
+      data: []
+    };
   }
 };
 
