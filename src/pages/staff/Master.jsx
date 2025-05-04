@@ -684,12 +684,7 @@ const Master = () => {
                 </div>
               </Col>
 
-              <Col span={24} md={12}>
-                <div className="mb-4">
-                  <p className="text-gray-500 mb-1">Đánh giá</p>
-                  <Rate disabled value={viewMaster.rating} />
-                </div>
-              </Col>
+              
 
               <Col span={24}>
                 <div className="mb-4">
@@ -704,31 +699,11 @@ const Master = () => {
                 </div>
               </Col>
 
-              <Col span={24} md={12}>
-                <div className="mb-4">
-                  <p className="text-gray-500 mb-1">Thời gian làm việc</p>
-                  <p className="font-medium">
-                    {viewMaster.workingHours &&
-                    Array.isArray(viewMaster.workingHours) &&
-                    viewMaster.workingHours.length === 2
-                      ? `${viewMaster.workingHours[0]} - ${viewMaster.workingHours[1]}`
-                      : "Chưa có thông tin"}
-                  </p>
-                </div>
-              </Col>
-
-              <Col span={24} md={12}>
-                <div className="mb-4">
-                  <p className="text-gray-500 mb-1">Ngày làm việc</p>
-                  <p className="font-medium">
-                    {viewMaster.workingDays.join(", ")}
-                  </p>
-                </div>
-              </Col>
+              
 
               <Col span={24}>
                 <div className="mb-4">
-                  <p className="text-gray-500 mb-1">Giới thiệu</p>
+                  <p className="text-gray-500 mb-1">Tiểu sử</p>
                   <p>{viewMaster.bio}</p>
                 </div>
               </Col>

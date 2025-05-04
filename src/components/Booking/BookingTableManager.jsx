@@ -320,12 +320,13 @@ const BookingTableManager = ({ bookings, loading, onStaffChange }) => {
       title: "Loại tư vấn",
       dataIndex: "consultingType",
       key: "consultingType",
-      width: "15%",
-      render: (text) => {
-        const isOnline = text.toLowerCase() === "online";
+      width: "12%",
+      render: (type) => {
+        const isOnline = type.toLowerCase() === "online";
         return (
           <Tag
             color={isOnline ? "#722ed1" : "#13c2c2"}
+            className="consulting-type-tag"
             style={{
               borderRadius: "20px",
               padding: "4px 12px",
@@ -338,9 +339,16 @@ const BookingTableManager = ({ bookings, loading, onStaffChange }) => {
               boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
               transition: "all 0.3s ease",
             }}
-            className="hover:scale-105"
           >
-            {isOnline ? <GlobalOutlined /> : <EnvironmentOutlined />} {text}
+            {isOnline ? (
+              <>
+                <GlobalOutlined /> Trực tuyến
+              </>
+            ) : (
+              <>
+                <EnvironmentOutlined /> Trực tiếp
+              </>
+            )}
           </Tag>
         );
       },

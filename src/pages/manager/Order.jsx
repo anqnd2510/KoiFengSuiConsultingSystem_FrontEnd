@@ -5,7 +5,7 @@ import CustomTable from "../../components/Common/CustomTable";
 import CustomButton from "../../components/Common/CustomButton";
 import Pagination from "../../components/Common/Pagination";
 import { EyeOutlined } from "@ant-design/icons";
-import { Tag, message, Modal, Descriptions, Spin } from "antd";
+import { Tag, message, Modal, Descriptions, Spin, Select } from "antd";
 import { getPendingConfirmOrders, getOrderById, updateOrderToPaid } from "../../services/order.service";
 import { useNavigate } from "react-router-dom";
 
@@ -22,6 +22,8 @@ const Order = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
+
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
 
   const fetchOrders = async () => {
     try {
@@ -120,6 +122,20 @@ const Order = () => {
       title: "Loại dịch vụ",
       dataIndex: "serviceType", 
       key: "serviceType",
+      render: (serviceType) => {
+        switch (serviceType) {
+          case "BookingOnline":
+            return "Tư vấn trực tuyến";
+          case "BookingOffline":
+            return "Tư vấn trực tiếp";
+          case "Course":
+            return "Khóa học";
+          case "RegisterAttend":
+            return "Tham dự hội thảo";
+          default:
+            return serviceType;
+        }
+      },
     },
     {
       title: "Tổng tiền",
@@ -191,11 +207,17 @@ const Order = () => {
     setCurrentPage(page);
   };
 
+  const handleServiceTypeFilter = (value) => {
+    setServiceTypeFilter(value);
+    setCurrentPage(1);
+  };
+
   const filteredOrders = orders.filter(
     (order) =>
-      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.serviceType.toLowerCase().includes(searchQuery.toLowerCase())
+      (serviceTypeFilter === "all" || order.serviceType === serviceTypeFilter) &&
+      (order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.serviceType.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   // Phân trang dữ liệu
@@ -212,9 +234,25 @@ const Order = () => {
       />
       
       <div className="mt-6 bg-white p-6 rounded-lg shadow-md">
-        <div className="flex justify-end mb-6">
-          <div className="w-72">
-            <SearchBar onSearch={handleSearch} />
+        <div className="flex justify-between mb-6">
+          <div></div>
+          <div className="flex gap-3">
+            <Select
+              value={serviceTypeFilter}
+              onChange={handleServiceTypeFilter}
+              style={{ width: 180 }}
+              options={[
+                { value: "all", label: "Tất cả loại dịch vụ" },
+                { value: "BookingOnline", label: "Tư vấn trực tuyến" },
+                { value: "BookingOffline", label: "Tư vấn trực tiếp" },
+                { value: "Course", label: "Khóa học" },
+                { value: "RegisterAttend", label: "Tham dự hội thảo" },
+              ]}
+              className="mr-2"
+            />
+            <div className="w-72">
+              <SearchBar onSearch={handleSearch} />
+            </div>
           </div>
         </div>
 
@@ -285,7 +323,22 @@ const Order = () => {
                 </div>
                 <div>
                   <p className="text-gray-600 mb-1">Loại dịch vụ:</p>
-                  <p className="font-medium">{selectedOrder.serviceType}</p>
+                  <p className="font-medium">
+                    {(() => {
+                      switch (selectedOrder.serviceType) {
+                        case "BookingOnline":
+                          return "Tư vấn trực tuyến";
+                        case "BookingOffline":
+                          return "Tư vấn trực tiếp";
+                        case "Course":
+                          return "Khóa học";
+                        case "RegisterAttend":
+                          return "Tham dự hội thảo";
+                        default:
+                          return selectedOrder.serviceType;
+                      }
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>

@@ -22,6 +22,7 @@ const Refund = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [refundQRCode, setRefundQRCode] = useState(null);
   const [generatingCode, setGeneratingCode] = useState(false);
+  const [serviceTypeFilter, setServiceTypeFilter] = useState("all");
 
   const fetchRefundOrders = async () => {
     try {
@@ -104,7 +105,13 @@ const Refund = () => {
     }
   };
 
+  const handleServiceTypeFilter = (value) => {
+    setServiceTypeFilter(value);
+    setCurrentPage(1);
+  };
+
   const filteredData = refundData.filter(item =>
+    (serviceTypeFilter === "all" || item.serviceType === serviceTypeFilter) &&
     Object.values(item).some(val =>
       val?.toString().toLowerCase().includes(searchQuery.toLowerCase())
     )
@@ -130,12 +137,26 @@ const Refund = () => {
       dataIndex: "serviceType",
       key: "serviceType",
       width: "15%",
+      render: (serviceType) => {
+        switch (serviceType) {
+          case "BookingOnline":
+            return "Tư vấn trực tuyến";
+          case "BookingOffline":
+            return "Tư vấn trực tiếp";
+          case "Course":
+            return "Khóa học";
+          case "RegisterAttend":
+            return "Tham dự hội thảo";
+          default:
+            return serviceType;
+        }
+      },
     },
     {
       title: "Tổng tiền",
       dataIndex: "amount",
       key: "amount",
-      width: "15%",
+      width: "10%",
       render: (amount) => (
         <span>{amount.toLocaleString("vi-VN")} đ</span>
       ),
@@ -152,10 +173,10 @@ const Refund = () => {
       ),
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      width: "15%",
+      title: "Ngày thanh toán",
+      dataIndex: "paymentDate",
+      key: "paymentDate",
+      width: "10%",
     },
     {
       title: "Thao tác",
@@ -186,8 +207,23 @@ const Refund = () => {
             <div className="flex justify-between items-center mb-6">
               <div className="flex items-center gap-4">
               </div>
-              <div className="w-72">
-                <SearchBar onSearch={handleSearch} />
+              <div className="flex gap-3">
+                <Select
+                  value={serviceTypeFilter}
+                  onChange={handleServiceTypeFilter}
+                  style={{ width: 180 }}
+                  options={[
+                    { value: "all", label: "Tất cả loại dịch vụ" },
+                    { value: "BookingOnline", label: "Tư vấn trực tuyến" },
+                    { value: "BookingOffline", label: "Tư vấn trực tiếp" },
+                    { value: "Course", label: "Khóa học" },
+                    { value: "RegisterAttend", label: "Tham dự hội thảo" },
+                  ]}
+                  className="mr-2"
+                />
+                <div className="w-72">
+                  <SearchBar onSearch={handleSearch} />
+                </div>
               </div>
             </div>
 
@@ -260,7 +296,22 @@ const Refund = () => {
               </div>
               <div>
                 <p className="text-gray-500 mb-1">Loại dịch vụ</p>
-                <p className="font-medium">{selectedRefund.serviceType}</p>
+                <p className="font-medium">
+                  {(() => {
+                    switch (selectedRefund.serviceType) {
+                      case "BookingOnline":
+                        return "Tư vấn trực tuyến";
+                      case "BookingOffline":
+                        return "Tư vấn trực tiếp";
+                      case "Course":
+                        return "Khóa học";
+                      case "RegisterAttend":
+                        return "Tham dự hội thảo";
+                      default:
+                        return selectedRefund.serviceType;
+                    }
+                  })()}
+                </p>
               </div>
               <div>
                 <p className="text-gray-500 mb-1">Tổng tiền</p>

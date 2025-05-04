@@ -1,30 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchBar from "../../components/Common/SearchBar";
-import Pagination from "../../components/Common/Pagination";
 import Header from "../../components/Common/Header";
 import CustomButton from "../../components/Common/CustomButton";
 
 const WorkshopList = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [workshops, setWorkshops] = useState([]);
-
-  const handleSearch = (searchTerm) => {
-    // Xử lý tìm kiếm ở đây
-    console.log("Searching for:", searchTerm);
-  };
-
-  // Xử lý chuyển trang
-  const handlePageChange = (page) => {
-    try {
-      setCurrentPage(page);
-      console.log("Changing to page:", page);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -35,10 +16,6 @@ const WorkshopList = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        <div className="mb-6 flex justify-end">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <span className="font-bold flex items-center">
@@ -97,12 +74,6 @@ const WorkshopList = () => {
             </div>
           </div>
         </div>
-
-        <Pagination
-          currentPage={currentPage}
-          totalPages={Math.ceil(workshops.length / 10)}
-          onPageChange={handlePageChange}
-        />
       </div>
     </div>
   );
