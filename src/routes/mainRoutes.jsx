@@ -17,7 +17,6 @@ import KoiFishManagement from "../pages/staff/KoiFishManagement";
 import KoiPondManagement from "../pages/staff/KoiPondManagement";
 import Master from "../pages/staff/Master";
 import Customer from "../pages/staff/Customer";
-import Notifications from "../pages/staff/Notifications";
 import ConsultationHistory from "../pages/staff/ConsultationHistory";
 import ConsultationPackage from "../pages/staff/ConsultationPackage";
 import Question from "../pages/master/Question";
@@ -196,11 +195,6 @@ export const mainRoutes = [
     path: "master/attachments",
     element: <AttachmentList />,
     roles: ["master"],
-  },
-  {
-    path: "staff/notifications",
-    element: <Notifications />,
-    roles: ["staff"],
   },
   {
     path: "manager/booking-management",

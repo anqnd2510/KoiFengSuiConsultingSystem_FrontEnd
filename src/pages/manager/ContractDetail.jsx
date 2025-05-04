@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Spin,
@@ -71,18 +71,41 @@ const ContractDetail = () => {
     if (!status) return { label: "Không xác định", color: "default" };
 
     switch (status.toLowerCase()) {
-      case "completed":
-      case "hoàn thành":
-        return { label: "Hoàn thành", color: "blue" };
-      case "đang hoạt động":
-      case "active":
-        return { label: "Đang hoạt động", color: "green" };
-      case "chờ xử lý":
       case "pending":
-        return { label: "Chờ xử lý", color: "yellow" };
-      case "đã lưu trữ":
-      case "archived":
-        return { label: "Đã lưu trữ", color: "red" };
+        return {
+          label: "Chờ xử lý",
+          color: "warning",
+        };
+      case "contractrejectedbymanager":
+        return {
+          label: "Bị từ chối bởi quản lý",
+          color: "error",
+        };
+      case "contractrejectedbycustomer":
+        return {
+          label: "Bị từ chối bởi khách hàng",
+          color: "error",
+        };
+      case "contractapprovedbymanager":
+        return {
+          label: "Được duyệt bởi quản lý",
+          color: "processing",
+        };
+      case "verifyingotp":
+        return {
+          label: "Đang xác thực OTP",
+          color: "purple",
+        };
+      case "firstpaymentpending":
+        return {
+          label: "Chờ thanh toán lần đầu",
+          color: "orange",
+        };
+      case "firstpaymentsuccess":
+        return {
+          label: "Đã thanh toán lần đầu",
+          color: "success",
+        };
       default:
         return { label: status, color: "default" };
     }
@@ -128,7 +151,7 @@ const ContractDetail = () => {
   const canPerformActions = () => {
     if (!contract || !contract.status) return false;
     const status = contract.status.toLowerCase();
-    return status === "pending" || status === "chờ xử lý";
+    return status === "pending";
   };
 
   return (

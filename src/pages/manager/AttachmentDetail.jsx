@@ -83,18 +83,36 @@ const AttachmentDetail = () => {
     if (!status) return { label: "Không xác định", color: "default" };
 
     switch (status.toLowerCase()) {
-      case "active":
-      case "đang hoạt động":
-        return { label: "Đang hoạt động", color: "green" };
       case "pending":
-      case "chờ xử lý":
-        return { label: "Chờ xử lý", color: "yellow" };
-      case "archived":
-      case "đã lưu trữ":
-        return { label: "Đã lưu trữ", color: "red" };
-      case "completed":
-      case "hoàn thành":
-        return { label: "Hoàn thành", color: "blue" };
+        return {
+          label: "Chờ xử lý",
+          color: "warning",
+          icon: <ScheduleOutlined />,
+        };
+      case "confirmed":
+        return {
+          label: "Đã xác nhận",
+          color: "processing",
+          icon: <CheckCircleOutlined />,
+        };
+      case "verifyingotp":
+        return {
+          label: "Đang xác thực OTP",
+          color: "purple",
+          icon: <FileTextOutlined />,
+        };
+      case "success":
+        return {
+          label: "Thành công",
+          color: "success",
+          icon: <CheckCircleOutlined />,
+        };
+      case "cancelled":
+        return {
+          label: "Đã hủy",
+          color: "error",
+          icon: <CloseCircleOutlined />,
+        };
       default:
         return { label: status, color: "default" };
     }
@@ -144,7 +162,10 @@ const AttachmentDetail = () => {
                     {attachment.attachmentName || "Không có tên"}
                   </h2>
                   {attachment.status && (
-                    <Tag color={getStatusDisplay(attachment.status).color}>
+                    <Tag
+                      color={getStatusDisplay(attachment.status).color}
+                      icon={getStatusDisplay(attachment.status).icon}
+                    >
                       {getStatusDisplay(attachment.status).label}
                     </Tag>
                   )}
@@ -187,7 +208,18 @@ const AttachmentDetail = () => {
                     </Descriptions.Item>
                   )}
 
-                  <Descriptions.Item label="Link tài liệu" span={2}>
+                  <Descriptions.Item label="Trạng thái">
+                    {attachment.status && (
+                      <Tag
+                        color={getStatusDisplay(attachment.status).color}
+                        icon={getStatusDisplay(attachment.status).icon}
+                      >
+                        {getStatusDisplay(attachment.status).label}
+                      </Tag>
+                    )}
+                  </Descriptions.Item>
+
+                  <Descriptions.Item label="Link tài liệu">
                     {attachment.attachmentUrl ? (
                       <a
                         href={attachment.attachmentUrl}
