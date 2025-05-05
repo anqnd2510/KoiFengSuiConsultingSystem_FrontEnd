@@ -249,9 +249,6 @@ const Document = () => {
                           Mã hồ sơ
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
-                          Phiên bản
-                        </th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
                           Mã tài liệu
                         </th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-700">
@@ -273,9 +270,6 @@ const Document = () => {
                         >
                           <td className="py-4 px-6 font-semibold text-[#B4925A]">
                             #{item.fengShuiDocumentId}
-                          </td>
-                          <td className="py-4 px-6 font-medium">
-                            {item.version || "-"}
                           </td>
                           <td className="py-4 px-6 font-medium">
                             {item.docNo}

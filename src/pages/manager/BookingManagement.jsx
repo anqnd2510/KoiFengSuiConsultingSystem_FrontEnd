@@ -172,8 +172,7 @@ const BookingManagement = () => {
         total: transformedData.length,
         unassigned: transformedData.filter(
           (b) =>
-            b.staff === "Chưa phân công" &&
-            b.status.toLowerCase() === "confirmed"
+            b.staff === "Chưa phân công" && b.status.toLowerCase() === "pending"
         ).length,
         online: transformedData.filter(
           (b) =>
@@ -220,7 +219,7 @@ const BookingManagement = () => {
           result = result.filter(
             (b) =>
               b.staff === "Chưa phân công" &&
-              b.status.toLowerCase() === "confirmed"
+              b.status.toLowerCase() === "pending"
           );
           break;
         case "online":

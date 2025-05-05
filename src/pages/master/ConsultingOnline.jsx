@@ -21,7 +21,14 @@ const ConsultingOnline = () => {
   const [consultingData, setConsultingData] = useState([]);
   const [loading, setLoading] = useState(false);
   //mai mốt cần thêm thì thêm ở dây
-  const tabs = ["Tất cả", "Chờ xử lý", "Đã xác nhận", "Hoàn thành"];
+  const tabs = [
+    "Tất cả",
+    "Chờ xử lý",
+    "Chờ xác nhận",
+    "Đã xác nhận",
+    "Hoàn thành",
+    "Đã hủy",
+  ];
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [error, setError] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
@@ -31,6 +38,10 @@ const ConsultingOnline = () => {
   const [savingNote, setSavingNote] = useState(false);
   const [completingConsulting, setCompletingConsulting] = useState(false);
   const [confirmingConsulting, setConfirmingConsulting] = useState(false);
+
+  // Thêm state cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const fetchConsultingData = async (date) => {
     setLoading(true);
@@ -71,9 +82,11 @@ const ConsultingOnline = () => {
   // Ánh xạ trạng thái từ tiếng Anh sang tiếng Việt
   const mapStatus = (status) => {
     const statusMap = {
-      Confirmed: "Đã xác nhận",
       Pending: "Chờ xử lý",
+      PendingConfirm: "Chờ xác nhận",
+      Confirmed: "Đã xác nhận",
       Completed: "Hoàn thành",
+      Canceled: "Đã hủy",
     };
     return statusMap[status] || status;
   };
@@ -85,6 +98,12 @@ const ConsultingOnline = () => {
     return vietnameseStatus === activeTab;
   });
 
+  // Tính toán dữ liệu cho trang hiện tại
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
   const getStatusColor = (status) => {
     const vietnameseStatus = mapStatus(status);
     switch (vietnameseStatus) {
@@ -92,8 +111,12 @@ const ConsultingOnline = () => {
         return "success";
       case "Chờ xử lý":
         return "warning";
+      case "Chờ xác nhận":
+        return "orange";
       case "Đã xác nhận":
         return "blue";
+      case "Đã hủy":
+        return "red";
       default:
         return "default";
     }
@@ -242,6 +265,11 @@ const ConsultingOnline = () => {
     setActiveTab(tab);
   };
 
+  // Hàm xử lý khi thay đổi trang
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="flex-1 flex">
       {/* Sidebar here */}
@@ -257,7 +285,10 @@ const ConsultingOnline = () => {
               {tabs.map((tab, index) => (
                 <button
                   key={`tab-${index}`}
-                  onClick={() => handleTabChange(tab)}
+                  onClick={() => {
+                    handleTabChange(tab);
+                    setCurrentPage(1); // Reset trang về 1 khi chuyển tab
+                  }}
                   className={`
                     px-5 py-2.5 
                     rounded-lg 
@@ -277,7 +308,10 @@ const ConsultingOnline = () => {
             </div>
             <CustomDatePicker
               value={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
+              onChange={(date) => {
+                setSelectedDate(date);
+                setCurrentPage(1); // Reset trang về 1 khi đổi ngày
+              }}
             />
           </div>
 
@@ -285,7 +319,7 @@ const ConsultingOnline = () => {
 
           <CustomTable
             columns={columns}
-            dataSource={filteredData.map((item) => ({
+            dataSource={currentItems.map((item) => ({
               ...item,
               key: item.bookingOnlineId,
             }))}
@@ -294,13 +328,13 @@ const ConsultingOnline = () => {
           />
 
           <div className="flex justify-end mt-6">
-            <Pagination
-              currentPage={1}
-              totalPages={Math.ceil(filteredData.length / 10)}
-              onPageChange={(page) => {
-                console.log("Chuyển đến trang:", page);
-              }}
-            />
+            {totalPages > 1 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </div>
 
@@ -338,7 +372,8 @@ const ConsultingOnline = () => {
                   {confirmingConsulting ? "Đang xử lý..." : "Xác nhận"}
                 </button>
               )}
-              {selectedBooking?.status === "Confirmed" && (
+              {(selectedBooking?.status === "Confirmed" ||
+                selectedBooking?.status === "PendingConfirm") && (
                 <button
                   className={`px-5 py-2 rounded-lg transition-all ${
                     completingConsulting
@@ -503,23 +538,28 @@ const ConsultingOnline = () => {
                     placeholder="Nhập ghi chú sau buổi tư vấn..."
                     autoSize={{ minRows: 3, maxRows: 6 }}
                     className="w-full mb-4"
-                    disabled={selectedBooking.status === "Completed"}
+                    disabled={
+                      selectedBooking.status === "Completed" ||
+                      selectedBooking.status === "Canceled"
+                    }
                   />
 
                   <div className="flex justify-end mt-2">
-                    <button
-                      onClick={handleSaveNote}
-                      disabled={
-                        savingNote || selectedBooking.status === "Completed"
-                      }
-                      className={`px-5 py-2 rounded-lg transition-all ${
-                        savingNote || selectedBooking.status === "Completed"
-                          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                          : "bg-blue-600 text-white hover:bg-blue-700"
-                      }`}
-                    >
-                      {savingNote ? "Đang lưu..." : "Lưu ghi chú"}
-                    </button>
+                    {selectedBooking.status !== "Canceled" && (
+                      <button
+                        onClick={handleSaveNote}
+                        disabled={
+                          savingNote || selectedBooking.status === "Completed"
+                        }
+                        className={`px-5 py-2 rounded-lg transition-all ${
+                          savingNote || selectedBooking.status === "Completed"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+                      >
+                        {savingNote ? "Đang lưu..." : "Lưu ghi chú"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
