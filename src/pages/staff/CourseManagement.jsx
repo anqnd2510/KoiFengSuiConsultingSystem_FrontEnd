@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { FaExclamationCircle, FaSync, FaEye, FaTimes } from "react-icons/fa";
 import { Tag, Button, Modal, Dropdown, Checkbox, Menu, Rate } from "antd";
 import SearchBar from "../../components/Common/SearchBar";
@@ -43,6 +43,10 @@ const CourseManagement = () => {
     status: true,
     isBestSeller: false,
   });
+
+  // Xử lý phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     fetchCourses();
@@ -174,8 +178,8 @@ const CourseManagement = () => {
   // Xử lý tìm kiếm
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
+    setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
     console.log("Searching for:", searchTerm);
-    // Thực hiện logic tìm kiếm ở đây
   };
 
   // Xử lý filter theo trạng thái
@@ -184,10 +188,6 @@ const CourseManagement = () => {
     setCurrentPage(1);
     console.log("Lọc theo trạng thái:", value);
   };
-
-  // Xử lý phân trang
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 20;
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -215,32 +215,40 @@ const CourseManagement = () => {
   ];
 
   // Lọc dữ liệu theo từ khóa tìm kiếm và trạng thái
-  const filteredRegistrations = registrations.filter((registration) => {
-    const matchesSearch =
-      registration.courseName
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      getCategoryName(registration.categoryId)
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      registration.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (registration.id &&
-        registration.id
-          .toString()
+  const filteredRegistrations = useMemo(() => {
+    return registrations.filter((registration) => {
+      const matchesSearch =
+        registration.courseName
           .toLowerCase()
-          .includes(searchTerm.toLowerCase()));
+          .includes(searchTerm.toLowerCase()) ||
+        getCategoryName(registration.categoryId)
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        registration.creator.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (registration.id &&
+          registration.id
+            .toString()
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()));
 
-    const matchesStatus =
-      statusFilter === "all" || registration.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" || registration.status === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [registrations, searchTerm, statusFilter]);
+
+  // Tính toán tổng số trang
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredRegistrations.length / pageSize);
+  }, [filteredRegistrations, pageSize]);
 
   // Phân trang dữ liệu
-  const paginatedRegistrations = filteredRegistrations.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const paginatedRegistrations = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredRegistrations.slice(startIndex, endIndex);
+  }, [filteredRegistrations, currentPage, pageSize]);
 
   // Xử lý thay đổi hiển thị cột
   const handleColumnVisibilityChange = (columnKey) => {
@@ -304,7 +312,7 @@ const CourseManagement = () => {
         </Tag>
       ),
     },
-    
+
     {
       title: "GIÁ",
       dataIndex: "total",
@@ -402,11 +410,36 @@ const CourseManagement = () => {
               />
             </div>
             <div className="flex items-center ml-auto">
-              <SearchBar
-                placeholder="Tìm theo tên khóa học, loại, người tạo"
-                onSearch={handleSearch}
-                className="w-64"
-              />
+              <div className="flex items-center">
+                <Button
+                  onClick={fetchCourses}
+                  icon={<FaSync />}
+                  loading={loading}
+                  title="Làm mới dữ liệu"
+                  className="mr-2"
+                >
+                  Làm mới
+                </Button>
+                <SearchBar
+                  placeholder="Tìm theo tên, loại, người tạo"
+                  onSearch={handleSearch}
+                  className="w-64"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <div className="text-sm text-gray-500">
+              Hiển thị{" "}
+              <span className="font-medium">
+                {paginatedRegistrations.length}
+              </span>{" "}
+              trên tổng số{" "}
+              <span className="font-medium">
+                {filteredRegistrations.length}
+              </span>{" "}
+              khóa học
             </div>
           </div>
 
@@ -421,9 +454,11 @@ const CourseManagement = () => {
             />
           )}
 
-          {registrations.length === 0 && !loading && !error && (
+          {filteredRegistrations.length === 0 && !loading && !error && (
             <div className="p-4 text-center text-gray-500">
-              Không có dữ liệu khóa học nào
+              {searchTerm || statusFilter !== "all"
+                ? "Không tìm thấy khóa học nào phù hợp với điều kiện lọc"
+                : "Không có dữ liệu khóa học nào"}
             </div>
           )}
 
@@ -441,13 +476,15 @@ const CourseManagement = () => {
             />
           </div>
 
-          <div className="mt-4 flex justify-end">
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(filteredRegistrations.length / pageSize)}
-              onPageChange={handlePageChange}
-            />
-          </div>
+          {totalPages > 1 && (
+            <div className="mt-4 flex justify-end">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -515,7 +552,9 @@ const CourseManagement = () => {
                 <div className="flex items-center">
                   <Rate disabled defaultValue={selectedCourse.rating || 0} />
                   <span className="ml-2 text-gray-500">
-                    {selectedCourse.rating ? `(${selectedCourse.rating})` : "Chưa có đánh giá"}
+                    {selectedCourse.rating
+                      ? `(${selectedCourse.rating})`
+                      : "Chưa có đánh giá"}
                   </span>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag, message, Spin, Button, Tooltip, Typography, Select } from "antd";
 import {
@@ -43,6 +43,7 @@ const WorkshopStaff = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("all");
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Fetch workshops từ API
   const fetchWorkshops = async () => {
@@ -57,24 +58,31 @@ const WorkshopStaff = () => {
         setWorkshops([]);
       } else {
         // Lọc chỉ lấy những workshop có status là approved
-        const approvedWorkshops = data.filter(workshop => workshop.status === "Approved");
+        const approvedWorkshops = data.filter(
+          (workshop) => workshop.status === "Approved"
+        );
         const formattedData = formatWorkshopsData(approvedWorkshops);
         console.log("Dữ liệu workshop đã định dạng:", formattedData);
-        
+
         // Lọc và cập nhật trạng thái workshop
         const today = new Date();
         today.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
 
-        const updatedWorkshops = formattedData.map(workshop => {
+        const updatedWorkshops = formattedData.map((workshop) => {
           // Chuyển đổi ngày workshop từ format dd/mm/yyyy sang Date object
-          const [day, month, year] = workshop.date.split('/');
+          const [day, month, year] = workshop.date.split("/");
           const workshopDate = new Date(year, month - 1, day);
           workshopDate.setHours(0, 0, 0, 0); // Reset giờ về 00:00:00
 
-          console.log('So sánh ngày:', {
+          console.log("So sánh ngày:", {
             workshopDate: workshopDate.toISOString(),
             today: today.toISOString(),
-            comparison: workshopDate.getTime() === today.getTime() ? 'equal' : workshopDate.getTime() > today.getTime() ? 'future' : 'past'
+            comparison:
+              workshopDate.getTime() === today.getTime()
+                ? "equal"
+                : workshopDate.getTime() > today.getTime()
+                ? "future"
+                : "past",
           });
 
           if (workshopDate.getTime() === today.getTime()) {
@@ -88,9 +96,12 @@ const WorkshopStaff = () => {
 
         // Lọc chỉ lấy workshop có trạng thái phù hợp
         const relevantWorkshops = updatedWorkshops.filter(
-          (workshop) => workshop.status === "Sắp diễn ra" || workshop.status === "Đang diễn ra" || workshop.status === "Đã kết thúc"
+          (workshop) =>
+            workshop.status === "Sắp diễn ra" ||
+            workshop.status === "Đang diễn ra" ||
+            workshop.status === "Đã kết thúc"
         );
-        
+
         console.log("Workshop đã cập nhật:", relevantWorkshops);
         setWorkshops(relevantWorkshops);
       }
@@ -123,6 +134,7 @@ const WorkshopStaff = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
+    setCurrentPage(1); // Reset về trang 1 khi tìm kiếm
     console.log("Searching for:", searchTerm);
   };
 
@@ -147,11 +159,12 @@ const WorkshopStaff = () => {
   // Hàm xử lý sắp xếp
   const handleSort = (value) => {
     setSortOrder(value);
+    setCurrentPage(1); // Reset về trang 1 khi thay đổi sắp xếp
     console.log("Sắp xếp theo:", value);
   };
 
-  // Lọc và sắp xếp dữ liệu
-  const getFilteredAndSortedWorkshops = () => {
+  // Lọc và sắp xếp dữ liệu sử dụng useMemo để tối ưu hiệu suất
+  const filteredAndSortedWorkshops = useMemo(() => {
     let result = [...workshops].filter((workshop) => {
       const matchesSearch =
         (workshop.name &&
@@ -164,7 +177,7 @@ const WorkshopStaff = () => {
           workshop.workshopId.toLowerCase().includes(searchTerm.toLowerCase()));
 
       // Lọc theo trạng thái được chọn
-      const matchesStatus = 
+      const matchesStatus =
         sortOrder === "all" ||
         (sortOrder === "ongoing" && workshop.status === "Đang diễn ra") ||
         (sortOrder === "upcoming" && workshop.status === "Sắp diễn ra");
@@ -174,13 +187,25 @@ const WorkshopStaff = () => {
 
     // Sắp xếp theo ngày
     result.sort((a, b) => {
-      const dateA = new Date(a.date.split('/').reverse().join('-'));
-      const dateB = new Date(b.date.split('/').reverse().join('-'));
+      const dateA = new Date(a.date.split("/").reverse().join("-"));
+      const dateB = new Date(b.date.split("/").reverse().join("-"));
       return dateA - dateB;
     });
 
     return result;
-  };
+  }, [workshops, searchTerm, sortOrder]);
+
+  // Tính toán dữ liệu hiển thị cho trang hiện tại
+  const currentData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredAndSortedWorkshops.slice(startIndex, endIndex);
+  }, [filteredAndSortedWorkshops, currentPage, itemsPerPage]);
+
+  // Tính tổng số trang
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredAndSortedWorkshops.length / itemsPerPage);
+  }, [filteredAndSortedWorkshops, itemsPerPage]);
 
   const columns = [
     {
@@ -283,10 +308,9 @@ const WorkshopStaff = () => {
                 style={{ width: 200 }}
                 onChange={handleSort}
                 options={[
-                  { value: 'all', label: 'Tất cả' },
-                  { value: 'ongoing', label: 'Đang diễn ra' },
-                  { value: 'upcoming', label: 'Sắp diễn ra' },
-                  
+                  { value: "all", label: "Tất cả" },
+                  { value: "ongoing", label: "Đang diễn ra" },
+                  { value: "upcoming", label: "Sắp diễn ra" },
                 ]}
               />
             </div>
@@ -298,30 +322,31 @@ const WorkshopStaff = () => {
             </div>
           ) : (
             <>
-              {workshops.length === 0 ? (
+              {filteredAndSortedWorkshops.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-gray-500 mb-4">
                     Không có hội thảo nào sắp diễn ra
                   </p>
-
                 </div>
               ) : (
                 <>
                   <CustomTable
                     columns={columns}
-                    dataSource={getFilteredAndSortedWorkshops()}
+                    dataSource={currentData}
                     onRowClick={handleRowClick}
                     rowKey="id"
                     scroll={{ x: 1200 }}
                   />
 
-                  <div className="mt-4 flex justify-end">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={Math.ceil(getFilteredAndSortedWorkshops().length / 10)}
-                      onPageChange={handlePageChange}
-                    />
-                  </div>
+                  {totalPages > 1 && (
+                    <div className="mt-4 flex justify-end">
+                      <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
                 </>
               )}
             </>
