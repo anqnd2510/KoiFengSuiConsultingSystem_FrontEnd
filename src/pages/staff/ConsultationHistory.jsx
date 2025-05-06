@@ -185,7 +185,7 @@ const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
           <Row gutter={16} key="master-row">
             <Col span={24} md={12}>
               <div>
-                <p className="text-gray-500 mb-1">Thầy tư vấn</p>
+                <p className="text-gray-500 mb-1">Tư vấn viên</p>
                 <p className="font-medium">{formattedData.masterName}</p>
               </div>
             </Col>
@@ -428,7 +428,7 @@ const ConsultationHistory = () => {
       ),
     },
     {
-      title: "Thầy tư vấn",
+      title: "Tư vấn viên",
       dataIndex: "master",
       key: "master",
       render: (master) => master || "Chưa phân công",

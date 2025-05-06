@@ -266,12 +266,12 @@ const CourseManagement = () => {
       width: 150,
     },
     {
-      title: "TÊN KHÓA HỌC",
+      title: "Tên khóa học",
       dataIndex: "courseName",
       key: "courseName",
     },
     {
-      title: "LOẠI KHÓA HỌC",
+      title: "Loại khóa học",
       dataIndex: "courseType",
       key: "courseType",
       render: (_, record) => (
@@ -281,7 +281,7 @@ const CourseManagement = () => {
       ),
     },
     {
-      title: "NGÀY TẠO",
+      title: "Ngày tạo",
       dataIndex: "date",
       key: "date",
       render: (date) => {
@@ -299,7 +299,7 @@ const CourseManagement = () => {
       },
     },
     {
-      title: "TRẠNG THÁI",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => (
@@ -314,13 +314,13 @@ const CourseManagement = () => {
     },
 
     {
-      title: "GIÁ",
+      title: "Giá",
       dataIndex: "total",
       key: "total",
       render: (total) => `${total.toLocaleString()} đ`,
     },
     {
-      title: "ĐÁNH GIÁ",
+      title: "Đánh giá",
       dataIndex: "rating",
       key: "rating",
       render: (rating) => (
@@ -333,7 +333,7 @@ const CourseManagement = () => {
       ),
     },
     {
-      title: "NGƯỜI TẠO",
+      title: "Người tạo",
       dataIndex: "creator",
       key: "creator",
       render: (creator) => {

@@ -233,7 +233,7 @@ const Master = () => {
             id: master.masterId,
             fullName: master.masterName,
             email: master.email || "",
-            phone: master.phone || "",
+            phoneNumber: master.phoneNumber || "",
             level: master.rating || "",
             experience: master.experience || "",
             rating: 5,
@@ -299,7 +299,7 @@ const Master = () => {
       const formValues = {
         fullName: master.fullName,
         email: master.email,
-        phone: master.phone,
+        phoneNumber: master.phoneNumber,
         level: master.level,
         experience: master.experience,
         rating: master.rating,
@@ -415,44 +415,15 @@ const Master = () => {
   };
 
   // Hàm mở modal để xem chi tiết
-  const handleOpenViewModal = async (master) => {
-    try {
-      // Fetch thông tin chi tiết của master từ API
-      const response = await fetch(`http://localhost:5261/api/Master/${master.id}`);
-      
-      if (response.ok) {
-        const detailData = await response.json();
-        
-        if (detailData.isSuccess) {
-          // Cập nhật thông tin chi tiết với dữ liệu mới nhất
-          const updatedMaster = {
-            ...master,
-            email: detailData.data.email || "",
-            phone: detailData.data.phoneNumber || "",
-            bio: detailData.data.biography || master.bio,
-            expertise: [detailData.data.expertise || master.expertise[0]],
-            experience: detailData.data.experience || master.experience
-          };
-          
-          setViewMaster(updatedMaster);
-        } else {
-          // Nếu API trả về lỗi, vẫn hiển thị dữ liệu hiện có
-          setViewMaster(master);
-          message.warning("Không thể lấy thông tin chi tiết mới nhất");
-        }
-      } else {
-        // Nếu request không thành công, vẫn hiển thị dữ liệu hiện có
-        setViewMaster(master);
-        message.warning("Không thể kết nối đến máy chủ");
-      }
-    } catch (error) {
-      console.error("Lỗi khi tải thông tin chi tiết:", error);
-      // Vẫn hiển thị dữ liệu hiện có nếu có lỗi
-    setViewMaster(master);
-      message.warning("Đã xảy ra lỗi khi tải thông tin chi tiết");
-    } finally {
+  const handleOpenViewModal = (master) => {
+    // Nếu master.expertise là string, convert thành array (nếu cần)
+    const updatedMaster = {
+      ...master,
+      expertise: Array.isArray(master.expertise) ? master.expertise : [master.expertise],
+    };
+  
+    setViewMaster(updatedMaster);
     setIsViewModalOpen(true);
-    }
   };
 
   // Đóng modal xem chi tiết
@@ -469,14 +440,14 @@ const Master = () => {
   // Cấu hình các cột cho bảng
   const columns = [
     {
-      title: "Mã thầy phong thủy",
+      title: "Mã tư vấn viên",
       dataIndex: "id",
       key: "id",
       width: "10%",
       render: (id) => <span className="font-medium">#{id}</span>,
     },
     {
-      title: "Tên thầy phong thủy",
+      title: "Tên tư vấn viên",
       dataIndex: "fullName",
       key: "fullName",
       width: "20%",
@@ -485,6 +456,7 @@ const Master = () => {
           <div>
             <div className="font-medium">{record.fullName}</div>
             <div className="text-xs text-gray-500">{record.email}</div>
+            <div className="text-xs text-gray-2200">{record.phoneNumber}</div>
           </div>
         </div>
       ),
@@ -642,7 +614,7 @@ const Master = () => {
       <Modal
         title={
           <div className="text-xl font-semibold">
-            Chi tiết thông tin bậc thầy
+            Chi tiết thông tin tư vấn viên
           </div>
         }
         open={isViewModalOpen}
@@ -690,7 +662,7 @@ const Master = () => {
               <Col span={24} md={12}>
                 <div className="mb-4">
                   <p className="text-gray-500 mb-1">Số điện thoại</p>
-                  <p className="font-medium">{viewMaster.phone}</p>
+                  <p className="font-medium">{viewMaster.phoneNumber}</p>
                 </div>
               </Col>
 

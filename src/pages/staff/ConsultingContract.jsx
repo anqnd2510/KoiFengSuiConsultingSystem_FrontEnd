@@ -1152,7 +1152,7 @@ const ConsultingContract = () => {
               <div>
                 <h2 className="text-xl font-semibold flex items-center">
                   <ClockCircleOutlined className="mr-2 text-blue-500" />
-                  Danh sách lịch tư vấn offline
+                  Danh sách lịch tư vấn trực tiếp
                 </h2>
                 <p className="text-gray-500 text-sm">
                   Quản lý và tạo hợp đồng cho các buổi tư vấn

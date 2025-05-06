@@ -194,14 +194,14 @@ const WorkshopManager = () => {
 
   const columns = [
     {
-      title: "WORKSHOP ID",
+      title: "Mã hội thảo",
       dataIndex: "workshopId",
       key: "workshopId",
       width: 180,
       render: (text) => text,
     },
     {
-      title: "TÊN WORKSHOP",
+      title: "Tên hội thảo",
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
@@ -216,35 +216,35 @@ const WorkshopManager = () => {
       ),
     },
     {
-      title: "MASTER",
+      title: "Tư vấn viên",
       dataIndex: "master",
       key: "master",
     },
     {
-      title: "ĐỊA ĐIỂM",
+      title: "Địa điểm",
       dataIndex: "location",
       key: "location",
     },
     {
-      title: "NGÀY",
+      title: "Ngày",
       dataIndex: "date",
       key: "date",
     },
     {
-      title: "GIÁ",
+      title: "Giá",
       dataIndex: "price",
       key: "price",
       render: (price) =>
         price ? `${price.toLocaleString("vi-VN")} VND` : "N/A",
     },
     {
-      title: "TRẠNG THÁI",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
-      title: "HÀNH ĐỘNG",
+      title: "Hành động",
       key: "action",
       render: (_, record) => (
         <div className="flex space-x-2">
