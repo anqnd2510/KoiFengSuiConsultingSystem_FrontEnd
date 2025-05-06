@@ -240,8 +240,10 @@ const Login = () => {
 
         if (formData.rememberMe) {
           localStorage.setItem("rememberedEmail", formData.email);
+          localStorage.setItem("rememberedPassword", formData.password);
         } else {
           localStorage.removeItem("rememberedEmail");
+          localStorage.removeItem("rememberedPassword");
         }
 
         localStorage.setItem("accessToken", response.accessToken);
@@ -335,10 +337,13 @@ const Login = () => {
 
   useEffect(() => {
     const rememberedEmail = localStorage.getItem("rememberedEmail");
-    if (rememberedEmail) {
+    const rememberedPassword = localStorage.getItem("rememberedPassword");
+
+    if (rememberedEmail && rememberedPassword) {
       setFormData((prev) => ({
         ...prev,
         email: rememberedEmail,
+        password: rememberedPassword,
         rememberMe: true,
       }));
     }

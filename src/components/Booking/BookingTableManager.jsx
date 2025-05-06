@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Tag, Table, Select, Space, Tooltip, Avatar, Badge } from "antd";
+import {
+  Tag,
+  Table,
+  Select,
+  Space,
+  Tooltip,
+  Avatar,
+  Badge,
+  Typography,
+} from "antd";
 import CustomTable from "../Common/CustomTable";
 import { Link } from "react-router-dom";
 import StatusBadge from "../Common/StatusBadge";
@@ -18,7 +27,10 @@ import {
   FireOutlined,
   UserOutlined,
   FileTextOutlined,
+  QuestionCircleOutlined,
 } from "@ant-design/icons";
+
+const { Text, Paragraph } = Typography;
 
 const BookingTableManager = ({ bookings, loading, onStaffChange }) => {
   const [staffList, setStaffList] = useState([
@@ -133,6 +145,74 @@ const BookingTableManager = ({ bookings, loading, onStaffChange }) => {
       default:
         return "default";
     }
+  };
+
+  const renderStatusTag = (record) => {
+    const status = record.statusText || record.status;
+    const isCanceled =
+      record.status?.toLowerCase().includes("cancel") ||
+      record.status?.toLowerCase() === "canceled" ||
+      status.includes("hủy");
+
+    const isSuccess =
+      record.status?.toLowerCase() === "completed" ||
+      status.includes("hoàn thành") ||
+      status.includes("thành công");
+
+    // Xác định style dựa trên loại trạng thái
+    const getStatusStyle = () => {
+      if (isCanceled) {
+        return {
+          color: "#ff4d4f",
+          backgroundColor: "#fff2f0",
+          border: "1px solid #ffccc7",
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: "0 2px 0 rgba(255,77,79,0.06)",
+        };
+      } else if (isSuccess) {
+        return {
+          color: "#52c41a",
+          backgroundColor: "#f6ffed",
+          border: "1px solid #b7eb8f",
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: "0 2px 0 rgba(82,196,26,0.06)",
+        };
+      } else {
+        // Sử dụng màu từ record.statusColor nếu có
+        const color = record.statusColor || "#1890ff";
+        return {
+          color: color,
+          backgroundColor: `${hexToRgba(color, 0.1)}`,
+          border: `1px solid ${hexToRgba(color, 0.3)}`,
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: `0 2px 0 ${hexToRgba(color, 0.06)}`,
+        };
+      }
+    };
+
+    return (
+      <span style={getStatusStyle()} className="inline-block text-center">
+        {status}
+      </span>
+    );
+  };
+
+  // Hàm chuyển đổi HEX sang RGBA
+  const hexToRgba = (hex, alpha = 1) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   };
 
   const columns = [
@@ -396,75 +476,8 @@ const BookingTableManager = ({ bookings, loading, onStaffChange }) => {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: "120px",
-      align: "center",
-      render: (status) => {
-        let color = "";
-        let text = "";
-        let icon = null;
-        let bgColor = "";
-
-        switch (status) {
-          case "Pending":
-            color = "#faad14";
-            bgColor = "#fff7e6";
-            text = "Chờ xử lý";
-            icon = <ClockCircleOutlined />;
-            break;
-          case "Completed":
-            color = "#52c41a";
-            bgColor = "#f6ffed";
-            text = "Hoàn thành";
-            icon = <CheckCircleOutlined />;
-            break;
-          case "Cancelled":
-            color = "#f5222d";
-            bgColor = "#fff1f0";
-            text = "Đã hủy";
-            icon = <CloseCircleOutlined />;
-            break;
-          case "Scheduled":
-            color = "#1890ff";
-            bgColor = "#e6f7ff";
-            text = "Đã xếp lịch";
-            icon = <CalendarOutlined />;
-            break;
-          case "Confirmed":
-            color = "#13c2c2";
-            bgColor = "#e6fffb";
-            text = "Đã xác nhận";
-            icon = <CheckOutlined />;
-            break;
-          default:
-            color = "#d9d9d9";
-            bgColor = "#fafafa";
-            text = status;
-            icon = <InfoCircleOutlined />;
-        }
-
-        return (
-          <Tag
-            style={{
-              backgroundColor: bgColor,
-              color: color,
-              borderColor: color,
-              borderRadius: "20px",
-              padding: "4px 12px",
-              fontSize: "13px",
-              fontWeight: "600",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "6px",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.05)",
-              transition: "all 0.3s ease",
-            }}
-            className="hover:scale-105"
-          >
-            {icon} {text}
-          </Tag>
-        );
-      },
+      width: "15%",
+      render: (_, record) => renderStatusTag(record),
     },
   ];
 
