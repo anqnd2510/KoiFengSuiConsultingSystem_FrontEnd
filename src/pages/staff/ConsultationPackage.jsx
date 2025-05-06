@@ -201,7 +201,8 @@ const ConsultationPackage = () => {
     form.setFieldsValue({
       packageName: record.packageName,
       minPrice: record.minPrice,
-      maxPrice: record.maxPrice,
+      //maxPrice: record.maxPrice,
+      maxPrice: 100000000, 
       description: record.description,
       suitableFor: record.suitableFor,
       requiredInfo: record.requiredInfo,
@@ -215,6 +216,7 @@ const ConsultationPackage = () => {
     setCurrentPackage(null);
     setIsEditMode(false);
     form.resetFields();
+    form.setFieldsValue({ maxPrice: 100_000_000 });
     setImageFile(null);
     setImageUrl("");
     setIsModalVisible(true);
@@ -243,6 +245,10 @@ const ConsultationPackage = () => {
         ...values,
         imageFile: imageFile, // File ảnh sẽ được xử lý bởi service
       };
+
+      
+      submitData.maxPrice = 100000000;
+      
 
       // Nếu đang trong mode chỉnh sửa và không có file ảnh mới, lưu ý URL hiện tại
       if (isEditMode && currentPackage && !imageFile && imageUrl) {
@@ -463,6 +469,13 @@ const ConsultationPackage = () => {
         width={800}
       >
         <Form form={form} layout="vertical" className="mt-4">
+        <Form.Item
+        name="maxPrice"
+        initialValue={100000000}
+        style={{ display: 'none' }}    // ẩn luôn
+        >
+          <InputNumber disabled />
+</Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -503,9 +516,10 @@ const ConsultationPackage = () => {
                   { required: true, message: "Vui lòng nhập giá" },
                   {
                     validator: async (_, value) => {
-                      if (value <= 0) {
-                        throw new Error('Giá phải lớn hơn 0');
+                      if (value === undefined || value <= 2000) {
+                        return Promise.reject("Giá phải lớn hơn 2.000 VND");
                       }
+                      return Promise.resolve();
                     }
                   }
                 ]}
