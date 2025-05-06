@@ -28,33 +28,40 @@ export const getPendingOrder = async () => {
 export const updateOrderToPaid = async (orderId) => {
   try {
     // Lấy token từ localStorage
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
 
     // Thêm token vào header
     const config = {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     };
 
-    console.log('Calling update payment API for order:', orderId);
-    const response = await apiClient.put(`${ORDER_ENDPOINT}/update-to-PAID/${orderId}`, null, config);
-    
+    console.log("Calling update payment API for order:", orderId);
+    const response = await apiClient.put(
+      `${ORDER_ENDPOINT}/update-to-PAID/${orderId}`,
+      null,
+      config
+    );
+
     if (response.data && response.data.isSuccess) {
       return response.data;
     } else {
-      throw new Error(response.data?.message || 'Không thể cập nhật trạng thái thanh toán');
+      throw new Error(
+        response.data?.message || "Không thể cập nhật trạng thái thanh toán"
+      );
     }
   } catch (error) {
     console.error("Error in updateOrderToPaid:", error);
     if (error.response?.status === 401) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
     throw new Error(
-      error.response?.data?.message || "Có lỗi xảy ra khi cập nhật đơn hàng thành đã thanh toán"
+      error.response?.data?.message ||
+        "Có lỗi xảy ra khi cập nhật đơn hàng thành đã thanh toán"
     );
   }
 };
@@ -67,33 +74,40 @@ export const updateOrderToPaid = async (orderId) => {
 export const getPendingConfirmOrders = async () => {
   try {
     // Lấy token từ localStorage
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
 
     // Thêm token vào header
     const config = {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     };
 
-    console.log('Calling API with URL:', `${ORDER_ENDPOINT}/get-pendingConfirm-order`);
-    const response = await apiClient.get(`${ORDER_ENDPOINT}/get-pendingConfirm-order`, config);
-    
+    console.log(
+      "Calling API with URL:",
+      `${ORDER_ENDPOINT}/get-pendingConfirm-order`
+    );
+    const response = await apiClient.get(
+      `${ORDER_ENDPOINT}/get-pendingConfirm-order`,
+      config
+    );
+
     if (response.data && response.data.isSuccess) {
       return response.data;
     } else {
-      throw new Error(response.data?.message || 'Không có dữ liệu trả về');
+      throw new Error(response.data?.message || "Không có dữ liệu trả về");
     }
   } catch (error) {
     console.error("Error in getPendingConfirmOrders:", error);
     if (error.response?.status === 401) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
     throw new Error(
-      error.response?.data?.message || "Không thể tải danh sách đơn hàng chờ xác nhận"
+      error.response?.data?.message ||
+        "Không thể tải danh sách đơn hàng chờ xác nhận"
     );
   }
 };
@@ -107,32 +121,38 @@ export const getPendingConfirmOrders = async () => {
 export const getOrderById = async (orderId) => {
   try {
     // Lấy token từ localStorage
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
 
     // Thêm token vào header
     const config = {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     };
 
-    const response = await apiClient.get(`${ORDER_ENDPOINT}/get-order/${orderId}`, config);
-    
+    const response = await apiClient.get(
+      `${ORDER_ENDPOINT}/get-order/${orderId}`,
+      config
+    );
+
     if (response.data && response.data.isSuccess) {
       return response.data;
     } else {
-      throw new Error(response.data?.message || 'Không thể lấy thông tin chi tiết đơn hàng');
+      throw new Error(
+        response.data?.message || "Không thể lấy thông tin chi tiết đơn hàng"
+      );
     }
   } catch (error) {
     console.error("Error in getOrderById:", error);
     if (error.response?.status === 401) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
     throw new Error(
-      error.response?.data?.message || "Không thể lấy thông tin chi tiết đơn hàng"
+      error.response?.data?.message ||
+        "Không thể lấy thông tin chi tiết đơn hàng"
     );
   }
 };
@@ -144,20 +164,23 @@ export const getOrderById = async (orderId) => {
  */
 export const getWaitingForRefundOrders = async () => {
   try {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      throw new Error('Vui lòng đăng nhập lại');
+      throw new Error("Vui lòng đăng nhập lại");
     }
 
     const config = {
       headers: {
-        'Authorization': `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     };
 
     // Hãy kiểm tra đúng endpoint với backend
-    const response = await axios.get(`http://localhost:5261/api/Order/get-waitingForRefund-order`, config);
-    
+    const response = await apiClient.get(
+      `${ORDER_ENDPOINT}/get-waitingForRefund-order`,
+      config
+    );
+
     if (response.data && response.data.isSuccess) {
       return response.data;
     } else {
@@ -165,19 +188,20 @@ export const getWaitingForRefundOrders = async () => {
       // Trả về đối tượng với cấu trúc phù hợp ngay cả khi có lỗi
       return {
         isSuccess: false,
-        message: response.data?.message || 'Không có dữ liệu trả về',
-        data: []
+        message: response.data?.message || "Không có dữ liệu trả về",
+        data: [],
       };
     }
   } catch (error) {
     console.error("Error in getWaitingForRefundOrders:", error);
-    
+
     // Trả về đối tượng với cấu trúc phù hợp thay vì throw error
     return {
       isSuccess: false,
-      message: error.response?.data?.message || "Không thể tải danh sách đơn hàng chờ hoàn tiền",
-      data: []
+      message:
+        error.response?.data?.message ||
+        "Không thể tải danh sách đơn hàng chờ hoàn tiền",
+      data: [],
     };
   }
 };
-
