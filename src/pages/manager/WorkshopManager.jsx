@@ -185,16 +185,23 @@ const WorkshopManager = () => {
     return new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date);
   });
 
+  // Số workshop trên mỗi trang
+  const pageSize = 10;
+  
+  // Lấy dữ liệu cho trang hiện tại
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedWorkshops = sortedWorkshops.slice(startIndex, startIndex + pageSize);
+
   const columns = [
     {
-      title: "WORKSHOP ID",
+      title: "Mã hội thảo",
       dataIndex: "workshopId",
       key: "workshopId",
       width: 180,
       render: (text) => text,
     },
     {
-      title: "TÊN WORKSHOP",
+      title: "Tên hội thảo",
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
@@ -209,35 +216,35 @@ const WorkshopManager = () => {
       ),
     },
     {
-      title: "MASTER",
+      title: "Tư vấn viên",
       dataIndex: "master",
       key: "master",
     },
     {
-      title: "ĐỊA ĐIỂM",
+      title: "Địa điểm",
       dataIndex: "location",
       key: "location",
     },
     {
-      title: "NGÀY",
+      title: "Ngày",
       dataIndex: "date",
       key: "date",
     },
     {
-      title: "GIÁ",
+      title: "Giá",
       dataIndex: "price",
       key: "price",
       render: (price) =>
         price ? `${price.toLocaleString("vi-VN")} VND` : "N/A",
     },
     {
-      title: "TRẠNG THÁI",
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => <Tag color={getStatusColor(status)}>{status}</Tag>,
     },
     {
-      title: "HÀNH ĐỘNG",
+      title: "Hành động",
       key: "action",
       render: (_, record) => (
         <div className="flex space-x-2">
@@ -259,7 +266,7 @@ const WorkshopManager = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      <Header title="Quản lý Workshop" description="Quản lý workshop" />
+      <Header title="Quản lý hội thảo" description="Quản lý hội thảo" />
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
@@ -302,16 +309,17 @@ const WorkshopManager = () => {
                 <>
                   <CustomTable
                     columns={columns}
-                    dataSource={sortedWorkshops}
+                    dataSource={paginatedWorkshops}
                     onRowClick={handleRowClick}
                     rowKey="id"
                     scroll={{ x: 1200 }}
+                    pagination={false}
                   />
 
                   <div className="mt-4 flex justify-end">
                     <Pagination
                       currentPage={currentPage}
-                      totalPages={Math.ceil(sortedWorkshops.length / 10)}
+                      totalPages={Math.ceil(sortedWorkshops.length / pageSize)}
                       onPageChange={handlePageChange}
                     />
                   </div>

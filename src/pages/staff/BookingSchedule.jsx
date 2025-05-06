@@ -105,10 +105,10 @@ const BookingSchedule = () => {
           unassigned: processedData.filter((b) => b.master === "Chưa phân công")
             .length,
           online: processedData.filter(
-            (b) => b.consultingType.toLowerCase() === "online"
+            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
           ).length,
           offline: processedData.filter(
-            (b) => b.consultingType.toLowerCase() === "offline"
+            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
           ).length,
         };
 
@@ -147,12 +147,12 @@ const BookingSchedule = () => {
           break;
         case "online":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "online"
+            (b) => b.consultingType.toLowerCase() === "online" || b.consultingType === "Trực tuyến"
           );
           break;
         case "offline":
           result = result.filter(
-            (b) => b.consultingType.toLowerCase() === "offline"
+            (b) => b.consultingType.toLowerCase() === "offline" || b.consultingType === "Trực tiếp"
           );
           break;
         case "new":
@@ -412,7 +412,7 @@ const BookingSchedule = () => {
                   <Statistic
                     title={
                       <Text strong className="text-gray-600">
-                        Tư vấn Online
+                        Tư vấn trực tuyến
                       </Text>
                     }
                     value={stats.online}
@@ -439,7 +439,7 @@ const BookingSchedule = () => {
                   <Statistic
                     title={
                       <Text strong className="text-gray-600">
-                        Tư vấn Offline
+                        Tư vấn trực tiếp
                       </Text>
                     }
                     value={stats.offline}
@@ -513,7 +513,7 @@ const BookingSchedule = () => {
                   <Space size="small" align="center">
                     <GlobalOutlined />
                     <Text strong className="mr-2">
-                      Online
+                      Trực tuyến
                     </Text>
                   </Space>
                 </Badge>
@@ -531,7 +531,7 @@ const BookingSchedule = () => {
                   <Space size="small" align="center">
                     <EnvironmentOutlined />
                     <Text strong className="mr-2">
-                      Offline
+                      Trực tiếp
                     </Text>
                   </Space>
                 </Badge>
@@ -570,17 +570,17 @@ const BookingSchedule = () => {
           </div>
         )}
 
-        {/* Pagination with Modern Style */}
-        <div className="mt-6 flex justify-center">
-          <Pagination
-            currentPage={currentPage}
-            totalPages={Math.max(
-              1,
-              Math.ceil(filteredBookings.length / pageSize)
-            )}
-            onPageChange={handlePageChange}
-          />
-        </div>
+          {/* Pagination with Modern Style */}
+          <div className="mt-6 flex justify-end">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.max(
+                1,
+                Math.ceil(filteredBookings.length / pageSize)
+              )}
+              onPageChange={handlePageChange}
+            />
+          </div>
 
         <Modal
           title={<div className="text-xl font-semibold">Tạo lịch tư vấn</div>}
