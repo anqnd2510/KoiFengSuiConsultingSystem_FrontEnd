@@ -5,7 +5,7 @@ import CustomDatePicker from "../../components/Common/CustomDatePicker";
 import Header from "../../components/Common/Header";
 import dayjs from "dayjs";
 import { getAllAttachments } from "../../services/attachment.service";
-import { Spin, message, Empty, Button, Select, Tag } from "antd";
+import { Spin, message, Empty, Button, Select } from "antd";
 import { ReloadOutlined, FilterOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
@@ -179,6 +179,90 @@ const Attachment = () => {
   console.log("Filtered attachments:", filteredAttachments.length);
   console.log("Paginated data:", paginatedData.length);
 
+  // Hàm chuyển đổi HEX sang RGBA
+  const hexToRgba = (hex, alpha = 1) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
+  const getStatusColor = (status) => {
+    if (!status) return "#bfbfbf";
+
+    switch (status.toLowerCase()) {
+      case "pending":
+        return "#faad14";
+      case "confirmed":
+        return "#1890ff";
+      case "verifyingotp":
+        return "#722ed1";
+      case "success":
+        return "#52c41a";
+      case "cancelled":
+        return "#f5222d";
+      default:
+        return "#bfbfbf";
+    }
+  };
+
+  const renderStatusTag = (status) => {
+    const displayText = displayStatus(status);
+    const isSuccess =
+      status?.toLowerCase() === "success" || displayText.includes("thành công");
+    const isCancelled =
+      status?.toLowerCase() === "cancelled" || displayText.includes("hủy");
+
+    // Xác định style dựa trên loại trạng thái
+    const getStatusStyle = () => {
+      if (isCancelled) {
+        return {
+          color: "#ff4d4f",
+          backgroundColor: "#fff2f0",
+          border: "1px solid #ffccc7",
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: "0 2px 0 rgba(255,77,79,0.06)",
+          display: "inline-block",
+          textAlign: "center",
+        };
+      } else if (isSuccess) {
+        return {
+          color: "#52c41a",
+          backgroundColor: "#f6ffed",
+          border: "1px solid #b7eb8f",
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: "0 2px 0 rgba(82,196,26,0.06)",
+          display: "inline-block",
+          textAlign: "center",
+        };
+      } else {
+        // Sử dụng màu từ getStatusColor
+        const color = getStatusColor(status);
+        return {
+          color: color,
+          backgroundColor: `${hexToRgba(color, 0.1)}`,
+          border: `1px solid ${hexToRgba(color, 0.3)}`,
+          borderRadius: "20px",
+          padding: "4px 12px",
+          fontWeight: "500",
+          fontSize: "13px",
+          boxShadow: `0 2px 0 ${hexToRgba(color, 0.06)}`,
+          display: "inline-block",
+          textAlign: "center",
+        };
+      }
+    };
+
+    return <span style={getStatusStyle()}>{displayText}</span>;
+  };
+
   return (
     <>
       <Header
@@ -282,9 +366,7 @@ const Attachment = () => {
                             {item.attachmentName}
                           </td>
                           <td className="py-4 px-6">
-                            <Tag color={getStatusTagColor(item.status)}>
-                              {displayStatus(item.status)}
-                            </Tag>
+                            {renderStatusTag(item.status)}
                           </td>
                           <td className="py-4 px-6">
                             <button

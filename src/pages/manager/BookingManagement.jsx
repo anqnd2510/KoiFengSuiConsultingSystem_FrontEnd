@@ -47,6 +47,85 @@ import {
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
 
+// Chuyển đổi trạng thái từ tiếng Anh sang tiếng Việt
+const translateBookingOfflineStatus = (status) => {
+  const statusMap = {
+    pending: "Chờ xử lý",
+    inprogress: "Đang xử lý",
+    contractrejectedbymanager: "Quản lý từ chối hợp đồng",
+    contractconfirmedbymanager: "Quản lý xác nhận hợp đồng",
+    contractrejectedbycustomer: "Khách hàng từ chối hợp đồng",
+    contractconfirmedbycustomer: "Khách hàng xác nhận hợp đồng",
+    verifyingotp: "Đang xác thực OTP",
+    verifiedotp: "Đã xác thực OTP",
+    firstpaymentpending: "Chờ thanh toán lần 1",
+    firstpaymentpendingconfirm: "Đang xác nhận thanh toán lần 1",
+    firstpaymentsuccess: "Đã thanh toán lần 1",
+    documentrejectedbymanager: "Quản lý từ chối hồ sơ",
+    documentconfirmedbymanager: "Quản lý xác nhận hồ sơ",
+    documentrejectedbycustomer: "Khách hàng từ chối hồ sơ",
+    documentconfirmedbycustomer: "Khách hàng xác nhận hồ sơ",
+    attachmentrejected: "Tài liệu đính kèm bị từ chối",
+    attachmentconfirmed: "Tài liệu đính kèm được xác nhận",
+    verifyingotpattachment: "Đang xác thực OTP tài liệu",
+    verifiedotpattachment: "Đã xác thực OTP tài liệu",
+    secondpaymentpending: "Chờ thanh toán lần 2",
+    secondpaymentpendingconfirm: "Đang xác nhận thanh toán lần 2",
+    completed: "Hoàn thành",
+    canceled: "Đã hủy",
+  };
+
+  return statusMap[status.toLowerCase()] || status;
+};
+
+const translateBookingOnlineStatus = (status) => {
+  const statusMap = {
+    pending: "Chờ xử lý",
+    pendingconfirm: "Chờ xác nhận",
+    confirmed: "Đã xác nhận",
+    completed: "Hoàn thành",
+    canceled: "Đã hủy",
+  };
+
+  return statusMap[status.toLowerCase()] || status;
+};
+
+// Hàm lấy màu cho trạng thái
+const getStatusColor = (status) => {
+  const colorMap = {
+    // Trạng thái Online
+    pending: "#faad14",
+    pendingconfirm: "#1890ff",
+    confirmed: "#52c41a",
+    completed: "#13c2c2",
+    canceled: "#f5222d",
+
+    // Trạng thái Offline
+    inprogress: "#1890ff",
+    contractrejectedbymanager: "#f5222d",
+    contractconfirmedbymanager: "#52c41a",
+    contractrejectedbycustomer: "#f5222d",
+    contractconfirmedbycustomer: "#52c41a",
+    verifyingotp: "#faad14",
+    verifiedotp: "#52c41a",
+    firstpaymentpending: "#faad14",
+    firstpaymentpendingconfirm: "#1890ff",
+    firstpaymentsuccess: "#52c41a",
+    documentrejectedbymanager: "#f5222d",
+    documentconfirmedbymanager: "#52c41a",
+    documentrejectedbycustomer: "#f5222d",
+    documentconfirmedbycustomer: "#52c41a",
+    attachmentrejected: "#f5222d",
+    attachmentconfirmed: "#52c41a",
+    verifyingotpattachment: "#faad14",
+    verifiedotpattachment: "#52c41a",
+    secondpaymentpending: "#faad14",
+    secondpaymentpendingconfirm: "#1890ff",
+  };
+
+  return colorMap[status.toLowerCase()] || "#bfbfbf";
+};
+
 const BookingManagement = () => {
   const [bookings, setBookings] = useState([]);
   const [filteredBookings, setFilteredBookings] = useState([]);
@@ -97,6 +176,13 @@ const BookingManagement = () => {
 
         let staffName = "";
         const status = booking.status?.toLowerCase() || "pending";
+        const consultingType = booking.type || "Trực tuyến";
+        const statusText =
+          consultingType.toLowerCase() === "offline" ||
+          consultingType === "Trực tiếp"
+            ? translateBookingOfflineStatus(status)
+            : translateBookingOnlineStatus(status);
+        const statusColor = getStatusColor(status);
 
         switch (status) {
           case "canceled":
@@ -158,10 +244,12 @@ const BookingManagement = () => {
           description: booking.description || "",
           date: formattedDate,
           rawDate: createDate,
-          consultingType: booking.type || "Trực tuyến",
+          consultingType: consultingType,
           staff: staffName,
           staffId,
           status: booking.status || "pending",
+          statusText: statusText,
+          statusColor: statusColor,
           isNew: isNewBooking,
         };
       });

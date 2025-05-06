@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { Select } from "antd";
+import React, { useState, useEffect } from "react";
 import Header from "../../components/Common/Header";
 import Error from "../../components/Common/Error";
 import {
@@ -18,49 +17,83 @@ import {
   AreaChart,
 } from "recharts";
 import { UserOutlined, BookOutlined, StarOutlined } from "@ant-design/icons";
-
-const { Option } = Select;
-
-const mockData = {
-  stats: {
-    revenue: 15234,
-    rating: 4.0,
-    customers: 1440,
-  },
-  monthlyData: [
-    { month: "Oct 2021", consultations: 2500, courses: 2000, workshops: 2100 },
-    { month: "Nov 2021", consultations: 2200, courses: 2300, workshops: 1500 },
-    { month: "Dec 2021", consultations: 2400, courses: 1800, workshops: 2000 },
-    { month: "Jan 2022", consultations: 1900, courses: 2500, workshops: 1800 },
-  ],
-  timeData: [
-    { time: "07:00 AM", value: 50 },
-    { time: "11:00 AM", value: 80 },
-    { time: "03:00 PM", value: 120 },
-    { time: "07:00 PM", value: 60 },
-    { time: "11:00 PM", value: 90 },
-  ],
-  genderData: [
-    { name: "Male", value: 60 },
-    { name: "Female", value: 40 },
-  ],
-  serviceData: [
-    { name: "Consultations", value: 35 },
-    { name: "Courses", value: 40 },
-    { name: "Workshops", value: 25 },
-  ],
-  todayRecord: {
-    courses: 100,
-    workshops: 123,
-    consultations: 165,
-  },
-};
+import { getDashboardInfo } from "../../services/account.service";
 
 const COLORS = ["#FF4D4F", "#1890FF"];
 const SERVICE_COLORS = ["#FF4D4F", "#52C41A", "#1890FF"];
 
 const Dashboard = () => {
   const [error, setError] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        const response = await getDashboardInfo();
+        if (response && response.isSuccess && response.data) {
+          setDashboardData(response.data);
+        } else {
+          setError("Không thể lấy dữ liệu Dashboard");
+        }
+      } catch (err) {
+        setError("Đã xảy ra lỗi khi lấy dữ liệu Dashboard");
+        console.error("Dashboard data error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Chuẩn bị dữ liệu cho biểu đồ
+  const prepareMonthlyData = () => {
+    if (!dashboardData || !dashboardData.monthlyComparison) return [];
+
+    return dashboardData.monthlyComparison.map((item) => ({
+      month: item.monthYear,
+      bookingOnline: item.bookingOnline,
+      bookingOffline: item.bookingOffline,
+      courses: item.courses,
+      workshops: item.workshops,
+    }));
+  };
+
+  const prepareGenderData = () => {
+    if (!dashboardData || !dashboardData.genderStats) return [];
+
+    return [
+      { name: "Nam", value: dashboardData.genderStats.male },
+      { name: "Nữ", value: dashboardData.genderStats.female },
+    ];
+  };
+
+  const prepareServiceData = () => {
+    if (!dashboardData) return [];
+
+    return [
+      {
+        name: "Tư vấn trực tuyến",
+        value: dashboardData.todayRecord?.bookingOnline || 0,
+      },
+      {
+        name: "Tư vấn trực tiếp",
+        value: dashboardData.todayRecord?.bookingOffline || 0,
+      },
+      { name: "Khóa học", value: dashboardData.todayRecord?.courses || 0 },
+    ];
+  };
+
+  const prepareTimeData = () => {
+    if (!dashboardData || !dashboardData.timeAdmittedToday) return [];
+
+    return dashboardData.timeAdmittedToday.map((item) => ({
+      time: `${item.time}:00`,
+      value: item.count,
+    }));
+  };
 
   return (
     <div className="flex-1 bg-[#F8F9FC]">
@@ -84,7 +117,7 @@ const Dashboard = () => {
                   Doanh thu
                 </p>
                 <h3 className="text-xl md:text-3xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
-                  ${mockData.stats.revenue.toLocaleString()}
+                  {dashboardData?.revenue?.toLocaleString() || "0"} VNĐ
                 </h3>
               </div>
             </div>
@@ -96,10 +129,11 @@ const Dashboard = () => {
               </div>
               <div>
                 <p className="text-gray-500 text-xs md:text-sm font-medium mb-1 md:mb-2 uppercase tracking-wider">
-                  Đánh giá trung bình
+                  Tư vấn trực tuyến/trực tiếp
                 </p>
                 <h3 className="text-xl md:text-3xl font-bold text-gray-800 group-hover:text-amber-600 transition-colors">
-                  {mockData.stats.rating}/5.0
+                  {(dashboardData?.todayRecord?.bookingOnline || 0) +
+                    (dashboardData?.todayRecord?.bookingOffline || 0)}
                 </h3>
               </div>
             </div>
@@ -114,7 +148,7 @@ const Dashboard = () => {
                   Tổng số khách hàng
                 </p>
                 <h3 className="text-xl md:text-3xl font-bold text-gray-800 group-hover:text-green-600 transition-colors">
-                  {mockData.stats.customers.toLocaleString()}
+                  {dashboardData?.totalCustomers?.toLocaleString() || "0"}
                 </h3>
               </div>
             </div>
@@ -134,19 +168,10 @@ const Dashboard = () => {
                     Tư vấn - Khóa học - Hội thảo
                   </p>
                 </div>
-                <Select
-                  defaultValue="month"
-                  style={{ width: "100%", maxWidth: 160 }}
-                  bordered={false}
-                  className="hover:bg-gray-50 rounded-lg text-base"
-                >
-                  <Option value="month">Xem theo tháng</Option>
-                  <Option value="week">Xem theo tuần</Option>
-                </Select>
               </div>
               <div className="h-[300px] md:h-[380px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={mockData.monthlyData} barGap={8}>
+                  <BarChart data={prepareMonthlyData()} barGap={8}>
                     <CartesianGrid
                       strokeDasharray="3 3"
                       vertical={false}
@@ -169,20 +194,30 @@ const Dashboard = () => {
                       }}
                     />
                     <Bar
-                      dataKey="consultations"
+                      dataKey="bookingOnline"
+                      name="Tư vấn trực tuyến"
                       fill="#FF4D4F"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={50}
                     />
                     <Bar
-                      dataKey="courses"
+                      dataKey="bookingOffline"
+                      name="Tư vấn trực tiếp"
                       fill="#52C41A"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={50}
                     />
                     <Bar
-                      dataKey="workshops"
+                      dataKey="courses"
+                      name="Khóa học"
                       fill="#1890FF"
+                      radius={[8, 8, 0, 0]}
+                      maxBarSize={50}
+                    />
+                    <Bar
+                      dataKey="workshops"
+                      name="Hội thảo"
+                      fill="#FAAD14"
                       radius={[8, 8, 0, 0]}
                       maxBarSize={50}
                     />
@@ -200,24 +235,15 @@ const Dashboard = () => {
                       Phân bố giới tính
                     </h2>
                     <p className="text-gray-500 text-sm mb-4 md:mb-8">
-                      Khách hàng theo giới tính
+                      Tài khoản theo giới tính
                     </p>
                   </div>
-                  <Select
-                    defaultValue="month"
-                    style={{ width: "100%" }}
-                    bordered={false}
-                    className="hover:bg-gray-50 rounded-lg text-base"
-                  >
-                    <Option value="month">Xem theo tháng</Option>
-                    <Option value="week">Xem theo tuần</Option>
-                  </Select>
                 </div>
-                <div className="h-[200px] md:h-[250px] mt-4">
+                <div className="h-[200px] md:h-[350px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={mockData.genderData}
+                        data={prepareGenderData()}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -226,7 +252,7 @@ const Dashboard = () => {
                         startAngle={90}
                         endAngle={-270}
                       >
-                        {mockData.genderData.map((entry, index) => (
+                        {prepareGenderData().map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index]}
@@ -263,21 +289,12 @@ const Dashboard = () => {
                       Phân bố theo loại dịch vụ
                     </p>
                   </div>
-                  <Select
-                    defaultValue="month"
-                    style={{ width: "100%" }}
-                    bordered={false}
-                    className="hover:bg-gray-50 rounded-lg text-base"
-                  >
-                    <Option value="month">Xem theo tháng</Option>
-                    <Option value="week">Xem theo tuần</Option>
-                  </Select>
                 </div>
-                <div className="h-[200px] md:h-[250px] mt-4">
+                <div className="h-[200px] md:h-[350px] mt-4">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={mockData.serviceData}
+                        data={prepareServiceData()}
                         cx="50%"
                         cy="50%"
                         innerRadius={60}
@@ -286,7 +303,7 @@ const Dashboard = () => {
                         startAngle={90}
                         endAngle={-270}
                       >
-                        {mockData.serviceData.map((entry, index) => (
+                        {prepareServiceData().map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={SERVICE_COLORS[index]}
@@ -330,20 +347,11 @@ const Dashboard = () => {
                     Thời gian đăng ký trong ngày
                   </p>
                 </div>
-                <Select
-                  defaultValue="today"
-                  style={{ width: "100%", maxWidth: 160 }}
-                  bordered={false}
-                  className="hover:bg-gray-50 rounded-lg text-base"
-                >
-                  <Option value="today">Xem hôm nay</Option>
-                  <Option value="week">Xem tuần này</Option>
-                </Select>
               </div>
               <div className="h-[250px] md:h-[280px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
-                    data={mockData.timeData}
+                    data={prepareTimeData()}
                     margin={{ left: 25, right: 25, top: 20, bottom: 20 }}
                   >
                     <defs>
@@ -425,15 +433,6 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-gray-500 text-sm">Số liệu hôm nay</p>
                 </div>
-                <Select
-                  defaultValue="today"
-                  style={{ width: "100%" }}
-                  bordered={false}
-                  className="hover:bg-gray-50 rounded-lg text-base"
-                >
-                  <Option value="today">Xem hôm nay</Option>
-                  <Option value="yesterday">Xem hôm qua</Option>
-                </Select>
               </div>
               <div className="space-y-4 md:space-y-6">
                 <div className="bg-blue-50/50 rounded-2xl p-6 hover:bg-blue-50 transition-colors duration-300 group cursor-pointer">
@@ -444,7 +443,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-gray-600 font-medium mb-1">Khóa học</p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
-                        {mockData.todayRecord.courses}
+                        {dashboardData?.todayRecord?.courses || 0}
                       </p>
                     </div>
                   </div>
@@ -459,7 +458,7 @@ const Dashboard = () => {
                         Điểm danh hội thảo
                       </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors">
-                        {mockData.todayRecord.workshops}
+                        {dashboardData?.todayRecord?.checkInWorkshops || 0}
                       </p>
                     </div>
                   </div>
@@ -472,7 +471,8 @@ const Dashboard = () => {
                     <div>
                       <p className="text-gray-600 font-medium mb-1">Tư vấn</p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-red-600 transition-colors">
-                        {mockData.todayRecord.consultations}
+                        {(dashboardData?.todayRecord?.bookingOnline || 0) +
+                          (dashboardData?.todayRecord?.bookingOffline || 0)}
                       </p>
                     </div>
                   </div>
