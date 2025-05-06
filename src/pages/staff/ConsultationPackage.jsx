@@ -316,21 +316,14 @@ const ConsultationPackage = () => {
       ellipsis: true,
     },
     {
-      title: "Giá tối thiểu",
+      title: "Giá",
       dataIndex: "minPrice",
       key: "minPrice",
       width: 120,
       align: "left",
       render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
     },
-    {
-      title: "Giá tối đa",
-      dataIndex: "maxPrice",
-      key: "maxPrice",
-      width: 120,
-      align: "left",
-      render: (price) => <span>{price.toLocaleString("vi-VN")} đ</span>,
-    },
+    
     {
       title: "Trạng thái",
       dataIndex: "status",
@@ -505,9 +498,9 @@ const ConsultationPackage = () => {
             <Col span={12}>
               <Form.Item
                 name="minPrice"
-                label="Giá tối thiểu"
+                label="Giá"
                 rules={[
-                  { required: true, message: "Vui lòng nhập giá tối thiểu" },
+                  { required: true, message: "Vui lòng nhập giá" },
                   {
                     validator: async (_, value) => {
                       if (value <= 0) {
@@ -518,7 +511,7 @@ const ConsultationPackage = () => {
                 ]}
               >
                 <InputNumber
-                  placeholder="Nhập giá tối thiểu"
+                  placeholder="Nhập giá"
                   style={{ width: "100%" }}
                   min={1}
                   formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }
@@ -526,36 +519,7 @@ const ConsultationPackage = () => {
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
-              <Form.Item
-                name="maxPrice"
-                label="Giá tối đa"
-                dependencies={['minPrice']}
-                rules={[
-                  { required: true, message: "Vui lòng nhập giá tối đa" },
-                  ({ getFieldValue }) => ({
-                    validator(_, value) {
-                      if (!value || value <= 0) {
-                        return Promise.reject('Giá phải lớn hơn 0');
-                      }
-                      const minPrice = getFieldValue('minPrice');
-                      if (minPrice && value <= minPrice) {
-                        return Promise.reject('Giá tối đa phải lớn hơn giá tối thiểu');
-                      }
-                      return Promise.resolve();
-                    },
-                  }),
-                ]}
-              >
-                <InputNumber
-                  placeholder="Nhập giá tối đa"
-                  style={{ width: "100%" }}
-                  min={1}
-                  formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") }
-                  parser={(value) => value.replace(/\$\s?|(,*)/g, "")}
-                />
-              </Form.Item>
-            </Col>
+            
           </Row>
 
           <Form.Item
@@ -740,21 +704,14 @@ const ConsultationPackage = () => {
 
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 uppercase tracking-wider">
-                  Giá tối thiểu
+                  Giá
                 </p>
                 <p className="text-base font-medium text-gray-800">
                   {currentPackage.minPrice?.toLocaleString("vi-VN")} đ
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-sm text-gray-500 uppercase tracking-wider">
-                  Giá tối đa
-                </p>
-                <p className="text-base font-medium text-gray-800">
-                  {currentPackage.maxPrice?.toLocaleString("vi-VN")} đ
-                </p>
-              </div>
+              
 
               <div className="space-y-2">
                 <p className="text-sm text-gray-500 uppercase tracking-wider">
