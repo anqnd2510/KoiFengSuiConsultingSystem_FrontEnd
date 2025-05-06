@@ -45,6 +45,92 @@ const { TextArea } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
 
+// Hàm dịch trạng thái sang tiếng Việt
+const translateStatus = (status) => {
+  // Ánh xạ trạng thái BookingOnline
+  const onlineStatusMap = {
+    Pending: "Chờ xử lý",
+    PendingConfirm: "Chờ xác nhận",
+    Confirmed: "Đã xác nhận",
+    Completed: "Hoàn thành",
+    Canceled: "Đã hủy",
+  };
+
+  // Ánh xạ trạng thái BookingOffline
+  const offlineStatusMap = {
+    Pending: "Chờ xử lý",
+    InProgress: "Đang xử lý",
+    ContractRejectedByManager: "Hợp đồng bị từ chối bởi quản lý",
+    ContractConfirmedByManager: "Hợp đồng được xác nhận bởi quản lý",
+    ContractRejectedByCustomer: "Hợp đồng bị từ chối bởi khách hàng",
+    ContractConfirmedByCustomer: "Hợp đồng được xác nhận bởi khách hàng",
+    VerifyingOTP: "Đang xác minh OTP",
+    VerifiedOTP: "Đã xác minh OTP",
+    FirstPaymentPending: "Chờ thanh toán lần 1",
+    FirstPaymentPendingConfirm: "Chờ xác nhận thanh toán lần 1",
+    FirstPaymentSuccess: "Thanh toán lần 1 thành công",
+    DocumentRejectedByManager: "Hồ sơ bị từ chối bởi quản lý",
+    DocumentConfirmedByManager: "Hồ sơ được xác nhận bởi quản lý",
+    DocumentRejectedByCustomer: "Hồ sơ bị từ chối bởi khách hàng",
+    DocumentConfirmedByCustomer: "Hồ sơ được xác nhận bởi khách hàng",
+    AttachmentRejected: "Biên bản kèm bị từ chối",
+    AttachmentConfirmed: "Biên bản kèm được xác nhận",
+    VerifyingOTPAttachment: "Đang xác minh OTP Biên bản kèm",
+    VerifiedOTPAttachment: "Đã xác minh OTP Biên bản kèm",
+    SecondPaymentPending: "Chờ thanh toán lần 2",
+    SecondPaymentPendingConfirm: "Chờ xác nhận thanh toán lần 2",
+    Completed: "Hoàn thành",
+    Canceled: "Đã hủy",
+  };
+
+  // Kiểm tra trong bảng ánh xạ BookingOnline
+  if (onlineStatusMap[status]) {
+    return onlineStatusMap[status];
+  }
+
+  // Kiểm tra trong bảng ánh xạ BookingOffline
+  if (offlineStatusMap[status]) {
+    return offlineStatusMap[status];
+  }
+
+  // Nếu không tìm thấy, trả về giá trị ban đầu
+  return status;
+};
+
+// Hàm xác định màu cho trạng thái
+const getStatusColor = (status) => {
+  // Các trạng thái hoàn thành
+  if (status === "Completed") {
+    return "success";
+  }
+
+  // Các trạng thái bị hủy hoặc từ chối
+  if (status === "Canceled" || status.includes("Rejected")) {
+    return "error";
+  }
+
+  // Các trạng thái đã xác nhận
+  if (
+    status.includes("Confirmed") ||
+    status.includes("Success") ||
+    status.includes("Verified")
+  ) {
+    return "blue";
+  }
+
+  // Các trạng thái đang chờ
+  if (
+    status.includes("Pending") ||
+    status === "InProgress" ||
+    status.includes("Verifying")
+  ) {
+    return "warning";
+  }
+
+  // Mặc định
+  return "default";
+};
+
 // Component modal xem chi tiết tư vấn
 const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
   // Log để debug data nhận được
@@ -137,24 +223,8 @@ const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
             <Col span={24}>
               <div>
                 <p className="text-gray-500 mb-1">Trạng thái</p>
-                <Tag
-                  color={
-                    formattedData.status === "Completed"
-                      ? "success"
-                      : formattedData.status === "Pending"
-                      ? "warning"
-                      : formattedData.status === "Cancelled"
-                      ? "error"
-                      : "default"
-                  }
-                >
-                  {formattedData.status === "Completed"
-                    ? "Hoàn thành"
-                    : formattedData.status === "Pending"
-                    ? "Đang chờ"
-                    : formattedData.status === "Cancelled"
-                    ? "Đã hủy"
-                    : formattedData.status}
+                <Tag color={getStatusColor(formattedData.status)}>
+                  {translateStatus(formattedData.status)}
                 </Tag>
               </div>
             </Col>
@@ -163,13 +233,6 @@ const ConsultationDetail = React.memo(({ consultation, visible, onClose }) => {
           <div>
             <p className="text-gray-500 mb-1">Yêu cầu tư vấn</p>
             <p className="mt-1">{formattedData.description}</p>
-          </div>
-
-          <Divider />
-
-          <div>
-            <p className="text-gray-500 mb-1">Ghi chú của thầy</p>
-            <p className="font-medium mt-1">{formattedData.masterNote}</p>
           </div>
 
           <div className="flex justify-end gap-3 mt-6">
@@ -442,37 +505,26 @@ const ConsultationHistory = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        let color = "default";
-        let icon = null;
-        let displayText = status;
+        const color = getStatusColor(status);
+        const displayText = translateStatus(status);
 
-        switch (status) {
-          case "Completed":
-            color = "success";
-            icon = <Check className="inline-block mr-1 w-4 h-4" />;
-            displayText = "Hoàn thành";
-            break;
-          case "Canceled":
-            color = "error";
-            icon = <Trash2 className="inline-block mr-1 w-4 h-4" />;
-            displayText = "Đã hủy";
-            break;
-          case "Pending":
-            color = "warning";
-            icon = <Clock className="inline-block mr-1 w-4 h-4" />;
-            displayText = "Đang chờ";
-            break;
-          case "Confirmed":
-            color = "processing";
-            icon = <CheckCircle className="inline-block mr-1 w-4 h-4" />;
-            displayText = "Đã xác nhận";
-            break;
-          case "SecondPaymentPending":
-            color = "default";
-            displayText = "Chờ thanh toán lần 2";
-            break;
-          default:
-            displayText = status || "Chưa xác định";
+        let icon = null;
+        if (status === "Completed") {
+          icon = <Check className="inline-block mr-1 w-4 h-4" />;
+        } else if (status === "Canceled" || status.includes("Rejected")) {
+          icon = <Trash2 className="inline-block mr-1 w-4 h-4" />;
+        } else if (
+          status.includes("Pending") ||
+          status === "InProgress" ||
+          status.includes("Verifying")
+        ) {
+          icon = <Clock className="inline-block mr-1 w-4 h-4" />;
+        } else if (
+          status.includes("Confirmed") ||
+          status.includes("Success") ||
+          status.includes("Verified")
+        ) {
+          icon = <CheckCircle className="inline-block mr-1 w-4 h-4" />;
         }
 
         return (
@@ -522,14 +574,26 @@ const ConsultationHistory = () => {
                 <Option key="status-all" value="all">
                   Tất cả trạng thái
                 </Option>
+                <Option key="status-pending" value="Pending">
+                  Chờ xử lý
+                </Option>
+                <Option key="status-confirmed" value="Confirmed">
+                  Đã xác nhận
+                </Option>
                 <Option key="status-completed" value="Completed">
                   Hoàn thành
                 </Option>
-                <Option key="status-cancelled" value="Cancelled">
+                <Option key="status-canceled" value="Canceled">
                   Đã hủy
                 </Option>
-                <Option key="status-postponed" value="Postponed">
-                  Hoãn lại
+                <Option key="status-first-payment" value="FirstPaymentPending">
+                  Chờ thanh toán lần 1
+                </Option>
+                <Option
+                  key="status-second-payment"
+                  value="SecondPaymentPending"
+                >
+                  Chờ thanh toán lần 2
                 </Option>
               </Select>
 

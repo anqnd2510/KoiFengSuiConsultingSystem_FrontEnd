@@ -455,51 +455,117 @@ const ConsultingContract = () => {
         break;
       case "ContractRejectedByManager":
         color = "#f5222d";
-        text = "Quản lý từ chối";
+        text = "Quản lý từ chối hợp đồng";
         bgColor = "bg-red-50";
         icon = <CloseCircleOutlined className="mr-1" />;
         break;
       case "ContractRejectedByCustomer":
         color = "#f5222d";
-        text = "Khách hàng từ chối";
+        text = "Khách hàng từ chối hợp đồng";
         bgColor = "bg-red-50";
         icon = <UserDeleteOutlined className="mr-1" />;
         break;
       case "ContractConfirmedByManager":
         color = "#52c41a";
-        text = "Quản lý đã duyệt";
+        text = "Quản lý đã duyệt hợp đồng";
         bgColor = "bg-green-50";
         icon = <CheckCircleOutlined className="mr-1" />;
         break;
       case "ContractConfirmedByCustomer":
         color = "#52c41a";
-        text = "Khách hàng đã duyệt";
+        text = "Khách hàng đã duyệt hợp đồng";
         bgColor = "bg-green-50";
         icon = <CheckCircleOutlined className="mr-1" />;
         break;
       case "VerifyingOTP":
         color = "#722ed1";
-        text = "Đang xác thực OTP";
+        text = "Đang xác thực OTP hợp đồng";
         bgColor = "bg-purple-50";
         icon = <SafetyCertificateOutlined className="mr-1" />;
         break;
       case "VerifiedOTP":
         color = "#13c2c2";
-        text = "Đã xác thực OTP";
+        text = "Đã xác thực OTP hợp đồng";
         bgColor = "bg-cyan-50";
         icon = <CheckCircleOutlined className="mr-1" />;
         break;
       case "FirstPaymentPending":
         color = "#fa8c16";
-        text = "Chờ thanh toán";
+        text = "Chờ thanh toán lần 1";
+        bgColor = "bg-orange-50";
+        icon = <CreditCardOutlined className="mr-1" />;
+        break;
+      case "FirstPaymentPendingConfirm":
+        color = "#fa8c16";
+        text = "Chờ xác nhận thanh toán lần 1";
         bgColor = "bg-orange-50";
         icon = <CreditCardOutlined className="mr-1" />;
         break;
       case "FirstPaymentSuccess":
         color = "#52c41a";
-        text = "Đã thanh toán";
+        text = "Đã thanh toán lần 1";
         bgColor = "bg-green-50";
         icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "DocumentRejectedByManager":
+        color = "#f5222d";
+        text = "Quản lý từ chối hồ sơ";
+        bgColor = "bg-red-50";
+        icon = <CloseCircleOutlined className="mr-1" />;
+        break;
+      case "DocumentConfirmedByManager":
+        color = "#52c41a";
+        text = "Quản lý đã duyệt hồ sơ";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "DocumentRejectedByCustomer":
+        color = "#f5222d";
+        text = "Khách hàng từ chối hồ sơ";
+        bgColor = "bg-red-50";
+        icon = <UserDeleteOutlined className="mr-1" />;
+        break;
+      case "DocumentConfirmedByCustomer":
+        color = "#52c41a";
+        text = "Khách hàng đã duyệt hồ sơ";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "AttachmentRejected":
+        color = "#f5222d";
+        text = "Biên bản kèm bị từ chối";
+        bgColor = "bg-red-50";
+        icon = <CloseCircleOutlined className="mr-1" />;
+        break;
+      case "AttachmentConfirmed":
+        color = "#52c41a";
+        text = "Biên bản kèm được xác nhận";
+        bgColor = "bg-green-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "VerifyingOTPAttachment":
+        color = "#722ed1";
+        text = "Đang xác thực OTP biên bản kèm";
+        bgColor = "bg-purple-50";
+        icon = <SafetyCertificateOutlined className="mr-1" />;
+        break;
+      case "VerifiedOTPAttachment":
+        color = "#13c2c2";
+        text = "Đã xác thực OTP biên bản kèm";
+        bgColor = "bg-cyan-50";
+        icon = <CheckCircleOutlined className="mr-1" />;
+        break;
+      case "SecondPaymentPending":
+        color = "#fa8c16";
+        text = "Chờ thanh toán lần 2";
+        bgColor = "bg-orange-50";
+        icon = <CreditCardOutlined className="mr-1" />;
+        break;
+      case "SecondPaymentPendingConfirm":
+        color = "#fa8c16";
+        text = "Chờ xác nhận thanh toán lần 2";
+        bgColor = "bg-orange-50";
+        icon = <CreditCardOutlined className="mr-1" />;
         break;
       case "Completed":
         color = "#52c41a";
