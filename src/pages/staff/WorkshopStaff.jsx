@@ -123,6 +123,7 @@ const WorkshopStaff = () => {
 
   const handleSearch = (searchTerm) => {
     setSearchTerm(searchTerm);
+    setCurrentPage(1);
     console.log("Searching for:", searchTerm);
   };
 
@@ -147,6 +148,7 @@ const WorkshopStaff = () => {
   // Hàm xử lý sắp xếp
   const handleSort = (value) => {
     setSortOrder(value);
+    setCurrentPage(1); 
     console.log("Sắp xếp theo:", value);
   };
 
@@ -181,19 +183,26 @@ const WorkshopStaff = () => {
 
     return result;
   };
+  const getPaginatedWorkshops = () => {
+    const filtered = getFilteredAndSortedWorkshops();
+    const startIndex = (currentPage - 1) * 10;
+    const endIndex = startIndex + 10;
+    return filtered.slice(startIndex, endIndex);
+  };
 
   const columns = [
     {
       title: "Mã hội thảo",
       dataIndex: "workshopId",
       key: "workshopId",
-      width: 180,
+      width: 250,
       render: (text) => text,
     },
     {
       title: "Tên hội thảo",
       dataIndex: "name",
       key: "name",
+      width: 400,
       render: (text, record) => (
         <div>
           {text}
@@ -209,6 +218,7 @@ const WorkshopStaff = () => {
       title: "Diễn giả",
       dataIndex: "master",
       key: "master",
+      width: 150,
       render: (text, record) => {
         // Kiểm tra email người dùng
         const userEmail = localStorage.getItem("userEmail");
@@ -247,6 +257,7 @@ const WorkshopStaff = () => {
     {
       title: "Hành động",
       key: "action",
+      width: 180,
       render: (_, record) => (
         <Button
           type="primary"
@@ -265,7 +276,7 @@ const WorkshopStaff = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-8">
-      <Header title="Workshop" description="Quản lý workshop" />
+      <Header title="Hội thảo" description="Quản lý hội thảo" />
 
       <div className="p-6">
         <div className="bg-white p-6 rounded-lg shadow-sm mb-6">
@@ -309,10 +320,12 @@ const WorkshopStaff = () => {
                 <>
                   <CustomTable
                     columns={columns}
-                    dataSource={getFilteredAndSortedWorkshops()}
+                    dataSource={getPaginatedWorkshops()}
+            
                     onRowClick={handleRowClick}
                     rowKey="id"
                     scroll={{ x: 1200 }}
+                  
                   />
 
                   <div className="mt-4 flex justify-end">

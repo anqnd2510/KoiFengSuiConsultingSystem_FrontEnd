@@ -424,7 +424,9 @@ const ConsultationHistory = () => {
     {
       title: "Yêu cầu tư vấn",
       dataIndex: "topics",
+      ellipsis: true,
       key: "topics",
+      width: "15%",
       render: (topics) => (
         <>
           {(topics || []).map((topic, index) => (

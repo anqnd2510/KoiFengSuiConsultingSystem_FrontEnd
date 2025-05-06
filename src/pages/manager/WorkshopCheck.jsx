@@ -253,7 +253,7 @@ const WorkshopCheck = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
-        title="Quản lý hội thảo"
+        title="Kiểm tra hội thảo"
         description="Báo cáo và tổng quan về hội thảo của bạn"
       />
 

@@ -448,10 +448,10 @@ const Master = () => {
     } catch (error) {
       console.error("Lỗi khi tải thông tin chi tiết:", error);
       // Vẫn hiển thị dữ liệu hiện có nếu có lỗi
-      setViewMaster(master);
+    setViewMaster(master);
       message.warning("Đã xảy ra lỗi khi tải thông tin chi tiết");
     } finally {
-      setIsViewModalOpen(true);
+    setIsViewModalOpen(true);
     }
   };
 
@@ -661,18 +661,18 @@ const Master = () => {
               <div>
                 <h2 className="text-xl font-bold">{viewMaster.fullName}</h2>
                 {viewMaster.level && (
-                  <Tag
-                    color={
-                      viewMaster.level === "Cao cấp"
-                        ? "gold"
-                        : viewMaster.level === "Trung cấp"
-                        ? "green"
-                        : "blue"
-                    }
-                    className="mt-1"
-                  >
-                    {viewMaster.level}
-                  </Tag>
+                <Tag
+                  color={
+                    viewMaster.level === "Cao cấp"
+                      ? "gold"
+                      : viewMaster.level === "Trung cấp"
+                      ? "green"
+                      : "blue"
+                  }
+                  className="mt-1"
+                >
+                  {viewMaster.level}
+                </Tag>
                 )}
               </div>
             </div>

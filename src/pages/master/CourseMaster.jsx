@@ -759,21 +759,7 @@ const CourseMaster = () => {
             >
               Cập nhật
             </CustomButton>
-            <CustomButton
-              type="text"
-              danger
-              size="small"
-              onClick={(e) => {
-                if (isActive) {
-                  e.preventDefault();
-                  return;
-                }
-                handleDeleteCourse(record);
-              }}
-              icon={<Trash2 size={16} />}
-              disabled={isActive}
-              className={`${isActive ? "opacity-50 cursor-not-allowed pointer-events-none" : ""}`}
-            />
+            
           </div>
         );
       },
