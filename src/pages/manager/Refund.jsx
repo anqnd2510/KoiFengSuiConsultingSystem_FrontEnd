@@ -196,6 +196,20 @@ const Refund = () => {
       }
     } catch (error) {
       console.error("Refund error:", error);
+      
+      // Kiểm tra và log chi tiết lỗi từ BE (nếu có response)
+      if (error.response) {
+        console.error("Error from BE:", {
+          status: error.response.status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+        });
+      } else if (error.request) {
+        console.error("No response received from BE:", error.request);
+      } else {
+        console.error("Error occurred while setting up the request:", error.message);
+      }
+      
       setApiError(true);
       message.error("Có lỗi xảy ra khi tạo mã hoàn tiền. Vui lòng thử lại sau");
     } finally {
