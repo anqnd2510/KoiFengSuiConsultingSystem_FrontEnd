@@ -16,7 +16,10 @@ import CustomTable from "../../components/Common/CustomTable";
 import Error from "../../components/Common/Error";
 import Header from "../../components/Common/Header";
 import BackButton from "../../components/Common/BackButton";
-import { checkInAudience, getAudiencesByWorkshopId } from "../../services/audience.service";
+import {
+  checkInAudience,
+  getAudiencesByWorkshopId,
+} from "../../services/audience.service";
 import { getWorkshopById } from "../../services/workshopstaff.service";
 
 const { Title } = Typography;
@@ -28,7 +31,7 @@ const defaultWorkshopInfo = {
   location: "Không xác định",
   date: "Không xác định",
   startTime: "Chưa có thông tin",
-  endTime: "Chưa có thông tin"
+  endTime: "Chưa có thông tin",
 };
 
 const AudienceList = () => {
@@ -74,9 +77,11 @@ const AudienceList = () => {
             name: workshopData.workshopName || "Workshop",
             master: workshopData.masterName || "Không xác định",
             location: workshopData.location || "Không xác định",
-            date: workshopData.startDate ? new Date(workshopData.startDate).toLocaleDateString('vi-VN') : "Không xác định",
+            date: workshopData.startDate
+              ? new Date(workshopData.startDate).toLocaleDateString("vi-VN")
+              : "Không xác định",
             startTime: startTime,
-            endTime: endTime
+            endTime: endTime,
           });
         }
       } catch (err) {
@@ -96,13 +101,16 @@ const AudienceList = () => {
       setError(null);
 
       try {
-        console.log("Đang lấy danh sách người tham dự cho workshop ID:", workshopId);
-        
+        console.log(
+          "Đang lấy danh sách người tham dự cho workshop ID:",
+          workshopId
+        );
+
         const result = await getAudiencesByWorkshopId(workshopId);
-        
+
         if (result.success) {
           console.log("Lấy danh sách người tham dự thành công:", result.data);
-          
+
           const formattedAudiences = result.data.map((audience, index) => ({
             id: index + 1,
             attendId: audience.attendId,
@@ -112,7 +120,7 @@ const AudienceList = () => {
             customerId: audience.customerName || "Không có",
             status: audience.status || "Pending",
           }));
-          
+
           setAudiences(formattedAudiences);
         } else {
           setAudiences([]);
@@ -196,6 +204,8 @@ const AudienceList = () => {
         return "Chờ xác nhận";
       case "Absent":
         return "Vắng mặt";
+      case "Paid":
+        return "Đã thanh toán";
       default:
         return status;
     }
@@ -239,24 +249,27 @@ const AudienceList = () => {
       sorter: {
         compare: (a, b) => {
           // Tách tên thành các phần
-          const aNames = a.customerId.trim().split(' ');
-          const bNames = b.customerId.trim().split(' ');
-          
+          const aNames = a.customerId.trim().split(" ");
+          const bNames = b.customerId.trim().split(" ");
+
           // Lấy tên (phần cuối cùng)
           const aFirstName = aNames[aNames.length - 1];
           const bFirstName = bNames[bNames.length - 1];
-          
+
           // So sánh tên trước
-          const firstNameComparison = aFirstName.localeCompare(bFirstName, 'vi');
-          
+          const firstNameComparison = aFirstName.localeCompare(
+            bFirstName,
+            "vi"
+          );
+
           // Nếu tên giống nhau, so sánh toàn bộ tên đầy đủ
           if (firstNameComparison === 0) {
-            return a.customerId.localeCompare(b.customerId, 'vi');
+            return a.customerId.localeCompare(b.customerId, "vi");
           }
-          
+
           return firstNameComparison;
         },
-        multiple: 1
+        multiple: 1,
       },
       showSorterTooltip: false,
     },
@@ -265,7 +278,6 @@ const AudienceList = () => {
       dataIndex: "phoneNumber",
       key: "phoneNumber",
       width: "15%",
-      
     },
     {
       title: "Trạng thái",
@@ -282,9 +294,11 @@ const AudienceList = () => {
       width: "15%",
       render: (_, record) => {
         // Chuyển đổi ngày workshop và ngày hiện tại sang cùng định dạng để so sánh
-        const workshopDate = workshop.date ? new Date(workshop.date.split('/').reverse().join('-')) : null;
+        const workshopDate = workshop.date
+          ? new Date(workshop.date.split("/").reverse().join("-"))
+          : null;
         const today = new Date();
-        
+
         // Reset giờ, phút, giây để chỉ so sánh ngày
         if (workshopDate) {
           workshopDate.setHours(0, 0, 0, 0);
@@ -293,7 +307,8 @@ const AudienceList = () => {
 
         // Kiểm tra các điều kiện
         const isWorkshopPassed = workshopDate && workshopDate < today;
-        const isWorkshopToday = workshopDate && workshopDate.getTime() === today.getTime();
+        const isWorkshopToday =
+          workshopDate && workshopDate.getTime() === today.getTime();
         const isWorkshopFuture = workshopDate && workshopDate > today;
 
         // Nếu workshop đã diễn ra trong quá khứ
@@ -371,7 +386,7 @@ const AudienceList = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <Header 
+      <Header
         title="Người tham dự"
         description="Báo cáo và tất cả khán giả đã tham gia trong hội thảo"
       />
@@ -423,7 +438,9 @@ const AudienceList = () => {
           <>
             {audiences.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-gray-500">Không tìm thấy người tham dự cho hội thảo này</p>
+                <p className="text-gray-500">
+                  Không tìm thấy người tham dự cho hội thảo này
+                </p>
               </div>
             ) : (
               <>
