@@ -332,7 +332,7 @@ const WorkshopManager = () => {
 
       {/* Modal hiển thị chi tiết workshop */}
       <Modal
-        title="Chi tiết Workshop"
+        title="Chi tiết hội thảo"
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={[
@@ -346,15 +346,15 @@ const WorkshopManager = () => {
           <div className="p-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="font-semibold">ID:</p>
+                <p className="font-semibold">Mã hội thảo:</p>
                 <p>{selectedWorkshop.workshopId}</p>
               </div>
               <div>
-                <p className="font-semibold">Tên workshop:</p>
+                <p className="font-semibold">Tên hội thảo:</p>
                 <p>{selectedWorkshop.name}</p>
               </div>
               <div>
-                <p className="font-semibold">Master:</p>
+                <p className="font-semibold">Tư vấn viên:</p>
                 <p>{selectedWorkshop.master}</p>
               </div>
               <div>
@@ -386,10 +386,7 @@ const WorkshopManager = () => {
                   {selectedWorkshop.status}
                 </Tag>
               </div>
-              <div>
-                <p className="font-semibold">Ngày tạo:</p>
-                <p>{selectedWorkshop.createdAt}</p>
-              </div>
+             
             </div>
 
             {selectedWorkshop.description && (
