@@ -133,6 +133,27 @@ const Calendar = ({
   // Mảng tên các ngày trong tuần
   const weekdays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
+  // Sắp xếp các lịch hẹn theo thời gian
+  const sortBookingsByTime = (bookings) => {
+    return [...bookings].sort((a, b) => {
+      // Thứ tự ưu tiên: Workshop > Tư vấn trực tiếp > Tư vấn trực tuyến > Lịch trống
+      const priorityOrder = {
+        Workshop: 1,
+        "Tư vấn trực tiếp": 2,
+        "Tư vấn trực tuyến": 3,
+        "Chưa có lịch hẹn": 4,
+      };
+
+      // So sánh ưu tiên theo loại sự kiện trước
+      const priorityDiff =
+        priorityOrder[a.eventType] - priorityOrder[b.eventType];
+      if (priorityDiff !== 0) return priorityDiff;
+
+      // Nếu cùng loại, sắp xếp theo thời gian
+      return a.time.localeCompare(b.time);
+    });
+  };
+
   // Hàm render mặc định cho sự kiện nếu không có renderBooking từ prop
   const defaultRenderBooking = (booking) => {
     // Xác định biểu tượng hiển thị dựa trên loại sự kiện
@@ -166,8 +187,7 @@ const Calendar = ({
         key={booking.id}
         className={`${
           booking.eventColor || getEventColor()
-        } text-white text-xs p-1.5 rounded mb-1 cursor-pointer w-full`}
-        onClick={() => handleCustomerClick(booking.id)}
+        } text-white text-xs p-1.5 rounded mb-1 w-full`}
       >
         <div className="font-medium truncate">{booking.customerName}</div>
         <div className="text-xs truncate flex items-center">
@@ -283,8 +303,9 @@ const Calendar = ({
               );
             });
 
-            // Áp dụng bộ lọc sự kiện
-            const dayBookings = filterBookings(allDayBookings).slice(0, 2); // Limit to 2 events to prevent overflow
+            // Lọc và sắp xếp các booking cho ngày này
+            const filteredBookings = filterBookings(allDayBookings);
+            const dayBookings = sortBookingsByTime(filteredBookings);
 
             // Kiểm tra xem có phải là ngày hiện tại không
             const isCurrentDay = dayData.date && isToday(dayData.date);
@@ -294,11 +315,17 @@ const Calendar = ({
               dayData.date &&
               (dayData.date.getDay() === 0 || dayData.date.getDay() === 6);
 
+            // Xác định chiều cao của ô dựa vào số lượng lịch hẹn
+            const cellHeight = Math.min(
+              Math.max(dayBookings.length * 32, 96),
+              200
+            ); // Min 96px, max 200px
+
             return (
               <div
                 key={index}
                 className={`
-                  h-24 border-b border-r relative
+                  border-b border-r relative
                   last:border-r-0 transition-all duration-200
                   ${
                     !dayData.isCurrentMonth
@@ -308,40 +335,41 @@ const Calendar = ({
                   ${isWeekend && dayData.isCurrentMonth ? "bg-gray-50" : ""}
                   ${isCurrentDay ? "bg-blue-50 relative" : ""}
                 `}
+                style={{ height: `${cellHeight}px` }}
               >
-                <div className="p-1">
-                  <span
-                    className={`
-                      inline-flex items-center justify-center w-6 h-6 text-sm rounded-full font-medium
-                      ${isCurrentDay ? "bg-blue-500 text-white" : ""}
-                    `}
-                  >
-                    {dayData.day}
-                  </span>
-
-                  {/* Hiển thị nhãn "Hôm nay" cho ngày hiện tại */}
-                  {isCurrentDay && (
-                    <span className="absolute right-1 top-1 text-xs font-medium text-blue-600 bg-blue-100 px-1 py-0.5 rounded-sm">
-                      Hôm nay
+                <div className="p-1 h-full flex flex-col">
+                  <div className="flex items-center justify-between mb-1">
+                    <span
+                      className={`
+                        inline-flex items-center justify-center w-6 h-6 text-sm rounded-full font-medium
+                        ${isCurrentDay ? "bg-blue-500 text-white" : ""}
+                      `}
+                    >
+                      {dayData.day}
                     </span>
-                  )}
 
-                  <div className="mt-1 space-y-1 overflow-hidden max-h-[48px]">
-                    {dayBookings.map((booking) => (
-                      <div key={booking.id}>
-                        {renderBooking
-                          ? renderBooking(booking)
-                          : defaultRenderBooking(booking)}
-                      </div>
-                    ))}
+                    {/* Hiển thị nhãn "Hôm nay" cho ngày hiện tại */}
+                    {isCurrentDay && (
+                      <span className="text-xs font-medium text-blue-600 bg-blue-100 px-1 py-0.5 rounded-sm">
+                        Hôm nay
+                      </span>
+                    )}
                   </div>
 
-                  {/* Chỉ hiển thị số lượng sự kiện bị ẩn nếu có nhiều hơn 2 sự kiện */}
-                  {allDayBookings.length > 2 && (
-                    <div className="text-xs text-center font-medium text-blue-600 mt-0.5">
-                      +{allDayBookings.length - 2} sự kiện khác
-                    </div>
-                  )}
+                  <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 space-y-1">
+                    {dayBookings.length > 0 ? (
+                      dayBookings.map((booking) => (
+                        <div key={booking.id} className="booking-item">
+                          {renderBooking
+                            ? renderBooking(booking)
+                            : defaultRenderBooking(booking)}
+                        </div>
+                      ))
+                    ) : (
+                      // Bỏ dòng hiển thị "Không có lịch"
+                      <div className="text-xs text-gray-400"></div>
+                    )}
+                  </div>
                 </div>
               </div>
             );

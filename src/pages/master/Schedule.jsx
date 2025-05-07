@@ -24,8 +24,15 @@ const Schedule = () => {
       //console.log("Schedule response:", response);
 
       if (response.isSuccess) {
-        const formattedBookings = response.data.flatMap((dateSchedule) => {
-          return dateSchedule.schedules.map((schedule) => {
+        // Dùng Map để gom nhóm lịch trình theo ngày
+        const schedulesByDay = new Map();
+
+        response.data.forEach((dateSchedule) => {
+          const dateKey = new Date(dateSchedule.date)
+            .toISOString()
+            .split("T")[0];
+
+          dateSchedule.schedules.forEach((schedule) => {
             const formatTime = (timeStr) => {
               if (!timeStr) return "";
               const time = timeStr.split(":");
@@ -157,7 +164,7 @@ const Schedule = () => {
               displayTime = `${startTime}-${endTime}`;
             }
 
-            return {
+            const bookingData = {
               id: schedule.masterScheduleId,
               date: new Date(dateSchedule.date).getDate(),
               month: new Date(dateSchedule.date).getMonth(),
@@ -171,7 +178,19 @@ const Schedule = () => {
               eventColor: eventColor,
               originalData: schedule,
             };
+
+            // Thêm vào map theo ngày
+            if (!schedulesByDay.has(dateKey)) {
+              schedulesByDay.set(dateKey, []);
+            }
+            schedulesByDay.get(dateKey).push(bookingData);
           });
+        });
+
+        // Chuyển từ Map sang mảng
+        const formattedBookings = [];
+        schedulesByDay.forEach((dateBookings) => {
+          formattedBookings.push(...dateBookings);
         });
 
         setBookings(formattedBookings);
@@ -201,59 +220,12 @@ const Schedule = () => {
 
   // Render component lịch với tooltip khi hover
   const renderBookingWithTooltip = (booking) => {
-    if (booking.tooltipContent) {
-      return (
-        <Tooltip
-          title={booking.tooltipContent}
-          placement="top"
-          color="#fff"
-          overlayClassName="calendar-tooltip"
-          overlayInnerStyle={{ color: "#333" }}
-        >
-          <div
-            className={`cursor-pointer p-1 rounded text-white text-xs ${
-              booking.eventColor || "bg-blue-500"
-            } hover:opacity-90 transition-opacity`}
-            onClick={booking.onClick}
-          >
-            <div className="font-medium truncate">{booking.customerName}</div>
-            <div className="text-xs truncate flex items-center">
-              {booking.eventType === "Tư vấn trực tiếp" ? (
-                <MapPin className="inline-block w-3 h-3 mr-1" />
-              ) : booking.eventType === "Workshop" ? (
-                <CalendarIcon className="inline-block w-3 h-3 mr-1" />
-              ) : (
-                <Clock className="inline-block w-3 h-3 mr-1" />
-              )}
-              {booking.time}
-            </div>
-          </div>
-        </Tooltip>
-      );
-    }
-
-    // Hiển thị lịch trống một cách trực quan hơn
-    if (booking.eventType === "Chưa có lịch hẹn") {
-      return (
-        <div
-          className="cursor-pointer p-1 rounded text-white text-xs bg-gray-400 hover:bg-gray-500 transition-colors"
-          onClick={booking.onClick}
-        >
-          <div className="font-medium truncate">{booking.customerName}</div>
-          <div className="text-xs truncate flex items-center">
-            <Clock className="inline-block w-3 h-3 mr-1" />
-            {booking.time}
-          </div>
-        </div>
-      );
-    }
-
-    return (
+    // Định dạng để hiển thị nhỏ gọn
+    const compactDisplay = (
       <div
-        className={`cursor-pointer p-1 rounded text-white text-xs ${
+        className={`rounded text-white text-xs ${
           booking.eventColor || "bg-blue-500"
-        } hover:opacity-90 transition-opacity`}
-        onClick={booking.onClick}
+        } hover:opacity-90 transition-opacity mb-1 p-1`}
       >
         <div className="font-medium truncate">{booking.customerName}</div>
         <div className="text-xs truncate flex items-center">
@@ -268,6 +240,36 @@ const Schedule = () => {
         </div>
       </div>
     );
+
+    // Nếu có tooltipContent, bọc trong Tooltip
+    if (booking.tooltipContent) {
+      return (
+        <Tooltip
+          title={booking.tooltipContent}
+          placement="top"
+          color="#fff"
+          overlayClassName="calendar-tooltip"
+          overlayInnerStyle={{ color: "#333" }}
+        >
+          {compactDisplay}
+        </Tooltip>
+      );
+    }
+
+    // Hiển thị lịch trống một cách trực quan hơn
+    if (booking.eventType === "Chưa có lịch hẹn") {
+      return (
+        <div className="rounded text-white text-xs bg-gray-400 hover:bg-gray-500 transition-colors mb-1 p-1">
+          <div className="font-medium truncate">{booking.customerName}</div>
+          <div className="text-xs truncate flex items-center">
+            <Clock className="inline-block w-3 h-3 mr-1" />
+            {booking.time}
+          </div>
+        </div>
+      );
+    }
+
+    return compactDisplay;
   };
 
   return (
@@ -300,6 +302,38 @@ const Schedule = () => {
         }
         .calendar-tooltip .ant-tooltip-arrow-content {
           --antd-arrow-background-color: #fff;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
+        }
+        .booking-item {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .booking-item:hover {
+          transform: scale(1.02);
+          transition: transform 0.2s ease;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
       `}</style>
     </div>
