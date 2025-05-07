@@ -52,28 +52,32 @@ const Dashboard = () => {
   const prepareMonthlyData = () => {
     if (!dashboardData || !dashboardData.monthlyComparison) return [];
 
-    return dashboardData.monthlyComparison.map((item) => ({
+    const data = dashboardData.monthlyComparison.map((item) => ({
       month: item.monthYear,
       bookingOnline: item.bookingOnline,
       bookingOffline: item.bookingOffline,
       courses: item.courses,
       workshops: item.workshops,
     }));
+
+    return data.length > 0 ? data : [];
   };
 
   const prepareGenderData = () => {
     if (!dashboardData || !dashboardData.genderStats) return [];
 
-    return [
+    const data = [
       { name: "Nam", value: dashboardData.genderStats.male },
       { name: "Nữ", value: dashboardData.genderStats.female },
     ];
+
+    return data.some((item) => item.value > 0) ? data : [];
   };
 
   const prepareServiceData = () => {
     if (!dashboardData) return [];
 
-    return [
+    const data = [
       {
         name: "Tư vấn trực tuyến",
         value: dashboardData.todayRecord?.bookingOnline || 0,
@@ -84,15 +88,19 @@ const Dashboard = () => {
       },
       { name: "Khóa học", value: dashboardData.todayRecord?.courses || 0 },
     ];
+
+    return data.some((item) => item.value > 0) ? data : [];
   };
 
   const prepareTimeData = () => {
     if (!dashboardData || !dashboardData.timeAdmittedToday) return [];
 
-    return dashboardData.timeAdmittedToday.map((item) => ({
+    const data = dashboardData.timeAdmittedToday.map((item) => ({
       time: `${item.time}:00`,
       value: item.count,
     }));
+
+    return data.some((item) => item.value > 0) ? data : [];
   };
 
   return (
@@ -169,60 +177,66 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="h-[300px] md:h-[380px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={prepareMonthlyData()} barGap={8}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f0f0f0"
-                    />
-                    <XAxis
-                      dataKey="month"
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={13}
-                    />
-                    <YAxis axisLine={false} tickLine={false} fontSize={13} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "none",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        padding: "12px 16px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="bookingOnline"
-                      name="Tư vấn trực tuyến"
-                      fill="#FF4D4F"
-                      radius={[8, 8, 0, 0]}
-                      maxBarSize={50}
-                    />
-                    <Bar
-                      dataKey="bookingOffline"
-                      name="Tư vấn trực tiếp"
-                      fill="#52C41A"
-                      radius={[8, 8, 0, 0]}
-                      maxBarSize={50}
-                    />
-                    <Bar
-                      dataKey="courses"
-                      name="Khóa học"
-                      fill="#1890FF"
-                      radius={[8, 8, 0, 0]}
-                      maxBarSize={50}
-                    />
-                    <Bar
-                      dataKey="workshops"
-                      name="Hội thảo"
-                      fill="#FAAD14"
-                      radius={[8, 8, 0, 0]}
-                      maxBarSize={50}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+              <div className="h-[300px] md:h-[380px] flex items-center justify-center">
+                {prepareMonthlyData().length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={prepareMonthlyData()} barGap={8}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#f0f0f0"
+                      />
+                      <XAxis
+                        dataKey="month"
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={13}
+                      />
+                      <YAxis axisLine={false} tickLine={false} fontSize={13} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255, 255, 255, 0.98)",
+                          border: "none",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          padding: "12px 16px",
+                        }}
+                      />
+                      <Bar
+                        dataKey="bookingOnline"
+                        name="Tư vấn trực tuyến"
+                        fill="#FF4D4F"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={50}
+                      />
+                      <Bar
+                        dataKey="bookingOffline"
+                        name="Tư vấn trực tiếp"
+                        fill="#52C41A"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={50}
+                      />
+                      <Bar
+                        dataKey="courses"
+                        name="Khóa học"
+                        fill="#1890FF"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={50}
+                      />
+                      <Bar
+                        dataKey="workshops"
+                        name="Hội thảo"
+                        fill="#FAAD14"
+                        radius={[8, 8, 0, 0]}
+                        maxBarSize={50}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <p className="text-lg">Chưa có dữ liệu thống kê</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -239,44 +253,52 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <div className="h-[200px] md:h-[350px] mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={prepareGenderData()}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        dataKey="value"
-                        startAngle={90}
-                        endAngle={-270}
-                      >
-                        {prepareGenderData().map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={COLORS[index]}
-                            strokeWidth={0}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.98)",
-                          border: "none",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          padding: "12px 16px",
-                        }}
-                      />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        iconType="circle"
-                        iconSize={10}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="h-[200px] md:h-[350px] mt-4 flex items-center justify-center">
+                  {prepareGenderData().length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={prepareGenderData()}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          dataKey="value"
+                          startAngle={90}
+                          endAngle={-270}
+                        >
+                          {prepareGenderData().map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={COLORS[index]}
+                              strokeWidth={0}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.98)",
+                            border: "none",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            padding: "12px 16px",
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          iconType="circle"
+                          iconSize={10}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="text-center text-gray-500">
+                      <p className="text-lg">
+                        Chưa có dữ liệu phân bố giới tính
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-4 md:p-8 shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-100/50">
@@ -290,44 +312,50 @@ const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <div className="h-[200px] md:h-[350px] mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={prepareServiceData()}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        dataKey="value"
-                        startAngle={90}
-                        endAngle={-270}
-                      >
-                        {prepareServiceData().map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={SERVICE_COLORS[index]}
-                            strokeWidth={0}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255, 255, 255, 0.98)",
-                          border: "none",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                          padding: "12px 16px",
-                        }}
-                      />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        iconType="circle"
-                        iconSize={10}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="h-[200px] md:h-[350px] mt-4 flex items-center justify-center">
+                  {prepareServiceData().length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={prepareServiceData()}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={80}
+                          dataKey="value"
+                          startAngle={90}
+                          endAngle={-270}
+                        >
+                          {prepareServiceData().map((entry, index) => (
+                            <Cell
+                              key={`cell-${index}`}
+                              fill={SERVICE_COLORS[index]}
+                              strokeWidth={0}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255, 255, 255, 0.98)",
+                            border: "none",
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                            padding: "12px 16px",
+                          }}
+                        />
+                        <Legend
+                          verticalAlign="bottom"
+                          height={36}
+                          iconType="circle"
+                          iconSize={10}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="text-center text-gray-500">
+                      <p className="text-lg">Chưa có dữ liệu phân bố dịch vụ</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -348,79 +376,85 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="h-[250px] md:h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={prepareTimeData()}
-                    margin={{ left: 25, right: 25, top: 20, bottom: 20 }}
-                  >
-                    <defs>
-                      <linearGradient
-                        id="colorValue"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor="#FF4D4F"
-                          stopOpacity={0.18}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor="#FF4D4F"
-                          stopOpacity={0.02}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <XAxis
-                      dataKey="time"
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={13}
-                      padding={{ left: 30, right: 30 }}
-                      interval={0}
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "500",
-                      }}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={13}
-                      width={40}
-                      tickFormatter={(value) => `${value}`}
-                      style={{
-                        fontSize: "12px",
-                        fontWeight: "500",
-                      }}
-                    />
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f0f0f0"
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "none",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        padding: "12px 16px",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="#FF4D4F"
-                      strokeWidth={3}
-                      fillOpacity={1}
-                      fill="url(#colorValue)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="h-[250px] md:h-[280px] flex items-center justify-center">
+                {prepareTimeData().length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={prepareTimeData()}
+                      margin={{ left: 25, right: 25, top: 20, bottom: 20 }}
+                    >
+                      <defs>
+                        <linearGradient
+                          id="colorValue"
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop
+                            offset="5%"
+                            stopColor="#FF4D4F"
+                            stopOpacity={0.18}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor="#FF4D4F"
+                            stopOpacity={0.02}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="time"
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={13}
+                        padding={{ left: 30, right: 30 }}
+                        interval={0}
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "500",
+                        }}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={13}
+                        width={40}
+                        tickFormatter={(value) => `${value}`}
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "500",
+                        }}
+                      />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#f0f0f0"
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "rgba(255, 255, 255, 0.98)",
+                          border: "none",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                          padding: "12px 16px",
+                        }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#FF4D4F"
+                        strokeWidth={3}
+                        fillOpacity={1}
+                        fill="url(#colorValue)"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="text-center text-gray-500">
+                    <p className="text-lg">Chưa có dữ liệu phân bố thời gian</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -429,9 +463,9 @@ const Dashboard = () => {
               <div className="flex flex-col space-y-4 mb-8">
                 <div>
                   <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                    Thống kê hàng ngày
+                    Thống kê hệ thống
                   </h2>
-                  <p className="text-gray-500 text-sm">Số liệu hôm nay</p>
+                  <p className="text-gray-500 text-sm">Số liệu hệ thống</p>
                 </div>
               </div>
               <div className="space-y-4 md:space-y-6">
@@ -441,7 +475,9 @@ const Dashboard = () => {
                       <BookOutlined className="text-blue-500 text-2xl" />
                     </div>
                     <div>
-                      <p className="text-gray-600 font-medium mb-1">Khóa học</p>
+                      <p className="text-gray-600 font-medium mb-1">
+                        Tổng số khóa học đã bán
+                      </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
                         {dashboardData?.todayRecord?.courses || 0}
                       </p>
@@ -455,7 +491,7 @@ const Dashboard = () => {
                     </div>
                     <div>
                       <p className="text-gray-600 font-medium mb-1">
-                        Điểm danh hội thảo
+                        Tổng số vé hội thảo đã bán
                       </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-gray-600 transition-colors">
                         {dashboardData?.todayRecord?.checkInWorkshops || 0}
@@ -469,7 +505,9 @@ const Dashboard = () => {
                       <StarOutlined className="text-red-500 text-2xl" />
                     </div>
                     <div>
-                      <p className="text-gray-600 font-medium mb-1">Tư vấn</p>
+                      <p className="text-gray-600 font-medium mb-1">
+                        Tổng số buổi tư vấn thành công
+                      </p>
                       <p className="text-3xl font-bold text-gray-800 group-hover:text-red-600 transition-colors">
                         {(dashboardData?.todayRecord?.bookingOnline || 0) +
                           (dashboardData?.todayRecord?.bookingOffline || 0)}

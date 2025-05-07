@@ -1,3 +1,4 @@
+import axios from "axios";
 import apiClient from "./apiClient";
 
 const ACCOUNT_ENDPOINT = "/Account";
@@ -169,10 +170,13 @@ export const getAllCustomers = async () => {
  */
 export const getDashboardInfo = async () => {
   try {
-    const response = await apiClient.get(
-      `${ACCOUNT_ENDPOINT}/get-dashboard-data`
+    // const response = await apiClient.get(
+    //   `${ACCOUNT_ENDPOINT}/get-dashboard-data`
+    // );
+    const response = await axios.get(
+      "//localhost/api/Account/get-dashboard-data"
     );
-    console.log("API response:", response.data);
+    http: console.log("API response:", response.data);
     return response.data;
   } catch (error) {
     console.error("Error fetching dashboard info:", error);
