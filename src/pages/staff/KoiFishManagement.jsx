@@ -185,7 +185,10 @@ const KoiFishManagement = () => {
       }
 
       // Xử lý dữ liệu màu sắc
-      if (Array.isArray(koiDetail.varietyColors) && koiDetail.varietyColors.length > 0) {
+      if (
+        Array.isArray(koiDetail.varietyColors) &&
+        koiDetail.varietyColors.length > 0
+      ) {
         const colors = koiDetail.varietyColors.map((color) => ({
           colorId: color.colorId || "",
           value: (color.percentage || 0) / 100,
@@ -194,7 +197,9 @@ const KoiFishManagement = () => {
         }));
         setColorFields(colors);
       } else {
-        setColorFields([{ colorId: "", value: 0.5, colorName: "", element: "" }]);
+        setColorFields([
+          { colorId: "", value: 0.5, colorName: "", element: "" },
+        ]);
       }
 
       // Cập nhật form
@@ -288,7 +293,10 @@ const KoiFishManagement = () => {
       }
 
       // Kiểm tra tổng phần trăm màu sắc
-      const totalPercentage = colorFields.reduce((sum, color) => sum + (color.value || 0) * 100, 0);
+      const totalPercentage = colorFields.reduce(
+        (sum, color) => sum + (color.value || 0) * 100,
+        0
+      );
       if (Math.abs(totalPercentage - 100) > 0.1) {
         message.error("Tổng tỷ lệ màu sắc phải đạt 100%");
         return;
@@ -303,13 +311,17 @@ const KoiFishManagement = () => {
         console.log("Values being appended:", {
           VarietyName: values.breed.trim(),
           Description: values.description.trim(),
-          Introduction: values.introduction?.trim() || values.description.trim()
+          Introduction:
+            values.introduction?.trim() || values.description.trim(),
         });
 
         // Append các trường dữ liệu cơ bản
         formData.append("VarietyName", values.breed.trim());
         formData.append("Description", values.description.trim());
-        formData.append("Introduction", values.introduction?.trim() || values.description.trim());
+        formData.append(
+          "Introduction",
+          values.introduction?.trim() || values.description.trim()
+        );
 
         // Xử lý file ảnh nếu có
         if (koiImageFile) {
@@ -319,10 +331,10 @@ const KoiFishManagement = () => {
 
         // Xử lý màu sắc
         const validColorFields = colorFields
-          .filter(color => color.colorId && color.value > 0)
-          .map(color => ({
+          .filter((color) => color.colorId && color.value > 0)
+          .map((color) => ({
             ColorId: color.colorId,
-            Percentage: Math.round(color.value * 100)
+            Percentage: Math.round(color.value * 100),
           }));
 
         console.log("Color data being appended:", validColorFields);
@@ -331,7 +343,9 @@ const KoiFishManagement = () => {
         // Log toàn bộ dữ liệu trong FormData
         console.log("FormData entries:");
         for (let pair of formData.entries()) {
-          console.log(pair[0] + ": " + (pair[1] instanceof File ? pair[1].name : pair[1]));
+          console.log(
+            pair[0] + ": " + (pair[1] instanceof File ? pair[1].name : pair[1])
+          );
         }
 
         // Gửi request cập nhật
@@ -341,17 +355,20 @@ const KoiFishManagement = () => {
         const formData = new FormData();
         formData.append("VarietyName", values.breed.trim());
         formData.append("Description", values.description.trim());
-        formData.append("Introduction", values.introduction?.trim() || values.description.trim());
+        formData.append(
+          "Introduction",
+          values.introduction?.trim() || values.description.trim()
+        );
 
         if (koiImageFile) {
           formData.append("ImageFile", koiImageFile);
         }
 
         const validColorFields = colorFields
-          .filter(color => color.colorId && color.value > 0)
-          .map(color => ({
+          .filter((color) => color.colorId && color.value > 0)
+          .map((color) => ({
             ColorId: color.colorId,
-            Percentage: Math.round(color.value * 100)
+            Percentage: Math.round(color.value * 100),
           }));
 
         formData.append("VarietyColorsJson", JSON.stringify(validColorFields));
@@ -362,7 +379,9 @@ const KoiFishManagement = () => {
       console.log("Server response:", response);
 
       if (response && response.isSuccess) {
-        message.success(selectedKoi ? "Đã cập nhật thành công" : "Đã tạo mới thành công");
+        message.success(
+          selectedKoi ? "Đã cập nhật thành công" : "Đã tạo mới thành công"
+        );
         await fetchKoiList();
         handleCloseModal();
         setKoiImageFile(null);
@@ -373,11 +392,12 @@ const KoiFishManagement = () => {
       }
     } catch (err) {
       console.error("Lỗi khi lưu:", err);
-      const errorMessage = err.response?.data?.title || 
-                         err.response?.data?.message || 
-                         err.response?.data?.errors?.join(", ") || 
-                         err.message || 
-                         "Đã xảy ra lỗi khi lưu dữ liệu";
+      const errorMessage =
+        err.response?.data?.title ||
+        err.response?.data?.message ||
+        err.response?.data?.errors?.join(", ") ||
+        err.message ||
+        "Đã xảy ra lỗi khi lưu dữ liệu";
       message.error(errorMessage);
     } finally {
       setModalLoading(false);
@@ -386,14 +406,14 @@ const KoiFishManagement = () => {
 
   // Thêm hàm kiểm tra file ảnh
   const beforeUpload = (file) => {
-    const isImage = file.type.startsWith('image/');
+    const isImage = file.type.startsWith("image/");
     if (!isImage) {
-      message.error('Bạn chỉ có thể tải lên file ảnh!');
+      message.error("Bạn chỉ có thể tải lên file ảnh!");
       return false;
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error('Ảnh phải nhỏ hơn 5MB!');
+      message.error("Ảnh phải nhỏ hơn 5MB!");
       return false;
     }
     return true;
@@ -525,7 +545,11 @@ const KoiFishManagement = () => {
                     {color.colorName || color.color?.colorName || "Không tên"}:{" "}
                     {color.percentage}%
                     <span className="ml-1 text-gray-500">
-                      ({color.element || color.color?.element || "Không xác định"})
+                      (
+                      {color.element ||
+                        color.color?.element ||
+                        "Không xác định"}
+                      )
                     </span>
                   </span>
                 </li>
@@ -603,7 +627,7 @@ const KoiFishManagement = () => {
   useEffect(() => {
     if (selectedKoi && isModalOpen) {
       console.log("Cập nhật form với dữ liệu selectedKoi:", selectedKoi);
-      
+
       // Cập nhật form với thông tin hiện tại
       editForm.setFieldsValue({
         breed: selectedKoi.varietyName,
@@ -617,7 +641,10 @@ const KoiFishManagement = () => {
       }
 
       // Cập nhật dữ liệu màu sắc
-      if (Array.isArray(selectedKoi.varietyColors) && selectedKoi.varietyColors.length > 0) {
+      if (
+        Array.isArray(selectedKoi.varietyColors) &&
+        selectedKoi.varietyColors.length > 0
+      ) {
         const colors = selectedKoi.varietyColors.map((color) => ({
           colorId: color.colorId || "",
           value: (color.percentage || 0) / 100,
@@ -725,7 +752,7 @@ const KoiFishManagement = () => {
             current: currentPage,
             total: filteredData.length,
             pageSize: pageSize,
-            showSizeChanger: true,
+            showSizeChanger: false,
             showTotal: (total) => `Tổng số ${total} cá Koi`,
             onChange: (page) => {
               setCurrentPage(page);

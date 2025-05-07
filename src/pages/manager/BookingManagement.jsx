@@ -398,27 +398,6 @@ const BookingManagement = () => {
         return;
       }
 
-      // Kiểm tra trạng thái của booking này trước khi cập nhật
-      const booking = bookings.find((b) => b.id === recordId);
-      if (
-        booking &&
-        booking.status &&
-        booking.status.toLowerCase() === "canceled"
-      ) {
-        message.error("Không thể phân công cho lịch đã bị hủy!");
-        return;
-      }
-
-      // Kiểm tra trạng thái đã được xác nhận chưa
-      if (
-        booking &&
-        booking.status &&
-        booking.status.toLowerCase() !== "confirmed"
-      ) {
-        message.error("Chỉ có thể phân công cho lịch đã được xác nhận!");
-        return;
-      }
-
       // Lưu trạng thái phân công vào localStorage để giữ lại sau khi refresh
       const assignmentData = JSON.parse(
         localStorage.getItem("staffAssignments") || "{}"

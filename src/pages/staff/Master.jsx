@@ -226,10 +226,10 @@ const Master = () => {
         setIsLoading(true);
         setError(null);
         const response = await getMasterList();
-        
+
         if (response.isSuccess) {
           // Chuyển đổi dữ liệu từ API để phù hợp với cấu trúc hiện tại
-          const formattedData = response.data.map(master => ({
+          const formattedData = response.data.map((master) => ({
             id: master.masterId,
             fullName: master.masterName,
             email: master.email || "",
@@ -419,9 +419,11 @@ const Master = () => {
     // Nếu master.expertise là string, convert thành array (nếu cần)
     const updatedMaster = {
       ...master,
-      expertise: Array.isArray(master.expertise) ? master.expertise : [master.expertise],
+      expertise: Array.isArray(master.expertise)
+        ? master.expertise
+        : [master.expertise],
     };
-  
+
     setViewMaster(updatedMaster);
     setIsViewModalOpen(true);
   };
@@ -508,7 +510,7 @@ const Master = () => {
             icon={<Eye size={14} />}
             className="!bg-blue-500 hover:!bg-blue-600 !text-white"
           >
-            Xem 
+            Xem
           </CustomButton>
         </Space>
       ),
@@ -519,8 +521,10 @@ const Master = () => {
   const filteredData = data.filter(
     (item) =>
       item.fullName.toLowerCase().includes(searchText.toLowerCase()) ||
-      (item.email && item.email.toLowerCase().includes(searchText.toLowerCase())) ||
-      (item.level && item.level.toLowerCase().includes(searchText.toLowerCase()))
+      (item.email &&
+        item.email.toLowerCase().includes(searchText.toLowerCase())) ||
+      (item.level &&
+        item.level.toLowerCase().includes(searchText.toLowerCase()))
   );
 
   // Phân trang dữ liệu
@@ -555,16 +559,18 @@ const Master = () => {
                 columns={columns}
                 dataSource={paginatedData}
                 loading={loading}
-                pagination={false}
+                pagination={{
+                  current: currentPage,
+                  total: filteredData.length,
+                  pageSize: pageSize,
+                  showSizeChanger: false,
+                  showTotal: (total) => `Tổng số ${total} tư vấn viên`,
+                  onChange: (page) => {
+                    setCurrentPage(page);
+                  },
+                }}
                 scroll={{ x: 1200 }}
               />
-              <div className="p-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={Math.ceil(filteredData.length / pageSize)}
-                  onPageChange={handlePageChange}
-                />
-              </div>
             </div>
           </div>
         </div>
@@ -633,18 +639,18 @@ const Master = () => {
               <div>
                 <h2 className="text-xl font-bold">{viewMaster.fullName}</h2>
                 {viewMaster.level && (
-                <Tag
-                  color={
-                    viewMaster.level === "Cao cấp"
-                      ? "gold"
-                      : viewMaster.level === "Trung cấp"
-                      ? "green"
-                      : "blue"
-                  }
-                  className="mt-1"
-                >
-                  {viewMaster.level}
-                </Tag>
+                  <Tag
+                    color={
+                      viewMaster.level === "Cao cấp"
+                        ? "gold"
+                        : viewMaster.level === "Trung cấp"
+                        ? "green"
+                        : "blue"
+                    }
+                    className="mt-1"
+                  >
+                    {viewMaster.level}
+                  </Tag>
                 )}
               </div>
             </div>
@@ -669,7 +675,9 @@ const Master = () => {
               <Col span={24} md={12}>
                 <div className="mb-4">
                   <p className="text-gray-500 mb-1">Kinh nghiệm</p>
-                  <p className="font-medium">{viewMaster.experience && `${viewMaster.experience} năm`}</p>
+                  <p className="font-medium">
+                    {viewMaster.experience && `${viewMaster.experience} năm`}
+                  </p>
                 </div>
               </Col>
 
