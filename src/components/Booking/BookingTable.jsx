@@ -90,47 +90,36 @@ const BookingTable = ({ bookings, loading, onMasterChange }) => {
       dataIndex: "customerName",
       key: "customerName",
       width: "15%",
-      render: (text, record) => {
-        // Kiểm tra xem booking có phải mới tạo trong vòng 12h không
-        const isRecentlyCreated = record.isNew;
-
-        return (
-          <div className="flex items-center gap-3">
+      render: (_, record) => (
+        <div className="flex items-center gap-2">
+          {record.imageUrl &&
+          record.imageUrl !== "https://via.placeholder.com/40?text=User" ? (
+            <div className="w-10 h-10 overflow-hidden rounded-full">
+              <img
+                src={record.imageUrl}
+                alt={record.fullName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/40?text=User";
+                }}
+              />
+            </div>
+          ) : (
             <Avatar
               style={{
-                backgroundColor: stringToColor(text),
+                backgroundColor: stringToColor(record.customerName || "User"),
                 boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
               size="large"
               icon={<UserOutlined />}
             />
-            <div>
-              <span className="text-gray-800 font-medium hover:text-blue-600 transition-colors duration-300">
-                {text}
-              </span>
-              {isRecentlyCreated && (
-                <Tag
-                  color="#52c41a"
-                  className="ml-2 new-booking-tag"
-                  style={{
-                    borderRadius: "12px",
-                    padding: "0px 6px",
-                    fontSize: "10px",
-                    fontWeight: "bold",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "2px",
-                    animation: "pulse 1.5s infinite",
-                    boxShadow: "0 2px 5px rgba(82, 196, 26, 0.2)",
-                  }}
-                >
-                  <FireOutlined /> MỚI
-                </Tag>
-              )}
-            </div>
+          )}
+          <div>
+            <div className="font-medium">{record.fullName}</div>
+            <div className="text-xs text-gray-500">{record.userName}</div>
           </div>
-        );
-      },
+        </div>
+      ),
     },
     {
       title: "Mô tả",
@@ -333,65 +322,19 @@ const BookingTable = ({ bookings, loading, onMasterChange }) => {
     },
     {
       title: "Trạng thái",
-      dataIndex: "status",
+      dataIndex: "statusText",
       key: "status",
       width: "120px",
       align: "center",
-      render: (status) => {
-        let color = "";
-        let text = "";
-        let icon = null;
-        let bgColor = "";
-
-        switch (status) {
-          case "Pending":
-          case "pending":
-            color = "#faad14";
-            bgColor = "#fff7e6";
-            text = "Chờ xử lý";
-            icon = <ClockCircleOutlined />;
-            break;
-          case "Completed":
-          case "completed":
-            color = "#52c41a";
-            bgColor = "#f6ffed";
-            text = "Hoàn thành";
-            icon = <CheckCircleOutlined />;
-            break;
-          case "Cancelled":
-          case "cancelled":
-            color = "#f5222d";
-            bgColor = "#fff1f0";
-            text = "Đã hủy";
-            icon = <CloseCircleOutlined />;
-            break;
-          case "Scheduled":
-          case "scheduled":
-            color = "#1890ff";
-            bgColor = "#e6f7ff";
-            text = "Đã xếp lịch";
-            icon = <CalendarOutlined />;
-            break;
-          case "Confirmed":
-          case "confirmed":
-            color = "#13c2c2";
-            bgColor = "#e6fffb";
-            text = "Đã xác nhận";
-            icon = <CheckOutlined />;
-            break;
-          default:
-            color = "#d9d9d9";
-            bgColor = "#fafafa";
-            text = status;
-            icon = <InfoCircleOutlined />;
-        }
-
+      render: (statusText, record) => {
         return (
           <Tag
             style={{
-              backgroundColor: bgColor,
-              color: color,
-              borderColor: color,
+              backgroundColor: record.statusColor
+                ? `${record.statusColor}20`
+                : "#fafafa",
+              color: record.statusColor || "#d9d9d9",
+              borderColor: record.statusColor || "#d9d9d9",
               borderRadius: "20px",
               padding: "4px 12px",
               fontSize: "13px",
@@ -405,7 +348,7 @@ const BookingTable = ({ bookings, loading, onMasterChange }) => {
             }}
             className="hover:scale-105"
           >
-            {icon} {text}
+            {statusText}
           </Tag>
         );
       },

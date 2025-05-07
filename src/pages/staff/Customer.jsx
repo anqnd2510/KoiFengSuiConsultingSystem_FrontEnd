@@ -24,7 +24,9 @@ import {
   Radio,
   Badge,
   Card,
+  Avatar,
 } from "antd";
+import { UserOutlined } from "@ant-design/icons";
 import SearchBar from "../../components/Common/SearchBar";
 import Pagination from "../../components/Common/Pagination";
 import Header from "../../components/Common/Header";
@@ -360,16 +362,28 @@ const Customer = () => {
       width: "22%",
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 overflow-hidden rounded-full">
-            <img
-              src={record.imageUrl}
-              alt={record.fullName}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.src = "https://via.placeholder.com/40?text=User";
+          {record.imageUrl &&
+          record.imageUrl !== "https://via.placeholder.com/40?text=User" ? (
+            <div className="w-10 h-10 overflow-hidden rounded-full">
+              <img
+                src={record.imageUrl}
+                alt={record.fullName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = "https://via.placeholder.com/40?text=User";
+                }}
+              />
+            </div>
+          ) : (
+            <Avatar
+              style={{
+                backgroundColor: "#1890ff",
+                boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
               }}
+              size="large"
+              icon={<UserOutlined />}
             />
-          </div>
+          )}
           <div>
             <div className="font-medium">{record.fullName}</div>
             <div className="text-xs text-gray-500">{record.userName}</div>
