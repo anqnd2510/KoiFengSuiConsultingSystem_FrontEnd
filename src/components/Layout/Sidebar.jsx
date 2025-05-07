@@ -31,7 +31,7 @@ const menuItems = [
   },
   {
     icon: Calendar,
-    label: "Lịch hẹn",
+    label: "Lịch làm việc",
     path: "/master/schedule",
     roles: ["master"],
   },
@@ -190,7 +190,9 @@ const Sidebar = () => {
     if (path === "/master/consulting-offline") {
       return (
         location.pathname === "/master/consulting-offline" ||
-        location.pathname.startsWith("/master/consulting-offline/")
+        location.pathname.startsWith("/master/consulting-offline/") ||
+        location.pathname === "/master/document" ||
+        location.pathname === "/master/attachments"
       );
     }
 
