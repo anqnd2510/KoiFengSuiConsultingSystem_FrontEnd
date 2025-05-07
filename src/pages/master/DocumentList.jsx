@@ -8,12 +8,14 @@ import Error from "../../components/Common/Error";
 import CustomDatePicker from "../../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { message, Tag } from "antd";
+import { message, Tag, Select } from "antd";
 import CustomTable from "../../components/Common/CustomTable";
 import { getAllDocumentsByMaster } from "../../services/document.service";
 
 const DocumentList = () => {
   const [documents, setDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,6 +26,10 @@ const DocumentList = () => {
   useEffect(() => {
     fetchDocuments();
   }, [currentPage, selectedDate]);
+
+  useEffect(() => {
+    filterDocuments();
+  }, [documents, statusFilter]);
 
   const fetchDocuments = async () => {
     try {
@@ -65,6 +71,16 @@ const DocumentList = () => {
     }
   };
 
+  const filterDocuments = () => {
+    if (statusFilter === "all") {
+      setFilteredDocuments(documents);
+    } else {
+      setFilteredDocuments(
+        documents.filter((doc) => doc.status === statusFilter)
+      );
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case "Pending":
@@ -79,6 +95,23 @@ const DocumentList = () => {
         return "success";
       default:
         return "default";
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case "Pending":
+        return "Chờ xử lý";
+      case "ConfirmedByManager":
+        return "Đã xác nhận";
+      case "CancelledByManager":
+        return "Quản lý đã hủy";
+      case "CancelledByCustomer":
+        return "Khách hàng đã hủy";
+      case "Success":
+        return "Thành công";
+      default:
+        return status;
     }
   };
 
@@ -149,13 +182,6 @@ const DocumentList = () => {
       width: "30%",
     },
     {
-      title: "Phiên bản",
-      dataIndex: "version",
-      key: "version",
-      render: (text) => <span className="text-gray-600">{text}</span>,
-      width: "10%",
-    },
-    {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -171,7 +197,7 @@ const DocumentList = () => {
           color={getStatusColor(status)}
           className="px-3 py-1 text-xs font-medium rounded-full"
         >
-          {status}
+          {getStatusText(status)}
         </Tag>
       ),
       width: "15%",
@@ -237,10 +263,31 @@ const DocumentList = () => {
               </div>
             </div>
 
-            <CustomDatePicker
-              value={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-            />
+            <div className="flex items-center gap-4">
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: 200 }}
+                placeholder="Lọc theo trạng thái"
+              >
+                <Select.Option value="all">Tất cả trạng thái</Select.Option>
+                <Select.Option value="Pending">Chờ xử lý</Select.Option>
+                <Select.Option value="ConfirmedByManager">
+                  Đã xác nhận
+                </Select.Option>
+                <Select.Option value="CancelledByManager">
+                  Quản lý đã hủy
+                </Select.Option>
+                <Select.Option value="CancelledByCustomer">
+                  Khách hàng đã hủy
+                </Select.Option>
+                <Select.Option value="Success">Thành công</Select.Option>
+              </Select>
+              <CustomDatePicker
+                value={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+              />
+            </div>
           </div>
 
           <div className="p-4 md:p-6">
@@ -249,7 +296,7 @@ const DocumentList = () => {
             <div className="overflow-x-auto rounded-lg border border-gray-100">
               <CustomTable
                 columns={columns}
-                dataSource={documents}
+                dataSource={filteredDocuments}
                 loading={loading}
                 className="custom-table"
                 rowClassName="hover:bg-gray-50 transition-colors"

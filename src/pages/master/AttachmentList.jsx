@@ -8,12 +8,14 @@ import Error from "../../components/Common/Error";
 import CustomDatePicker from "../../components/Common/CustomDatePicker";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
-import { message, Tag } from "antd";
+import { message, Tag, Select } from "antd";
 import CustomTable from "../../components/Common/CustomTable";
 import { getAllAttachmentsByMaster } from "../../services/attachment.service";
 
 const AttachmentList = () => {
   const [attachments, setAttachments] = useState([]);
+  const [filteredAttachments, setFilteredAttachments] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,6 +26,10 @@ const AttachmentList = () => {
   useEffect(() => {
     fetchAttachments();
   }, [currentPage, selectedDate]);
+
+  useEffect(() => {
+    filterAttachments();
+  }, [attachments, statusFilter]);
 
   const fetchAttachments = async () => {
     try {
@@ -63,6 +69,16 @@ const AttachmentList = () => {
       message.error("Không thể tải danh sách biên bản nghiệm thu");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterAttachments = () => {
+    if (statusFilter === "all") {
+      setFilteredAttachments(attachments);
+    } else {
+      setFilteredAttachments(
+        attachments.filter((attachment) => attachment.status === statusFilter)
+      );
     }
   };
 
@@ -251,10 +267,27 @@ const AttachmentList = () => {
               </div>
             </div>
 
-            <CustomDatePicker
-              value={selectedDate}
-              onChange={(date) => setSelectedDate(date)}
-            />
+            <div className="flex items-center gap-4">
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                style={{ width: 200 }}
+                placeholder="Lọc theo trạng thái"
+              >
+                <Select.Option value="all">Tất cả trạng thái</Select.Option>
+                <Select.Option value="Pending">Chờ duyệt</Select.Option>
+                <Select.Option value="Confirmed">Đã duyệt</Select.Option>
+                <Select.Option value="VefifyingOTP">
+                  Đang xác thực OTP
+                </Select.Option>
+                <Select.Option value="Success">Hoàn thành</Select.Option>
+                <Select.Option value="Cancelled">Đã hủy</Select.Option>
+              </Select>
+              <CustomDatePicker
+                value={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+              />
+            </div>
           </div>
 
           <div className="p-4 md:p-6">
@@ -263,7 +296,7 @@ const AttachmentList = () => {
             <div className="overflow-x-auto rounded-lg border border-gray-100">
               <CustomTable
                 columns={columns}
-                dataSource={attachments}
+                dataSource={filteredAttachments}
                 loading={loading}
                 className="custom-table"
                 rowClassName="hover:bg-gray-50 transition-colors"
