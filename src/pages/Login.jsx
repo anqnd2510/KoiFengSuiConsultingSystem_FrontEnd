@@ -874,7 +874,7 @@ const Login = () => {
 
                   <div className="text-right mt-auto">
                     <p className="text-sm text-[#90B77D]">
-                      © 2024 Koi Feng Shui Consulting System
+                      © 2025 Koi Feng Shui Consulting System
                     </p>
                   </div>
                 </div>
@@ -920,7 +920,7 @@ const Login = () => {
 
                   <div className="text-right mt-auto">
                     <p className="text-sm text-[#90B77D]">
-                      © 2024 Koi Feng Shui Consulting System
+                      © 2025 Koi Feng Shui Consulting System
                     </p>
                   </div>
                 </div>
