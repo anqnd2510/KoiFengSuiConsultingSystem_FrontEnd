@@ -277,7 +277,7 @@ export const getAllCoursesByMaster = async () => {
 };
 
 // Thêm hàm mới để cập nhật trạng thái khóa học
-export const updateCourseStatus = async (courseId, status) => {
+export const updateCourseStatus = async (courseId) => {
   try {
     // Kiểm tra token đăng nhập
     const token = localStorage.getItem("accessToken");
@@ -291,11 +291,10 @@ export const updateCourseStatus = async (courseId, status) => {
 
     console.log("Đang gọi API cập nhật trạng thái khóa học:", {
       courseId,
-      status,
     });
 
     const response = await apiClient.put(
-      `${COURSE_ENDPOINT}/update-course-status/${courseId}?status=${status}`,
+      `${COURSE_ENDPOINT}/update-course-status/${courseId}`,
       null,
       {
         headers: {

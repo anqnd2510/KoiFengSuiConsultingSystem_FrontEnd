@@ -24,11 +24,12 @@ const RoleBasedRedirect = () => {
         break;
       default:
         // Chuyển đến trang Pending nếu không có role cụ thể
-        navigate("/pending", { 
-          replace: true, 
-          state: { 
-            message: "Tài khoản của bạn đang chờ xác nhận hoặc chưa được phân quyền. Vui lòng liên hệ quản trị viên để biết thêm chi tiết." 
-          } 
+        navigate("/pending", {
+          replace: true,
+          state: {
+            message:
+              "Tài khoản của bạn đang chờ xác nhận hoặc chưa được phân quyền. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
+          },
         });
     }
   }, [navigate]);
