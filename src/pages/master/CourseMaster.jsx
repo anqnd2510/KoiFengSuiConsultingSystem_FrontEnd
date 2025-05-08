@@ -168,6 +168,9 @@ const CourseForm = ({
               if (value > 100000000) {
                 return Promise.reject("Giá không được vượt quá 100.000.000");
               }
+              if (value <= 2000) {
+                return Promise.reject("Giá vé phải lớn hơn 2000 VND");
+              }
               return Promise.resolve();
             },
           },
